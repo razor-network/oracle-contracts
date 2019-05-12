@@ -6,9 +6,7 @@ import "./SimpleToken.sol";
 // invalid vote cannot be revealed and you will get penalty
 
 // TODO Priority list
-// prng should count blocks from start of epoch
 // test unstake and withdraw
-//add epoch and state restrictions
 
 contract Schelling {
 
@@ -152,7 +150,6 @@ contract Schelling {
     // vote in the first 250 blocks every epoch, else get penalty
     // what was the eth/usd rate at the beginning of this epoch?
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(c.COMMIT) {
-        // require(getState() == 0, "wrong state");
         uint256 nodeId = nodeIds[msg.sender];
         Node storage thisStaker = nodes[nodeId];
         require(thisStaker.stake > c.MIN_STAKE, "stake is below minimum stake");
@@ -259,7 +256,6 @@ contract Schelling {
         SimpleToken sch = SimpleToken(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(nodes[proposerId].stake > c.MIN_STAKE, "stake below minimum stake");
-        // require(getState() == 2);
 
         //check if someone already proposed
         if (blocks[epoch].proposerId != 0) {
@@ -292,16 +288,12 @@ contract Schelling {
 
     //todo resetDisute(_)
     function giveSorted (uint256 epoch, uint256[] memory sorted) public checkEpoch(epoch) checkState(c.DISPUTE) {
-        // require(getState() == 3);
         uint256 twoFiveWeight = totalStakeRevealed[epoch] / 4;
         uint256 medianWeight = totalStakeRevealed[epoch] / 2;
         uint256 sevenFiveWeight = (totalStakeRevealed[epoch] * 3) / 4;
 
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
-        // uint256 twoFive = disputes[epoch][msg.sender].twoFive;
-        // uint256 median = disputes[epoch][msg.sender].median;
-        // uint256 sevenFive = disputes[epoch][msg.sender].sevenFive;
 
         uint256 stakeGettingReward;
         uint256 stakeGettingPenalty;
@@ -330,9 +322,6 @@ contract Schelling {
                 }
             if (gasleft() < 5000) break;
         }
-        // disputes[epoch][msg.sender].twoFive = twoFive;
-        // disputes[epoch][msg.sender].median = median;
-        // disputes[epoch][msg.sender].sevenFive = sevenFive;
 
         disputes[epoch][msg.sender].lastVisited = lastVisited;
         disputes[epoch][msg.sender].accWeight = accWeight;
@@ -344,7 +333,6 @@ contract Schelling {
 
     //propose in dispute phase
     function proposeAlt (uint256 epoch) public checkEpoch(epoch) checkState(c.DISPUTE) {
-        // require(getState() == 4);
         require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch]);
         uint256 median = disputes[epoch][msg.sender].median;
         uint256 twoFive = disputes[epoch][msg.sender].twoFive;
@@ -353,11 +341,9 @@ contract Schelling {
         uint256 stakeGettingPenalty = disputes[epoch][msg.sender].stakeGettingPenalty;
         uint256 proposerId = nodeIds[msg.sender];
 
-        // TODO check state
         require(twoFive >= 0);
         require(median >= twoFive);
         require(sevenFive >= median);
-        // if (blocks[epoch].sevenFive > 0) {
         if (blocks[epoch].sevenFive != sevenFive ||
             blocks[epoch].median != median ||
             blocks[epoch].twoFive != twoFive) {
@@ -393,9 +379,7 @@ contract Schelling {
 
     function prngHash(uint8 numBlocks, bytes32 seed) public view returns(bytes32) {
         bytes32 sum;
-        // TODO uncomment in prod
         uint256 blockNumberEpochStart = (block.number/16)*16;
-        // uint256 blockNumberEpochStart = block.number;
         for (uint8 i = 1; i <= numBlocks; i++) {
             sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart - i)));
         }
@@ -427,9 +411,6 @@ contract Schelling {
 
     function slash (uint256 id, address bountyHunter) internal {
         SimpleToken sch = SimpleToken(schAddress);
-        // if(fixedAmount > 0) {
-        //     stakeTransfer(id, bountyHunter, fixedAmount);
-        // }
         uint256 thisStake = nodes[id].stake;
         nodes[id].stake = 0;
         //TODO WHAT IF IT IS 0???
