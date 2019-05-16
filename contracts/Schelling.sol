@@ -4,9 +4,14 @@ import "./SimpleToken.sol";
 // Must Vote price rounded to 2 decimals *100 and must be above 0
 // e.g. if ethusd is 169.99 vote 16999
 // invalid vote cannot be revealed and you will get penalty
+// node == staker
 
 // TODO Priority list
 // test unstake and withdraw
+// cases where nobody votes, too low stake (1-4)
+// nobody proposes, nobody disputes, extending dispute period
+// staker wants to vote but cant because below minimum. how to handle? should he be penalized? how much waiting time?
+// use openzeppelin math to avoid under and overflows
 
 contract Schelling {
 
@@ -25,6 +30,8 @@ contract Schelling {
         uint256 withdrawAfter;
     }
 
+    // twoFive = twentyFive percentile value
+    // sevenFive = seventyFive percentile value
     struct Block {
         uint256 proposerId;
         uint256 median;
@@ -47,9 +54,10 @@ contract Schelling {
     }
 
     mapping (address => uint256) public nodeIds;
-    mapping(uint256 => uint256) public totalStakeRevealed;
+    mapping (uint256 => Node) public nodes;
     mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
     mapping (uint256 => mapping (uint256 => Vote)) public votes;
+    mapping(uint256 => uint256) public totalStakeRevealed;
     mapping (uint256 => Block) public blocks;
 
     mapping (uint256 => mapping (uint256 => uint256)) public voteWeights;
@@ -57,7 +65,6 @@ contract Schelling {
     mapping(uint256 => mapping(address => Dispute)) public disputes;
     address public schAddress;
 
-    mapping (uint256 => Node) public nodes;
     uint256 public numNodes = 0;
     uint256 public totalStake = 0;
 
@@ -70,15 +77,19 @@ contract Schelling {
         uint256 PENALTY_NOT_REVEAL_DENOM;
         uint256 PENALTY_NOT_IN_ZONE_NUM;
         uint256 PENALTY_NOT_IN_ZONE_DENOM;
-        uint256 EPOCH;//8
-        uint256 STATE;
-        uint256 MIN_STAKE; //10
+        uint256 MIN_STAKE;
         uint256 BLOCK_REWARD;
-        uint256 UNSTAKE_LOCK_PERIOD; //12
-        uint256 WITHDRAW_LOCK_PERIOD; //13
+        uint256 REVEAL_REWARD;
+        uint256 SAFETY_MARGIN_LOWER;
+        // uint256 SAFETY_MARGIN_UPPER;
+        uint256 UNSTAKE_LOCK_PERIOD;
+        uint256 WITHDRAW_LOCK_PERIOD;
     }
 
-    Constants public c = Constants(0, 1, 2, 3, 95, 100, 99, 100, 0, 0, 1000, 5, 1, 1);
+    uint256 EPOCH;
+    uint256 STATE;
+
+    Constants public c = Constants(0, 1, 2, 3, 95, 100, 99, 100, 1000, 5, 5, 99, 1, 1);
 
     constructor (address _schAddress) public {
         schAddress = _schAddress;
@@ -96,6 +107,7 @@ contract Schelling {
 
     event Staked(uint256 nodeId, uint256 amount);
 
+// stake during any epoch/state
     function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) {
         SimpleToken sch = SimpleToken(schAddress);
          //not allowed during reveal period
@@ -117,11 +129,14 @@ contract Schelling {
 
     event Unstaked(uint256 nodeId);
 
+    // staker must call unstake() and continue voting for c.WITHDRAW_LOCK_PERIOD
+    //after which she can call withdraw() to finally Withdraw
     function unstake (uint256 epoch) public checkEpoch(epoch) {
         // require(getState()!= 1); //not allowed during reveal period
         uint256 nodeId = nodeIds[msg.sender];
         Node storage node = nodes[nodeId];
         require(node.id != 0);
+        require(node.stake > 0, "Nonpositive stake");
         require(node.unstakeAfter < epoch && node.unstakeAfter != 0);
         node.unstakeAfter = 0;
         node.withdrawAfter = epoch + c.WITHDRAW_LOCK_PERIOD;
@@ -134,20 +149,20 @@ contract Schelling {
         uint256 nodeId = nodeIds[msg.sender];
         Node storage node = nodes[nodeId];
         require(node.id != 0, "node doesnt exist");
-        require(node.epochLastRevealed >= epoch - 1, "Didnt reveal in last or current epoch");
+        require(node.epochLastRevealed == epoch, "Didnt reveal in current epoch");
         require(node.unstakeAfter == 0, "Did not unstake");
-        require((node.withdrawAfter < epoch) && node.withdrawAfter != 0, "Withdraw epoch not eached");
+        require((node.withdrawAfter < epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
+        require(node.stake > 0, "Nonpositive Stake");
         SimpleToken sch = SimpleToken(schAddress);
         uint256 toSend = nodes[nodeId].stake;
         totalStake = totalStake - nodes[nodeId].stake;
         nodes[nodeId].stake = 0;
-        sch.transfer(msg.sender, toSend);
         emit Withdrew(nodeId);
+        require(sch.transfer(msg.sender, toSend));
     }
 
     event Committed(uint256 nodeId, bytes32 commitment);
 
-    // vote in the first 250 blocks every epoch, else get penalty
     // what was the eth/usd rate at the beginning of this epoch?
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
@@ -163,7 +178,6 @@ contract Schelling {
 
     event Revealed(uint256 nodeId, uint256 value);
 
-    //todo bounty only available in commit state
     function reveal (uint256 epoch, uint256 value, bytes32 secret, address stakerAddress)
     public
     checkEpoch(epoch) {
@@ -179,49 +193,20 @@ contract Schelling {
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(getState() == c.REVEAL, "Not reveal state");
-            if (epoch > 1) {
-                //penalty for not revealing
-                uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
-                                        thisStaker.epochLastRevealed :
-                                        thisStaker.epochStaked;
-                // penalize or reward if last active more than epoch - 1
-                if (epochLastActive < epoch - 1) {
-                    uint256 penalizeEpochs = epoch - epochLastActive - 1;
-                    uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-                    thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))
-                    / c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs);
-
-                    uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
-                    //reward for in zone
-                    if (voteLastEpoch > 0 && blocks[epochLastRevealed].stakeGettingReward > 0) {
-                        if (voteLastEpoch >= blocks[epochLastRevealed].twoFive &&
-                        voteLastEpoch <= blocks[epochLastRevealed].sevenFive) {
-                            thisStaker.stake = thisStaker.stake +
-                                            (thisStaker.stake *
-                                            blocks[epochLastRevealed].stakeGettingPenalty) /
-                                            (100*blocks[epochLastRevealed].stakeGettingReward);
-                        } else {
-                        // penalty for outside zone
-                            thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_IN_ZONE_NUM) /
-                                                c.PENALTY_NOT_IN_ZONE_DENOM;
-                        }
-                    }
-                }
-            }
             require(thisStaker.stake > 0, "nonpositive stake");
+            givePenaltiesAndRewards(thisStaker, epoch);
             votes[epoch][thisNodeId] = Vote(value, thisStaker.stake);
             commitments[epoch][thisNodeId] = 0x0;
             totalStakeRevealed[epoch] = totalStakeRevealed[epoch] + thisStaker.stake;
             voteWeights[epoch][value] = voteWeights[epoch][value] + thisStaker.stake;
             thisStaker.epochLastRevealed = epoch;
-
         } else {
+            //bounty hunter revealing someone else's secret in commit state
             require(getState() == c.COMMIT, "Not commit state");
             commitments[epoch][thisNodeId] = 0x0;
             slash(thisNodeId, msg.sender);
         }
         emit Revealed(thisNodeId, value);
-
     }
 
     function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 nodeId) public view returns(bool) {
@@ -244,6 +229,14 @@ contract Schelling {
                     uint256 iteration,
                     uint256 biggestStakerId);
 
+    // elected proposer proposes block. we use a probabilistic method to elect stakers weighted by stake
+    // protocol works like this. select a staker pseudorandomly (not weighted by anything)
+    // (todo what if it is below min stake)
+    // that staker then tosses a biased coin. bias = hisStake/biggestStake. if its heads, he can propose block
+    // end of iteration. try next iteration
+    // note that only one staker or no stakers selected in each iteration.
+    // stakers elected in higher iterations can also propose hoping that
+    // stakers with lower iteration do not propose for some reason
     function propose (uint256 epoch,
                     uint256 median,
                     uint256 twoFive,
@@ -279,19 +272,21 @@ contract Schelling {
                                 stakeGettingPenalty,
                                 iteration,
                                 nodes[biggestStakerId].stake);
-        sch.mint(address(this), c.BLOCK_REWARD);
-        nodes[proposerId].stake = nodes[proposerId].stake + c.BLOCK_REWARD;
-        totalStake = totalStake + c.BLOCK_REWARD;
+        if (c.BLOCK_REWARD > 0) {
+            nodes[proposerId].stake = nodes[proposerId].stake + c.BLOCK_REWARD;
+            totalStake = totalStake + c.BLOCK_REWARD;
+            require(sch.mint(address(this), c.BLOCK_REWARD));
+        }
         emit Proposed(epoch, median, twoFive, sevenFive, stakeGettingPenalty,
                     stakeGettingReward, iteration, biggestStakerId);
     }
 
-    //todo resetDisute(_)
+    //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256[] memory sorted) public checkEpoch(epoch) checkState(c.DISPUTE) {
         uint256 twoFiveWeight = totalStakeRevealed[epoch] / 4;
         uint256 medianWeight = totalStakeRevealed[epoch] / 2;
         uint256 sevenFiveWeight = (totalStakeRevealed[epoch] * 3) / 4;
-
+        //accumulatedWeight
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
 
@@ -303,6 +298,7 @@ contract Schelling {
             lastVisited = sorted[i];
             accWeight = accWeight + voteWeights[epoch][sorted[i]];
 
+            //set twofive, median, sevenFive if conditions meet
             if (disputes[epoch][msg.sender].twoFive == 0 && accWeight >= twoFiveWeight) {
                 disputes[epoch][msg.sender].twoFive = sorted[i];
             }
@@ -313,14 +309,16 @@ contract Schelling {
                 disputes[epoch][msg.sender].sevenFive = sorted[i];
             }
 
-            if (//(sorted[i] == disputes[epoch][msg.sender].twoFive) ||
+            if ((sorted[i] == disputes[epoch][msg.sender].twoFive) ||
                 (disputes[epoch][msg.sender].twoFive == 0) ||
-                (sorted[i] > disputes[epoch][msg.sender].sevenFive && disputes[epoch][msg.sender].sevenFive > 0)) {
-                    stakeGettingPenalty = stakeGettingPenalty + voteWeights[epoch][sorted[i]];
-                } else {
-                    stakeGettingReward = stakeGettingReward + voteWeights[epoch][sorted[i]];
-                }
-            if (gasleft() < 5000) break;
+                disputes[epoch][msg.sender].sevenFive > 0) {
+                // (sorted[i] > disputes[epoch][msg.sender].sevenFive && disputes[epoch][msg.sender].sevenFive > 0)) {
+                stakeGettingPenalty = stakeGettingPenalty + voteWeights[epoch][sorted[i]];
+            } else {
+                stakeGettingReward = stakeGettingReward + voteWeights[epoch][sorted[i]];
+            }
+            //TODO verify how much gas required for below operations and update this value
+            if (gasleft() < 10000) break;
         }
 
         disputes[epoch][msg.sender].lastVisited = lastVisited;
@@ -331,7 +329,14 @@ contract Schelling {
                                                         stakeGettingReward;
     }
 
-    //propose in dispute phase
+    //if any mistake made during giveSorted, resetDispute and start again
+    //todo test
+    function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(c.DISPUTE) {
+        disputes[epoch][msg.sender] = Dispute(0, 0, 0, 0, 0, 0, 0);
+    }
+
+    //propose alternate block in dispute phase
+    //if no one votes, skip giveSorted and proposeAlt directly.
     function proposeAlt (uint256 epoch) public checkEpoch(epoch) checkState(c.DISPUTE) {
         require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch]);
         uint256 median = disputes[epoch][msg.sender].median;
@@ -346,10 +351,12 @@ contract Schelling {
         require(sevenFive >= median);
         if (blocks[epoch].sevenFive != sevenFive ||
             blocks[epoch].median != median ||
-            blocks[epoch].twoFive != twoFive) {
-            slash(blocks[epoch].proposerId, msg.sender); //50% - 50% slash
+            blocks[epoch].twoFive != twoFive ||
+            blocks[epoch].stakeGettingReward != stakeGettingReward ||
+            blocks[epoch].stakeGettingPenalty != stakeGettingPenalty) {
+            slash(blocks[epoch].proposerId, msg.sender);
         } else {
-            revert("Proposed Alternate block as same as proposed block");
+            revert("Proposed Alternate block as identical to proposed block");
         }
         blocks[epoch] = Block(proposerId, median, twoFive, sevenFive, stakeGettingReward, stakeGettingPenalty, 0, 0);
         emit Proposed(epoch, median, twoFive, sevenFive, stakeGettingPenalty,
@@ -358,25 +365,25 @@ contract Schelling {
     }
 
     function getEpoch () public view returns(uint256) {
-        // return(c.EPOCH);
+        return(EPOCH);
         return((block.number/16) + 1);
     }
 
-    // TODO complete getState()
     function getState() public view returns(uint256) {
-        // return (c.STATE);
+        return (STATE);
         uint256 state = (block.number/4);
 
-        return state%4;
+        return (state % 4);
     }
 
-    // returns 0 -> max-1
+    // pseudo random number generator based on block hashes. returns 0 -> max-1
     function prng (uint8 numBlocks, uint256 max, bytes32 seed) public view returns (uint256) {
         bytes32 hashh = prngHash(numBlocks, seed);
         uint256 sum = uint256(hashh);
-        return(sum%max);
+        return(sum % max);
     }
 
+    // pseudo random hash generator based on block hashes.
     function prngHash(uint8 numBlocks, bytes32 seed) public view returns(bytes32) {
         bytes32 sum;
         uint256 blockNumberEpochStart = (block.number/16)*16;
@@ -387,13 +394,61 @@ contract Schelling {
         return(sum);
     }
 
-    // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
-    function setEpoch (uint256 epoch) public { c.EPOCH = epoch;}
+    // // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
+    function setEpoch (uint256 epoch) public { EPOCH = epoch;}
 
-    function setState (uint256 state) public { c.STATE = state;}
+    function setState (uint256 state) public { STATE = state;}
 
+    // dummy function to forcibly increase block number in ganache
     function dum () public {true;}
-    // END TESTING FUNCTIONS
+    // // END TESTING FUNCTIONS
+
+    // // internal functions vvvvvvvv
+    function givePenaltiesAndRewards(Node storage thisStaker, uint256 epoch) internal {
+        if (epoch > 1) {
+            uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
+                                    thisStaker.epochLastRevealed :
+                                    thisStaker.epochStaked;
+            // penalize or reward if last active more than epoch - 1
+            uint256 penalizeEpochs = epoch - epochLastActive - 1;
+            uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+            thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))
+            / c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs);
+
+            uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
+
+            //reward for in zone
+            if (voteLastEpoch > 0 &&
+                blocks[epochLastRevealed].stakeGettingReward > 0 &&
+                voteLastEpoch >= (blocks[epochLastRevealed].median*c.SAFETY_MARGIN_LOWER)/100 &&
+                voteLastEpoch <= (blocks[epochLastRevealed].median*(200-c.SAFETY_MARGIN_LOWER)/100)) {
+                if (voteLastEpoch >= blocks[epochLastRevealed].twoFive &&
+                voteLastEpoch <= blocks[epochLastRevealed].sevenFive) {
+                    thisStaker.stake = thisStaker.stake +
+                                    (thisStaker.stake *
+                                    blocks[epochLastRevealed].stakeGettingPenalty) /
+                                    (100*blocks[epochLastRevealed].stakeGettingReward);
+                } else {
+                    // penalty for outside zone
+                    thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_IN_ZONE_NUM) /
+                                        c.PENALTY_NOT_IN_ZONE_DENOM;
+                }
+            }
+
+        }
+    }
+
+    function slash (uint256 id, address bountyHunter) internal {
+        SimpleToken sch = SimpleToken(schAddress);
+        uint256 halfStake = nodes[id].stake / uint256(2);
+        nodes[id].stake = 0;
+        //TODO WHAT IF IT IS 0???
+        // require(sch.transfer(bountyHunter, thisStake / uint256(2)), "failed to transfer bounty");
+        if (halfStake > 1) {
+            totalStake = totalStake - halfStake;
+            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
+        }
+    }
     // function stakeTransfer(uint256 fromId, address to, uint256 amount) internal{
     //     // uint256 fromId = nodeIds[from];
     //     require(fromId!=0);
@@ -408,14 +463,5 @@ contract Schelling {
     //         nodes[toId].stake = nodes[toId].stake + amount;
     //     }
     // }
-
-    function slash (uint256 id, address bountyHunter) internal {
-        SimpleToken sch = SimpleToken(schAddress);
-        uint256 thisStake = nodes[id].stake;
-        nodes[id].stake = 0;
-        //TODO WHAT IF IT IS 0???
-        totalStake = totalStake - thisStake / uint256(2);
-        require(sch.transfer(bountyHunter, thisStake / uint256(2)), "failed to transfer bounty");
-    }
 
 }

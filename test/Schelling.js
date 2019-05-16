@@ -269,10 +269,25 @@ contract('Schelling', function (accounts) {
       tx = await schelling.commit(1, commitment10, { 'from': accounts[10]})
     })
 
+    it('should be able to reveal someone elses commitment and get bounty', async function () {
+      let schelling = await Schelling.deployed()
+      let sch = await SimpleToken.deployed()
+      let stakerId = await schelling.nodeIds(accounts[2])
+      let stakeBefore = await schelling.nodes(stakerId)
+      let res = await schelling.reveal(1, 170, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111', accounts[2], { 'from': accounts[19]})
+      let stakeAfter = await schelling.nodes(stakerId)
+      // assert stake is slashed
+      assert(stakeAfter.stake.toString() === '0')
+      let bountyHunterBalance = (await sch.balanceOf(accounts[19])).toString()
+      assert(Number(bountyHunterBalance) === Math.floor(Number(stakeBefore.stake) / 2))
+    })
+
     it('should not be able to reveal incorrectly', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
       // let commitment = web3i.utils.soliditySha3(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      await assertRevert(schelling.reveal(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]}))
+      await schelling.setState(1)
       await assertRevert(schelling.reveal(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9fff', accounts[1], { 'from': accounts[1]}))
       await assertRevert(schelling.reveal(0, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]}))
       await assertRevert(schelling.reveal(1, 161, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]}))
@@ -282,7 +297,6 @@ contract('Schelling', function (accounts) {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
       let epoch = Number(await schelling.getEpoch())
-      await schelling.setState(1)
       // //console.log('epoch', epoch)
       let tx = await schelling.reveal(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]})
       // //console.log('reveal gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
@@ -307,18 +321,6 @@ contract('Schelling', function (accounts) {
       await assertRevert(schelling.reveal(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]}))
     })
 
-    it('should be able to reveal someone elses commitment and get bounty', async function () {
-      let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
-      let stakerId = await schelling.nodeIds(accounts[2])
-      let stakeBefore = await schelling.nodes(stakerId)
-      let res = await schelling.reveal(1, 170, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111', accounts[2], { 'from': accounts[19]})
-      let stakeAfter = await schelling.nodes(stakerId)
-      // assert stake is slashed
-      assert(stakeAfter.stake.toString() === '0')
-      let bountyHunterBalance = (await sch.balanceOf(accounts[19])).toString()
-      assert(Number(bountyHunterBalance) === Math.floor(Number(stakeBefore.stake) / 2))
-    })
 // // //
 // // //     it('should be able to give proper random number', async function () {
 // // //       let schelling = await Schelling.deployed()
