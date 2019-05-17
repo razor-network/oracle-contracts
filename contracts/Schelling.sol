@@ -1,5 +1,7 @@
 pragma solidity 0.5.7;
 import "./SimpleToken.sol";
+import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 // WARNING IN development
 // Must Vote price rounded to 2 decimals *100 and must be above 0
 // e.g. if ethusd is 169.99 vote 16999
@@ -14,6 +16,7 @@ import "./SimpleToken.sol";
 // use openzeppelin math to avoid under and overflows
 
 contract Schelling {
+    using SafeMath for uint256;
 
     struct Vote {
         uint256 value;
@@ -107,8 +110,9 @@ contract Schelling {
 
     event Staked(uint256 nodeId, uint256 amount);
 
-// stake during any epoch/state
-    function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) {
+    // stake during commit state only
+    // we check epoch during every transaction to avoid withholding and rebroadcasting attacks
+    function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) checkState(c.COMMIT) {
         SimpleToken sch = SimpleToken(schAddress);
          //not allowed during reveal period
         require(getState() != c.REVEAL);
@@ -116,14 +120,16 @@ contract Schelling {
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 nodeId = nodeIds[msg.sender];
         if (nodeId == 0) {
-            numNodes = numNodes + 1;
-            nodes[numNodes] = Node(numNodes, amount, epoch, 0, 0, epoch + c.UNSTAKE_LOCK_PERIOD, 0);
+            numNodes = numNodes.add(1);
+            nodes[numNodes] = Node(numNodes, amount, epoch, 0, 0, epoch.add(c.UNSTAKE_LOCK_PERIOD), 0);
             nodeId = numNodes;
             nodeIds[msg.sender] = nodeId;
         } else {
-            nodes[nodeId].stake = nodes[nodeId].stake + amount;
+            require(nodes[nodeId].stake > 0,
+                    "adding stake is not possible after withdrawal/slash. Please use a new address");
+            nodes[nodeId].stake = nodes[nodeId].stake.add(amount);
         }
-        totalStake = totalStake + amount;
+        totalStake = totalStake.add(amount);
         emit Staked(nodeId, amount);
     }
 
@@ -137,25 +143,26 @@ contract Schelling {
         Node storage node = nodes[nodeId];
         require(node.id != 0);
         require(node.stake > 0, "Nonpositive stake");
-        require(node.unstakeAfter < epoch && node.unstakeAfter != 0);
+        require(node.unstakeAfter <= epoch && node.unstakeAfter != 0);
         node.unstakeAfter = 0;
-        node.withdrawAfter = epoch + c.WITHDRAW_LOCK_PERIOD;
+        node.withdrawAfter = epoch.add(c.WITHDRAW_LOCK_PERIOD);
         emit Unstaked(nodeId);
     }
 
     event Withdrew(uint256 nodeId);
 
-    function withdraw (uint256 epoch) public checkEpoch(epoch) {
+    function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
         Node storage node = nodes[nodeId];
         require(node.id != 0, "node doesnt exist");
-        require(node.epochLastRevealed == epoch, "Didnt reveal in current epoch");
+        require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
         require(node.unstakeAfter == 0, "Did not unstake");
-        require((node.withdrawAfter < epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
+        require((node.withdrawAfter <= epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
         require(node.stake > 0, "Nonpositive Stake");
+        require(commitments[epoch][nodeId] == 0x0, "already commited this epoch. Cant withdraw");
         SimpleToken sch = SimpleToken(schAddress);
         uint256 toSend = nodes[nodeId].stake;
-        totalStake = totalStake - nodes[nodeId].stake;
+        totalStake = totalStake.sub(nodes[nodeId].stake);
         nodes[nodeId].stake = 0;
         emit Withdrew(nodeId);
         require(sch.transfer(msg.sender, toSend));
@@ -167,10 +174,8 @@ contract Schelling {
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
         Node storage thisStaker = nodes[nodeId];
-        require(thisStaker.stake > c.MIN_STAKE, "stake is below minimum stake");
-
+        require(thisStaker.stake >= c.MIN_STAKE, "stake is below minimum stake");
         require(commitments[epoch][nodeId] == 0x0, "already commited");
-
         commitments[epoch][nodeId] = commitment;
         thisStaker.epochLastCommitted = epoch;
         emit Committed(nodeId, commitment);
@@ -181,8 +186,6 @@ contract Schelling {
     function reveal (uint256 epoch, uint256 value, bytes32 secret, address stakerAddress)
     public
     checkEpoch(epoch) {
-        //if staked last epoch, no penalty
-        // if epoch last revealed <epoch-1 & epochlastrevealed >epoch staked+1 penalty
         uint256 thisNodeId = nodeIds[stakerAddress];
         require(thisNodeId > 0, "Node does not exist");
         Node storage thisStaker = nodes[thisNodeId];
@@ -190,6 +193,7 @@ contract Schelling {
         require(value > 0, "voted non positive value");
         require(keccak256(abi.encodePacked(epoch, value, secret)) == commitments[epoch][thisNodeId],
                 "incorrect secret");
+        emit Revealed(thisNodeId, value);
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(getState() == c.REVEAL, "Not reveal state");
@@ -197,8 +201,8 @@ contract Schelling {
             givePenaltiesAndRewards(thisStaker, epoch);
             votes[epoch][thisNodeId] = Vote(value, thisStaker.stake);
             commitments[epoch][thisNodeId] = 0x0;
-            totalStakeRevealed[epoch] = totalStakeRevealed[epoch] + thisStaker.stake;
-            voteWeights[epoch][value] = voteWeights[epoch][value] + thisStaker.stake;
+            totalStakeRevealed[epoch] = totalStakeRevealed[epoch].add(thisStaker.stake);
+            voteWeights[epoch][value] = voteWeights[epoch][value].add(thisStaker.stake);
             thisStaker.epochLastRevealed = epoch;
         } else {
             //bounty hunter revealing someone else's secret in commit state
@@ -206,17 +210,16 @@ contract Schelling {
             commitments[epoch][thisNodeId] = 0x0;
             slash(thisNodeId, msg.sender);
         }
-        emit Revealed(thisNodeId, value);
     }
 
     function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 nodeId) public view returns(bool) {
         // rand = 0 -> totalStake-1
         //add +1 since prng returns 0 to max-1 and node start from 1
-        if ((prng(10, numNodes, keccak256(abi.encode(iteration))) + 1) != nodeId) return(false);
+        if ((prng(10, numNodes, keccak256(abi.encode(iteration))).add(1)) != nodeId) return(false);
         bytes32 randHash = prngHash(10, keccak256(abi.encode(nodeId, iteration)));
-        uint256 rand = uint256(randHash) % 2**32;
+        uint256 rand = uint256(randHash).mod(2**32);
         uint256 biggestStake = nodes[biggestStakerId].stake;
-        if (rand * biggestStake > nodes[nodeId].stake * 2**32) return(false);
+        if (rand.mul(biggestStake) > nodes[nodeId].stake.mul(2**32)) return(false);
         return(true);
     }
 
@@ -248,7 +251,7 @@ contract Schelling {
         uint256 proposerId = nodeIds[msg.sender];
         SimpleToken sch = SimpleToken(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
-        require(nodes[proposerId].stake > c.MIN_STAKE, "stake below minimum stake");
+        require(nodes[proposerId].stake >= c.MIN_STAKE, "stake below minimum stake");
 
         //check if someone already proposed
         if (blocks[epoch].proposerId != 0) {
@@ -273,8 +276,8 @@ contract Schelling {
                                 iteration,
                                 nodes[biggestStakerId].stake);
         if (c.BLOCK_REWARD > 0) {
-            nodes[proposerId].stake = nodes[proposerId].stake + c.BLOCK_REWARD;
-            totalStake = totalStake + c.BLOCK_REWARD;
+            nodes[proposerId].stake = nodes[proposerId].stake.add(c.BLOCK_REWARD);
+            totalStake = totalStake.add(c.BLOCK_REWARD);
             require(sch.mint(address(this), c.BLOCK_REWARD));
         }
         emit Proposed(epoch, median, twoFive, sevenFive, stakeGettingPenalty,
@@ -283,9 +286,9 @@ contract Schelling {
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256[] memory sorted) public checkEpoch(epoch) checkState(c.DISPUTE) {
-        uint256 twoFiveWeight = totalStakeRevealed[epoch] / 4;
-        uint256 medianWeight = totalStakeRevealed[epoch] / 2;
-        uint256 sevenFiveWeight = (totalStakeRevealed[epoch] * 3) / 4;
+        uint256 twoFiveWeight = totalStakeRevealed[epoch].div(4);
+        uint256 medianWeight = totalStakeRevealed[epoch].div(2);
+        uint256 sevenFiveWeight = (totalStakeRevealed[epoch].mul(3)).div(4);
         //accumulatedWeight
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
@@ -296,7 +299,7 @@ contract Schelling {
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
-            accWeight = accWeight + voteWeights[epoch][sorted[i]];
+            accWeight = accWeight.add(voteWeights[epoch][sorted[i]]);
 
             //set twofive, median, sevenFive if conditions meet
             if (disputes[epoch][msg.sender].twoFive == 0 && accWeight >= twoFiveWeight) {
@@ -313,9 +316,9 @@ contract Schelling {
                 (disputes[epoch][msg.sender].twoFive == 0) ||
                 disputes[epoch][msg.sender].sevenFive > 0) {
                 // (sorted[i] > disputes[epoch][msg.sender].sevenFive && disputes[epoch][msg.sender].sevenFive > 0)) {
-                stakeGettingPenalty = stakeGettingPenalty + voteWeights[epoch][sorted[i]];
+                stakeGettingPenalty = stakeGettingPenalty.add(voteWeights[epoch][sorted[i]]);
             } else {
-                stakeGettingReward = stakeGettingReward + voteWeights[epoch][sorted[i]];
+                stakeGettingReward = stakeGettingReward.add(voteWeights[epoch][sorted[i]]);
             }
             //TODO verify how much gas required for below operations and update this value
             if (gasleft() < 10000) break;
@@ -323,14 +326,14 @@ contract Schelling {
 
         disputes[epoch][msg.sender].lastVisited = lastVisited;
         disputes[epoch][msg.sender].accWeight = accWeight;
-        disputes[epoch][msg.sender].stakeGettingPenalty = disputes[epoch][msg.sender].stakeGettingPenalty +
-                                                        stakeGettingPenalty;
-        disputes[epoch][msg.sender].stakeGettingReward = disputes[epoch][msg.sender].stakeGettingReward +
-                                                        stakeGettingReward;
+        disputes[epoch][msg.sender].stakeGettingPenalty = disputes[epoch][msg.sender].stakeGettingPenalty.add(
+                                                        stakeGettingPenalty);
+        disputes[epoch][msg.sender].stakeGettingReward = disputes[epoch][msg.sender].stakeGettingReward.add(
+                                                        stakeGettingReward);
     }
 
-    //if any mistake made during giveSorted, resetDispute and start again
     //todo test
+    //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(c.DISPUTE) {
         disputes[epoch][msg.sender] = Dispute(0, 0, 0, 0, 0, 0, 0);
     }
@@ -344,7 +347,8 @@ contract Schelling {
         uint256 sevenFive = disputes[epoch][msg.sender].sevenFive;
         uint256 stakeGettingReward = disputes[epoch][msg.sender].stakeGettingReward;
         uint256 stakeGettingPenalty = disputes[epoch][msg.sender].stakeGettingPenalty;
-        uint256 proposerId = nodeIds[msg.sender];
+        uint256 bountyHunterId = nodeIds[msg.sender];
+        uint256 proposerId = blocks[epoch].proposerId;
 
         require(twoFive >= 0);
         require(median >= twoFive);
@@ -354,98 +358,95 @@ contract Schelling {
             blocks[epoch].twoFive != twoFive ||
             blocks[epoch].stakeGettingReward != stakeGettingReward ||
             blocks[epoch].stakeGettingPenalty != stakeGettingPenalty) {
-            slash(blocks[epoch].proposerId, msg.sender);
+            blocks[epoch] = Block(bountyHunterId, median, twoFive, sevenFive,
+                                    stakeGettingReward, stakeGettingPenalty, 0, 0);
+            emit Proposed(epoch, median, twoFive, sevenFive, stakeGettingPenalty, stakeGettingReward, 0, 0);
+            slash(proposerId, msg.sender);
         } else {
             revert("Proposed Alternate block as identical to proposed block");
         }
-        blocks[epoch] = Block(proposerId, median, twoFive, sevenFive, stakeGettingReward, stakeGettingPenalty, 0, 0);
-        emit Proposed(epoch, median, twoFive, sevenFive, stakeGettingPenalty,
-                    stakeGettingReward, 0, 0);
-
     }
 
     function getEpoch () public view returns(uint256) {
         return(EPOCH);
-        return((block.number/16) + 1);
+        return((block.number.div(16)).add(1));
     }
 
     function getState() public view returns(uint256) {
         return (STATE);
-        uint256 state = (block.number/4);
+        uint256 state = (block.number.div(4));
 
-        return (state % 4);
+        return (state.mod(4));
     }
 
     // pseudo random number generator based on block hashes. returns 0 -> max-1
     function prng (uint8 numBlocks, uint256 max, bytes32 seed) public view returns (uint256) {
         bytes32 hashh = prngHash(numBlocks, seed);
         uint256 sum = uint256(hashh);
-        return(sum % max);
+        return(sum.mod(max));
     }
 
     // pseudo random hash generator based on block hashes.
     function prngHash(uint8 numBlocks, bytes32 seed) public view returns(bytes32) {
         bytes32 sum;
-        uint256 blockNumberEpochStart = (block.number/16)*16;
+        uint256 blockNumberEpochStart = (block.number.div(16)).mul(16);
         for (uint8 i = 1; i <= numBlocks; i++) {
-            sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart - i)));
+            sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart.sub(i))));
         }
         sum = keccak256(abi.encodePacked(sum, seed));
         return(sum);
     }
 
-    // // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
+    // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
     function setEpoch (uint256 epoch) public { EPOCH = epoch;}
 
     function setState (uint256 state) public { STATE = state;}
 
     // dummy function to forcibly increase block number in ganache
     function dum () public {true;}
-    // // END TESTING FUNCTIONS
+    // END TESTING FUNCTIONS
 
-    // // internal functions vvvvvvvv
+    // internal functions vvvvvvvv
     function givePenaltiesAndRewards(Node storage thisStaker, uint256 epoch) internal {
         if (epoch > 1) {
             uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
                                     thisStaker.epochLastRevealed :
                                     thisStaker.epochStaked;
             // penalize or reward if last active more than epoch - 1
-            uint256 penalizeEpochs = epoch - epochLastActive - 1;
+            uint256 penalizeEpochs = epoch.sub(epochLastActive).sub(1);
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-            thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))
-            / c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs);
+            thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))).div(
+            c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs));
 
             uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
 
             //reward for in zone
             if (voteLastEpoch > 0 &&
                 blocks[epochLastRevealed].stakeGettingReward > 0 &&
-                voteLastEpoch >= (blocks[epochLastRevealed].median*c.SAFETY_MARGIN_LOWER)/100 &&
-                voteLastEpoch <= (blocks[epochLastRevealed].median*(200-c.SAFETY_MARGIN_LOWER)/100)) {
+                voteLastEpoch >= (blocks[epochLastRevealed].median.mul(c.SAFETY_MARGIN_LOWER)).div(100) &&
+                voteLastEpoch <= (blocks[epochLastRevealed].median.mul(uint256(200).sub(
+                                    c.SAFETY_MARGIN_LOWER))).div(100)) {
                 if (voteLastEpoch >= blocks[epochLastRevealed].twoFive &&
                 voteLastEpoch <= blocks[epochLastRevealed].sevenFive) {
-                    thisStaker.stake = thisStaker.stake +
-                                    (thisStaker.stake *
-                                    blocks[epochLastRevealed].stakeGettingPenalty) /
-                                    (100*blocks[epochLastRevealed].stakeGettingReward);
+                    thisStaker.stake = thisStaker.stake.add(
+                                    (thisStaker.stake.mul(
+                                    blocks[epochLastRevealed].stakeGettingPenalty)).div(
+                                    ((blocks[epochLastRevealed].stakeGettingReward).mul(100))));
                 } else {
                     // penalty for outside zone
-                    thisStaker.stake = (thisStaker.stake * c.PENALTY_NOT_IN_ZONE_NUM) /
-                                        c.PENALTY_NOT_IN_ZONE_DENOM;
+                    thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_IN_ZONE_NUM)).div(
+                                        c.PENALTY_NOT_IN_ZONE_DENOM);
                 }
             }
-
         }
     }
 
     function slash (uint256 id, address bountyHunter) internal {
         SimpleToken sch = SimpleToken(schAddress);
-        uint256 halfStake = nodes[id].stake / uint256(2);
+        uint256 halfStake = nodes[id].stake.div(2);
         nodes[id].stake = 0;
-        //TODO WHAT IF IT IS 0???
-        // require(sch.transfer(bountyHunter, thisStake / uint256(2)), "failed to transfer bounty");
         if (halfStake > 1) {
-            totalStake = totalStake - halfStake;
+            totalStake = totalStake.sub(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     }
