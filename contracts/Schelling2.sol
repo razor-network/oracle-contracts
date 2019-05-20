@@ -16,8 +16,10 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 // use openzeppelin math to avoid under and overflows
 
 // new algo
-//give reward and penalty in state 1 not stake 2. because someone may defect is state 2 and leave in next epoch state 1
-
+//give reward and penalty in state 1 not state 2. because someone may defect in state 2 and leave in next epoch state 1
+//calculate penalty in state 1 and distribute reward in state 2
+//state 2 divide reward to those who committed in state 1 and distribute. if they dont participate, too bad.
+// newvariables. global rewardpool.
 
 contract Schelling {
     using SafeMath for uint256;
@@ -91,7 +93,6 @@ contract Schelling {
     uint256 public EPOCH;
     uint256 public STATE;
     uint256 public rewardPool = 0;
-    uint256 public penaltiesThisEpoch = 0;
 
     Constants public c = Constants(0, 1, 2, 3, 95, 100, 99, 100, 1000, 5, 5, 10000, 1, 1);
 
@@ -175,6 +176,7 @@ contract Schelling {
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
         Node storage thisStaker = nodes[nodeId];
+        givePenalties(thisStaker, epoch);
         require(thisStaker.stake >= c.MIN_STAKE, "stake is below minimum stake");
         require(commitments[epoch][nodeId] == 0x0, "already commited");
         commitments[epoch][nodeId] = commitment;
@@ -199,7 +201,7 @@ contract Schelling {
         if (msg.sender == stakerAddress) {
             require(getState() == c.REVEAL, "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
-            givePenaltiesAndRewards(thisStaker, epoch);
+            givePenalties(thisStaker, epoch);
             votes[epoch][thisNodeId] = Vote(value, thisStaker.stake);
             commitments[epoch][thisNodeId] = 0x0;
             totalStakeRevealed[epoch] = totalStakeRevealed[epoch].add(thisStaker.stake);
@@ -305,7 +307,8 @@ contract Schelling {
             // if ((sorted[i] == disputes[epoch][msg.sender].twoFive) ||
             //     (disputes[epoch][msg.sender].twoFive == 0) ||
             //     disputes[epoch][msg.sender].sevenFive > 0) {
-            //     // (sorted[i] > disputes[epoch][msg.sender].sevenFive && disputes[epoch][msg.sender].sevenFive > 0)) {
+            //     // (sorted[i] > disputes[epoch][msg.sender].sevenFive &&
+             // disputes[epoch][msg.sender].sevenFive > 0)) {
             //     stakeGettingPenalty = stakeGettingPenalty.add(voteWeights[epoch][sorted[i]]);
             // } else {
             //     stakeGettingReward = stakeGettingReward.add(voteWeights[epoch][sorted[i]]);
@@ -422,7 +425,7 @@ contract Schelling {
     //         }
     //     }
     // }
-    function givePenaltiesAndRewards(Node storage thisStaker, uint256 epoch) internal {
+    function givePenalties(Node storage thisStaker, uint256 epoch) internal {
         if (epoch > 1) {
             uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
                                     thisStaker.epochLastRevealed :
@@ -430,28 +433,23 @@ contract Schelling {
             // penalize or reward if last active more than epoch - 1
             uint256 penalizeEpochs = epoch.sub(epochLastActive).sub(1);
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+            uint256 previousStake = thisStaker.stake;
             thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))).div(
             c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs));
 
             uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
-
-            //reward for in zone
+            uint256 medianLastEpoch = blocks[epochLastRevealed].median;
+            //penalty for out of zone for in zone
             if (voteLastEpoch > 0 &&
-                blocks[epochLastRevealed].stakeGettingReward > 0 &&
-                voteLastEpoch >= (blocks[epochLastRevealed].median.mul(c.SAFETY_MARGIN_LOWER)).div(100) &&
-                voteLastEpoch <= (blocks[epochLastRevealed].median.mul(uint256(200).sub(
-                                    c.SAFETY_MARGIN_LOWER))).div(100)) {
-                if (voteLastEpoch >= blocks[epochLastRevealed].twoFive &&
-                voteLastEpoch <= blocks[epochLastRevealed].sevenFive) {
-                    thisStaker.stake = thisStaker.stake.add(
-                                    (thisStaker.stake.mul(
-                                    blocks[epochLastRevealed].stakeGettingPenalty)).div(
-                                    ((blocks[epochLastRevealed].stakeGettingReward).mul(100))));
-                } else {
-                    // penalty for outside zone
-                    thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_IN_ZONE_NUM)).div(
-                                        c.PENALTY_NOT_IN_ZONE_DENOM);
-                }
+                (voteLastEpoch < (medianLastEpoch.mul(c.SAFETY_MARGIN_LOWER)).div(100) ||
+                voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
+                                    c.SAFETY_MARGIN_LOWER))).div(100))) {
+                // ((y - x)^2/y^2) - 0.0001
+                // (10000((y-x)(y-x)/y*y) - 1)/10000
+                thisStaker.stake = (((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+                                    voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+                                    uint256(10000))).sub(uint256(1))).div(uint256(10000));
+                rewardPool = rewardPool.add(thisStaker.stake.sub(previousStake));
             }
         }
     }
