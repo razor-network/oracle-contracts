@@ -93,6 +93,7 @@ contract Schelling {
     uint256 public EPOCH;
     uint256 public STATE;
     uint256 public rewardPool = 0;
+    uint256 public stakeGettingReward = 0;
 
     Constants public c = Constants(0, 1, 2, 3, 95, 100, 99, 100, 1000, 5, 5, 10000, 1, 1);
 
@@ -151,7 +152,7 @@ contract Schelling {
         emit Unstaked(nodeId);
     }
 
-    event Withdrew(uint256 nodeId);
+    event Withdrew(uint256 nodeId, uint256 amount);
 
     function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
@@ -160,14 +161,14 @@ contract Schelling {
         require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
         require(node.unstakeAfter == 0, "Did not unstake");
         require((node.withdrawAfter <= epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
-        require(node.stake > 0, "Nonpositive Stake");
         require(commitments[epoch][nodeId] == 0x0, "already commited this epoch. Cant withdraw");
+        givePenalties(thisStaker, epoch);
+        require(node.stake > 0, "Nonpositive Stake");
         SimpleToken sch = SimpleToken(schAddress);
-        uint256 toSend = nodes[nodeId].stake;
         totalStake = totalStake.sub(nodes[nodeId].stake);
         nodes[nodeId].stake = 0;
-        emit Withdrew(nodeId);
-        require(sch.transfer(msg.sender, toSend));
+        emit Withdrew(nodeId, nodes[nodeId].stake);
+        require(sch.transfer(msg.sender, nodes[nodeId].stake));
     }
 
     event Committed(uint256 nodeId, bytes32 commitment);
@@ -201,7 +202,7 @@ contract Schelling {
         if (msg.sender == stakerAddress) {
             require(getState() == c.REVEAL, "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
-            givePenalties(thisStaker, epoch);
+            giveRewards(thisStaker, epoch);
             votes[epoch][thisNodeId] = Vote(value, thisStaker.stake);
             commitments[epoch][thisNodeId] = 0x0;
             totalStakeRevealed[epoch] = totalStakeRevealed[epoch].add(thisStaker.stake);
@@ -304,15 +305,6 @@ contract Schelling {
                 disputes[epoch][msg.sender].sevenFive = sorted[i];
             }
 
-            // if ((sorted[i] == disputes[epoch][msg.sender].twoFive) ||
-            //     (disputes[epoch][msg.sender].twoFive == 0) ||
-            //     disputes[epoch][msg.sender].sevenFive > 0) {
-            //     // (sorted[i] > disputes[epoch][msg.sender].sevenFive &&
-             // disputes[epoch][msg.sender].sevenFive > 0)) {
-            //     stakeGettingPenalty = stakeGettingPenalty.add(voteWeights[epoch][sorted[i]]);
-            // } else {
-            //     stakeGettingReward = stakeGettingReward.add(voteWeights[epoch][sorted[i]]);
-            // }
             //TODO verify how much gas required for below operations and update this value
             if (gasleft() < 10000) break;
         }
@@ -425,6 +417,8 @@ contract Schelling {
     //         }
     //     }
     // }
+
+    //executed in state 0
     function givePenalties(Node storage thisStaker, uint256 epoch) internal {
         if (epoch > 1) {
             uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
@@ -440,18 +434,39 @@ contract Schelling {
             uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
             uint256 medianLastEpoch = blocks[epochLastRevealed].median;
             //penalty for out of zone for in zone
+            // (y= ((M - x)^2/M^2))- 0.0001
+            // (10000((M-x)(M-x)/M*M) - 1)/10000
+            uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+                        voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+                        uint256(10000)));
             if (voteLastEpoch > 0 &&
                 (voteLastEpoch < (medianLastEpoch.mul(c.SAFETY_MARGIN_LOWER)).div(100) ||
                 voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
                                     c.SAFETY_MARGIN_LOWER))).div(100))) {
-                // ((y - x)^2/y^2) - 0.0001
-                // (10000((y-x)(y-x)/y*y) - 1)/10000
-                thisStaker.stake = (((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-                                    voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-                                    uint256(10000))).sub(uint256(1))).div(uint256(10000));
+                //stake = y*stake
+                thisStaker.stake = ((y.sub(uint256(1))).mul(thisStaker.stake)).div(uint256(10000));
                 rewardPool = rewardPool.add(thisStaker.stake.sub(previousStake));
             }
+            else {
+              // reward += stake*(0.0001-y)
+              // = stake*(1-10000y)/10000
+              // = stake*()
+              stakeGettingReward = stakeGettingReward.add((thisStaker.stake.mul(uint256(1).sub(uint256(10000).mul(y)))).div(10000));
+
+            }
         }
+    }
+
+    //executed in state 1
+    function giveRewards(thisStaker) {
+      if (epoch > 1) {
+        //rewardpool*stake*multiplier/stakeGettingReward
+        uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+                    voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+                    uint256(10000)));
+        thisStaker.stake = (thisStaker.stake*rewardPool*y)/stakeGettingReward;
+
+
     }
 
     function slash (uint256 id, address bountyHunter) internal {
