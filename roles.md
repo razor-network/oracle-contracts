@@ -1,5 +1,5 @@
 // accounts[0] transfers tokens to other accounts; does nothing
-// 1 stakes 420000; commit 160; reveal 160; proposes wrong, gets slashed
+// 1 stakes 420000; commit 160; reveal 160; proposes wrong, gets slashed //TODO HIS VOTES STILL COUNTD!
 // 2 stakes 19000; commit 170; (9) reveals this guy, loses stake
 // 3 stakes 800000; commit 168; reveal 168;
 // 4 stakes 600000; commit 4; reveal 4;

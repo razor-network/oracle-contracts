@@ -9,11 +9,8 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 // node == staker
 
 // TODO Priority list
-// test unstake and withdraw
-// cases where nobody votes, too low stake (1-4)
 // nobody proposes, nobody disputes, extending dispute period
 // staker wants to vote but cant because below minimum. how to handle? should he be penalized? how much waiting time?
-// use openzeppelin math to avoid under and overflows
 
 // new algo
 //give reward and penalty in state 1 not state 2. because someone may defect in state 2 and leave in next epoch state 1
@@ -39,8 +36,6 @@ contract Schelling2 {
         uint256 withdrawAfter;
     }
 
-    // twoFive = twentyFive percentile value
-    // sevenFive = seventyFive percentile value
     struct Block {
         uint256 proposerId;
         uint256 median;
@@ -174,11 +169,11 @@ contract Schelling2 {
     // what was the eth/usd rate at the beginning of this epoch?
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(c.COMMIT) {
         uint256 nodeId = nodeIds[msg.sender];
+        require(commitments[epoch][nodeId] == 0x0, "already commited");
         Node storage thisStaker = nodes[nodeId];
         uint256 y = givePenalties(thisStaker, epoch);
         emit Y(y);
         if(thisStaker.stake >= c.MIN_STAKE){
-            require(commitments[epoch][nodeId] == 0x0, "already commited");
             commitments[epoch][nodeId] = commitment;
             thisStaker.epochLastCommitted = epoch;
             emit Committed(nodeId, commitment);
@@ -257,8 +252,6 @@ contract Schelling2 {
                 revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
             }
         }
-        // twoFive == 0 if no one votes
-        // require(twoFive > 0);
         require(median > 0);
         blocks[epoch] = Block(proposerId,
                                 median,
@@ -275,7 +268,7 @@ contract Schelling2 {
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256[] memory sorted) public checkEpoch(epoch) checkState(c.DISPUTE) {
         uint256 medianWeight = totalStakeRevealed[epoch].div(2);
-        //accumulatedWeight
+        //accWeight = accumulatedWeight
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
 
@@ -378,8 +371,8 @@ contract Schelling2 {
             // c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs));
 
             uint256 medianLastEpoch = blocks[epochLastRevealed].median;
-            if(medianLastEpoch > 0) {
-              uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
+            uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
+            if(medianLastEpoch > 0 && voteLastEpoch > 0) {
               // //penalty for out of zone for in zone
               // // (y= ((M - x)^2/M^2))- 0.0001
               // // (10000((M-x)(M-x)/M*M) - 1)/10000
@@ -389,6 +382,8 @@ contract Schelling2 {
               //             voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
               //             uint256(10000)));
               uint256 stakeBefore = thisStaker.stake;
+              // should probably simplify this curve to a linear curve
+              // cut stake by 100% if vote is 0 or >2*M where M is weighted median
               uint256 y = (10000*(medianLastEpoch*medianLastEpoch + voteLastEpoch*voteLastEpoch
                          -2*medianLastEpoch*voteLastEpoch))/(
                            medianLastEpoch*medianLastEpoch);
@@ -412,8 +407,9 @@ contract Schelling2 {
                 // reward += stake*(0.0001-y)
                 // = stake*(1-10000y)/10000
                 // = stake*()
-                  stakeGettingReward = stakeGettingReward.add((thisStaker.stake.mul(
-                                      uint256(1).sub(uint256(10000).mul(y)))).div(10000));
+                  // stakeGettingReward = stakeGettingReward.add((thisStaker.stake.mul(
+                  //                     uint256(1).sub(uint256(10000).mul(y)))).div(10000));
+                  stakeGettingReward = stakeGettingReward + stakeBefore*(1 - y);
               }
           }
       }
@@ -427,10 +423,10 @@ contract Schelling2 {
           uint256 medianLastEpoch = blocks[epochLastRevealed].median;
 
         //rewardpool*stake*multiplier/stakeGettingReward
-            uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-                    voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-                    uint256(10000)));
-            thisStaker.stake = (thisStaker.stake*rewardPool*y)/stakeGettingReward;
+            // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+            //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+            //         uint256(10000)));
+            thisStaker.stake = thisStaker.stake + (thisStaker.stake*rewardPool)/stakeGettingReward;
         }
     }
 
