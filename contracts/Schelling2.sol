@@ -53,7 +53,7 @@ contract Schelling2 {
     mapping (uint256 => Node) public nodes;
     mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
     mapping (uint256 => mapping (uint256 => Vote)) public votes;
-    mapping(uint256 => uint256) public totalStakeRevealed;
+    mapping (uint256 => uint256) public totalStakeRevealed;
     mapping (uint256 => Block) public blocks;
 
     mapping (uint256 => mapping (uint256 => uint256)) public voteWeights;
@@ -252,7 +252,8 @@ contract Schelling2 {
                 revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
             }
         }
-        require(median > 0);
+        //median can be zero if no one committed
+        // require(median > 0);
         blocks[epoch] = Block(proposerId,
                                 median,
                                 iteration,
@@ -271,23 +272,17 @@ contract Schelling2 {
         //accWeight = accumulatedWeight
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
-
-
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
             accWeight = accWeight.add(voteWeights[epoch][sorted[i]]);
-
             //set  median, if conditions meet
-
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sorted[i];
             }
-
             //TODO verify how much gas required for below operations and update this value
             if (gasleft() < 10000) break;
         }
-
         disputes[epoch][msg.sender].lastVisited = lastVisited;
         disputes[epoch][msg.sender].accWeight = accWeight;
     }
@@ -318,12 +313,12 @@ contract Schelling2 {
     }
 
     function getEpoch () public view returns(uint256) {
-        return(EPOCH);
+        // return(EPOCH);
         return((block.number.div(16)).add(1));
     }
 
     function getState() public view returns(uint256) {
-        return (STATE);
+        // return (STATE);
         uint256 state = (block.number.div(4));
 
         return (state.mod(4));
@@ -417,7 +412,7 @@ contract Schelling2 {
 
     //executed in state 1
     function giveRewards (Node storage thisStaker, uint256 epoch) internal {
-        if (epoch > 1) {
+        if (epoch > 1 && stakeGettingReward > 0) {
           uint256 epochLastRevealed = thisStaker.epochLastRevealed;
           uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
           uint256 medianLastEpoch = blocks[epochLastRevealed].median;

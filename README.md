@@ -4,7 +4,7 @@ install openzeppelin\
 run ganache\
 `ganache-cli -s 0 -i 420 -a 30`\
 run test\
-`truffle test test/Schelling.sol `\
+`truffle test test/Schelling.js `\
 for bigSchelling.js large number of accounts required\
 `ganache-cli -s 0 -i 420 -a 101`\
 for testing with client, set blocktime\
