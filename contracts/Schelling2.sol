@@ -110,7 +110,7 @@ contract Schelling2 {
     function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) checkState(c.COMMIT) {
         SimpleToken sch = SimpleToken(schAddress);
          //not allowed during reveal period
-        require(getState() != c.REVEAL);
+        //require(getState() != c.REVEAL);
         require(amount >= c.MIN_STAKE, "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 nodeId = nodeIds[msg.sender];
@@ -314,12 +314,12 @@ contract Schelling2 {
 
     function getEpoch () public view returns(uint256) {
         // return(EPOCH);
-        return((block.number.div(16)).add(1));
+        return((block.number.div(80));//.add(1));
     }
 
-    function getState() public view returns(uint256) {
+    function getState () public view returns(uint256) {
         // return (STATE);
-        uint256 state = (block.number.div(4));
+        uint256 state = (block.number.div(20));
 
         return (state.mod(4));
     }

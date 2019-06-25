@@ -47,9 +47,10 @@ module.exports = {
     // options below to some value.
     //
     development: {
-      provider: () => new HDWalletProvider(mnemonic, 'http://localhost:8545/'), // `${infuraKey}`),
-      // host: '127.0.0.1',     // Localhost (default: none)
-      // port: 8545,
+      // provider: () => new HDWalletProvider(mnemonic, 'http://localhost:8545'), // `${infuraKey}`),
+      from: '1271da926f0b2e4947a944268259e910861446d0',
+      host: '127.0.0.1',     // Localhost (default: none)
+      port: 8545,
       confirmations: 0,
       network_id: 420       // Any network (default: none)
       // websockets: true
