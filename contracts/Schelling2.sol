@@ -172,7 +172,7 @@ contract Schelling2 {
         require(commitments[epoch][nodeId] == 0x0, "already commited");
         Node storage thisStaker = nodes[nodeId];
         uint256 y = givePenalties(thisStaker, epoch);
-        emit Y(y);
+        // emit Y(y);
         if(thisStaker.stake >= c.MIN_STAKE){
             commitments[epoch][nodeId] = commitment;
             thisStaker.epochLastCommitted = epoch;
@@ -314,7 +314,7 @@ contract Schelling2 {
 
     function getEpoch () public view returns(uint256) {
         // return(EPOCH);
-        return((block.number.div(80));//.add(1));
+        return(block.number.div(80));//.add(1));
     }
 
     function getState () public view returns(uint256) {

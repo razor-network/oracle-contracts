@@ -16,3 +16,5 @@ These are the contracts for Razor network testnet.
 `ganache-cli -s 0 -i 420 -a 30 -b 5`
 7. Deploy
 `truffle migrate --reset`
+
+todo add package.json
