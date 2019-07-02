@@ -14,8 +14,11 @@ These are the contracts for Razor network testnet.
 `ganache-cli -s 0 -i 420 -a 101`
 6. For testing with cli, set blocktime
 `ganache-cli -s 0 -i 420 -a 30 -b 5`
-7. Deploy
+7. Deploy on ganache
 `truffle migrate --reset`
+8. create .secret file with mnemonic of the private key used to deploy on rinkeby
+9. Deploy on rinkeby (.secret file must be present with mnemonic of the private key used to deploy)
+`truffle migrate --network rinkeby --reset`
 
 Schelling2.sol is the main contract that is used in testnet.
 
