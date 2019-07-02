@@ -7,7 +7,8 @@ const { assertRevert } = require('./helpers/assertRevert')
 let Schelling = artifacts.require('./Schelling2.sol')
 let SimpleToken = artifacts.require('./SimpleToken.sol')
 let Web3 = require('web3')
-let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8546', null, {})
+
+let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
 let gasPrice = 3.9 // gwei
 let ethPrice = 172
 // let dollarPerGas = ethUsd * gasPrice * 10 ** 9 = 6.708e-7
@@ -57,6 +58,7 @@ async function getBiggestStakerId (schelling) {
 contract('Schelling', function (accounts) {
   contract('SimpleToken', function () {
     it('should be able to stake', async function () {
+      // console.log(web3i.eth.accounts)
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
       await schelling.setEpoch(1)

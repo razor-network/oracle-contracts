@@ -349,6 +349,7 @@ contract Schelling2 {
         sum = keccak256(abi.encodePacked(sum, seed));
         return(sum);
     }
+
     // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
     // function setEpoch (uint256 epoch) public { EPOCH = epoch;}
     //
@@ -361,17 +362,18 @@ contract Schelling2 {
     //executed in state 0
 
     function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
-        if (epoch > 1) {
+        uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+        if (epoch > 1 && epochLastRevealed > 0) {
             uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
                                     thisStaker.epochLastRevealed :
                                     thisStaker.epochStaked;
             // penalize or reward if last active more than epoch - 1
-            uint256 penalizeEpochs = epoch.sub(epochLastActive).sub(1);
-            uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+            uint256 penalizeEpochs = epoch.sub(epochLastActive);
             uint256 previousStake = thisStaker.stake;
-            thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs))).div(
-            c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs));
-
+            if (penalizeEpochs > 1) {
+                thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs.sub(1)))).div(
+                c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs.sub(1)));
+            }
             uint256 medianLastEpoch = blocks[epochLastRevealed].median;
             uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
             if (medianLastEpoch > 0 && voteLastEpoch > 0) {
@@ -394,13 +396,13 @@ contract Schelling2 {
                            // uint256 y = (10000*(medianLastEpoch*medianLastEpoch + voteLastEpoch*voteLastEpoch
                            //            -2*medianLastEpoch*voteLastEpoch))/(
                            //              medianLastEpoch*medianLastEpoch);
-                if (voteLastEpoch > (2*medianLastEpoch)) {
+                if (voteLastEpoch > (medianLastEpoch.mul(2))) {
                     thisStaker.stake = 0;
                     rewardPool = rewardPool.add(previousStake);
                 } else if (voteLastEpoch > 0 &&
-                    (voteLastEpoch < (medianLastEpoch.mul(c.SAFETY_MARGIN_LOWER)).div(uint256(100)) ||
+                    (voteLastEpoch < (medianLastEpoch.mul(c.SAFETY_MARGIN_LOWER)).div(100) ||
                     voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
-                                    c.SAFETY_MARGIN_LOWER))).div(uint256(100)))) {
+                                    c.SAFETY_MARGIN_LOWER))).div(100))) {
                                         // return(y);
                   //stake = y*stake
                   // thisStaker.stake = ((y.sub(uint256(1))).mul(thisStaker.stake)).div(uint256(10000));
@@ -417,7 +419,7 @@ contract Schelling2 {
                 // = stake*()
                   // stakeGettingReward = stakeGettingReward.add((thisStaker.stake.mul(
                   //                     uint256(1).sub(uint256(10000).mul(y)))).div(10000));
-                    stakeGettingReward = stakeGettingReward + previousStake;//*(1 - y);
+                    stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
                 }
             }
         }

@@ -1,0 +1,28 @@
+{
+  "name": "contracts",
+  "version": "1.0.0",
+  "description": "These are the contracts for Razor network testnet. # Deployment",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/schelling-network/contracts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/schelling-network/contracts/issues"
+  },
+  "homepage": "https://github.com/schelling-network/contracts#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "^2.3.0",
+    "truffle": "^5.0.25",
+    "truffle-hdwallet-provider": "^1.0.12",
+    "web3": "^1.0.0-beta.55"
+  }
+}
