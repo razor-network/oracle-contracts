@@ -17,4 +17,7 @@ These are the contracts for Razor network testnet.
 7. Deploy
 `truffle migrate --reset`
 
+Schelling2.sol is the main contract that is used in testnet.
+
 todo add package.json
+get ethereum price in 1 call

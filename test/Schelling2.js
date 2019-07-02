@@ -388,105 +388,102 @@ contract('Schelling', function (accounts) {
       assert(Number(block.median) === 160)
     })
 
-    it ('should be able to commit and get penalties in next epoch', async function () {
+    it('should be able to commit and get penalties in next epoch', async function () {
       let schelling = await Schelling.deployed()
       await schelling.setEpoch(2)
       await schelling.setState(0)
 
       let medianLastEpoch = Number((await schelling.blocks(1)).median)
-      console.log('medianLastEpoch',medianLastEpoch)
+      console.log('medianLastEpoch', medianLastEpoch)
       let stakerId = Number(await schelling.nodeIds(accounts[8]))
-      console.log('stakerId',stakerId)
-      let voteLastEpoch = Number((await schelling.votes(1,stakerId)).value)
-      console.log('voteLastEpoch',voteLastEpoch)
+      console.log('stakerId', stakerId)
+      let voteLastEpoch = Number((await schelling.votes(1, stakerId)).value)
+      console.log('voteLastEpoch', voteLastEpoch)
       let stakeBefore = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeBefore',stakeBefore)
+      console.log('stakeBefore', stakeBefore)
       let commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
       let tx = await schelling.commit(2, commitment1, { 'from': accounts[8]})
       console.log(Number(tx.logs[0].args.y))
       let stakeAfter = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeAfter',stakeAfter)
-      if(voteLastEpoch < Math.floor(medianLastEpoch*0.99) || voteLastEpoch > Math.floor(medianLastEpoch*1.01))
-      {
-        let expectedStakeAfer = stakeBefore - Math.floor((((medianLastEpoch-voteLastEpoch)**2/medianLastEpoch**2)-0.0001)*stakeBefore)
-        console.log('expectedStakeAfer',expectedStakeAfer)
+      console.log('stakeAfter', stakeAfter)
+      if (voteLastEpoch < Math.floor(medianLastEpoch * 0.99) || voteLastEpoch > Math.floor(medianLastEpoch * 1.01)) {
+        let expectedStakeAfer = stakeBefore - Math.floor((((medianLastEpoch - voteLastEpoch) ** 2 / medianLastEpoch ** 2) - 0.0001) * stakeBefore)
+        console.log('expectedStakeAfer', expectedStakeAfer)
         assert(expectedStakeAfer === stakeAfter)
       }
       let rewardPool = Number(await schelling.rewardPool())
 
-      console.log('rewardPool',rewardPool)
+      console.log('rewardPool', rewardPool)
       let stakeGettingReward = Number(await schelling.stakeGettingReward())
-      console.log('stakeGettingReward',stakeGettingReward)
+      console.log('stakeGettingReward', stakeGettingReward)
       // assert(rewardPool ===(stakeBefore-stakeAfter))
 
       stakerId = Number(await schelling.nodeIds(accounts[4]))
-      console.log('stakerId',stakerId)
-      voteLastEpoch = Number((await schelling.votes(1,stakerId)).value)
-      console.log('voteLastEpoch',voteLastEpoch)
+      console.log('stakerId', stakerId)
+      voteLastEpoch = Number((await schelling.votes(1, stakerId)).value)
+      console.log('voteLastEpoch', voteLastEpoch)
       stakeBefore = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeBefore',stakeBefore)
+      console.log('stakeBefore', stakeBefore)
       commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
       tx = await schelling.commit(2, commitment1, { 'from': accounts[4]})
-      console.log(Number(tx.logs[0].args.y))
+      console.log('y', Number(tx.logs[0].args.y))
       stakeAfter = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeAfter',stakeAfter)
-      if(voteLastEpoch < Math.floor(medianLastEpoch*0.99) || voteLastEpoch > Math.floor(medianLastEpoch*1.01))
-      {
-        let expectedStakeAfer = stakeBefore - Math.floor(((Math.floor((10000*(medianLastEpoch-voteLastEpoch)**2)/medianLastEpoch**2)-1)*stakeBefore)/10000)
-        console.log('expectedStakeAfer',expectedStakeAfer)
+      console.log('stakeAfter', stakeAfter)
+      if (voteLastEpoch < Math.floor(medianLastEpoch * 0.99) || voteLastEpoch > Math.floor(medianLastEpoch * 1.01)) {
+        let expectedStakeAfer = stakeBefore - Math.floor(((Math.floor((10000 * (medianLastEpoch - voteLastEpoch) ** 2) / medianLastEpoch ** 2) - 1) * stakeBefore) / 10000)
+        console.log('expectedStakeAfer', expectedStakeAfer)
         assert(expectedStakeAfer === stakeAfter)
       }
       rewardPool = Number(await schelling.rewardPool())
-      console.log('rewardPool',rewardPool)
+      console.log('rewardPool', rewardPool)
       stakeGettingReward = Number(await schelling.stakeGettingReward())
-      console.log('stakeGettingReward',stakeGettingReward)
-      assert(rewardPool ===(stakeBefore-stakeAfter))
+      console.log('stakeGettingReward', stakeGettingReward)
+      assert(rewardPool === (stakeBefore - stakeAfter))
 
       stakerId = Number(await schelling.nodeIds(accounts[10]))
-      console.log('stakerId',stakerId)
-      voteLastEpoch = Number((await schelling.votes(1,stakerId)).value)
-      console.log('voteLastEpoch',voteLastEpoch)
+      console.log('stakerId', stakerId)
+      voteLastEpoch = Number((await schelling.votes(1, stakerId)).value)
+      console.log('voteLastEpoch', voteLastEpoch)
       stakeBefore = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeBefore',stakeBefore)
+      console.log('stakeBefore', stakeBefore)
       let rewardPoolBefore = Number(await schelling.rewardPool())
-      console.log('rewardPoolBefore',rewardPoolBefore)
+      console.log('rewardPoolBefore', rewardPoolBefore)
 
       commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
       tx = await schelling.commit(2, commitment1, { 'from': accounts[10]})
       console.log(Number(tx.logs[0].args.y))
       stakeAfter = Number((await schelling.nodes(stakerId)).stake)
-      console.log('stakeAfter',stakeAfter)
-      if(voteLastEpoch > medianLastEpoch*2) {
+      console.log('stakeAfter', stakeAfter)
+      if (voteLastEpoch > medianLastEpoch * 2) {
         let expectedStakeAfer = 0
-        console.log('expectedStakeAfer',expectedStakeAfer)
+        console.log('expectedStakeAfer', expectedStakeAfer)
         assert(expectedStakeAfer === stakeAfter)
-      }
-      else if(voteLastEpoch < Math.floor(medianLastEpoch*0.99) || voteLastEpoch > Math.floor(medianLastEpoch*1.01))
-      {
-        let expectedStakeAfer = stakeBefore - Math.floor(((Math.floor((10000*(medianLastEpoch-voteLastEpoch)**2)/medianLastEpoch**2)-1)*stakeBefore)/10000)
-        console.log('expectedStakeAfer',expectedStakeAfer)
+      } else if (voteLastEpoch < Math.floor(medianLastEpoch * 0.99) || voteLastEpoch > Math.floor(medianLastEpoch * 1.01)) {
+        let expectedStakeAfer = stakeBefore - Math.floor(((Math.floor((10000 * (medianLastEpoch - voteLastEpoch) ** 2) / medianLastEpoch ** 2) - 1) * stakeBefore) / 10000)
+        console.log('expectedStakeAfer', expectedStakeAfer)
         assert(expectedStakeAfer === stakeAfter)
       }
       rewardPool = Number(await schelling.rewardPool())
-      console.log('rewardPool',rewardPool)
-      assert(rewardPool === rewardPoolBefore+(stakeBefore-stakeAfter))
-
+      console.log('rewardPool', rewardPool)
+      assert(rewardPool === rewardPoolBefore + (stakeBefore - stakeAfter))
     })
 
-
-        it ('should get rewards when revealed', async function () {
-          let schelling = await Schelling.deployed()
-          await schelling.setState(1)
-          let stakerId = Number(await schelling.nodeIds(accounts[8]))
-          console.log('stakerId',stakerId)
-          let stakeBefore = Number((await schelling.nodes(stakerId)).stake)
-          console.log('stakeBefore',stakeBefore)
-            tx = await schelling.reveal(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000', accounts[8], { 'from': accounts[8]})
-            let stakeAfter = Number((await schelling.nodes(stakerId)).stake)
-            console.log('stakeAfter',stakeAfter)
-      })
-
-
+    it('should get rewards when revealed', async function () {
+      let schelling = await Schelling.deployed()
+      await schelling.setState(1)
+      let stakerId = Number(await schelling.nodeIds(accounts[8]))
+      console.log('stakerId', stakerId)
+      let stakeBefore = Number((await schelling.nodes(stakerId)).stake)
+      console.log('stakeBefore', stakeBefore)
+      tx = await schelling.reveal(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000', accounts[8], { 'from': accounts[8]})
+      let stakeAfter = Number((await schelling.nodes(stakerId)).stake)
+      console.log('stakeAfter', stakeAfter)
+    })
+    it('should get price last epoch', async function () {
+      let schelling = await Schelling.deployed()
+      let price = Number(await schelling.getPrice())
+      console.log('price', price)
+    })
     // it('should be able to unstake in next epoch', async function () {
     //   let schelling = await Schelling.deployed()
     //
