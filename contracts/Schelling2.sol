@@ -85,7 +85,7 @@ contract Schelling2 {
     uint256 public rewardPool = 0;
     uint256 public stakeGettingReward = 0;
 
-    Constants public c = Constants(0, 1, 2, 3, 95, 100, 99, 100, 1000, 5, 5, 99, 1, 1);
+    Constants public c = Constants(0, 1, 2, 3, 9999, 10000, 99, 100, 1000, 5, 5, 99, 1, 1);
 
     constructor (address _schAddress) public {
         schAddress = _schAddress;
@@ -315,14 +315,23 @@ contract Schelling2 {
         }
     }
 
+    // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
+    // function setEpoch (uint256 epoch) public { EPOCH = epoch;}
+    //
+    // function setState (uint256 state) public { STATE = state;}
+
+    // dummy function to forcibly increase block number in ganache
+    // function dum () public {true;}
+    // END TESTING FUNCTIONS
+
     function getEpoch () public view returns(uint256) {
         // return(EPOCH);
-        return(block.number.div(80));
+        return(block.number.div(40));
     }
 
     function getState () public view returns(uint256) {
         // return (STATE);
-        uint256 state = (block.number.div(20));
+        uint256 state = (block.number.div(10));
         return (state.mod(4));
     }
 
@@ -350,17 +359,9 @@ contract Schelling2 {
         return(sum);
     }
 
-    // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
-    // function setEpoch (uint256 epoch) public { EPOCH = epoch;}
-    //
-    // function setState (uint256 state) public { STATE = state;}
-    //
-    // // dummy function to forcibly increase block number in ganache
-    // function dum () public {true;}
-    // END TESTING FUNCTIONS
+
     // internal functions vvvvvvvv
     //executed in state 0
-
     function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
         if (epoch > 1 && epochLastRevealed > 0) {
@@ -371,8 +372,16 @@ contract Schelling2 {
             uint256 penalizeEpochs = epoch.sub(epochLastActive);
             uint256 previousStake = thisStaker.stake;
             if (penalizeEpochs > 1) {
-                thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs.sub(1)))).div(
-                c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs.sub(1)));
+              // this is problematic
+              // anything to the power of N grows too fast
+              // stake = stake * 99**e/100**e
+              // alternative, calculate penalty for 1 epoch * pe
+
+                // thisStaker.stake = (thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs.sub(1)))).div(
+                // c.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs.sub(1)));
+                thisStaker.stake = thisStaker.stake.sub((penalizeEpochs.sub(1))
+                .mul((thisStaker.stake.mul(c.PENALTY_NOT_REVEAL_NUM)).div(
+                c.PENALTY_NOT_REVEAL_DENOM)));
             }
             uint256 medianLastEpoch = blocks[epochLastRevealed].median;
             uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;

@@ -3,6 +3,7 @@
 
 // // TODO:
 // // test same vote values, stakes
+// test penalizeEpochs
 const { assertRevert } = require('./helpers/assertRevert')
 let Schelling = artifacts.require('./Schelling2.sol')
 let SimpleToken = artifacts.require('./SimpleToken.sol')
