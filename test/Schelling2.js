@@ -60,8 +60,10 @@ contract('Schelling', function (accounts) {
   contract('SimpleToken', function () {
     it('should be able to stake', async function () {
       // console.log(web3i.eth.accounts)
+
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
+
       await schelling.setEpoch(1)
       await sch.transfer(accounts[1], 420000, { 'from': accounts[0] })
       await sch.transfer(accounts[2], 19000, { 'from': accounts[0]})
@@ -487,6 +489,7 @@ contract('Schelling', function (accounts) {
       let price = Number(await schelling.getPrice())
       console.log('price', price)
     })
+
     // it('should be able to unstake in next epoch', async function () {
     //   let schelling = await Schelling.deployed()
     //
@@ -604,7 +607,7 @@ contract('Schelling', function (accounts) {
     //   // assert(staker.stake.toString() === '42000')
     //
     //   // //console.log('stakeGettingPenalty', Number((await schelling.blocks(1)).stakeGettingPenalty))
-    //   // //console.log('stakeGettingReward', Number((await schelling.blocks(1)).stakeGettingReward))
+//     //   // //console.log('stakeGettingReward', Number((await schelling.blocks(1)).stakeGettingReward))
     // })
   })
 })
