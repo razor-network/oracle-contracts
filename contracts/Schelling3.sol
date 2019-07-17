@@ -257,17 +257,18 @@ contract Schelling3 {
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(nodes[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
 
-        //check if someone already proposed
+        // check if someone already proposed
         if (blocks[epoch].proposerId != 0) {
             if (blocks[epoch].proposerId == proposerId) {
                 revert("Already Proposed");
             }
-            if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
-                proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
-
-                require(proposedBlocks[epoch][4].iteration > iteration,
-                        "iteration not smaller than last elected staker");
-            } else if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
+            // if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
+            //     proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
+            //
+            //     require(proposedBlocks[epoch][4].iteration > iteration,
+            //             "iteration not smaller than last elected staker");
+            // } else
+            if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
                 revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
             }
         }
@@ -277,14 +278,13 @@ contract Schelling3 {
                                         iteration,
                                         nodes[biggestStakerId].stake));
         // mint and give block reward
-        // if (Constants.blockReward() > 0) {
-        //     nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
-        //     totalStake = totalStake.add(Constants.blockReward());
-        //     require(sch.mint(address(this), Constants.blockReward()));
-        // }
+        if (Constants.blockReward() > 0) {
+            nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
+            totalStake = totalStake.add(Constants.blockReward());
+            require(sch.mint(address(this), Constants.blockReward()));
+        }
         emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId);
     }
-
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
@@ -468,33 +468,35 @@ contract Schelling3 {
     //         }
     //     }
     // }
+    //proposedblocks[epoch] = [Block.iteration]
     function insertAppropriately(uint256 epoch, Block memory _block) internal {
-        uint256 iteration = _block.iteration;
+        // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
             return;
         }
-        Block[] memory temp = proposedBlocks[epoch];
-        delete (proposedBlocks[epoch]);
-        bool pushed = false;
-        bool empty = true;
-        for (uint256 i = 0; i < temp.length; i++) {
-            if (temp[i].iteration < _block.iteration && pushed == false) {
-                if (empty) {
-                    Block[] storage proposedBlocks[epoch];
-                    proposedBlocks[epoch] = [_block];
-                    empty = false;
-                } else {
-                    proposedBlocks[epoch].push(_block);
-                }
-                pushed = true;
-            } else {
-                proposedBlocks[epoch].push(temp[i]);
+        // Block[] memory temp = proposedBlocks[epoch];
+        // delete (proposedBlocks[epoch]);
+        // bool pushed = false;
+        // bool empty = true;
+        uint256 pushAt = 0;
+        for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
+            if (proposedBlocks[epoch][i].iteration > _block.iteration) {
+                pushAt = i;
+                break;
+                // proposedBlocks[epoch].push(_block);
             }
         }
-        if (pushed == false && temp.length < Constants.maxAltBlocks()) {
-            proposedBlocks[epoch].push(_block);
+
+        for (uint256 j = proposedBlocks[epoch].length; j > pushAt; j--) {
+            proposedBlocks[epoch][j+1] = proposedBlocks[epoch][j];
         }
+        proposedBlocks[epoch][pushAt] = _block;
+
+
+        // if (pushed == false && temp.length < Constants.maxAltBlocks()) {
+        //     proposedBlocks[epoch].push(_block);
+        // }
     }
 
     function slash (uint256 id, address bountyHunter) internal {
