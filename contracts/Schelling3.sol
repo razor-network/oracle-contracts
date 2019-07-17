@@ -474,20 +474,27 @@ contract Schelling3 {
             proposedBlocks[epoch].push(_block);
             return;
         }
-        Block[] memory temp;
+        Block[] memory temp = proposedBlocks[epoch];
+        delete (proposedBlocks[epoch]);
         bool pushed = false;
-        for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
-            if (proposedBlocks[epoch][i].iteration < _block.iteration && pushed == false) {
-                temp[temp.length] = (_block);
+        bool empty = true;
+        for (uint256 i = 0; i < temp.length; i++) {
+            if (temp[i].iteration < _block.iteration && pushed == false) {
+                if (empty) {
+                    Block[] storage proposedBlocks[epoch];
+                    proposedBlocks[epoch] = [_block];
+                    empty = false;
+                } else {
+                    proposedBlocks[epoch].push(_block);
+                }
                 pushed = true;
             } else {
-                temp[temp.length] = (proposedBlocks[epoch][i]);
+                proposedBlocks[epoch].push(temp[i]);
             }
         }
         if (pushed == false && temp.length < Constants.maxAltBlocks()) {
-            temp[temp.length] = (_block);
+            proposedBlocks[epoch].push(_block);
         }
-        proposedBlocks[epoch] = temp;
     }
 
     function slash (uint256 id, address bountyHunter) internal {

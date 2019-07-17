@@ -315,11 +315,11 @@ contract('Schelling', function (accounts) {
       await schelling.setState(2)
 
       await schelling.propose(1, [200, 301], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
-      // let block = await schelling.getBlock(1)
-      // console.log([Number(block[1][0]), Number(block[1][1])], [200, 300])
-      // assert(Number(block[0]) === electedProposer)
+      let block = await schelling.proposedBlocks(1, 1)
+      console.log([Number(block[1][0]), Number(block[1][1])], [200, 300])
+      assert(Number(block[0]) === electedProposer)
 
-      // assert.deepEqual([Number(block[1][0]), Number(b  lock[1][1])], [200, 301])
+      assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
 
     it('should be able to giveSortedVotes', async function () {
