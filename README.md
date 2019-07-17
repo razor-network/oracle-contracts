@@ -21,3 +21,7 @@ These are the contracts for Razor network testnet.
 `truffle migrate --network rinkeby --reset`
 
 Schelling2.sol is the main contract that is used in testnet.
+#features
+[x] support voting multiple assets
+[x] support disputing for multiple assets
+[] support proposing multiple blocks in single epoch

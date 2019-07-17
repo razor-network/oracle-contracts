@@ -66,9 +66,9 @@ contract Schelling3 {
     //epoch->address->dispute->assetid->
     mapping (uint256 => mapping (address => Dispute)) public disputes;
     //epoch -> numProposedBlocks
-    mapping (uint256 => uint256) public numProposedBlocks;
+    // mapping (uint256 => uint256) public numProposedBlocks;
     //epoch -> proposalNumber -> block
-    mapping (uint256 => mapping (uint256 => Block)) public proposedBlocks;
+    mapping (uint256 => Block[]) public proposedBlocks;
     address public schAddress;
 
     uint256 public numNodes = 0;
@@ -262,24 +262,29 @@ contract Schelling3 {
             if (blocks[epoch].proposerId == proposerId) {
                 revert("Already Proposed");
             }
-            if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake) {
-                require(blocks[epoch].iteration > iteration, "iteration not bigger than existing elected staker");
+            if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
+                proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
+
+                require(proposedBlocks[epoch][4].iteration > iteration,
+                        "iteration not smaller than last elected staker");
             } else if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
                 revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
             }
         }
-        blocks[epoch] = Block(proposerId,
-                                medians,
-                                iteration,
-                                nodes[biggestStakerId].stake);
+        // blocks[epoch]
+        insertAppropriately(epoch, Block(proposerId,
+                                        medians,
+                                        iteration,
+                                        nodes[biggestStakerId].stake));
         // mint and give block reward
-        if (Constants.blockReward() > 0) {
-            nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
-            totalStake = totalStake.add(Constants.blockReward());
-            require(sch.mint(address(this), Constants.blockReward()));
-        }
+        // if (Constants.blockReward() > 0) {
+        //     nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
+        //     totalStake = totalStake.add(Constants.blockReward());
+        //     require(sch.mint(address(this), Constants.blockReward()));
+        // }
         emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId);
     }
+
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
@@ -361,7 +366,6 @@ contract Schelling3 {
         return(blocks[epoch-1].medians[assetId]);
     }
 
-
     // internal functions vvvvvvvv
     //executed in state 0
     // function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
@@ -383,7 +387,6 @@ contract Schelling3 {
     //         return(0);
     //     }
     // }
-
     // function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
     //     uint256 epochLastRevealed = thisStaker.epochLastRevealed;
     //     if (epoch > 1 && epochLastRevealed > 0) {
@@ -465,6 +468,27 @@ contract Schelling3 {
     //         }
     //     }
     // }
+    function insertAppropriately(uint256 epoch, Block memory _block) internal {
+        uint256 iteration = _block.iteration;
+        if (proposedBlocks[epoch].length == 0) {
+            proposedBlocks[epoch].push(_block);
+            return;
+        }
+        Block[] memory temp;
+        bool pushed = false;
+        for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
+            if (proposedBlocks[epoch][i].iteration < _block.iteration && pushed == false) {
+                temp[temp.length] = (_block);
+                pushed = true;
+            } else {
+                temp[temp.length] = (proposedBlocks[epoch][i]);
+            }
+        }
+        if (pushed == false && temp.length < Constants.maxAltBlocks()) {
+            temp[temp.length] = (_block);
+        }
+        proposedBlocks[epoch] = temp;
+    }
 
     function slash (uint256 id, address bountyHunter) internal {
         SimpleToken sch = SimpleToken(schAddress);
