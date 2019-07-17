@@ -1,14 +1,21 @@
 // var Schelling = artifacts.require('./Schelling.sol')
-var Schelling2 = artifacts.require('./Schelling2.sol')
+var Schelling3 = artifacts.require('./Schelling3.sol')
 var SimpleToken = artifacts.require('./SimpleToken.sol')
+var Constants = artifacts.require('./lib/Constants.sol')
+var Random = artifacts.require('./lib/Random.sol')
 
 module.exports = async function (deployer) {
   // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
   deployer.deploy(SimpleToken).then(async function (toke) {
     // await deployer.deploy(Schelling, toke.address).then(async function (sch) {
-    await deployer.deploy(Schelling2, toke.address).then(async function (sch2) {
+    await deployer.deploy(Random)
+    await deployer.deploy(Constants)
+    await deployer.link(Random, Schelling3)
+    await deployer.link(Constants, Schelling3)
+    await deployer.deploy(Schelling3, toke.address).then(async function (sch3) {
           // let tx = await toke.addMinter(sch.address)
-      tx = await toke.addMinter(sch2.address)
+      tx = await toke.addMinter(sch3.address)
+
           // console.log(tx)
         // })
     })

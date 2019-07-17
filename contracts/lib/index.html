@@ -1,0 +1,1054 @@
+<html>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+<script src="./web3.min.js"></script>
+<body>
+  <div class="chart-container" style="position: relative; height:30vh; width:60vw">
+    <h1 id= 'loading'>Loading...</h1>
+  <canvas id="proposals"></canvas>
+  <canvas id="revelations"></canvas>
+  <canvas id="stakes"></canvas>
+</div>
+</body>
+<script>
+
+let provider2 = 'wss://rinkeby.infura.io/ws'
+let networkid = '4' // rinkeby
+let web3 = new Web3(Web3.givenProvider || provider2, null, {})
+// let schellingBuild = require('./build/contracts/Schelling2.json')
+let schellingAbi = [
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "stakeGettingReward",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "nodes",
+      "outputs": [
+        {
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "name": "stake",
+          "type": "uint256"
+        },
+        {
+          "name": "epochStaked",
+          "type": "uint256"
+        },
+        {
+          "name": "epochLastCommitted",
+          "type": "uint256"
+        },
+        {
+          "name": "epochLastRevealed",
+          "type": "uint256"
+        },
+        {
+          "name": "unstakeAfter",
+          "type": "uint256"
+        },
+        {
+          "name": "withdrawAfter",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "nodeIds",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "rewardPool",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "disputes",
+      "outputs": [
+        {
+          "name": "accWeight",
+          "type": "uint256"
+        },
+        {
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "name": "lastVisited",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "totalStake",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "schAddress",
+      "outputs": [
+        {
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "voteWeights",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "numNodes",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "EPOCH",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "totalStakeRevealed",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "c",
+      "outputs": [
+        {
+          "name": "COMMIT",
+          "type": "uint8"
+        },
+        {
+          "name": "REVEAL",
+          "type": "uint8"
+        },
+        {
+          "name": "PROPOSE",
+          "type": "uint8"
+        },
+        {
+          "name": "DISPUTE",
+          "type": "uint8"
+        },
+        {
+          "name": "PENALTY_NOT_REVEAL_NUM",
+          "type": "uint256"
+        },
+        {
+          "name": "PENALTY_NOT_REVEAL_DENOM",
+          "type": "uint256"
+        },
+        {
+          "name": "PENALTY_NOT_IN_ZONE_NUM",
+          "type": "uint256"
+        },
+        {
+          "name": "PENALTY_NOT_IN_ZONE_DENOM",
+          "type": "uint256"
+        },
+        {
+          "name": "MIN_STAKE",
+          "type": "uint256"
+        },
+        {
+          "name": "BLOCK_REWARD",
+          "type": "uint256"
+        },
+        {
+          "name": "REVEAL_REWARD",
+          "type": "uint256"
+        },
+        {
+          "name": "SAFETY_MARGIN_LOWER",
+          "type": "uint256"
+        },
+        {
+          "name": "UNSTAKE_LOCK_PERIOD",
+          "type": "uint256"
+        },
+        {
+          "name": "WITHDRAW_LOCK_PERIOD",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "STATE",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "votes",
+      "outputs": [
+        {
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "name": "weight",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "commitments",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "blocks",
+      "outputs": [
+        {
+          "name": "proposerId",
+          "type": "uint256"
+        },
+        {
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "name": "biggestStake",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "name": "_schAddress",
+          "type": "address"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Staked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        }
+      ],
+      "name": "Unstaked",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "Withdrew",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "commitment",
+          "type": "bytes32"
+        }
+      ],
+      "name": "Committed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "y",
+          "type": "uint256"
+        }
+      ],
+      "name": "Y",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "stake",
+          "type": "uint256"
+        }
+      ],
+      "name": "Revealed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "nodeId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "name": "biggestStakerId",
+          "type": "uint256"
+        }
+      ],
+      "name": "Proposed",
+      "type": "event"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "stake",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "unstake",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "withdraw",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "name": "commitment",
+          "type": "bytes32"
+        }
+      ],
+      "name": "commit",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "name": "secret",
+          "type": "bytes32"
+        },
+        {
+          "name": "stakerAddress",
+          "type": "address"
+        }
+      ],
+      "name": "reveal",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "name": "biggestStakerId",
+          "type": "uint256"
+        },
+        {
+          "name": "nodeId",
+          "type": "uint256"
+        }
+      ],
+      "name": "isElectedProposer",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "name": "biggestStakerId",
+          "type": "uint256"
+        }
+      ],
+      "name": "propose",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "name": "sorted",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "giveSorted",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "resetDispute",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": false,
+      "inputs": [
+        {
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "proposeAlt",
+      "outputs": [],
+      "payable": false,
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getEpoch",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getState",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [],
+      "name": "getPrice",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "numBlocks",
+          "type": "uint8"
+        },
+        {
+          "name": "max",
+          "type": "uint256"
+        },
+        {
+          "name": "seed",
+          "type": "bytes32"
+        }
+      ],
+      "name": "prng",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "constant": true,
+      "inputs": [
+        {
+          "name": "numBlocks",
+          "type": "uint8"
+        },
+        {
+          "name": "seed",
+          "type": "bytes32"
+        }
+      ],
+      "name": "prngHash",
+      "outputs": [
+        {
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+
+let dataset = []
+let labels = []
+let nodes = []
+let revelations={}
+let stakes = {}
+let schelling = new web3.eth.Contract(schellingAbi, '0x133e8Ca9EdfE81611B0c6Aa1891107Eba4F60B09')
+
+// let simpleTokenBuild = require('./build/contracts/SimpleToken.json')
+// let simpleTokenAbi = simpleTokenBuild['abi']
+// let simpleToken = new web3.eth.Contract(simpleTokenAbi, simpleTokenBuild['networks'][networkid].address,
+//   {transactionConfirmationBlocks: 1,
+//     defaultGas: 500000,
+//     defaultGasPrice: 2000000000})
+
+async function processProposals (proposals) {
+  for (let i = 0; i < proposals.length; i++) {
+    dataset.push(Number(proposals[i].returnValues.median) / 100)
+    labels.push(Number(proposals[i].returnValues.epoch))
+    // console.log(Number(proposals[i].returnValues.median) / 100)
+  }
+}
+
+async function processReveals (reveals) {
+  for (let i = 0; i < reveals.length; i++) {
+
+    if(!nodes.includes(Number(reveals[i].returnValues.nodeId))) nodes.push(Number(reveals[i].returnValues.nodeId))
+    if (Number(reveals[i].returnValues.epoch) in revelations) {
+        if (Number(reveals[i].returnValues.nodeId) in revelations[Number(reveals[i].returnValues.epoch)]) {
+          revelations[Number(reveals[i].returnValues.epoch)][Number(reveals[i].returnValues.nodeId)].push(Number(reveals[i].returnValues.value) / 100)
+        } else {
+            revelations[Number(reveals[i].returnValues.epoch)][Number(reveals[i].returnValues.nodeId)]=[(Number(reveals[i].returnValues.value) / 100)]
+        }
+      } else {
+        revelations[Number(reveals[i].returnValues.epoch)]={[Number(reveals[i].returnValues.nodeId)]:[(Number(reveals[i].returnValues.value) / 100)]}
+      }
+
+      if (Number(reveals[i].returnValues.epoch) in stakes) {
+          if (Number(reveals[i].returnValues.nodeId) in stakes[Number(reveals[i].returnValues.epoch)]) {
+            stakes[Number(reveals[i].returnValues.epoch)][Number(reveals[i].returnValues.nodeId)].push(Number(reveals[i].returnValues.stake) )
+          } else {
+              stakes[Number(reveals[i].returnValues.epoch)][Number(reveals[i].returnValues.nodeId)]=[(Number(reveals[i].returnValues.stake) )]
+          }
+        } else {
+          stakes[Number(reveals[i].returnValues.epoch)]={[Number(reveals[i].returnValues.nodeId)]:[(Number(reveals[i].returnValues.stake) )]}
+        }
+
+    }
+
+    console.log('revelations', revelations)
+    console.log('stakes', stakes)
+    console.log('nodes',nodes)
+  }
+
+
+async function main () {
+  let reveals = await schelling.getPastEvents('Revealed', {
+    fromBlock: 0,
+    toBlock: 'latest'
+  })
+  let proposals = await schelling.getPastEvents('Proposed', {
+    fromBlock: 0,
+    toBlock: 'latest'
+  })
+  await processProposals(proposals)
+  await processReveals(reveals)
+  let chartColors = {
+  	red: 'rgb(255, 99, 132)',
+  	orange: 'rgb(255, 159, 64)',
+  	yellow: 'rgb(255, 205, 86)',
+  	green: 'rgb(75, 192, 192)',
+  	blue: 'rgb(54, 162, 235)',
+  	purple: 'rgb(153, 102, 255)',
+  	grey: 'rgb(201, 203, 207)'
+  };
+  	var colorNames = Object.keys(chartColors);
+  var ctx = document.getElementById('proposals').getContext('2d');
+  var chart = new Chart(ctx, {
+      // The type of chart we want to create
+      type: 'line',
+
+      // The data for our dataset
+      data: {
+          labels: labels,
+          datasets: [{
+              label: 'Final Ethereum price reported over epochs',
+              backgroundColor: '#40429b',
+              borderColor: '#40429b',
+              data: dataset
+          }]
+      },
+
+      // Configuration options go here
+      options: {}
+  });
+
+  var ctx2 = document.getElementById('revelations').getContext('2d');
+  let datasets = []
+
+  for (node of nodes) {
+    console.log('node', node)
+    let data = []
+    for (blockNumber in revelations) {
+        data.push(revelations[blockNumber][node])
+      }
+      console.log('data',data)
+      var colorName = colorNames[datasets.length % colorNames.length];
+  		var newColor = chartColors[colorName];
+      datasets.push({
+        label: node,
+        backgroundColor: newColor,
+        pointRadius:2,
+        borderColor: newColor,
+        data: data,
+        fill: false,
+      })
+  }
+  console.log('datasets',datasets)
+	window.myLine = new Chart(ctx2, {
+			type: 'line',
+			data: {
+				labels: labels,
+				datasets: datasets
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Votes of individual stakers'
+				},
+				tooltips: {
+					mode: 'index',
+					intersect: false,
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: true
+				},
+				scales: {
+					xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'Epoch'
+						}
+					}],
+					yAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'Value'
+						}
+					}]
+				}
+			}
+		})
+    var ctx3 = document.getElementById('stakes').getContext('2d');
+    let datasets3 = []
+
+    for (node of nodes) {
+      console.log('node', node)
+      let data = []
+      for (blockNumber in stakes) {
+          data.push(stakes[blockNumber][node])
+        }
+        console.log('data',data)
+        var colorName = colorNames[datasets3.length % colorNames.length];
+        var newColor = chartColors[colorName];
+        datasets3.push({
+          label: node,
+          backgroundColor: newColor,
+          pointRadius:2,
+          borderColor: newColor,
+          data: data,
+          fill: false,
+        })
+    }
+    console.log('datasets3',datasets3)
+    window.myLine = new Chart(ctx3, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: datasets3
+        },
+        options: {
+          responsive: true,
+          title: {
+            display: true,
+            text: 'Stakes of individual stakers'
+          },
+          tooltips: {
+            mode: 'index',
+            intersect: false,
+          },
+          hover: {
+            mode: 'nearest',
+            intersect: true
+          },
+          scales: {
+            xAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'epoch'
+              }
+            }],
+            yAxes: [{
+              display: true,
+              scaleLabel: {
+                display: true,
+                labelString: 'Value'
+              }
+            }]
+          }
+        }
+      })
+    document.getElementById('loading').innerHTML='';
+
+}
+
+main()
+
+  </script>
+</html>
