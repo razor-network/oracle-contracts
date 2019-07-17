@@ -1,4 +1,4 @@
-pragma solidity 0.5.7;
+pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
 import "./SimpleToken.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
@@ -40,15 +40,15 @@ contract Schelling3 {
 
     struct Block {
         uint256 proposerId;
-        uint256 median;
+        uint256[] medians;
         uint256 iteration;
         uint256 biggestStake;
     }
 
     struct Dispute {
-        uint256 accWeight;
-        uint256 median;
-        uint256 lastVisited;
+        uint256[] accWeights;
+        uint256[] medians;
+        uint256[] lastVisited;
     }
 
     mapping (address => uint256) public nodeIds;
@@ -57,12 +57,13 @@ contract Schelling3 {
     mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
     //epoch->stakerid->assetid->vote
     mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Vote))) public votes;
-    mapping (uint256 => uint256) public totalStakeRevealed;
+    // epoch -> asset -> stakeWeight
+    mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
     mapping (uint256 => Block) public blocks;
     //epoch->assetid->voteValue->weight
     mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
-
-    mapping(uint256 => mapping(address => Dispute)) public disputes;
+    //epoch->address->dispute->assetid->
+    mapping (uint256 => mapping (address => Dispute)) disputes;
     address public schAddress;
 
     uint256 public numNodes = 0;
@@ -87,6 +88,17 @@ contract Schelling3 {
     modifier checkState (uint256 state) {
         require(state == getState(), "incorrect state");
         _;
+    }
+
+    //for some reasom, getter for block doesnt return medians array. so using this for now
+    function getBlock (uint256 blockNumber) public view returns(uint256, uint256[] memory medians, uint256, uint256) {
+      // uint256 proposerId;
+      // uint256[] medians;
+      // uint256 iteration;
+      // uint256 biggestStake;
+        Block memory _block = blocks[blockNumber];
+        medians = _block.medians;
+        return(_block.proposerId, medians, _block.iteration, _block.biggestStake);
     }
 
     event Staked(uint256 nodeId, uint256 amount);
@@ -154,6 +166,7 @@ contract Schelling3 {
     event Y(uint256 y);
     //
     // // what was the eth/usd rate at the beginning of this epoch?
+
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 nodeId = nodeIds[msg.sender];
         require(commitments[epoch][nodeId] == 0x0, "already commited");
@@ -166,7 +179,7 @@ contract Schelling3 {
             emit Committed(epoch, nodeId, commitment);
         }
     }
-    //
+
     event Revealed(uint256 epoch, uint256 nodeId, uint256 value, uint256 stake);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
@@ -186,6 +199,7 @@ contract Schelling3 {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))));
                 votes[epoch][thisNodeId][i] = Vote(values[i], thisStaker.stake);
                 voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]].add(thisStaker.stake);
+                totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
 
             }
 
@@ -194,7 +208,6 @@ contract Schelling3 {
             // giveRewards(thisStaker, epoch);
 
             commitments[epoch][thisNodeId] = 0x0;
-            totalStakeRevealed[epoch] = totalStakeRevealed[epoch].add(thisStaker.stake);
             thisStaker.epochLastRevealed = epoch;
             // emit Revealed(epoch, thisNodeId, value, thisStaker.stake);
         } else {
@@ -205,22 +218,22 @@ contract Schelling3 {
         }
     }
 
-    // function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 nodeId) public view returns(bool) {
-    //     // rand = 0 -> totalStake-1
-    //     //add +1 since prng returns 0 to max-1 and node start from 1
-    //     if ((prng(10, numNodes, keccak256(abi.encode(iteration))).add(1)) != nodeId) return(false);
-    //     bytes32 randHash = prngHash(10, keccak256(abi.encode(nodeId, iteration)));
-    //     uint256 rand = uint256(randHash).mod(2**32);
-    //     uint256 biggestStake = nodes[biggestStakerId].stake;
-    //     if (rand.mul(biggestStake) > nodes[nodeId].stake.mul(2**32)) return(false);
-    //     return(true);
-    // }
-    //
-    // event Proposed(uint256 epoch,
-    //                 uint256 nodeId,
-    //                 uint256 median,
-    //                 uint256 iteration,
-    //                 uint256 biggestStakerId);
+    function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 nodeId) public view returns(bool) {
+        // rand = 0 -> totalStake-1
+        //add +1 since prng returns 0 to max-1 and node start from 1
+        if ((Random.prng(10, numNodes, keccak256(abi.encode(iteration))).add(1)) != nodeId) return(false);
+        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(nodeId, iteration)));
+        uint256 rand = uint256(randHash).mod(2**32);
+        uint256 biggestStake = nodes[biggestStakerId].stake;
+        if (rand.mul(biggestStake) > nodes[nodeId].stake.mul(2**32)) return(false);
+        return(true);
+    }
+
+    event Proposed(uint256 epoch,
+                    uint256 nodeId,
+                    uint256[] medians,
+                    uint256 iteration,
+                    uint256 biggestStakerId);
 
     // elected proposer proposes block. we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this. select a staker pseudorandomly (not weighted by anything)
@@ -230,61 +243,64 @@ contract Schelling3 {
     // note that only one staker or no stakers selected in each iteration.
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
-    // function propose (uint256 epoch,
-    //                 uint256 median,
-    //                 uint256 iteration,
-    //                 uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.PROPOSE) {
-    //     uint256 proposerId = nodeIds[msg.sender];
-    //     SimpleToken sch = SimpleToken(schAddress);
-    //     require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
-    //     require(nodes[proposerId].stake >= Constants.MIN_STAKE, "stake below minimum stake");
-    //
-    //     //check if someone already proposed
-    //     if (blocks[epoch].proposerId != 0) {
-    //         if (blocks[epoch].proposerId == proposerId) {
-    //             revert("Already Proposed");
-    //         }
-    //         if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake) {
-    //             require(blocks[epoch].iteration > iteration, "iteration not bigger than existing elected staker");
-    //         } else if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
-    //             revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
-    //         }
-    //     }
-    //     //median can be zero if no one committed
-    //     // require(median > 0);
-    //     blocks[epoch] = Block(proposerId,
-    //                             median,
-    //                             iteration,
-    //                             nodes[biggestStakerId].stake);
-    //     if (Constants.BLOCK_REWARD > 0) {
-    //         nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.BLOCK_REWARD);
-    //         totalStake = totalStake.add(Constants.BLOCK_REWARD);
-    //         require(sch.mint(address(this), Constants.BLOCK_REWARD));
-    //     }
-    //     emit Proposed(epoch, proposerId, median, iteration, biggestStakerId);
-    // }
-    //
-    // //anyone can give sorted votes in batches in dispute state
-    // function giveSorted (uint256 epoch, uint256[] memory sorted) public checkEpoch(epoch) checkState(Constants.DISPUTE) {
-    //     uint256 medianWeight = totalStakeRevealed[epoch].div(2);
-    //     //accWeight = accumulatedWeight
-    //     uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-    //     uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
-    //     for (uint256 i = 0; i < sorted.length; i++) {
-    //         require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
-    //         lastVisited = sorted[i];
-    //         accWeight = accWeight.add(voteWeights[epoch][sorted[i]]);
-    //         //set  median, if conditions meet
-    //         if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
-    //             disputes[epoch][msg.sender].median = sorted[i];
-    //         }
-    //         //TODO verify how much gas required for below operations and update this value
-    //         if (gasleft() < 10000) break;
-    //     }
-    //     disputes[epoch][msg.sender].lastVisited = lastVisited;
-    //     disputes[epoch][msg.sender].accWeight = accWeight;
-    // }
-    //
+    function propose (uint256 epoch,
+                    uint256[] memory medians,
+                    uint256 iteration,
+                    uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
+        uint256 proposerId = nodeIds[msg.sender];
+        SimpleToken sch = SimpleToken(schAddress);
+        require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
+        require(nodes[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
+
+        //check if someone already proposed
+        if (blocks[epoch].proposerId != 0) {
+            if (blocks[epoch].proposerId == proposerId) {
+                revert("Already Proposed");
+            }
+            if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake) {
+                require(blocks[epoch].iteration > iteration, "iteration not bigger than existing elected staker");
+            } else if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
+                revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
+            }
+        }
+        blocks[epoch] = Block(proposerId,
+                                medians,
+                                iteration,
+                                nodes[biggestStakerId].stake);
+        if (Constants.blockReward() > 0) {
+            nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
+            totalStake = totalStake.add(Constants.blockReward());
+            require(sch.mint(address(this), Constants.blockReward()));
+        }
+        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId);
+    }
+
+    //anyone can give sorted votes in batches in dispute state
+    function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public checkEpoch(epoch)
+    checkState(Constants.dispute()) {
+        //iterate over
+        for (uint256 j=0; j < sorted.length; j++) {
+            uint256 medianWeight = totalStakeRevealed[epoch][j].div(2);
+            //accWeight = accumulatedWeight
+            uint256 accWeight = disputes[epoch][msg.sender].accWeights[j];
+            uint256 lastVisited = disputes[epoch][msg.sender].lastVisited[j];
+            for (uint256 i = 0; i < sorted[j].length; i++) {
+                require(sorted[j][i] > lastVisited, "sorted[j][i] is not greater than lastVisited");
+                lastVisited = sorted[j][i];
+                // voteWeights[epoch][i][values[i]]
+                accWeight = accWeight.add(voteWeights[epoch][j][sorted[j][i]]);
+                //set  median, if conditions meet
+                if (disputes[epoch][msg.sender].medians[j] == 0 && accWeight > medianWeight) {
+                    disputes[epoch][msg.sender].medians[j] = sorted[j][i];
+                }
+                //TODO verify how much gas required for below operations and update this value
+                if (gasleft() < 10000) break;
+            }
+            disputes[epoch][msg.sender].lastVisited[j] = lastVisited;
+            disputes[epoch][msg.sender].accWeights[j] = accWeight;
+        }
+    }
+
     // //todo test
     // //if any mistake made during giveSorted, resetDispute and start again
     // function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(Constants.DISPUTE) {
@@ -332,9 +348,9 @@ contract Schelling3 {
     }
 
     //return price from last epoch
-    function getPrice() public view returns (uint256) {
+    function getPrice(uint256 assetId) public view returns (uint256) {
         uint256 epoch = getEpoch();
-        return(blocks[epoch-1].median);
+        return(blocks[epoch-1].medians[assetId]);
     }
 
 

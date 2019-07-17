@@ -1,17 +1,17 @@
-pragma solidity 0.5.7;
+pragma solidity 0.5.10;
 
 
 library Constants {
     function commit() public pure returns(uint8) { return(0);}
     function reveal() public pure returns(uint8) { return(1);}
-    uint8 constant PROPOSE = 2;
-    uint8 constant DISPUTE = 3;
+    function propose() public pure returns(uint8) { return(2);}
+    function dispute() public pure returns(uint8) { return(3);}
     uint256 constant PENALTY_NOT_REVEAL_NUM = 1;
     uint256 constant PENALTY_NOT_REVEAL_DENOM = 10000;
     uint256 constant PENALTY_NOT_IN_ZONE_NUM = 99;
     uint256 constant PENALTY_NOT_IN_ZONE_DENOM = 100;
     function minStake() public pure returns(uint256) { return(1000); }
-    uint256 constant BLOCK_REWARD = 5;
+    function blockReward() public pure returns(uint8) { return(5);}
     uint256 constant REVEAL_REWARD = 5;
     uint256 constant SAFETY_MARGIN_LOWER = 99;
     function unstakeLockPeriod () public pure returns(uint256) { return(1); }
