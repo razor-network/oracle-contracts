@@ -314,11 +314,11 @@ contract('Schelling', function (accounts) {
       let sch = await SimpleToken.deployed()
       await schelling.setState(2)
 
-      await schelling.propose(1, [200, 300], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
+      await schelling.propose(1, [200, 301], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
       let block = await schelling.getBlock(1)
       // console.log([Number(block[1][0]), Number(block[1][1])], [200, 300])
       assert(Number(block[0]) === electedProposer)
-      assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 300])
+      assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
 
     it('should be able to giveSortedVotes', async function () {
@@ -327,10 +327,10 @@ contract('Schelling', function (accounts) {
       await schelling.setState(3)
 
       // TODO check acutal weights from con tract
-      let sortedVotes = [1, 4, 160, 161, 168, 1000000]
-      let weights = [5000, 600000, 420000, 4000, 800000, 6000]
+      let sortedVotes = [300]
+      let weights = [420000]
 
-      let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1))
+      let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
       let medianWeight = totalStakeRevealed / 2
       let i = 0
       let median = 0
@@ -347,7 +347,7 @@ contract('Schelling', function (accounts) {
       // //console.log('sevenFive', sevenFive)
       // //console.log('---------------------------')
 
-      await schelling.giveSorted(1, sortedVotes, { 'from': accounts[20]})
+      await schelling.giveSorted(1, 1, sortedVotes, { 'from': accounts[20]})
       console.log('median', median)
       console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
       assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed)

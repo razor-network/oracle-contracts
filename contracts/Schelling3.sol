@@ -46,9 +46,10 @@ contract Schelling3 {
     }
 
     struct Dispute {
-        uint256[] accWeights;
-        uint256[] medians;
-        uint256[] lastVisited;
+        uint256 accWeight;
+        uint256 median;
+        uint256 lastVisited;
+        uint256 assetId;
     }
 
     mapping (address => uint256) public nodeIds;
@@ -63,7 +64,11 @@ contract Schelling3 {
     //epoch->assetid->voteValue->weight
     mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
     //epoch->address->dispute->assetid->
-    mapping (uint256 => mapping (address => Dispute)) disputes;
+    mapping (uint256 => mapping (address => Dispute)) public disputes;
+    //epoch -> numProposedBlocks
+    mapping (uint256 => uint256) public numProposedBlocks;
+    //epoch -> proposalNumber -> block
+    mapping (uint256 => mapping (uint256 => Block)) public proposedBlocks;
     address public schAddress;
 
     uint256 public numNodes = 0;
@@ -267,6 +272,7 @@ contract Schelling3 {
                                 medians,
                                 iteration,
                                 nodes[biggestStakerId].stake);
+        // mint and give block reward
         if (Constants.blockReward() > 0) {
             nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
             totalStake = totalStake.add(Constants.blockReward());
@@ -276,40 +282,42 @@ contract Schelling3 {
     }
 
     //anyone can give sorted votes in batches in dispute state
-    function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public checkEpoch(epoch)
-    checkState(Constants.dispute()) {
-        //iterate over
-        for (uint256 j=0; j < sorted.length; j++) {
-            uint256 medianWeight = totalStakeRevealed[epoch][j].div(2);
-            //accWeight = accumulatedWeight
-            uint256 accWeight = disputes[epoch][msg.sender].accWeights[j];
-            uint256 lastVisited = disputes[epoch][msg.sender].lastVisited[j];
-            for (uint256 i = 0; i < sorted[j].length; i++) {
-                require(sorted[j][i] > lastVisited, "sorted[j][i] is not greater than lastVisited");
-                lastVisited = sorted[j][i];
-                // voteWeights[epoch][i][values[i]]
-                accWeight = accWeight.add(voteWeights[epoch][j][sorted[j][i]]);
-                //set  median, if conditions meet
-                if (disputes[epoch][msg.sender].medians[j] == 0 && accWeight > medianWeight) {
-                    disputes[epoch][msg.sender].medians[j] = sorted[j][i];
-                }
-                //TODO verify how much gas required for below operations and update this value
-                if (gasleft() < 10000) break;
-            }
-            disputes[epoch][msg.sender].lastVisited[j] = lastVisited;
-            disputes[epoch][msg.sender].accWeights[j] = accWeight;
+    function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
+    checkEpoch(epoch) checkState(Constants.dispute()) {
+        uint256 medianWeight = totalStakeRevealed[epoch][assetId].div(2);
+        //accWeight = accumulatedWeight
+        uint256 accWeight = disputes[epoch][msg.sender].accWeight;
+        uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
+        if (disputes[epoch][msg.sender].accWeight == 0) {
+            disputes[epoch][msg.sender].assetId = assetId;
+        } else {
+            require(disputes[epoch][msg.sender].assetId == assetId, "AssetId not matching");
         }
+        for (uint256 i = 0; i < sorted.length; i++) {
+            require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
+            lastVisited = sorted[i];
+            accWeight = accWeight.add(voteWeights[epoch][assetId][sorted[i]]);
+            //set  median, if conditions meet
+            if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
+                disputes[epoch][msg.sender].median = sorted[i];
+            }
+            //TODO verify how much gas required for below operations and update this value
+            if (gasleft() < 10000) break;
+        }
+        disputes[epoch][msg.sender].lastVisited = lastVisited;
+        disputes[epoch][msg.sender].accWeight = accWeight;
     }
 
     // //todo test
     // //if any mistake made during giveSorted, resetDispute and start again
-    // function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(Constants.DISPUTE) {
-    //     disputes[epoch][msg.sender] = Dispute(0, 0, 0);
-    // }
-    //
+    function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(Constants.dispute()) {
+        disputes[epoch][msg.sender] = Dispute(0, 0, 0, 0);
+    }
+
     // //propose alternate block in dispute phase
     // //if no one votes, skip giveSorted and proposeAlt directly.
-    // function proposeAlt (uint256 epoch) public checkEpoch(epoch) checkState(Constants.DISPUTE) {
+    // function proposeAlt (uint256 epoch) public checkEpoch(epoch) checkState(Constants.dispute()) {
+    //
     //     require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch]);
     //     uint256 median = disputes[epoch][msg.sender].median;
     //     uint256 bountyHunterId = nodeIds[msg.sender];
