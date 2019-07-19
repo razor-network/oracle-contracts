@@ -96,12 +96,18 @@ contract Schelling3 {
     }
 
     //for some reasom, getter for block doesnt return medians array. so using this for now
-    function getBlock (uint256 blockNumber) public view returns(uint256, uint256[] memory medians, uint256, uint256) {
-      // uint256 proposerId;
-      // uint256[] medians;
-      // uint256 iteration;
-      // uint256 biggestStake;
-        Block memory _block = blocks[blockNumber];
+    function getBlock (uint256 epoch, uint256 proposalIndex) public view
+    returns(uint256, uint256[] memory medians, uint256, uint256) {
+        // uint256 proposerId;
+        // uint256[] medians;
+        // uint256 iteration;
+        // uint256 biggestStake;
+        Block memory _block;
+        if (proposalIndex > 0) {
+            _block = proposedBlocks[epoch][proposalIndex - 1];
+        } else {
+            _block = blocks[epoch];
+        }
         medians = _block.medians;
         return(_block.proposerId, medians, _block.iteration, _block.biggestStake);
     }
@@ -258,31 +264,32 @@ contract Schelling3 {
         require(nodes[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
 
         // check if someone already proposed
-        if (blocks[epoch].proposerId != 0) {
-            if (blocks[epoch].proposerId == proposerId) {
-                revert("Already Proposed");
-            }
-            // if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
-            //     proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
-            //
-            //     require(proposedBlocks[epoch][4].iteration > iteration,
-            //             "iteration not smaller than last elected staker");
-            // } else
-            if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
-                revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
-            }
-        }
+        // if (blocks[epoch].proposerId != 0) {
+        //     if (blocks[epoch].proposerId == proposerId) {
+        //         revert("Already Proposed");
+        //     }
+        //     // if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
+        //     //     proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
+        //     //
+        //     //     require(proposedBlocks[epoch][4].iteration > iteration,
+        //     //             "iteration not smaller than last elected staker");
+        //     // } else
+        //     if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
+        //         revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
+        //     }
+        // }
         // blocks[epoch]
-        insertAppropriately(epoch, Block(proposerId,
+        uint256 pushAt = insertAppropriately(epoch, Block(proposerId,
                                         medians,
                                         iteration,
                                         nodes[biggestStakerId].stake));
+        emit Y(pushAt);
         // mint and give block reward
-        if (Constants.blockReward() > 0) {
-            nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
-            totalStake = totalStake.add(Constants.blockReward());
-            require(sch.mint(address(this), Constants.blockReward()));
-        }
+        // if (Constants.blockReward() > 0) {
+        //     nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
+        //     totalStake = totalStake.add(Constants.blockReward());
+        //     require(sch.mint(address(this), Constants.blockReward()));
+        // }
         emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId);
     }
 
@@ -469,34 +476,50 @@ contract Schelling3 {
     //     }
     // }
     //proposedblocks[epoch] = [Block.iteration]
-    function insertAppropriately(uint256 epoch, Block memory _block) internal {
+    function insertAppropriately(uint256 epoch, Block memory _block) public returns(uint256) {
         // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
-            return;
+            return(0);
         }
         // Block[] memory temp = proposedBlocks[epoch];
         // delete (proposedBlocks[epoch]);
         // bool pushed = false;
         // bool empty = true;
-        uint256 pushAt = 0;
+        uint256 pushAt = proposedBlocks[epoch].length;
         for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
+            if (proposedBlocks[epoch][i].biggestStake < _block.biggestStake) {
+                pushAt = i;
+                break;
+            }
             if (proposedBlocks[epoch][i].iteration > _block.iteration) {
                 pushAt = i;
                 break;
-                // proposedBlocks[epoch].push(_block);
             }
         }
-
-        for (uint256 j = proposedBlocks[epoch].length; j > pushAt; j--) {
-            proposedBlocks[epoch][j+1] = proposedBlocks[epoch][j];
+//insert 53
+//pushat = 2
+// length = 4
+// j = 2
+// 1,10,2955
+// 1,10,2955,2955
+// 1,10,10,2955
+        // if (pushAt == proposedBlocks[epoch].length) {
+        //     proposedBlocks[epoch].push(_block);
+        //     return;
+        // }
+        proposedBlocks[epoch].push(_block);
+        for (uint256 j = proposedBlocks[epoch].length - 1; j > (pushAt); j--) {
+            proposedBlocks[epoch][j] = proposedBlocks[epoch][j - 1];
         }
+        // if (pushAt < proposedBlocks[epoch].length) {
+
         proposedBlocks[epoch][pushAt] = _block;
-
-
+        // }
         // if (pushed == false && temp.length < Constants.maxAltBlocks()) {
         //     proposedBlocks[epoch].push(_block);
         // }
+        return(pushAt);
     }
 
     function slash (uint256 id, address bountyHunter) internal {

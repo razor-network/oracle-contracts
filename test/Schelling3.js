@@ -161,10 +161,10 @@ contract('Schelling', function (accounts) {
     it('should be able to commit', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
-      let tree = merkle('keccak256').sync([200, 300])
+      let tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
       console.log(tree.root())
-      console.log(tree.level(1))
-      console.log(tree.level(2))
+      // console.log(tree.level(1))
+      // console.log(tree.level(2))
       let root = tree.root()
 
       let commitment1 = web3i.utils.soliditySha3(1, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
@@ -223,13 +223,26 @@ contract('Schelling', function (accounts) {
       await schelling.setState(1)
 
       // //console.log('epoch', epoch)
-      let tree = merkle('keccak256').sync([200, 300])
+      let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+      let tree = merkle('keccak256').sync(votes)
       console.log(tree.root())
       console.log(tree.level(1))
       // console.log(tree.level(2))
       let root = tree.root()
-      console.log('proofs', [[tree.level(1)[1]], [tree.level(1)[0]]])
-      let tx = await schelling.reveal(1, tree.root(), [200, 300], [[tree.level(1)[1]], [tree.level(1)[0]]], '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]})
+      // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
+      let proof = []
+      for (i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true))
+      }
+      console.log(1, tree.root(), [100, 200, 300, 400, 500, 600, 700, 800, 900],
+                proof,
+                  '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+                  accounts[1])
+      let tx = await schelling.reveal(1, tree.root(),
+      [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        proof,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+      accounts[1], { 'from': accounts[1]})
       // //console.log('reveal gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
 
       // tx = await schelling.reveal(1, 168, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9333', accounts[3], { 'from': accounts[3]})
@@ -273,52 +286,142 @@ contract('Schelling', function (accounts) {
 //     //   }
 //     // })
 //
-    it('should be able to elect random proposer', async function () {
-      let schelling = await Schelling.deployed()
-      await schelling.setState(2)
-      let res = {}
-      let val
-      biggestStakerId = await getBiggestStakerId(schelling)
-      for (let i = 0; i < 10; i++) { // sample no
-        await schelling.dum()
-
-        let isElectedProposer
-        for (let j = 0; ; j++) {
- // iternation
-
-          for (let k = 1; k < 10; k++) { // node
-            isElectedProposer = await schelling.isElectedProposer(j, biggestStakerId, k)
-            if (isElectedProposer) {
-              let node = await schelling.nodes(k)
-              iteration = j
-              electedProposer = k
-              break
-            }
-          }
-          if (isElectedProposer) break
-        }
-
-        if (!res[electedProposer]) {
-          res[electedProposer] = 0
-        }
-        res[electedProposer] = res[electedProposer] + 1
-      }
-
-      for (var key in res) {
-        val = res[key]
-      }
-    })
+ //    it('should be able to elect random proposer', async function () {
+ //      let schelling = await Schelling.deployed()
+ //      await schelling.setState(2)
+ //      let res = {}
+ //      let val
+ //      biggestStakerId = await getBiggestStakerId(schelling)
+ //      for (let i = 0; i < 10; i++) { // sample no
+ //        await schelling.dum()
+ //
+ //        let isElectedProposer
+ //        for (let j = 0; ; j++) {
+ // // iternation
+ //
+ //          for (let k = 1; k < 10; k++) { // node
+ //            isElectedProposer = await schelling.isElectedProposer(j, biggestStakerId, k)
+ //            if (isElectedProposer) {
+ //              let node = await schelling.nodes(k)
+ //              iteration = j
+ //              electedProposer = k
+ //              break
+ //            }
+ //          }
+ //          if (isElectedProposer) break
+ //        }
+ //
+ //        if (!res[electedProposer]) {
+ //          res[electedProposer] = 0
+ //        }
+ //        res[electedProposer] = res[electedProposer] + 1
+ //      }
+ //
+ //      for (var key in res) {
+ //        val = res[key]
+ //      }
+ //    })
 //
-    it('should be able to propose if elected', async function () {
+
+    async function getIteration (schelling, biggestStakerId, nodeId) {
+      let j = 0
+      for (let i = 0; i < 100000; i++) {
+        isElectedProposer = await schelling.isElectedProposer(i, biggestStakerId, nodeId)
+        if (isElectedProposer) return (i)
+      }
+    }
+
+    it('should be able to propose', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
       await schelling.setState(2)
+      let stakerId = await schelling.nodeIds(accounts[1])
+      let biggestStakerId = await getBiggestStakerId(schelling)
+      console.log('biggestStakerId', biggestStakerId)
+      let iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration1b', iteration)
+      await schelling.propose(1, [200, 301], iteration, biggestStakerId, { 'from': accounts[1]})
 
-      await schelling.propose(1, [200, 301], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
+      // let block = await schelling.proposedBlocks(1, 0)
+      let block = await schelling.getBlock(1, 1)
+      console.log(block[0])
+      // console.log(block.medians)
+      assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 301])
+      assert(Number(block[0]) === Number(stakerId))
+      // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
+    })
 
-      let block = await schelling.proposedBlocks(1, 0)
-      console.log(block)
-      // console.log([Number(block[1][0]), Number(block[1][1])], [200, 300])
+    it('should be able to propose multiple blocks', async function () {
+      let schelling = await Schelling.deployed()
+      let sch = await SimpleToken.deployed()
+      // await schelling.setState(2)
+      let biggestStakerId = await getBiggestStakerId(schelling)
+      console.log('biggestStakerId', biggestStakerId)
+      let stakerId = await schelling.nodeIds(accounts[2])
+      let iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration2b', Number(iteration))
+      await schelling.propose(1, [200, 300], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+      let block = await schelling.getBlock(1, 1)
+      // console.log('iteration', Number(block[0]))
+      // console.log(block.medians)
+      // assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 300])
+      // assert(Number(block[0]) === Number(stakerId))
+
+      let block2 = await schelling.getBlock(1, 2)
+      // let block3 = await schelling.getBlock(1, 3)
+      // let block4 = await schelling.getBlock(1, 4)
+      console.log('iteration1', Number(block[2]))
+      console.log('iteration2', Number(block2[2]))
+      // console.log('iteration3', Number(block3[2]))
+      // console.log('iteration4', Number(block4[2]))
+
+      stakerId = await schelling.nodeIds(accounts[3])
+      iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration3b', iteration)
+      await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+      block = await schelling.getBlock(1, 1)
+      block2 = await schelling.getBlock(1, 2)
+      block3 = await schelling.getBlock(1, 3)
+      // let block4 = await schelling.getBlock(1, 4)
+      console.log('iteration1', Number(block[2]))
+      console.log('iteration2', Number(block2[2]))
+      console.log('iteration3', Number(block3[2]))
+      // console.log('iteration4', Number(block4[2]))
+
+      stakerId = await schelling.nodeIds(accounts[4])
+      iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration4b', iteration)
+      await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+
+      // console.log('iteration2b', iteration)
+      block = await schelling.getBlock(1, 1)
+      block2 = await schelling.getBlock(1, 2)
+      block3 = await schelling.getBlock(1, 3)
+      block4 = await schelling.getBlock(1, 4)
+      console.log('iteration1', Number(block[2]))
+      console.log('iteration2', Number(block2[2]))
+      console.log('iteration3', Number(block3[2]))
+      console.log('iteration4', Number(block4[2]))
+      console.log('bb1', Number(block[3]))
+      console.log('bb2', Number(block2[3]))
+      console.log('bb3', Number(block3[3]))
+      console.log('bb4', Number(block4[3]))
+      // console.log(block.medians)
+      // assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 306])
+      // assert(Number(block[0]) === Number(stakerId))
+
+      // stakerId = await schelling.nodeIds(accounts[3])
+      // iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      // await schelling.propose(1, [200, 305], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
+      // stakerId = await schelling.nodeIds(accounts[4])
+      // iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      // await schelling.propose(1, [2000, 301], iteration, biggestStakerId, { 'from': accounts[electedProposer]})
+
+      // let block = await schelling.proposedBlocks(1, 0)
+      // console.log(block)
+      // let block = await schelling.getBlock(1, 1)
+      // console.log(block.medians)
+      // assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 301])
       // assert(Number(block[0]) === electedProposer)
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
@@ -329,7 +432,7 @@ contract('Schelling', function (accounts) {
       await schelling.setState(3)
 
       // TODO check acutal weights from con tract
-      let sortedVotes = [300]
+      let sortedVotes = [100]
       let weights = [420000]
 
       let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
@@ -349,12 +452,12 @@ contract('Schelling', function (accounts) {
       // //console.log('sevenFive', sevenFive)
       // //console.log('---------------------------')
 
-      await schelling.giveSorted(1, 1, sortedVotes, { 'from': accounts[20]})
+      await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
       console.log('median', median)
       console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
-      assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed)
-      assert(Number((await schelling.disputes(1, accounts[20])).median) === median)
-      assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1])
+      assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
     })
 // //
 //     it('should be able to giveSortedVotes in batches', async function () {
