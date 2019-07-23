@@ -27,6 +27,6 @@
     "web3": "^1.0.0-beta.55"
   },
   "devDependencies": {
-    "eth-gas-reporter": "^0.2.6"
+    "eth-gas-reporter": "^0.1.10"
   }
 }

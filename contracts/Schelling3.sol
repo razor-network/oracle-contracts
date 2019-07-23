@@ -119,7 +119,7 @@ contract Schelling3 {
     function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) checkState(Constants.commit()) {
         SimpleToken sch = SimpleToken(schAddress);
          //not allowed during reveal period
-        //require(getState() != Constants.REVEAL);
+        require(getState() != Constants.reveal());
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 nodeId = nodeIds[msg.sender];
@@ -137,41 +137,41 @@ contract Schelling3 {
         emit Staked(nodeId, amount);
     }
 
-    // // event Unstaked(uint256 nodeId);
-    // //
-    // // // staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
-    // // //after which she can call withdraw() to finally Withdraw
-    // // function unstake (uint256 epoch) public checkEpoch(epoch) {
-    // //     // require(getState()!= 1); //not allowed during reveal period
-    // //     uint256 nodeId = nodeIds[msg.sender];
-    // //     Node storage node = nodes[nodeId];
-    // //     require(node.id != 0);
-    // //     require(node.stake > 0, "Nonpositive stake");
-    // //     require(node.unstakeAfter <= epoch && node.unstakeAfter != 0);
-    // //     node.unstakeAfter = 0;
-    // //     node.withdrawAfter = epoch.add(Constants.WITHDRAW_LOCK_PERIOD);
-    // //     emit Unstaked(nodeId);
-    // // }
-    // //
-    // // event Withdrew(uint256 nodeId, uint256 amount);
-    //
-    // // function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(Constants.COMMIT) {
-    // //     uint256 nodeId = nodeIds[msg.sender];
-    // //     Node storage node = nodes[nodeId];
-    // //     require(node.id != 0, "node doesnt exist");
-    // //     require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
-    // //     require(node.unstakeAfter == 0, "Did not unstake");
-    // //     require((node.withdrawAfter <= epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
-    // //     require(commitments[epoch][nodeId] == 0x0, "already commited this epoch. Cant withdraw");
-    // //     givePenalties(node, epoch);
-    // //     require(node.stake > 0, "Nonpositive Stake");
-    // //     SimpleToken sch = SimpleToken(schAddress);
-    // //     totalStake = totalStake.sub(nodes[nodeId].stake);
-    // //     nodes[nodeId].stake = 0;
-    // //     emit Withdrew(nodeId, nodes[nodeId].stake);
-    // //     require(sch.transfer(msg.sender, nodes[nodeId].stake));
-    // // }
-    //
+    event Unstaked(uint256 nodeId);
+
+    // staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
+    //after which she can call withdraw() to finally Withdraw
+    function unstake (uint256 epoch) public checkEpoch(epoch) {
+        require(getState() != 1); //not allowed during reveal period
+        uint256 nodeId = nodeIds[msg.sender];
+        Node storage node = nodes[nodeId];
+        require(node.id != 0);
+        require(node.stake > 0, "Nonpositive stake");
+        require(node.unstakeAfter <= epoch && node.unstakeAfter != 0);
+        node.unstakeAfter = 0;
+        node.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
+        emit Unstaked(nodeId);
+    }
+
+    event Withdrew(uint256 nodeId, uint256 amount);
+
+    function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(Constants.commit()) {
+        uint256 nodeId = nodeIds[msg.sender];
+        Node storage node = nodes[nodeId];
+        require(node.id != 0, "node doesnt exist");
+        require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
+        require(node.unstakeAfter == 0, "Did not unstake");
+        require((node.withdrawAfter <= epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
+        require(commitments[epoch][nodeId] == 0x0, "already commited this epoch. Cant withdraw");
+        givePenalties(node, epoch);
+        require(node.stake > 0, "Nonpositive Stake");
+        SimpleToken sch = SimpleToken(schAddress);
+        totalStake = totalStake.sub(nodes[nodeId].stake);
+        nodes[nodeId].stake = 0;
+        emit Withdrew(nodeId, nodes[nodeId].stake);
+        require(sch.transfer(msg.sender, nodes[nodeId].stake));
+    }
+
     event Committed(uint256 epoch, uint256 nodeId, bytes32 commitment);
     //
     event Y(uint256 y);
@@ -259,7 +259,7 @@ contract Schelling3 {
                     uint256 iteration,
                     uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
         uint256 proposerId = nodeIds[msg.sender];
-        SimpleToken sch = SimpleToken(schAddress);
+        // SimpleToken sch = SimpleToken(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(nodes[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
 
@@ -326,26 +326,6 @@ contract Schelling3 {
         disputes[epoch][msg.sender] = Dispute(0, 0, 0, 0);
     }
 
-    // //propose alternate block in dispute phase
-    // //if no one votes, skip giveSorted and proposeAlt directly.
-    // function proposeAlt (uint256 epoch) public checkEpoch(epoch) checkState(Constants.dispute()) {
-    //
-    //     require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch]);
-    //     uint256 median = disputes[epoch][msg.sender].median;
-    //     uint256 bountyHunterId = nodeIds[msg.sender];
-    //     uint256 proposerId = blocks[epoch].proposerId;
-    //
-    //     require(median > 0);
-    //     if (blocks[epoch].median != median) {
-    //         blocks[epoch] = Block(bountyHunterId, median,
-    //                                 0, 0);
-    //         emit Proposed(epoch, proposerId, median, 0, 0);
-    //         slash(proposerId, msg.sender);
-    //     } else {
-    //         revert("Proposed Alternate block as identical to proposed block");
-    //     }
-    // }
-
     // WARNING TODO FOR TESTING ONLY. REMOVE IN PROD
 
     function setEpoch (uint256 epoch) public { EPOCH = epoch;}
@@ -358,13 +338,13 @@ contract Schelling3 {
 
     function getEpoch () public view returns(uint256) {
         return(EPOCH);
-        return(block.number.div(40));
+        return(block.number.div(Constants.epochLength()));
     }
 
     function getState () public view returns(uint256) {
         return (STATE);
-        uint256 state = (block.number.div(10));
-        return (state.mod(uint256(4)));
+        uint256 state = (block.number.div(Constants.epochLength()/Constants.numStates()));
+        return (state.mod(Constants.numStates()));
     }
 
     //return price from last epoch
@@ -375,88 +355,74 @@ contract Schelling3 {
 
     // internal functions vvvvvvvv
     //executed in state 0
-    // function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
-    //   // this is problematic
-    //   // anything to the power of N grows too fast
-    //   // stake = stake * 99**e/100**e
-    //   // alternative, calculate penalty for 1 epoch * pe
-    //
-    //     // thisStaker.stake = (thisStaker.stake.mul(Constants.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs.sub(1)))).div(
-    //     // Constants.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs.sub(1)));
-    //     if (epochs < 2) {
-    //         return(stakeValue);
-    //     }
-    //     uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.PENALTY_NOT_REVEAL_NUM)).div(
-    //     Constants.PENALTY_NOT_REVEAL_DENOM));
-    //     if (penalty < stakeValue) {
-    //         return(stakeValue.sub(penalty));
-    //     } else {
-    //         return(0);
-    //     }
-    // }
-    // function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
-    //     uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-    //     if (epoch > 1 && epochLastRevealed > 0) {
-    //         uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
-    //                                 thisStaker.epochLastRevealed :
-    //                                 thisStaker.epochStaked;
-    //         // penalize or reward if last active more than epoch - 1
-    //         uint256 penalizeEpochs = epoch.sub(epochLastActive);
-    //         uint256 previousStake = thisStaker.stake;
-    //         thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
-    //
-    //
-    //
-    //         uint256 medianLastEpoch = blocks[epochLastRevealed].median;
-    //         uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
-    //         if (medianLastEpoch > 0 && voteLastEpoch > 0) {
-    //           // //penalty for out of zone for in zone
-    //           // // (y= ((M - x)^2/M^2))- 0.0001
-    //           // // (10000((M-x)(M-x)/M*M) - 1)/10000
-    //           //for M = 160, x = 10
-    //           //
-    //           // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-    //           //             voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-    //           //             uint256(10000)));
-    //
-    //           // should probably simplify this curve to a linear curve
-    //           // cut stake by 100% if vote is 0 or >2*M where M is weighted median
-    //             uint256 y = (((medianLastEpoch.mul(medianLastEpoch)).add(voteLastEpoch.mul(voteLastEpoch)))
-    //                         .sub(medianLastEpoch.mul(voteLastEpoch.mul(2)))).mul(10000)
-    //                         .div(medianLastEpoch.mul(medianLastEpoch));
-    //             emit Y(y);
-    //
-    //                        // uint256 y = (10000*(medianLastEpoch*medianLastEpoch + voteLastEpoch*voteLastEpoch
-    //                        //            -2*medianLastEpoch*voteLastEpoch))/(
-    //                        //              medianLastEpoch*medianLastEpoch);
-    //             if (voteLastEpoch > (medianLastEpoch.mul(2))) {
-    //                 thisStaker.stake = 0;
-    //                 rewardPool = rewardPool.add(previousStake);
-    //             } else if (voteLastEpoch > 0 &&
-    //                 (voteLastEpoch < (medianLastEpoch.mul(Constants.SAFETY_MARGIN_LOWER)).div(100) ||
-    //                 voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
-    //                                 Constants.SAFETY_MARGIN_LOWER))).div(100))) {
-    //                                     // return(y);
-    //               //stake = y*stake
-    //               // thisStaker.stake = ((y.sub(uint256(1))).mul(thisStaker.stake)).div(uint256(10000));
-    //               // thisStaker.stake = thisStaker.stake.sub(((y.sub(uint256(1)))
-    //               //.mul(thisStaker.stake)).div(uint256(10000)));
-    //               // thisStaker.stake = stakeBefore-(((y-1)*stakeBefore)/10000);
-    //
-    //                 thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
-    //
-    //                 rewardPool = rewardPool.add(previousStake.sub(thisStaker.stake));
-    //             } else {
-    //             // reward += stake*(0.0001-y)
-    //             // = stake*(1-10000y)/10000
-    //             // = stake*()
-    //               // stakeGettingReward = stakeGettingReward.add((thisStaker.stake.mul(
-    //               //                     uint256(1).sub(uint256(10000).mul(y)))).div(10000));
-    //                 stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-    //             }
-    //         }
-    //     }
-    // }
+    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
+      // this is problematic
+      // anything to the power of N grows too fast
+      // stake = stake * 99**e/100**e
+      // alternative, calculate penalty for 1 epoch * pe
+
+        // thisStaker.stake = (thisStaker.stake.mul(Constants.PENALTY_NOT_REVEAL_NUM**(penalizeEpochs.sub(1)))).div(
+        // Constants.PENALTY_NOT_REVEAL_DENOM**(penalizeEpochs.sub(1)));
+        if (epochs < 2) {
+            return(stakeValue);
+        }
+        uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.penaltyNotRevealNum())).div(
+        Constants.penaltyNotRevealDenom()));
+        if (penalty < stakeValue) {
+            return(stakeValue.sub(penalty));
+        } else {
+            return(0);
+        }
+    }
+
+    //gives penalties for:
+    // 2. not committing
+    // 3. not revealing
+    // 1. giving vting outside consensus
+    function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
+        uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+        if (epoch > 1 && epochLastRevealed > 0) {
+            uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
+                                    thisStaker.epochLastRevealed :
+                                    thisStaker.epochStaked;
+            // penalize or reward if last active more than epoch - 1
+            uint256 penalizeEpochs = epoch.sub(epochLastActive);
+            uint256 previousStake = thisStaker.stake;
+            thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+            uint256[] memory mediansLastEpoch = blocks[epochLastRevealed].medians;
+            if (mediansLastEpoch.length > 0) {
+
+                uint256 y;
+                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
+                    uint256 voteLastEpoch = votes[epochLastRevealed][i][thisStaker.id].value;
+                    uint256 medianLastEpoch = mediansLastEpoch[i];
+                    if (voteLastEpoch > (medianLastEpoch.mul(2))) {
+                        thisStaker.stake = 0;
+                        rewardPool = rewardPool.add(previousStake);
+                        return(0);
+                    } else if (voteLastEpoch > 0 &&
+                        (voteLastEpoch < (medianLastEpoch.mul(Constants.safetyMarginLower())).div(100) ||
+                        voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
+                                        Constants.safetyMarginLower()))).div(100))) {
+
+                        if (medianLastEpoch > voteLastEpoch) {
+                            y = y + 100*(100*(medianLastEpoch - voteLastEpoch) - medianLastEpoch)/10000;
+                        } else {
+                            y = y + 100*(100*(voteLastEpoch - medianLastEpoch) - medianLastEpoch)/10000;
+                        }
+                    }
+                }
+                emit Y(y);
+                thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
+
+                rewardPool = rewardPool.add(previousStake.sub(thisStaker.stake));
+            } else {
+                //no penalty. only reward??
+                stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
+            }
+        }
+    }
+
     //
     // //executed in state 1
     // function giveRewards (Node storage thisStaker, uint256 epoch) internal {
@@ -497,17 +463,7 @@ contract Schelling3 {
                 break;
             }
         }
-//insert 53
-//pushat = 2
-// length = 4
-// j = 2
-// 1,10,2955
-// 1,10,2955,2955
-// 1,10,10,2955
-        // if (pushAt == proposedBlocks[epoch].length) {
-        //     proposedBlocks[epoch].push(_block);
-        //     return;
-        // }
+
         proposedBlocks[epoch].push(_block);
         for (uint256 j = proposedBlocks[epoch].length - 1; j > (pushAt); j--) {
             proposedBlocks[epoch][j] = proposedBlocks[epoch][j - 1];
@@ -519,6 +475,9 @@ contract Schelling3 {
         // if (pushed == false && temp.length < Constants.maxAltBlocks()) {
         //     proposedBlocks[epoch].push(_block);
         // }
+        if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
+            delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
+        }
         return(pushAt);
     }
 

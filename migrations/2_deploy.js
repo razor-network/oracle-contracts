@@ -8,8 +8,9 @@ module.exports = async function (deployer) {
   // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
   deployer.deploy(SimpleToken).then(async function (toke) {
     // await deployer.deploy(Schelling, toke.address).then(async function (sch) {
-    await deployer.deploy(Random)
     await deployer.deploy(Constants)
+    await deployer.link(Constants, Random)
+    await deployer.deploy(Random)
     await deployer.link(Random, Schelling3)
     await deployer.link(Constants, Schelling3)
     await deployer.deploy(Schelling3, toke.address).then(async function (sch3) {

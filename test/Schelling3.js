@@ -7,12 +7,15 @@
 const { assertRevert } = require('./helpers/assertRevert')
 let Schelling = artifacts.require('./Schelling3.sol')
 let SimpleToken = artifacts.require('./SimpleToken.sol')
+let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
 let merkle = require('@razor-network/merkle')
 
 let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
 let gasPrice = 3.9 // gwei
 let ethPrice = 172
+let numBlocks = 10
+
 // let dollarPerGas = ethUsd * gasPrice * 10 ** 9 = 6.708e-7
 let dollarPerGas = 6.708e-7
 let electedProposer
@@ -43,7 +46,7 @@ let biggestStakerId
 // test unstake and withdraw
 // test cases where nobody votes, too low stake (1-4)
 
-async function getBiggestStakerId (schelling) {
+async function getBiggestStakeAndId (schelling) {
   let numStakers = await schelling.numNodes()
   let biggestStake = 0
   let biggestStakerId = 0
@@ -54,7 +57,7 @@ async function getBiggestStakerId (schelling) {
       biggestStakerId = i
     }
   }
-  return biggestStakerId
+  return ([biggestStake, biggestStakerId])
 }
 
 contract('Schelling', function (accounts) {
@@ -323,44 +326,140 @@ contract('Schelling', function (accounts) {
  //    })
 //
 
-    async function getIteration (schelling, biggestStakerId, nodeId) {
+    async function prng (seed, max, blockHashes) {
+      let hashh = await prngHash(seed, blockHashes)
+      let sum = web3.utils.toBN(hashh)
+      max = web3.utils.toBN(max)
+      // console.log('sum', sum)
+      // console.log('max', max)
+      // console.log('sum%max', sum.mod(web3.utils.toBN(max)))
+      // console.log('hashh, sum,max,prng', hashh, sum, max, sum.mod(max))
+      return (sum.mod(max))
+    }
+
+// pseudo random hash generator based on block hashes.
+    async function prngHash (seed, blockHashes) {
+      // let sum = blockHashes(numBlocks)
+      let sum = await web3.utils.soliditySha3(blockHashes, seed)
+      // console.log('prngHash', sum)
+      return (sum)
+    }
+
+    async function getIteration (schelling, random, biggestStake, stake, nodeId, numNodes, blockHashes) {
       let j = 0
-      for (let i = 0; i < 100000; i++) {
-        isElectedProposer = await schelling.isElectedProposer(i, biggestStakerId, nodeId)
-        if (isElectedProposer) return (i)
+      console.log(blockHashes)
+      for (let i = 0; i < 10000000000; i++) {
+        // console.log('iteration ', i)
+
+        let isElected = await isElectedProposer(random, i, biggestStake, stake, nodeId, numNodes, blockHashes)
+        if (isElected) return (i)
       }
     }
+
+    async function isElectedProposer (random, iteration, biggestStake, stake, nodeId, numNodes, blockHashes) {
+        // rand = 0 -> totalStake-1
+        // add +1 since prng returns 0 to max-1 and node start from 1
+      let seed = await web3.utils.soliditySha3(iteration)
+      // console.log('seed', seed)
+      if ((Number(await prng(seed, numNodes, blockHashes)) + 1) !== nodeId) return (false)
+      let seed2 = await web3.utils.soliditySha3(nodeId, iteration)
+      let randHash = await prngHash(seed2, blockHashes)
+      let rand = Number((await web3.utils.toBN(randHash)).mod(await web3.utils.toBN(2 ** 32)))
+        // let biggestStake = nodes[biggestStake].stake;
+      if (rand * (biggestStake) > stake * (2 ** 32)) return (false)
+      return (true)
+    }
+
+    it('prngHash should work as expected', async function () {
+      // let schelling = await Schelling.deployed()
+      // let sch = await SimpleToken.deployed()
+      let random = await Random.deployed()
+
+      // async function prng (seed, max, blockHashes) {
+      let blockHashes = await random.blockHashes(numBlocks)
+      let seed = '0x5bb6cbdeb4de92b880424c3f2d6d1f6d50422ca0e12ea3b83aea4e59834aee9b'
+      // let max = 100
+      let r = await prngHash(seed, blockHashes)
+      let rr = await random.prngHash(numBlocks, seed)
+      // console.log('rr,r', rr, r)
+      assert(rr === r)
+      // await schelling.setState(2)
+    })
+
+    it('prng should work as expected', async function () {
+      // let schelling = await Schelling.deployed()
+      // let sch = await SimpleToken.deployed()
+      let random = await Random.deployed()
+
+      // async function prng (seed, max, blockHashes) {
+      let blockHashes = await random.blockHashes(numBlocks)
+      let seed = '0x5bb6cbdeb4de92b880424c3f2d6d1f6d50422ca0e12ea3b83aea4e59834aee9b'
+      let max = 100
+      let r = Number(await prng(seed, max, blockHashes))
+      let rr = Number(await random.prng(numBlocks, max, seed))
+      console.log('rr,r', rr, r)
+      assert(rr === r)
+      // await schelling.setState(2)
+    })
 
     it('should be able to propose', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
+      let random = await Random.deployed()
       await schelling.setState(2)
-      let stakerId = await schelling.nodeIds(accounts[1])
-      let biggestStakerId = await getBiggestStakerId(schelling)
+
+      let stakerId = Number(await schelling.nodeIds(accounts[1]))
+      let staker = await schelling.nodes(stakerId)
+      let numNodes = Number(await schelling.numNodes())
+      // assert(staker.id.toString() === '3')
+      // assert(staker.stake.toString() === '800000')
+      // console.log()
+      let stake = Number(staker.stake)
+      console.log('stake', stake)
+      let biggestStake = (await getBiggestStakeAndId(schelling))[0]
+      console.log('biggestStake', biggestStake)
+      let biggestStakerId = (await getBiggestStakeAndId(schelling))[1]
       console.log('biggestStakerId', biggestStakerId)
-      let iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      let blockHashes = await random.blockHashes(numBlocks)
+      console.log(' biggestStake, stake, stakerId, numNodes, blockHashes', biggestStake, stake, stakerId, numNodes, blockHashes)
+      let iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes)
       console.log('iteration1b', iteration)
       await schelling.propose(1, [200, 301], iteration, biggestStakerId, { 'from': accounts[1]})
 
       // let block = await schelling.proposedBlocks(1, 0)
       let block = await schelling.getBlock(1, 1)
-      console.log(block[0])
+      // console.log(block[0])
       // console.log(block.medians)
       assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 301])
       assert(Number(block[0]) === Number(stakerId))
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
-
+    //
     it('should be able to propose multiple blocks', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
+      let random = await Random.deployed()
+
       // await schelling.setState(2)
-      let biggestStakerId = await getBiggestStakerId(schelling)
+      // console.log('biggestStake', biggestStake)
+      let stakerId = Number(await schelling.nodeIds(accounts[2]))
+      let staker = await schelling.nodes(stakerId)
+      let stake = Number(staker.stake)
+      let numNodes = Number(await schelling.numNodes())
+      // assert(staker.id.toString() === '3')
+      // assert(staker.stake.toString() === '800000')
+      // console.log()
+      // console.log('stake', stake)
+      let biggestStake = (await getBiggestStakeAndId(schelling))[0]
+      console.log('biggestStake', biggestStake)
+      let biggestStakerId = (await getBiggestStakeAndId(schelling))[1]
       console.log('biggestStakerId', biggestStakerId)
-      let stakerId = await schelling.nodeIds(accounts[2])
-      let iteration = await getIteration(schelling, biggestStakerId, stakerId)
-      console.log('iteration2b', Number(iteration))
-      await schelling.propose(1, [200, 300], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+      let blockHashes = await random.blockHashes(numBlocks)
+      console.log(' biggestStake, stake, stakerId, numNodes, blockHashes', biggestStake, stake, stakerId, numNodes, blockHashes)
+      let iteration = Number(await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes))
+      // let iteration = await getIteration(schelling, biggestStake, stakerId)
+      console.log('iteration2b', (iteration))
+      await schelling.propose(1, [200, 300], iteration, biggestStakerId, { 'from': accounts[2]})
       let block = await schelling.getBlock(1, 1)
       // console.log('iteration', Number(block[0]))
       // console.log(block.medians)
@@ -375,8 +474,11 @@ contract('Schelling', function (accounts) {
       // console.log('iteration3', Number(block3[2]))
       // console.log('iteration4', Number(block4[2]))
 
-      stakerId = await schelling.nodeIds(accounts[3])
-      iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      stakerId = Number(await schelling.nodeIds(accounts[3]))
+      staker = await schelling.nodes(stakerId)
+      stake = Number(staker.stake)
+      blockHashes = await random.blockHashes(numBlocks)
+      iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes)
       console.log('iteration3b', iteration)
       await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
       block = await schelling.getBlock(1, 1)
@@ -388,8 +490,12 @@ contract('Schelling', function (accounts) {
       console.log('iteration3', Number(block3[2]))
       // console.log('iteration4', Number(block4[2]))
 
-      stakerId = await schelling.nodeIds(accounts[4])
-      iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      stakerId = Number(await schelling.nodeIds(accounts[4]))
+      staker = await schelling.nodes(stakerId)
+      stake = Number(staker.stake)
+      blockHashes = await random.blockHashes(numBlocks)
+      iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes)
+      // iteration = await getIteration(schelling, biggestStakerId, stakerId)
       console.log('iteration4b', iteration)
       await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
 
@@ -406,6 +512,62 @@ contract('Schelling', function (accounts) {
       console.log('bb2', Number(block2[3]))
       console.log('bb3', Number(block3[3]))
       console.log('bb4', Number(block4[3]))
+
+      stakerId = Number(await schelling.nodeIds(accounts[5]))
+      // stakerId = await schelling.nodeIds(accounts[3])
+      staker = await schelling.nodes(stakerId)
+      stake = Number(staker.stake)
+      blockHashes = await random.blockHashes(numBlocks)
+      iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes)
+      // iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration5b', iteration)
+      await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+
+      block = await schelling.getBlock(1, 1)
+      block2 = await schelling.getBlock(1, 2)
+      block3 = await schelling.getBlock(1, 3)
+      block4 = await schelling.getBlock(1, 4)
+      block5 = await schelling.getBlock(1, 5)
+      console.log('iteration1', Number(block[2]))
+      console.log('iteration2', Number(block2[2]))
+      console.log('iteration3', Number(block3[2]))
+      console.log('iteration4', Number(block4[2]))
+      console.log('iteration5', Number(block5[2]))
+      console.log('bb1', Number(block[3]))
+      console.log('bb2', Number(block2[3]))
+      console.log('bb3', Number(block3[3]))
+      console.log('bb4', Number(block4[3]))
+      console.log('bb5', Number(block5[3]))
+
+      stakerId = Number(await schelling.nodeIds(accounts[6]))
+      // stakerId = await schelling.nodeIds(accounts[3])
+      staker = await schelling.nodes(stakerId)
+      stake = Number(staker.stake)
+      blockHashes = await random.blockHashes(numBlocks)
+      iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numNodes, blockHashes)
+      // iteration = await getIteration(schelling, biggestStakerId, stakerId)
+      console.log('iteration6b', iteration)
+      await schelling.propose(1, [200, 306], iteration, biggestStakerId, { 'from': accounts[stakerId]})
+
+      block = await schelling.getBlock(1, 1)
+      block2 = await schelling.getBlock(1, 2)
+      block3 = await schelling.getBlock(1, 3)
+      block4 = await schelling.getBlock(1, 4)
+      block5 = await schelling.getBlock(1, 5)
+      block6 = await schelling.getBlock(1, 6)
+      console.log('iteration1', Number(block[2]))
+      console.log('iteration2', Number(block2[2]))
+      console.log('iteration3', Number(block3[2]))
+      console.log('iteration4', Number(block4[2]))
+      console.log('iteration5', Number(block5[2]))
+      console.log('iteration6', Number(block6[2]))
+      console.log('bb1', Number(block[3]))
+      console.log('bb2', Number(block2[3]))
+      console.log('bb3', Number(block3[3]))
+      console.log('bb4', Number(block4[3]))
+      console.log('bb5', Number(block5[3]))
+      console.log('bb6', Number(block6[3]))
+
       // console.log(block.medians)
       // assert.deepEqual([Number(block.medians[0]), Number(block.medians[1])], [200, 306])
       // assert(Number(block[0]) === Number(stakerId))
@@ -425,40 +587,40 @@ contract('Schelling', function (accounts) {
       // assert(Number(block[0]) === electedProposer)
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
-
-    it('should be able to giveSortedVotes', async function () {
-      let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
-      await schelling.setState(3)
-
-      // TODO check acutal weights from con tract
-      let sortedVotes = [100]
-      let weights = [420000]
-
-      let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
-      let medianWeight = totalStakeRevealed / 2
-      let i = 0
-      let median = 0
-      let weight = 0
-      for (i = 0; i < sortedVotes.length; i++) {
-        weight += weights[i]
-        if (weight > medianWeight && median === 0) median = sortedVotes[i]
-      }
-      // //console.log('totalStakeRevealed', totalStakeRevealed)
-      // //console.log('medianWeight', medianWeight)
-      // //console.log('twoFiveWeight', twoFiveWeight)
-      // //console.log('sevenFiveWeight', sevenFiveWeight)
-      // //console.log('twofive', twoFive)
-      // //console.log('sevenFive', sevenFive)
-      // //console.log('---------------------------')
-
-      await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
-      console.log('median', median)
-      console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
-      assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
-      assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
-      assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
-    })
+    //
+    // it('should be able to giveSortedVotes', async function () {
+    //   let schelling = await Schelling.deployed()
+    //   let sch = await SimpleToken.deployed()
+    //   await schelling.setState(3)
+    //
+    //   // TODO check acutal weights from con tract
+    //   let sortedVotes = [100]
+    //   let weights = [420000]
+    //
+    //   let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
+    //   let medianWeight = totalStakeRevealed / 2
+    //   let i = 0
+    //   let median = 0
+    //   let weight = 0
+    //   for (i = 0; i < sortedVotes.length; i++) {
+    //     weight += weights[i]
+    //     if (weight > medianWeight && median === 0) median = sortedVotes[i]
+    //   }
+    //   // //console.log('totalStakeRevealed', totalStakeRevealed)
+    //   // //console.log('medianWeight', medianWeight)
+    //   // //console.log('twoFiveWeight', twoFiveWeight)
+    //   // //console.log('sevenFiveWeight', sevenFiveWeight)
+    //   // //console.log('twofive', twoFive)
+    //   // //console.log('sevenFive', sevenFive)
+    //   // //console.log('---------------------------')
+    //
+    //   await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
+    //   console.log('median', median)
+    //   console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
+    //   assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
+    //   assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
+    //   assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
+    // })
 // //
 //     it('should be able to giveSortedVotes in batches', async function () {
 //       let schelling = await Schelling.deployed()

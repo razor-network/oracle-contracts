@@ -1,5 +1,6 @@
 pragma solidity 0.5.10;
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "./Constants.sol";
 
 
 library Random {
@@ -14,12 +15,18 @@ library Random {
 
     // pseudo random hash generator based on block hashes.
     function prngHash (uint8 numBlocks, bytes32 seed) public view returns(bytes32) {
+        bytes32 sum = blockHashes(numBlocks);
+        sum = keccak256(abi.encodePacked(sum, seed));
+        return(sum);
+    }
+
+    function blockHashes (uint8 numBlocks) public view returns(bytes32) {
         bytes32 sum;
-        uint256 blockNumberEpochStart = (block.number.div(16)).mul(16);
+        //lets start from the start of the epoch
+        uint256 blockNumberEpochStart = (block.number.div(Constants.epochLength())).mul(Constants.epochLength());
         for (uint8 i = 1; i <= numBlocks; i++) {
             sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart.sub(i))));
         }
-        sum = keccak256(abi.encodePacked(sum, seed));
         return(sum);
     }
 }
