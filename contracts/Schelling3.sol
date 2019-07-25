@@ -1,6 +1,8 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
 import "./SimpleToken.sol";
+import "./Incentives.sol";
+import "./lib/SharedStructs.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./lib/Random.sol";
 import "./lib/Constants.sol";
@@ -23,53 +25,24 @@ import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 contract Schelling3 {
     using SafeMath for uint256;
 
-    struct Vote {
-        uint256 value;
-        uint256 weight;
-    }
-
-    struct Node {
-        uint256 id;
-        uint256 stake;
-        uint256 epochStaked;
-        uint256 epochLastCommitted;
-        uint256 epochLastRevealed;
-        uint256 unstakeAfter;
-        uint256 withdrawAfter;
-    }
-
-    struct Block {
-        uint256 proposerId;
-        uint256[] medians;
-        uint256 iteration;
-        uint256 biggestStake;
-        bool valid;
-    }
-
-    struct Dispute {
-        uint256 accWeight;
-        uint256 median;
-        uint256 lastVisited;
-        uint256 assetId;
-    }
-
     mapping (address => uint256) public nodeIds;
-    mapping (uint256 => Node) public nodes;
+    mapping (uint256 => SharedStructs.Node) public nodes;
     //epoch->stakerid->commitment
     mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
     //epoch->stakerid->assetid->vote
-    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Vote))) public votes;
+    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => SharedStructs.Vote))) public votes;
     // epoch -> asset -> stakeWeight
     mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
-    mapping (uint256 => Block) public blocks;
+
+    mapping (uint256 => SharedStructs.Block) public blocks;
     //epoch->assetid->voteValue->weight
     mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
     //epoch->address->dispute->assetid
-    mapping (uint256 => mapping (address => Dispute)) public disputes;
+    mapping (uint256 => mapping (address => SharedStructs.Dispute)) public disputes;
     //epoch -> numProposedBlocks
     // mapping (uint256 => uint256) public numProposedBlocks;
     //epoch -> proposalNumber -> block
-    mapping (uint256 => Block[]) public proposedBlocks;
+    mapping (uint256 => SharedStructs.Block[]) public proposedBlocks;
     address public schAddress;
 
     uint256 public numNodes = 0;
@@ -126,7 +99,7 @@ contract Schelling3 {
         uint256 nodeId = nodeIds[msg.sender];
         if (nodeId == 0) {
             numNodes = numNodes.add(1);
-            nodes[numNodes] = Node(numNodes, amount, epoch, 0, 0, epoch.add(Constants.unstakeLockPeriod()), 0);
+            nodes[numNodes] = SharedStructs.Node(numNodes, amount, epoch, 0, 0, epoch.add(Constants.unstakeLockPeriod()), 0);
             nodeId = numNodes;
             nodeIds[msg.sender] = nodeId;
         } else {
@@ -158,7 +131,7 @@ contract Schelling3 {
 
     function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 nodeId = nodeIds[msg.sender];
-        Node storage node = nodes[nodeId];
+        SharedStructs.Node storage node = nodes[nodeId];
         require(node.id != 0, "node doesnt exist");
         require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
         require(node.unstakeAfter == 0, "Did not unstake");
@@ -182,11 +155,12 @@ contract Schelling3 {
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 nodeId = nodeIds[msg.sender];
         require(commitments[epoch][nodeId] == 0x0, "already commited");
-        Node storage thisStaker = nodes[nodeId];
+        SharedStructs.Node storage thisStaker = nodes[nodeId];
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
+                    giveBlockReward(blocks[epoch - 1].proposerId);
                 }
             }
         }
@@ -206,25 +180,27 @@ contract Schelling3 {
     public
     checkEpoch(epoch) {
         uint256 thisNodeId = nodeIds[stakerAddress];
-        require(thisNodeId > 0, "Node does not exist");
-        Node storage thisStaker = nodes[thisNodeId];
+        require(thisNodeId > 0, "SharedStructs.Node does not exist");
+        SharedStructs.Node storage thisStaker = nodes[thisNodeId];
         require(commitments[epoch][thisNodeId] != 0x0, "not commited or already revealed");
         // require(value > 0, "voted non positive value");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisNodeId],
                 "incorrect secret/value");
         //if revealing self
         if (msg.sender == stakerAddress) {
+
+            require(getState() == Constants.reveal(), "Not reveal state");
+            require(thisStaker.stake > 0, "nonpositive stake");
+            giveRewards(thisStaker, epoch);
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))));
-                votes[epoch][thisNodeId][i] = Vote(values[i], thisStaker.stake);
+
+                votes[epoch][thisNodeId][i] = SharedStructs.Vote(values[i], thisStaker.stake);
                 voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]].add(thisStaker.stake);
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
 
             }
 
-            require(getState() == Constants.reveal(), "Not reveal state");
-            require(thisStaker.stake > 0, "nonpositive stake");
-            // giveRewards(thisStaker, epoch);
 
             commitments[epoch][thisNodeId] = 0x0;
             thisStaker.epochLastRevealed = epoch;
@@ -287,7 +263,7 @@ contract Schelling3 {
         //     }
         // }
         // blocks[epoch]
-        uint256 pushAt = insertAppropriately(epoch, Block(proposerId,
+        uint256 pushAt = insertAppropriately(epoch, SharedStructs.Block(proposerId,
                                         medians,
                                         iteration,
                                         nodes[biggestStakerId].stake,
@@ -332,7 +308,7 @@ contract Schelling3 {
     // //todo test
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(Constants.dispute()) {
-        disputes[epoch][msg.sender] = Dispute(0, 0, 0, 0);
+        disputes[epoch][msg.sender] = SharedStructs.Dispute(0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
@@ -345,7 +321,7 @@ contract Schelling3 {
 
         require(median > 0);
         if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
-            // blocks[epoch] = Block(bountyHunterId, median,
+            // blocks[epoch] = SharedStructs.Block(bountyHunterId, median,
                                     // 0, 0);
             // emit Proposed(epoch, proposerId, median, 0, 0);
             proposedBlocks[epoch][blockId].valid = false;
@@ -381,47 +357,15 @@ contract Schelling3 {
         return(blocks[epoch-1].medians[assetId]);
     }
 
-    //executed in state 0
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
+    //proposedblocks[epoch] = [SharedStructs.Block.iteration]
 
-        if (epochs < 2) {
-            return(stakeValue);
-        }
-        uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.penaltyNotRevealNum())).div(
-        Constants.penaltyNotRevealDenom()));
-        if (penalty < stakeValue) {
-            return(stakeValue.sub(penalty));
-        } else {
-            return(0);
-        }
-    }
-    //
-    // //executed in state 1
-    // function giveRewards (Node storage thisStaker, uint256 epoch) internal {
-    //     if (epoch > 1 && stakeGettingReward > 0) {
-    //         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-    //         uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
-    //         uint256 medianLastEpoch = blocks[epochLastRevealed].median;
-    //
-    //     //rewardpool*stake*multiplier/stakeGettingReward
-    //         // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-    //         //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-    //         //         uint256(10000)));
-    //         //give rewards if voted in zone
-    //         if ((voteLastEpoch * 100 < (99 * medianLastEpoch) || (voteLastEpoch * 100 > (101 * medianLastEpoch)))) {
-    //             thisStaker.stake = thisStaker.stake + (thisStaker.stake*rewardPool)/stakeGettingReward;
-    //         }
-    //     }
-    // }
-    //proposedblocks[epoch] = [Block.iteration]
-
-    function insertAppropriately(uint256 epoch, Block memory _block) internal returns(uint256) {
+    function insertAppropriately(uint256 epoch, SharedStructs.Block memory _block) internal returns(uint256) {
         // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
             return(0);
         }
-        // Block[] memory temp = proposedBlocks[epoch];
+        // SharedStructs.Block[] memory temp = proposedBlocks[epoch];
         // delete (proposedBlocks[epoch]);
         // bool pushed = false;
         // bool empty = true;
@@ -452,62 +396,6 @@ contract Schelling3 {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }
         return(pushAt);
-    }
-
-    // internal functions vvvvvvvv
-    //gives penalties for:
-    // 2. not committing
-    // 3. not revealing
-    // 1. giving vting outside consensus
-    function givePenalties (Node storage thisStaker, uint256 epoch) internal returns(uint256) {
-        uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-        if (epoch > 1 && epochLastRevealed > 0) {
-            uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
-                                    thisStaker.epochLastRevealed :
-                                    thisStaker.epochStaked;
-            // penalize or reward if last active more than epoch - 1
-            uint256 penalizeEpochs = epoch.sub(epochLastActive);
-            uint256 previousStake = thisStaker.stake;
-            thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
-            // return(0);
-
-            uint256[] memory mediansLastEpoch = blocks[epochLastRevealed].medians;
-            if (mediansLastEpoch.length > 0) {
-
-                uint256 y;
-                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                    uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id][i].value;
-                    uint256 medianLastEpoch = mediansLastEpoch[i];
-
-                    if (voteLastEpoch > (medianLastEpoch.mul(2))) {
-                        thisStaker.stake = 0;
-                        rewardPool = rewardPool.add(previousStake);
-                        return(0);
-                    } else if (voteLastEpoch > 0 &&
-                        (voteLastEpoch < (medianLastEpoch.mul(Constants.safetyMarginLower())).div(100) ||
-                        voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
-                                        Constants.safetyMarginLower()))).div(100))) {
-
-                        if (medianLastEpoch > voteLastEpoch) {
-                            y = y + (100 * (medianLastEpoch - voteLastEpoch))/medianLastEpoch;
-                        } else {
-                            y = y + (100 * (voteLastEpoch - medianLastEpoch))/medianLastEpoch;
-                        }
-                    }
-                }
-
-                if (y > 0) {
-                    thisStaker.stake = previousStake.sub(((y - 1).mul(previousStake)).div(100*mediansLastEpoch.length));
-                // thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
-
-                    rewardPool = rewardPool.add(previousStake.sub(thisStaker.stake));
-                    return(y);
-                } else {
-                //no penalty. only reward??
-                    stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-                }
-            }
-        }
     }
 
     function slash (uint256 id, address bountyHunter) internal {

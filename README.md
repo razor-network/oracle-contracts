@@ -25,6 +25,8 @@ Schelling2.sol is the main contract that is used in testnet.
 [x] support voting multiple assets
 [x] support disputing for multiple assets
 [x] support proposing multiple blocks in single epoch
-[] support submit/getBlockReward
+[x] support submit/getBlockReward
 [] support getPenalties
 [] support finalize dispute
+[] do we need totalStake? if not, remove
+[] vuln - someone can repeatedly propose same block

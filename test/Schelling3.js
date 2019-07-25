@@ -249,7 +249,7 @@ contract('Schelling', function (accounts) {
       //             '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
       //             accounts[1])
       let tx = await schelling.reveal(1, tree.root(),
-      [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        votes,
         proof,
       '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
       accounts[1], { 'from': accounts[1]})
@@ -549,39 +549,39 @@ contract('Schelling', function (accounts) {
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
     //
-    // it('should be able to giveSortedVotes', async function () {
-    //   let schelling = await Schelling.deployed()
-    //   let sch = await SimpleToken.deployed()
-    //   await schelling.setState(3)
-    //
-    //   // TODO check acutal weights from con tract
-    //   let sortedVotes = [100]
-    //   let weights = [420000]
-    //
-    //   let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
-    //   let medianWeight = totalStakeRevealed / 2
-    //   let i = 0
-    //   let median = 0
-    //   let weight = 0
-    //   for (i = 0; i < sortedVotes.length; i++) {
-    //     weight += weights[i]
-    //     if (weight > medianWeight && median === 0) median = sortedVotes[i]
-    //   }
-    //   // //console.log('totalStakeRevealed', totalStakeRevealed)
-    //   // //console.log('medianWeight', medianWeight)
-    //   // //console.log('twoFiveWeight', twoFiveWeight)
-    //   // //console.log('sevenFiveWeight', sevenFiveWeight)
-    //   // //console.log('twofive', twoFive)
-    //   // //console.log('sevenFive', sevenFive)
-    //   // //console.log('---------------------------')
-    //
-    //   await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
-    //   console.log('median', median)
-    //   console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
-    //   assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
-    //   assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
-    //   assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
-    // })
+    it('should be able to giveSortedVotes', async function () {
+      let schelling = await Schelling.deployed()
+      let sch = await SimpleToken.deployed()
+      await schelling.setState(3)
+
+      // TODO check acutal weights from con tract
+      let sortedVotes = [4, 100, 120]
+      let weights = [600000, 420000, 800000]
+
+      let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
+      let medianWeight = totalStakeRevealed / 2
+      let i = 0
+      let median = 0
+      let weight = 0
+      for (i = 0; i < sortedVotes.length; i++) {
+        weight += weights[i]
+        if (weight > medianWeight && median === 0) median = sortedVotes[i]
+      }
+      // //console.log('totalStakeRevealed', totalStakeRevealed)
+      // //console.log('medianWeight', medianWeight)
+      // //console.log('twoFiveWeight', twoFiveWeight)
+      // //console.log('sevenFiveWeight', sevenFiveWeight)
+      // //console.log('twofive', twoFive)
+      // //console.log('sevenFive', sevenFive)
+      // //console.log('---------------------------')
+
+      await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
+      console.log('median', median)
+      console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
+      assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
+    })
 // //
 //     it('should be able to giveSortedVotes in batches', async function () {
 //       let schelling = await Schelling.deployed()
