@@ -11,7 +11,7 @@ import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 // Must Vote price rounded to 2 decimals *100 and must be above 0
 // e.g. if ethusd is 169.99 vote 16999
 // invalid vote cannot be revealed and you will get penalty
-// node == staker
+// staker == staker
 // TODO Priority list
 // nobody proposes, nobody disputes, extending dispute period
 // staker wants to vote but cant because below minimum. how to handle? should he be penalized? how much waiting time?
@@ -24,8 +24,8 @@ import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 contract Schelling3 {
     using SafeMath for uint256;
 
-    mapping (address => uint256) public nodeIds;
-    mapping (uint256 => Structs.Staker) public nodes;
+    mapping (address => uint256) public stakerIds;
+    mapping (uint256 => Structs.Staker) public stakers;
     //epoch->stakerid->commitment
     mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
     //epoch->stakerid->assetid->vote
@@ -43,7 +43,7 @@ contract Schelling3 {
     mapping (uint256 => Structs.Block[]) public proposedBlocks;
     address public schAddress;
 
-    uint256 public numNodes = 0;
+    uint256 public numStakers = 0;
     uint256 public totalStake = 0;
 
     uint256 public EPOCH;
@@ -84,7 +84,7 @@ contract Schelling3 {
         return(_block.proposerId, medians, _block.iteration, _block.biggestStake);
     }
 
-    event Staked(uint256 nodeId, uint256 amount);
+    event Staked(uint256 stakerId, uint256 amount);
 
     // stake during commit state only
     // we check epoch during every transaction to avoid withholding and rebroadcasting attacks
@@ -94,66 +94,66 @@ contract Schelling3 {
         require(getState() != Constants.reveal());
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
-        uint256 nodeId = nodeIds[msg.sender];
-        if (nodeId == 0) {
-            numNodes = numNodes.add(1);
-            nodes[numNodes] = Structs.Staker(numNodes, amount, epoch, 0, 0, epoch.add(Constants.unstakeLockPeriod()), 0);
-            nodeId = numNodes;
-            nodeIds[msg.sender] = nodeId;
+        uint256 stakerId = stakerIds[msg.sender];
+        if (stakerId == 0) {
+            numStakers = numStakers.add(1);
+            stakers[numStakers] = Structs.Staker(numStakers, amount, epoch, 0, 0, epoch.add(Constants.unstakeLockPeriod()), 0);
+            stakerId = numStakers;
+            stakerIds[msg.sender] = stakerId;
         } else {
-            require(nodes[nodeId].stake > 0,
+            require(stakers[stakerId].stake > 0,
                     "adding stake is not possible after withdrawal/slash. Please use a new address");
-            nodes[nodeId].stake = nodes[nodeId].stake.add(amount);
+            stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
         }
         totalStake = totalStake.add(amount);
-        emit Staked(nodeId, amount);
+        emit Staked(stakerId, amount);
     }
 
-    event Unstaked(uint256 nodeId);
+    event Unstaked(uint256 stakerId);
 
     // staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
     //after which she can call withdraw() to finally Withdraw
     function unstake (uint256 epoch) public checkEpoch(epoch) {
         require(getState() != 1); //not allowed during reveal period
-        uint256 nodeId = nodeIds[msg.sender];
-        Structs.Staker storage node = nodes[nodeId];
-        require(node.id != 0);
-        require(node.stake > 0, "Nonpositive stake");
-        require(node.unstakeAfter <= epoch && node.unstakeAfter != 0);
-        node.unstakeAfter = 0;
-        node.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
-        emit Unstaked(nodeId);
+        uint256 stakerId = stakerIds[msg.sender];
+        Structs.Staker storage staker = stakers[stakerId];
+        require(staker.id != 0);
+        require(staker.stake > 0, "Nonpositive stake");
+        require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0);
+        staker.unstakeAfter = 0;
+        staker.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
+        emit Unstaked(stakerId);
     }
 
-    event Withdrew(uint256 nodeId, uint256 amount);
+    event Withdrew(uint256 stakerId, uint256 amount);
 
     function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(Constants.commit()) {
-        uint256 nodeId = nodeIds[msg.sender];
-        Structs.Staker storage node = nodes[nodeId];
-        require(node.id != 0, "node doesnt exist");
-        require(node.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
-        require(node.unstakeAfter == 0, "Did not unstake");
-        require((node.withdrawAfter <= epoch) && node.withdrawAfter != 0, "Withdraw epoch not reached");
-        require(commitments[epoch][nodeId] == 0x0, "already commited this epoch. Cant withdraw");
-        givePenalties(node, epoch);
-        require(node.stake > 0, "Nonpositive Stake");
+        uint256 stakerId = stakerIds[msg.sender];
+        Structs.Staker storage staker = stakers[stakerId];
+        require(staker.id != 0, "staker doesnt exist");
+        require(staker.epochLastRevealed == epoch.sub(1), "Didnt reveal in last epoch");
+        require(staker.unstakeAfter == 0, "Did not unstake");
+        require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
+        require(commitments[epoch][stakerId] == 0x0, "already commited this epoch. Cant withdraw");
+        givePenalties(staker, epoch);
+        require(staker.stake > 0, "Nonpositive Stake");
         SimpleToken sch = SimpleToken(schAddress);
-        totalStake = totalStake.sub(nodes[nodeId].stake);
-        nodes[nodeId].stake = 0;
-        emit Withdrew(nodeId, nodes[nodeId].stake);
-        require(sch.transfer(msg.sender, nodes[nodeId].stake));
+        totalStake = totalStake.sub(stakers[stakerId].stake);
+        stakers[stakerId].stake = 0;
+        emit Withdrew(stakerId, stakers[stakerId].stake);
+        require(sch.transfer(msg.sender, stakers[stakerId].stake));
     }
 
-    event Committed(uint256 epoch, uint256 nodeId, bytes32 commitment);
+    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment);
     //
     event Y(uint256 y);
     //
     // // what was the eth/usd rate at the beginning of this epoch?
 
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
-        uint256 nodeId = nodeIds[msg.sender];
-        require(commitments[epoch][nodeId] == 0x0, "already commited");
-        Structs.Staker storage thisStaker = nodes[nodeId];
+        uint256 stakerId = stakerIds[msg.sender];
+        require(commitments[epoch][stakerId] == 0x0, "already commited");
+        Structs.Staker storage thisStaker = stakers[stakerId];
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
                 if (proposedBlocks[epoch - 1][i].valid) {
@@ -164,21 +164,21 @@ contract Schelling3 {
         uint256 y = givePenalties(thisStaker, epoch);
         emit Y(y);
         if (thisStaker.stake >= Constants.minStake()) {
-            commitments[epoch][nodeId] = commitment;
+            commitments[epoch][stakerId] = commitment;
             thisStaker.epochLastCommitted = epoch;
-            emit Committed(epoch, nodeId, commitment);
+            emit Committed(epoch, stakerId, commitment);
         }
     }
 
-    event Revealed(uint256 epoch, uint256 nodeId, uint256 value, uint256 stake);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 value, uint256 stake);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
     public
     checkEpoch(epoch) {
-        uint256 thisNodeId = nodeIds[stakerAddress];
+        uint256 thisNodeId = stakerIds[stakerAddress];
         require(thisNodeId > 0, "Structs.Staker does not exist");
-        Structs.Staker storage thisStaker = nodes[thisNodeId];
+        Structs.Staker storage thisStaker = stakers[thisNodeId];
         require(commitments[epoch][thisNodeId] != 0x0, "not commited or already revealed");
         // require(value > 0, "voted non positive value");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisNodeId],
@@ -208,19 +208,19 @@ contract Schelling3 {
         }
     }
 
-    function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 nodeId) public view returns(bool) {
+    function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 stakerId) public view returns(bool) {
         // rand = 0 -> totalStake-1
-        //add +1 since prng returns 0 to max-1 and node start from 1
-        if ((Random.prng(10, numNodes, keccak256(abi.encode(iteration))).add(1)) != nodeId) return(false);
-        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(nodeId, iteration)));
+        //add +1 since prng returns 0 to max-1 and staker start from 1
+        if ((Random.prng(10, numStakers, keccak256(abi.encode(iteration))).add(1)) != stakerId) return(false);
+        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand = uint256(randHash).mod(2**32);
-        uint256 biggestStake = nodes[biggestStakerId].stake;
-        if (rand.mul(biggestStake) > nodes[nodeId].stake.mul(2**32)) return(false);
+        uint256 biggestStake = stakers[biggestStakerId].stake;
+        if (rand.mul(biggestStake) > stakers[stakerId].stake.mul(2**32)) return(false);
         return(true);
     }
 
     event Proposed(uint256 epoch,
-                    uint256 nodeId,
+                    uint256 stakerId,
                     uint256[] medians,
                     uint256 iteration,
                     uint256 biggestStakerId);
@@ -237,23 +237,23 @@ contract Schelling3 {
                     uint256[] memory medians,
                     uint256 iteration,
                     uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
-        uint256 proposerId = nodeIds[msg.sender];
+        uint256 proposerId = stakerIds[msg.sender];
         // SimpleToken sch = SimpleToken(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
-        require(nodes[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
+        require(stakers[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
 
         // check if someone already proposed
         // if (blocks[epoch].proposerId != 0) {
         //     if (blocks[epoch].proposerId == proposerId) {
         //         revert("Already Proposed");
         //     }
-        //     // if (nodes[biggestStakerId].stake == blocks[epoch].biggestStake &&
+        //     // if (stakers[biggestStakerId].stake == blocks[epoch].biggestStake &&
         //     //     proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
         //     //
         //     //     require(proposedBlocks[epoch][4].iteration > iteration,
         //     //             "iteration not smaller than last elected staker");
         //     // } else
-        //     if (nodes[biggestStakerId].stake < blocks[epoch].biggestStake) {
+        //     if (stakers[biggestStakerId].stake < blocks[epoch].biggestStake) {
         //         revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
         //     }
         // }
@@ -261,12 +261,12 @@ contract Schelling3 {
         uint256 pushAt = insertAppropriately(epoch, Structs.Block(proposerId,
                                         medians,
                                         iteration,
-                                        nodes[biggestStakerId].stake,
+                                        stakers[biggestStakerId].stake,
                                         true));
         emit Y(pushAt);
         // mint and give block reward
         // if (Constants.blockReward() > 0) {
-        //     nodes[proposerId].stake = nodes[proposerId].stake.add(Constants.blockReward());
+        //     stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
         //     totalStake = totalStake.add(Constants.blockReward());
         //     require(sch.mint(address(this), Constants.blockReward()));
         // }
@@ -311,7 +311,7 @@ contract Schelling3 {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch][assetId]);
         uint256 median = disputes[epoch][msg.sender].median;
-        // uint256 bountyHunterId = nodeIds[msg.sender];
+        // uint256 bountyHunterId = stakerIds[msg.sender];
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
 
         require(median > 0);
@@ -373,7 +373,7 @@ contract Schelling3 {
     //         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
     //         uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id].value;
     //         uint256 medianLastEpoch = blocks[epochLastRevealed].median;
-    //
+    
     //     //rewardpool*stake*multiplier/stakeGettingReward
     //         // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
     //         //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
@@ -483,25 +483,25 @@ contract Schelling3 {
 
     function slash (uint256 id, address bountyHunter) internal {
         SimpleToken sch = SimpleToken(schAddress);
-        uint256 halfStake = nodes[id].stake.div(2);
-        nodes[id].stake = 0;
+        uint256 halfStake = stakers[id].stake.div(2);
+        stakers[id].stake = 0;
         if (halfStake > 1) {
             totalStake = totalStake.sub(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     }
     // function stakeTransfer(uint256 fromId, address to, uint256 amount) internal{
-    //     // uint256 fromId = nodeIds[from];
+    //     // uint256 fromId = stakerIds[from];
     //     require(fromId!=0);
-    //     require(nodes[fromId].stake >= amount);
-    //     uint256 toId = nodeIds[to];
-    //     nodes[fromId].stake = nodes[fromId].stake - amount;
+    //     require(stakers[fromId].stake >= amount);
+    //     uint256 toId = stakerIds[to];
+    //     stakers[fromId].stake = stakers[fromId].stake - amount;
     //     if (toId == 0) {
-    //         numNodes = numNodes + 1;
-    //         nodes[numNodes] = Structs.Staker(numNodes, amount, 0, 0, 0);
-    //         nodeIds[to] = numNodes;
+    //         numStakers = numStakers + 1;
+    //         stakers[numStakers] = Structs.Staker(numStakers, amount, 0, 0, 0);
+    //         stakerIds[to] = numStakers;
     //     } else {
-    //         nodes[toId].stake = nodes[toId].stake + amount;
+    //         stakers[toId].stake = stakers[toId].stake + amount;
     //     }
     // }
 
