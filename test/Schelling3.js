@@ -21,9 +21,6 @@ let dollarPerGas = 6.708e-7
 let electedProposer
 let iteration
 let biggestStakerId
-// const sleep = ms => new Promise(resolve => setTimeout(resolve, ms))
-// let gasPrice = new web3i.utils.BN(20000000000)
-
 // / TODO:
 // test unstake and withdraw
 // test cases where nobody votes, too low stake (1-4)
@@ -44,9 +41,7 @@ async function getBiggestStakeAndId (schelling) {
 
 contract('Schelling', function (accounts) {
   contract('SimpleToken', function () {
-    it('should be able to stake', async function () {
-      // console.log(web3i.eth.accounts)
-
+    it('shuld be able to initialize', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
 
@@ -61,6 +56,12 @@ contract('Schelling', function (accounts) {
       await sch.transfer(accounts[8], 4000, { 'from': accounts[0]})
       await sch.transfer(accounts[9], 5000, { 'from': accounts[0]})
       await sch.transfer(accounts[10], 6000, { 'from': accounts[0]})
+    })
+    it('should be able to stake', async function () {
+      let schelling = await Schelling.deployed()
+      let sch = await SimpleToken.deployed()
+
+      // console.log(web3i.eth.accounts)
 
       await sch.approve(schelling.address, 420000, { 'from': accounts[1]})
       let tx = await schelling.stake(1, 420000, {'from': accounts[1]})
@@ -168,13 +169,15 @@ contract('Schelling', function (accounts) {
       root = tree.root()
       let commitment3 = web3i.utils.soliditySha3(1, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9333')
       tx = await schelling.commit(1, commitment3, { 'from': accounts[3]})
-      // // ////console.log('commit gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
-      // //
-      tree = merkle('keccak256').sync([4, 4, 4, 4, 4, 4, 4, 4, 4 ])
 
+      tree = merkle('keccak256').sync([4, 4, 4, 4, 4, 4, 4, 4, 4 ])
       let commitment4 = web3i.utils.soliditySha3(1, tree.root(), '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9444')
       tx = await schelling.commit(1, commitment4, { 'from': accounts[4]})
+
       tree = merkle('keccak256').sync([110, 210, 310, 410, 510, 610, 710, 810, 910 ])
+      let commitment5 = web3i.utils.soliditySha3(1, tree.root(), '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9555')
+      tx = await schelling.commit(1, commitment5, { 'from': accounts[5]})
+
       //
       // let commitment7 = web3i.utils.soliditySha3(1, tree.root(), '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9777')
       // tx = await schelling.commit(1, commitment7, { 'from': accounts[7]})
@@ -187,7 +190,6 @@ contract('Schelling', function (accounts) {
       // let commitment10 = web3i.utils.soliditySha3(1, 1000000, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111')
       // tx = await schelling.commit(1, commitment10, { 'from': accounts[10]})
     })
-// //
     it('should be able to reveal someone elses commitment and get bounty', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
@@ -263,7 +265,6 @@ contract('Schelling', function (accounts) {
         proof.push(tree.getProofPath(i, true, true))
       }
       tx = await schelling.reveal(1, root, votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9333', accounts[3], { 'from': accounts[3]})
-      //
       votes = [4, 4, 4, 4, 4, 4, 4, 4, 4 ]
       tree = merkle('keccak256').sync(votes)
       root = tree.root()
@@ -272,6 +273,15 @@ contract('Schelling', function (accounts) {
         proof.push(tree.getProofPath(i, true, true))
       }
       tx = await schelling.reveal(1, root, votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9444', accounts[4], { 'from': accounts[4]})
+      votes = [110, 210, 310, 410, 510, 610, 710, 810, 910 ]
+
+      tree = merkle('keccak256').sync(votes)
+      root = tree.root()
+      proof = []
+      for (i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true))
+      }
+      tx = await schelling.reveal(1, root, votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9555', accounts[5], { 'from': accounts[5]})
       //
       // let commitment8 = web3i.utils.soliditySha3(1, 10, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9888')
       // await schelling.reveal(1, 161, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9888', accounts[8], { 'from': accounts[8]})
@@ -395,7 +405,7 @@ contract('Schelling', function (accounts) {
       assert(Number(block[0]) === Number(stakerId))
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
-    //
+    
     it('should be able to propose multiple blocks', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
@@ -549,39 +559,39 @@ contract('Schelling', function (accounts) {
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
     //
-    // it('should be able to giveSortedVotes', async function () {
-    //   let schelling = await Schelling.deployed()
-    //   let sch = await SimpleToken.deployed()
-    //   await schelling.setState(3)
-    //
-    //   // TODO check acutal weights from con tract
-    //   let sortedVotes = [100]
-    //   let weights = [420000]
-    //
-    //   let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
-    //   let medianWeight = totalStakeRevealed / 2
-    //   let i = 0
-    //   let median = 0
-    //   let weight = 0
-    //   for (i = 0; i < sortedVotes.length; i++) {
-    //     weight += weights[i]
-    //     if (weight > medianWeight && median === 0) median = sortedVotes[i]
-    //   }
-    //   // //console.log('totalStakeRevealed', totalStakeRevealed)
-    //   // //console.log('medianWeight', medianWeight)
-    //   // //console.log('twoFiveWeight', twoFiveWeight)
-    //   // //console.log('sevenFiveWeight', sevenFiveWeight)
-    //   // //console.log('twofive', twoFive)
-    //   // //console.log('sevenFive', sevenFive)
-    //   // //console.log('---------------------------')
-    //
-    //   await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
-    //   console.log('median', median)
-    //   console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
-    //   assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
-    //   assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
-    //   assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
-    // })
+    it('should be able to giveSortedVotes', async function () {
+      let schelling = await Schelling.deployed()
+      let sch = await SimpleToken.deployed()
+      await schelling.setState(3)
+    
+      // TODO check acutal weights from con tract
+      let sortedVotes = [4, 100, 110, 120]
+      let weights = [600000, 420000, 5000, 800000]
+    
+      let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
+      let medianWeight = totalStakeRevealed / 2
+      let i = 0
+      let median = 0
+      let weight = 0
+      for (i = 0; i < sortedVotes.length; i++) {
+        weight += weights[i]
+        if (weight > medianWeight && median === 0) median = sortedVotes[i]
+      }
+      // //console.log('totalStakeRevealed', totalStakeRevealed)
+      // //console.log('medianWeight', medianWeight)
+      // //console.log('twoFiveWeight', twoFiveWeight)
+      // //console.log('sevenFiveWeight', sevenFiveWeight)
+      // //console.log('twofive', twoFive)
+      // //console.log('sevenFive', sevenFive)
+      // //console.log('---------------------------')
+    
+      await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
+      console.log('median', median)
+      console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
+      assert(Number((await schelling.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).median) === median, 'median not matching')
+      assert(Number((await schelling.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
+    })
 // //
 //     it('should be able to giveSortedVotes in batches', async function () {
 //       let schelling = await Schelling.deployed()
@@ -651,9 +661,17 @@ contract('Schelling', function (accounts) {
       // console.log('voteLastEpoch', voteLastEpoch)
       let stakeBefore = Number((await schelling.stakers(stakerId)).stake)
       console.log('stakeBefore', stakeBefore)
-      let commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
-      let tx = await schelling.commit(2, commitment1, { 'from': accounts[1]})
-      console.log(Number(tx.logs[0].args.y))
+
+      tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
+     // console.log(tree.root())
+      root = tree.root()
+
+      let commitment = web3i.utils.soliditySha3(2, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111')
+      tx = await schelling.commit(2, commitment, { 'from': accounts[1]})
+
+      // let commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
+      // let tx = await schelling.commit(2, commitment1, { 'from': accounts[1]})
+      // console.log(Number(tx.logs[0].args.y))
       let stakeAfter = Number((await schelling.stakers(stakerId)).stake)
       console.log('stakeAfter', stakeAfter)
       // if (voteLastEpoch < Math.floor(medianLastEpoch * 0.99) || voteLastEpoch > Math.floor(medianLastEpoch * 1.01)) {
@@ -681,9 +699,9 @@ contract('Schelling', function (accounts) {
       // console.log('voteLastEpoch', voteLastEpoch)
       stakeBefore = Number((await schelling.stakers(stakerId)).stake)
       console.log('stakeBefore', stakeBefore)
-      commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
-      tx = await schelling.commit(2, commitment1, { 'from': accounts[3]})
-      console.log('y', Number(tx.logs[0].args.y))
+      // commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
+      tx = await schelling.commit(2, commitment, { 'from': accounts[3]})
+      // console.log('y', Number(tx.logs[0].args.y))
       stakeAfter = Number((await schelling.stakers(stakerId)).stake)
       console.log('stakeAfter', stakeAfter)
       // if (voteLastEpoch < Math.floor(medianLastEpoch * 0.99) || voteLastEpoch > Math.floor(medianLastEpoch * 1.01)) {
@@ -706,9 +724,9 @@ contract('Schelling', function (accounts) {
       let rewardPoolBefore = Number(await schelling.rewardPool())
       console.log('rewardPoolBefore', rewardPoolBefore)
 
-      commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
-      tx = await schelling.commit(2, commitment1, { 'from': accounts[4]})
-      console.log(Number(tx.logs[0].args.y))
+      // commitment1 = web3i.utils.soliditySha3(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
+      tx = await schelling.commit(2, commitment, { 'from': accounts[4]})
+      // console.log(Number(tx.logs[0].args.y))
       stakeAfter = Number((await schelling.stakers(stakerId)).stake)
       console.log('stakeAfter', stakeAfter)
       // if (voteLastEpoch > medianLastEpoch * 2) {
@@ -725,56 +743,99 @@ contract('Schelling', function (accounts) {
       // assert(rewardPool === rewardPoolBefore + (stakeBefore - stakeAfter))
     })
 //
-//     it('should get rewards when revealed', async function () {
-//       let schelling = await Schelling.deployed()
-//       await schelling.setState(1)
-//       let stakerId = Number(await schelling.stakerIds(accounts[8]))
-//       console.log('stakerId', stakerId)
-//       let stakeBefore = Number((await schelling.stakers(stakerId)).stake)
-//       console.log('stakeBefore', stakeBefore)
-//       tx = await schelling.reveal(2, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000', accounts[8], { 'from': accounts[8]})
-//       let stakeAfter = Number((await schelling.stakers(stakerId)).stake)
-//       console.log('stakeAfter', stakeAfter)
-//     })
-//     it('should get price last epoch', async function () {
-//       let schelling = await Schelling.deployed()
-//       let price = Number(await schelling.getPrice())
-//       console.log('price', price)
-//     })
+    it('should get rewards when revealed', async function () {
+      let schelling = await Schelling.deployed()
+      await schelling.setState(1)
+      let stakerId = Number(await schelling.stakerIds(accounts[1]))
+      console.log('stakerId', stakerId)
+      let stakeBefore = Number((await schelling.stakers(stakerId)).stake)
+      console.log('stakeBefore', stakeBefore)
+      let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+      let tree = merkle('keccak256').sync(votes)
+      console.log(tree.root())
+      let root = tree.root()
+      let proof = []
+      for (i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true))
+      }
+      console.log('proof', proof)
 
-    // it('should be able to unstake in next epoch', async function () {
-    //   let schelling = await Schelling.deployed()
-    //
-    //   tx = await schelling.unstake(3, { 'from': accounts[5]})
-    // })
-    //
-    // it('should not be able to withdraw in same epoch', async function () {
-    //   let sch = await SimpleToken.deployed()
-    //   let schelling = await Schelling.deployed()
-    //
-    //   await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
-    // })
-    //
-    // it('should not be able to withdraw if didnt reveal last epoch', async function () {
-    //   let sch = await SimpleToken.deployed()
-    //   let schelling = await Schelling.deployed()
-    //   await schelling.setEpoch(4)
-    //   await schelling.setState(0)
-    //
-    //   await assertRevert(schelling.withdraw(4, { 'from': accounts[5]}))
-    // })
+      let tx = await schelling.reveal(2, tree.root(),
+      [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        proof,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111',
+      accounts[1], { 'from': accounts[1]})
+
+      // let res = await schelling.reveal(2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111', [0], [['0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111']], '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111', accounts[8], { 'from': accounts[8]})
+      let stakeAfter = Number((await schelling.stakers(stakerId)).stake)
+      console.log('stakeAfter', stakeAfter)
+      // assert(false)
+    })
+    it('should get price last epoch', async function () {
+      let schelling = await Schelling.deployed()
+      let price = Number(await schelling.getPrice(0))
+      console.log('price', price)
+    })
+
+    it('should be able to unstake in next epoch', async function () {
+      let schelling = await Schelling.deployed()
+          await schelling.setEpoch(3)
+          await schelling.setState(0)
+
+      tx = await schelling.unstake(3, { 'from': accounts[5]})
+    })
+    
+    it('should not be able to withdraw in same epoch', async function () {
+      let sch = await SimpleToken.deployed()
+      let schelling = await Schelling.deployed()
+    
+      await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
+    })
+    
+    it('should not be able to withdraw if didnt reveal last epoch', async function () {
+      let sch = await SimpleToken.deployed()
+      let schelling = await Schelling.deployed()
+      await schelling.setEpoch(3)
+      await schelling.setState(0)
+    
+      await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
+    })
 
     // it('should be able to withdraw in next epoch if revealed last epoch', async function () {
     //   let sch = await SimpleToken.deployed()
     //   let schelling = await Schelling.deployed()
-    //
-    //   let commitment1 = web3i.utils.soliditySha3(4, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
-    //   let tx = await schelling.commit(4, commitment1, { 'from': accounts[5]})
-    //   // await schelling.setState(1)
-    //   // tx = await schelling.reveal(4, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000', accounts[5], { 'from': accounts[5]})
+    //   let random = await Random.deployed()
+    //   tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
+    //  // console.log(tree.root())
+    //   root = tree.root()
+
+    //   let commitment = web3i.utils.soliditySha3(3, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111')
+    //   tx = await schelling.commit(3, commitment, { 'from': accounts[5]})
+
+    //   await schelling.setState(2)
+
+    //   let stake = Number(staker.stake)
+    //   console.log('stake', stake)
+    //   let biggestStake = (await getBiggestStakeAndId(schelling))[0]
+    //   console.log('biggestStake', biggestStake)
+    //   let biggestStakerId = (await getBiggestStakeAndId(schelling))[1]
+    //   console.log('biggestStakerId', biggestStakerId)
+    //   let blockHashes = await random.blockHashes(numBlocks)
+    //   console.log('biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
+    //   let iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numStakers, blockHashes)
+    //   console.log('iteration1b', iteration)
+    //   await schelling.propose(1, [100, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1]})
+
+
+    //   // let commitment1 = web3i.utils.soliditySha3(3, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
+    //   // let tx = await schelling.commit(3, commitment1, { 'from': accounts[5]})
+    //   await schelling.setState(1)
+    //   let res = await schelling.reveal(3, tree.root(), [0], [['0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111']], '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9111', accounts[5], { 'from': accounts[5]})
+    //   // await schelling.setEpoch(4)
+    //   // await schelling.setState(0)
     //   // await schelling.setEpoch(5)
     //   //
-    //   // await schelling.withdraw(5, { 'from': accounts[5]})
+    //   // await schelling.withdraw(4, { 'from': accounts[5]})
     // })
 
     //
