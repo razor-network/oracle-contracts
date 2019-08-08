@@ -25,8 +25,8 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
 //
 const fs = require('fs')
-const infuraKey = fs.readFileSync('.infura').toString().trim()
-const mnemonic = fs.readFileSync('.secret').toString().trim()
+// const infuraKey = fs.readFileSync('.infura').toString().trim()
+// const mnemonic = fs.readFileSync('.secret').toString().trim()
 
 module.exports = {
   /**
@@ -70,7 +70,7 @@ module.exports = {
     // NB: It's important to wrap the provider as a function.
     // actually we are using rinkeby not ropsten
     rinkeby: {
-      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/${infuraKey}`), // `${infuraKey}`),
+      provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`), // `${infuraKey}`),
       network_id: 4,       // rinkeby's id
       gas: 5500000,        // Ropsten has a lower block limit than mainnet
       confirmations: 0,    // # of confs to wait between deployments. (default: 0)

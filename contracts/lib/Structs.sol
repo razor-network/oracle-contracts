@@ -1,3 +1,6 @@
+pragma solidity 0.5.10;
+
+
 library Structs
 {
 	struct Vote {
