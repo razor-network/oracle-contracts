@@ -1,25 +1,17 @@
 pragma solidity 0.5.10;
-// pragma experimental ABIEncoderV2;
+pragma experimental ABIEncoderV2;
 import "../SimpleToken.sol";
 import "./Utils.sol";
-// import "./BlockManager.sol";
-import "./Blocks.sol";
+import "./BlockManager.sol";
+// import "./Blocks.sol";
 import "./VoteManager.sol";
 // import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/Structs.sol";
 
 
-contract StakeManager is Utils, Blocks, VoteManager {
+contract StakeManager is Utils, BlockManager, VoteManager {
     using SafeMath for uint256;
-    mapping (address => uint256) public stakerIds;
-    mapping (uint256 => Structs.Staker) public stakers;
-    uint256 public numStakers = 0;
-       // uint256 public totalStake = 0;
-    event Staked(uint256 stakerId, uint256 amount);
-    // SimpleToken public sch;
-    uint256 public rewardPool = 0;
-    uint256 public stakeGettingReward = 0;
 
     // constructor(address _schAddress) public {
     //     sch = SimpleToken(_schAddress);
@@ -81,86 +73,7 @@ contract StakeManager is Utils, Blocks, VoteManager {
         require(sch.transfer(msg.sender, stakers[stakerId].stake), "couldnt transfer");
     }
 
-    // internal functions vvvvvvvv
-    //gives penalties for:
-    // 2. not committing
-    // 3. not revealing
-    // 1. giving vting outside consensus
-    //executed in state 0
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
-        if (epochs < 2) {
-            return(stakeValue);
-        }
-        uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.penaltyNotRevealNum())).div(
-        Constants.penaltyNotRevealDenom()));
-        if (penalty < stakeValue) {
-            return(stakeValue.sub(penalty));
-        } else {
-            return(0);
-        }
-    }
 
-    // todo reduce complexity
-    function givePenalties (Structs.Staker storage thisStaker, uint256 epoch) internal returns(uint256) {
-        uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-        if (epoch > 1 && epochLastRevealed > 0) {
-            uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
-                                    thisStaker.epochLastRevealed :
-                                    thisStaker.epochStaked;
-            // penalize or reward if last active more than epoch - 1
-            uint256 penalizeEpochs = epoch.sub(epochLastActive);
-            uint256 previousStake = thisStaker.stake;
-            thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
-            // return(0);
-
-            uint256[] memory mediansLastEpoch = blocks[epochLastRevealed].medians;
-            if (mediansLastEpoch.length > 0) {
-
-                uint256 y;
-                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                    uint256 voteLastEpoch = votes[epochLastRevealed][thisStaker.id][i].value;
-                    uint256 medianLastEpoch = mediansLastEpoch[i];
-
-                    if (voteLastEpoch > (medianLastEpoch.mul(2))) {
-                        thisStaker.stake = 0;
-                        rewardPool = rewardPool.add(previousStake);
-                        return(0);
-                    } else if (voteLastEpoch > 0 &&
-                        (voteLastEpoch < (medianLastEpoch.mul(Constants.safetyMarginLower())).div(100) ||
-                        voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
-                                        Constants.safetyMarginLower()))).div(100))) {
-
-                        if (medianLastEpoch > voteLastEpoch) {
-                            y = y + (100 * (medianLastEpoch - voteLastEpoch))/medianLastEpoch;
-                        } else {
-                            y = y + (100 * (voteLastEpoch - medianLastEpoch))/medianLastEpoch;
-                        }
-                    }
-                }
-
-                if (y > 0) {
-                    thisStaker.stake = previousStake.sub(((y - 1).mul(previousStake)).div(100*mediansLastEpoch.length));
-                // thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
-
-                    rewardPool = rewardPool.add(previousStake.sub(thisStaker.stake));
-                    return(y);
-                } else {
-                //no penalty. only reward??
-                    stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-                }
-            }
-        }
-    }
-
-    function slash (uint256 id, address bountyHunter) internal {
-        // SimpleToken sch = SimpleToken(schAddress);
-        uint256 halfStake = stakers[id].stake.div(2);
-        stakers[id].stake = 0;
-        if (halfStake > 1) {
-            // totalStake = totalStake.sub(halfStake);
-            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
-        }
-    }
     // function stakeTransfer(uint256 fromId, address to, uint256 amount) internal{
     //     // uint256 fromId = stakerIds[from];
     //     require(fromId!=0);

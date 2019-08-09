@@ -3,7 +3,7 @@ var Schelling4 = artifacts.require('./Schelling4.sol')
 var SimpleToken = artifacts.require('./SimpleToken.sol')
 // var Constants = artifacts.require('./lib/Constants.sol')
 var Utils = artifacts.require('./lib/Utils.sol')
-// var Random = artifacts.require('./lib/Random.sol')
+var Random = artifacts.require('./lib/Random.sol')
 // var Blocks = artifacts.require('./Blocks.sol')
 
 module.exports = async function (deployer) {
@@ -13,8 +13,8 @@ module.exports = async function (deployer) {
     // await deployer.link(Constants, Utils)
     // await deployer.link(Constants, Schelling3)
     // await deployer.link(Constants, Random)
-    // await deployer.deploy(Random)
-    // await deployer.link(Random, Schelling3)
+    await deployer.link(Random, Schelling4)
+    await deployer.deploy(Random)
     // deployer.deploy(Blocks).then(async function (blocks) {
     // await deployer.deploy(Schelling, toke.address).then(async function (sch) {
     // await deployer.link(Utils, Schelling4)

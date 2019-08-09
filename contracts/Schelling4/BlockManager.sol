@@ -1,22 +1,15 @@
 pragma solidity 0.5.10;
-// pragma experimental ABIEncoderV2;
+pragma experimental ABIEncoderV2;
 import "../SimpleToken.sol";
 import "./Utils.sol";
-import "./StakeManager.sol";
+// import "./StakeManager.sol";
 import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "../lib/Structs.sol";
 
 
-contract BlockManager is Utils, StakeManager {
+contract BlockManager is Utils {
     using SafeMath for uint256;
-
-  //epoch->address->dispute->assetid
-    mapping (uint256 => mapping (address => Structs.Dispute)) public disputes;
-    //epoch -> numProposedBlocks
-    // mapping (uint256 => uint256) public numProposedBlocks;
-    //epoch -> proposalNumber -> block
-    mapping (uint256 => Structs.Block[]) public proposedBlocks;
 
     event Proposed(uint256 epoch,
                     uint256 stakerId,
