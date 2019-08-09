@@ -1,9 +1,8 @@
 pragma solidity 0.5.10;
 
 
-library Structs
-{
-	struct Vote {
+library Structs {
+    struct Vote {
         uint256 value;
         uint256 weight;
     }

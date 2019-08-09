@@ -1,27 +1,11 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-import "../SimpleToken.sol";
-import "./Utils.sol";
-import "./WriterRole.sol";
-import "./StakeStorage.sol";
-import "./BlockManager.sol";
-import "./VoteManager.sol";
-// import "../lib/Random.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
-contract StakeManager is Utils, WriterRole, StakeStorage {
-    using SafeMath for uint256;
-    event Staked(uint256 stakerId, uint256 amount);
-    SimpleToken public sch;
-    VoteManager public voteManager;
-    BlockManager public blockManager;
+interface StakeManager {
 
-    function init (address _schAddress, address _voteManagerAddress, address _blockManagerAddress) public {
-        sch = SimpleToken(_schAddress);
-        voteManager = VoteManager(_voteManagerAddress);
-        blockManager = BlockManager(_blockManagerAddress);
-    }
+
+    function init (address _schAddress, address _voteManagerAddress, address _blockManagerAddress) external;
 
     function getStakerId(address _address) public view returns(uint256) {
         return(stakerIds[_address]);

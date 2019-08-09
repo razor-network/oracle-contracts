@@ -1,15 +1,26 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-import "../SimpleToken.sol";
-import "./Utils.sol";
-// import "./StakeManager.sol";
 import "../lib/Random.sol";
+// import "../SimpleToken.sol";
+import "./Utils.sol";
+import "./BlockStorage.sol";
+import "./StakeManager.sol";
+import "./VoteManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../lib/Structs.sol";
+import "./WriterRole.sol";
 
 
-contract BlockManager is Utils {
+contract BlockManager is Utils, WriterRole, BlockStorage {
     using SafeMath for uint256;
+
+    StakeManager public stakeManager;
+    VoteManager public voteManager;
+
+    //disable after init.
+    function init(address _stakeManagerAddress, address _voteManagerAddress) public {
+        stakeManager = StakeManager(_stakeManagerAddress);
+        voteManager = VoteManager(_voteManagerAddress);
+    }
 
     event Proposed(uint256 epoch,
                     uint256 stakerId,
@@ -29,10 +40,10 @@ contract BlockManager is Utils {
                     uint256[] memory medians,
                     uint256 iteration,
                     uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
-        uint256 proposerId = stakerIds[msg.sender];
+        uint256 proposerId = stakeManager.getStakerId(msg.sender);
         // SimpleToken sch = SimpleToken(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
-        require(stakers[proposerId].stake >= Constants.minStake(), "stake below minimum stake");
+        require(stakeManager.getStaker(proposerId).stake >= Constants.minStake(), "stake below minimum stake");
 
         // check if someone already proposed
         // if (blocks[epoch].proposerId != 0) {
@@ -53,7 +64,7 @@ contract BlockManager is Utils {
         uint256 pushAt = insertAppropriately(epoch, Structs.Block(proposerId,
                                         medians,
                                         iteration,
-                                        stakers[biggestStakerId].stake,
+                                        stakeManager.getStaker(biggestStakerId).stake,
                                         true));
         emit DebugUint256(pushAt);
         // mint and give block reward
@@ -68,7 +79,7 @@ contract BlockManager is Utils {
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
     checkEpoch(epoch) checkState(Constants.dispute()) {
-        uint256 medianWeight = totalStakeRevealed[epoch][assetId].div(2);
+        uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId).div(2);
         //accWeight = accumulatedWeight
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
@@ -80,7 +91,7 @@ contract BlockManager is Utils {
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
-            accWeight = accWeight.add(voteWeights[epoch][assetId][sorted[i]]);
+            accWeight = accWeight.add(voteManager.getVoteWeight(epoch, assetId, sorted[i]));
             //set  median, if conditions meet
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sorted[i];
@@ -101,7 +112,7 @@ contract BlockManager is Utils {
     function finalizeDispute (uint256 epoch, uint256 blockId)
     public checkEpoch(epoch) checkState(Constants.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
-        require(disputes[epoch][msg.sender].accWeight == totalStakeRevealed[epoch][assetId]);
+        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId));
         uint256 median = disputes[epoch][msg.sender].median;
         // uint256 bountyHunterId = stakerIds[msg.sender];
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
@@ -112,7 +123,7 @@ contract BlockManager is Utils {
                                     // 0, 0);
             // emit Proposed(epoch, proposerId, median, 0, 0);
             proposedBlocks[epoch][blockId].valid = false;
-            slash(proposerId, msg.sender);
+            stakeManager.slash(proposerId, msg.sender);
         } else {
             revert("Proposed Alternate block is identical to proposed block");
         }
@@ -121,12 +132,24 @@ contract BlockManager is Utils {
     function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 stakerId) public view returns(bool) {
        // rand = 0 -> totalStake-1
        //add +1 since prng returns 0 to max-1 and staker start from 1
-        if ((Random.prng(10, numStakers, keccak256(abi.encode(iteration))).add(1)) != stakerId) return(false);
+        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration))).add(1))
+        != stakerId) {return(false);}
         bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand = uint256(randHash).mod(2**32);
-        uint256 biggestStake = stakers[biggestStakerId].stake;
-        if (rand.mul(biggestStake) > stakers[stakerId].stake.mul(2**32)) return(false);
+        uint256 biggestStake = stakeManager.getStaker(biggestStakerId).stake;
+        if (rand.mul(biggestStake) > stakeManager.getStaker(stakerId).stake.mul(2**32)) return(false);
         return(true);
+    }
+
+    function confirmBlock() public onlyWriter {
+        uint256 epoch = getEpoch();
+        if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
+            for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
+                if (proposedBlocks[epoch - 1][i].valid) {
+                    blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
+                }
+            }
+        }
     }
 
     function insertAppropriately(uint256 epoch, Structs.Block memory _block) internal returns(uint256) {
@@ -167,5 +190,6 @@ contract BlockManager is Utils {
         }
         return(pushAt);
     }
+
 
 }

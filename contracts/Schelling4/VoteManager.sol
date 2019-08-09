@@ -4,34 +4,69 @@ pragma experimental ABIEncoderV2;
 import "./Utils.sol";
 // import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "../lib/Structs.sol";
+// import "../lib/Structs.sol";
+import "./StakeManager.sol";
+import "./BlockManager.sol";
+import "./VoteStorage.sol";
 import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
+// import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract VoteManager is Utils {
+contract VoteManager is  Utils, VoteStorage {
 
+    StakeManager public stakeManager;
+    BlockManager public blockManager;
+
+    function init (address _stakeManagerAddress, address _blockManagerAddress) public {
+        stakeManager = StakeManager(_stakeManagerAddress);
+        blockManager = BlockManager(_blockManagerAddress);
+    }
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment);
-    //
-    //
-    // // what was the eth/usd rate at the beginning of this epoch?
+
+    function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
+        //epoch->stakerid->commitment
+        // mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
+        return(commitments[epoch][stakerId]);
+    }
+
+    function getVote(uint256 epoch, uint256 stakerId, uint256 assetId) public view returns(Structs.Vote memory vote) {
+        //epoch->stakerid->assetid->vote
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+        return(votes[epoch][stakerId][assetId]);
+    }
+
+    function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
+    public view returns(uint256) {
+        //epoch->assetid->voteValue->weight
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        return(voteWeights[epoch][assetId][voteValue]);
+    }
+
+    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+        // epoch -> asset -> stakeWeight
+        // mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
+        return(totalStakeRevealed[epoch][assetId]);
+    }
+
+    function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
+        //epoch->assetid->voteValue->weight
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        return(voteWeights[epoch][assetId][voteValue]);
+    }
 
     function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
-        uint256 stakerId = stakerIds[msg.sender];
+        uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
-        Structs.Staker storage thisStaker = stakers[stakerId];
-        if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
-            for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
-                if (proposedBlocks[epoch - 1][i].valid) {
-                    blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
-                }
-            }
-        }
-        uint256 y = givePenalties(thisStaker, epoch);
-        emit DebugUint256(y);
+        Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
+        blockManager.confirmBlock();
+
+        stakeManager.givePenalties(thisStaker, epoch);
+        // emit DebugUint256(y);
         if (thisStaker.stake >= Constants.minStake()) {
             commitments[epoch][stakerId] = commitment;
-            thisStaker.epochLastCommitted = epoch;
+            stakeManager.updateCommitmentEpoch(stakerId);
+            // thisStaker.epochLastCommitted = epoch;
             emit Committed(epoch, stakerId, commitment);
         }
     }
@@ -42,9 +77,9 @@ contract VoteManager is Utils {
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
     public
     checkEpoch(epoch) {
-        uint256 thisNodeId = stakerIds[stakerAddress];
+        uint256 thisNodeId = stakeManager.getStakerId(stakerAddress);
         require(thisNodeId > 0, "Structs.Staker does not exist");
-        Structs.Staker storage thisStaker = stakers[thisNodeId];
+        Structs.Staker memory thisStaker = stakeManager.getStaker(thisNodeId);
         require(commitments[epoch][thisNodeId] != 0x0, "not commited or already revealed");
         // require(value > 0, "voted non positive value");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisNodeId],
@@ -61,7 +96,7 @@ contract VoteManager is Utils {
 
             require(getState() == Constants.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
-            giveRewards(thisStaker, epoch);
+            stakeManager.giveRewards(thisStaker, epoch);
 
             commitments[epoch][thisNodeId] = 0x0;
             thisStaker.epochLastRevealed = epoch;
@@ -70,7 +105,7 @@ contract VoteManager is Utils {
             //bounty hunter revealing someone else's secret in commit state
             require(getState() == Constants.commit(), "Not commit state");
             commitments[epoch][thisNodeId] = 0x0;
-            slash(thisNodeId, msg.sender);
+            stakeManager.slash(thisNodeId, msg.sender);
         }
     }
 }
