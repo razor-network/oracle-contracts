@@ -1,6 +1,6 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-import "./SimpleToken.sol";
+import "../SimpleToken.sol";
 // import "./Modifiers.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./lib/Random.sol";
