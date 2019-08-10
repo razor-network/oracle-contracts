@@ -6,7 +6,6 @@ import "./Utils.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 // import "../lib/Structs.sol";
 import "./IStakeManager.sol";
-import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./VoteStorage.sol";
 import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
@@ -14,24 +13,12 @@ import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 
 
 contract VoteManager is  Utils, VoteStorage {
-    using SafeMath for uint256;
+
     IStakeManager public stakeManager;
-    IStateManager public stateManager;
     IBlockManager public blockManager;
-    
-    modifier checkEpoch (uint256 epoch) {
-        require(epoch == stateManager.getEpoch(), "incorrect epoch");
-        _;
-    }
 
-    modifier checkState (uint256 state) {
-        require(state == stateManager.getState(), "incorrect state");
-        _;
-    }
-
-    function init (address _stakeManagerAddress, address _stateManagerAddress, address _blockManagerAddress) public {
+    function init (address _stakeManagerAddress, address _blockManagerAddress) public {
         stakeManager = IStakeManager(_stakeManagerAddress);
-        stateManager = IStateManager(_stateManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
     }
 
@@ -107,7 +94,7 @@ contract VoteManager is  Utils, VoteStorage {
 
             }
 
-            require(stateManager.getState() == Constants.reveal(), "Not reveal state");
+            require(getState() == Constants.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             stakeManager.giveRewards(thisStaker, epoch);
 
@@ -116,7 +103,7 @@ contract VoteManager is  Utils, VoteStorage {
             // emit Revealed(epoch, thisNodeId, value, thisStaker.stake);
         } else {
             //bounty hunter revealing someone else's secret in commit state
-            require(stateManager.getState() == Constants.commit(), "Not commit state");
+            require(getState() == Constants.commit(), "Not commit state");
             commitments[epoch][thisNodeId] = 0x0;
             stakeManager.slash(thisNodeId, msg.sender);
         }

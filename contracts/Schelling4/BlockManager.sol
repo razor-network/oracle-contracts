@@ -5,6 +5,7 @@ import "../lib/Random.sol";
 import "./Utils.sol";
 import "./BlockStorage.sol";
 import "./IStakeManager.sol";
+import "./IStateManager.sol";
 import "./IVoteManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./WriterRole.sol";
@@ -14,7 +15,18 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     using SafeMath for uint256;
 
     IStakeManager public stakeManager;
+    IStateManager public stateManager;
     IVoteManager public voteManager;
+    
+    modifier checkEpoch (uint256 epoch) {
+        require(epoch == stateManager.getEpoch(), "incorrect epoch");
+        _;
+    }
+
+    modifier checkState (uint256 state) {
+        require(state == stateManager.getState(), "incorrect state");
+        _;
+    }
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
         return(blocks[epoch]);
@@ -26,8 +38,9 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     }
 
     //disable after init.
-    function init(address _stakeManagerAddress, address _voteManagerAddress) public {
+    function init(address _stakeManagerAddress, address _stateManagerAddress, address _voteManagerAddress) public {
         stakeManager = IStakeManager(_stakeManagerAddress);
+        stateManager = IStateManager(_stateManagerAddress);
         voteManager = IVoteManager(_voteManagerAddress);
     }
 
@@ -151,7 +164,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     }
 
     function confirmBlock() public onlyWriter {
-        uint256 epoch = getEpoch();
+        uint256 epoch = stateManager.getEpoch();
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
                 if (proposedBlocks[epoch - 1][i].valid) {

@@ -4,9 +4,10 @@ import "../SimpleToken.sol";
 import "./Utils.sol";
 import "./WriterRole.sol";
 import "./StakeStorage.sol";
+import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./IVoteManager.sol";
-// import "../lib/Random.sol";
+import "../lib/Constants.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 
@@ -16,11 +17,25 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     SimpleToken public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
+    IStateManager public stateManager;
 
-    function init (address _schAddress, address _voteManagerAddress, address _blockManagerAddress) external {
+    modifier checkEpoch (uint256 epoch) {
+        require(epoch == stateManager.getEpoch(), "incorrect epoch");
+        _;
+    }
+
+    modifier checkState (uint256 state) {
+        require(state == stateManager.getState(), "incorrect state");
+        _;
+    }
+
+    // todo disable after init
+    function init (address _schAddress, address _voteManagerAddress,
+        address _blockManagerAddress, address _stateManagerAddress) external {
         sch = SimpleToken(_schAddress);
         voteManager = IVoteManager(_voteManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
+        stateManager = IStateManager(_stateManagerAddress);
     }
 
     function getStakerId(address _address) public view returns(uint256) {
@@ -46,16 +61,15 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
     //     return(totalStakeRevealed[epoch][assetId]);
     // }
-
     function updateCommitmentEpoch(uint256 stakerId) public onlyWriter {
-        stakers[stakerId].epochLastCommitted = getEpoch();
+        stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
     // stake during commit state only
     // we check epoch during every transaction to avoid withholding and rebroadcasting attacks
-    function stake (uint256 epoch, uint256 amount) public checkEpoch(epoch) checkState(Constants.commit()) {
-        //not allowed during reveal period
-        require(getState() != Constants.reveal());
+    function stake (uint256 epoch, uint256 amount) external checkEpoch(epoch) checkState(Constants.commit())  {
+        // not allowed during reveal period
+        require(stateManager.getState() != Constants.reveal(), "Incorrect state");
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];

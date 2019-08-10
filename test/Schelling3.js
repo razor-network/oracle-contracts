@@ -25,20 +25,6 @@ let biggestStakerId
 // test unstake and withdraw
 // test cases where nobody votes, too low stake (1-4)
 
-async function getBiggestStakeAndId (schelling) {
-  let numStakers = await schelling.numStakers()
-  let biggestStake = 0
-  let biggestStakerId = 0
-  for (let i = 1; i <= numStakers; i++) {
-    let stake = Number((await schelling.stakers(i)).stake)
-    if (stake > biggestStake) {
-      biggestStake = stake
-      biggestStakerId = i
-    }
-  }
-  return ([biggestStake, biggestStakerId])
-}
-
 contract('Schelling', function (accounts) {
   contract('SimpleToken', function () {
     it('shuld be able to initialize', async function () {
@@ -405,7 +391,7 @@ contract('Schelling', function (accounts) {
       assert(Number(block[0]) === Number(stakerId))
       // assert.deepEqual([Number(block[1][0]), Number(block[1][1])], [200, 301])
     })
-    
+
     it('should be able to propose multiple blocks', async function () {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
@@ -563,11 +549,11 @@ contract('Schelling', function (accounts) {
       let schelling = await Schelling.deployed()
       let sch = await SimpleToken.deployed()
       await schelling.setState(3)
-    
+
       // TODO check acutal weights from con tract
       let sortedVotes = [4, 100, 110, 120]
       let weights = [600000, 420000, 5000, 800000]
-    
+
       let totalStakeRevealed = Number(await schelling.totalStakeRevealed(1, 1))
       let medianWeight = totalStakeRevealed / 2
       let i = 0
@@ -584,7 +570,7 @@ contract('Schelling', function (accounts) {
       // //console.log('twofive', twoFive)
       // //console.log('sevenFive', sevenFive)
       // //console.log('---------------------------')
-    
+
       await schelling.giveSorted(1, 0, sortedVotes, { 'from': accounts[20]})
       console.log('median', median)
       console.log('median contract', Number((await schelling.disputes(1, accounts[20])).median))
@@ -779,25 +765,25 @@ contract('Schelling', function (accounts) {
 
     it('should be able to unstake in next epoch', async function () {
       let schelling = await Schelling.deployed()
-          await schelling.setEpoch(3)
-          await schelling.setState(0)
+      await schelling.setEpoch(3)
+      await schelling.setState(0)
 
       tx = await schelling.unstake(3, { 'from': accounts[5]})
     })
-    
+
     it('should not be able to withdraw in same epoch', async function () {
       let sch = await SimpleToken.deployed()
       let schelling = await Schelling.deployed()
-    
+
       await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
     })
-    
+
     it('should not be able to withdraw if didnt reveal last epoch', async function () {
       let sch = await SimpleToken.deployed()
       let schelling = await Schelling.deployed()
       await schelling.setEpoch(3)
       await schelling.setState(0)
-    
+
       await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
     })
 
@@ -825,7 +811,6 @@ contract('Schelling', function (accounts) {
     //   let iteration = await getIteration(schelling, random, biggestStake, stake, stakerId, numStakers, blockHashes)
     //   console.log('iteration1b', iteration)
     //   await schelling.propose(1, [100, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1]})
-
 
     //   // let commitment1 = web3i.utils.soliditySha3(3, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9000')
     //   // let tx = await schelling.commit(3, commitment1, { 'from': accounts[5]})
