@@ -11,57 +11,28 @@ var VoteManager = artifacts.require('./VoteManager.sol')
 
 module.exports = async function (deployer) {
   // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
-  deployer.deploy(SimpleToken).then(async function (toke) {
+
+  deployer.then(async () => {
+    await deployer.deploy(SimpleToken)
     await deployer.deploy(Constants)
+    await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager])
     await deployer.deploy(Structs)
-    // await deployer.link(Constants, Utils)
-    // await deployer.link(Constants, Schelling3)
-    await deployer.link(Constants, Random)
+    await deployer.link(Structs, [StakeManager, StakeManager, BlockManager])
     await deployer.deploy(Random)
-    await deployer.link(Structs, StakeManager)
-    deployer.deploy(StakeManager).then(async function (stake) {
-      deployer.deploy(VoteManager).then(async function (vote) {
-        await deployer.link(Random, BlockManager)
-        await deployer.link(Structs, BlockManager)
-        await deployer.link(Constants, BlockManager)
-        deployer.deploy(BlockManager).then(async function (block) {
-      // await deployer.link(Random, StakeManager)
-      // await deployer.link(Structs, StakeManager)
-      // await deployer.link(Constants, StakeManager)
-        // await deployer.link(Random, VoteManager)
-        // await deployer.link(Structs, VoteManager)
-        // await deployer.link(Constants, VoteManager)
-          await toke.addMinter(stake.address)
-          await block.init(stake.address, vote.address)
-          await stake.init(toke.address, vote.address, block.address)
-          await vote.init(stake.address, block.address)
-        })
-    // deployer.deploy(StakeManager).then(async function (stake) {
-    // deployer.deploy(VoteManager).then(async function (vote) {
-    // await deployer.deploy(BlockManager)
-    // await deployer.deploy(StakeManager)
-    // await deployer.deploy(VoteManager)
-    // deployer.deploy(Blocks).then(async function (blocks) {
-    // await deployer.deploy(Schelling, toke.address).then(async function (sch) {
-    // await deployer.link(Utils, Schelling4)
-    // await deployer.link(SimpleToken, Schelling4)
-    // await deployer.link(Random, Blocks)
-    // await deployer.link(Constants, Blocks)
-    // deployer.deploy(Utils).then(async function (utils) {
-    // await deployer.deploy(Razor).then(async function (razor) {
-    // await toke.addMinter(stake.address)
-    // await block.transferOwnership(razor.address)
-    // await stake.transferOwnership(razor.address)
-    // await vote.transferOwnership(razor.address)
-
-    // await deployer.deploy(Schelling4)
-
-    // console.log(tx)
-    // })
-    // })
-    // })
-    // })
-      })
-    })
+    await deployer.link(Random, BlockManager)
+    await deployer.deploy(VoteManager)
+    await deployer.deploy(StakeManager)
+    await deployer.deploy(BlockManager)
+    let token = await SimpleToken.deployed()
+    let block = await BlockManager.deployed()
+    let vote = await VoteManager.deployed()
+    let stake = await StakeManager.deployed()
+    return Promise.all([
+      token.addMinter(StakeManager.address),
+      block.init(StakeManager.address, VoteManager.address),
+      vote.init(StakeManager.address, BlockManager.address),
+      stake.init(SimpleToken.address, VoteManager.address, BlockManager.address)
+      // console.log(await stake.blockManager.call())
+    ])
   })
 }

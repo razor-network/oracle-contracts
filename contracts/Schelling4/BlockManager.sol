@@ -4,8 +4,8 @@ import "../lib/Random.sol";
 // import "../SimpleToken.sol";
 import "./Utils.sol";
 import "./BlockStorage.sol";
-import "./StakeManager.sol";
-import "./VoteManager.sol";
+import "./IStakeManager.sol";
+import "./IVoteManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./WriterRole.sol";
 
@@ -13,13 +13,22 @@ import "./WriterRole.sol";
 contract BlockManager is Utils, WriterRole, BlockStorage {
     using SafeMath for uint256;
 
-    StakeManager public stakeManager;
-    VoteManager public voteManager;
+    IStakeManager public stakeManager;
+    IVoteManager public voteManager;
+
+    function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
+        return(blocks[epoch]);
+    }
+
+    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = blocks[epoch].medians;
+        return(_blockMedians);
+    }
 
     //disable after init.
     function init(address _stakeManagerAddress, address _voteManagerAddress) public {
-        stakeManager = StakeManager(_stakeManagerAddress);
-        voteManager = VoteManager(_voteManagerAddress);
+        stakeManager = IStakeManager(_stakeManagerAddress);
+        voteManager = IVoteManager(_voteManagerAddress);
     }
 
     event Proposed(uint256 epoch,

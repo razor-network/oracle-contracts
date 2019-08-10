@@ -13,7 +13,7 @@ contract BlockStorage {
     mapping (uint256 => Structs.Block[]) public proposedBlocks;
     mapping (uint256 => Structs.Block) public blocks;
 
-    function getBlock(uint256 epoch) public view returns(Structs.Block memory _block) {
-        return(blocks[epoch]);
-    }
+    // function getBlock(uint256 epoch) public view returns(Structs.Block memory _block) {
+    //     return(blocks[epoch]);
+    // }
 }

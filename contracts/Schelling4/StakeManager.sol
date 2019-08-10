@@ -4,8 +4,8 @@ import "../SimpleToken.sol";
 import "./Utils.sol";
 import "./WriterRole.sol";
 import "./StakeStorage.sol";
-import "./BlockManager.sol";
-import "./VoteManager.sol";
+import "./IBlockManager.sol";
+import "./IVoteManager.sol";
 // import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -14,13 +14,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     using SafeMath for uint256;
     event Staked(uint256 stakerId, uint256 amount);
     SimpleToken public sch;
-    VoteManager public voteManager;
-    BlockManager public blockManager;
+    IVoteManager public voteManager;
+    IBlockManager public blockManager;
 
-    function init (address _schAddress, address _voteManagerAddress, address _blockManagerAddress) public {
+    function init (address _schAddress, address _voteManagerAddress, address _blockManagerAddress) external {
         sch = SimpleToken(_schAddress);
-        voteManager = VoteManager(_voteManagerAddress);
-        blockManager = BlockManager(_blockManagerAddress);
+        voteManager = IVoteManager(_voteManagerAddress);
+        blockManager = IBlockManager(_blockManagerAddress);
     }
 
     function getStakerId(address _address) public view returns(uint256) {
@@ -134,7 +134,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
             // return(0);
 
-            uint256[] memory mediansLastEpoch = blockManager.getBlock(epochLastRevealed).medians;
+            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
             if (mediansLastEpoch.length > 0) {
 
                 uint256 y;
@@ -176,7 +176,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     function giveRewards (Structs.Staker memory thisStaker, uint256 epoch) public onlyWriter {
         if (epoch > 1 && stakeGettingReward > 0) {
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-            uint256[] memory mediansLastEpoch = blockManager.getBlock(epochLastRevealed).medians;
+            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
             require(mediansLastEpoch.length > 0);
             //epoch->stakerid->assetid->vote
             // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;

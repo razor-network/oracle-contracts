@@ -5,8 +5,8 @@ import "./Utils.sol";
 // import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 // import "../lib/Structs.sol";
-import "./StakeManager.sol";
-import "./BlockManager.sol";
+import "./IStakeManager.sol";
+import "./IBlockManager.sol";
 import "./VoteStorage.sol";
 import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 // import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
@@ -14,12 +14,12 @@ import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
 
 contract VoteManager is  Utils, VoteStorage {
 
-    StakeManager public stakeManager;
-    BlockManager public blockManager;
+    IStakeManager public stakeManager;
+    IBlockManager public blockManager;
 
     function init (address _stakeManagerAddress, address _blockManagerAddress) public {
-        stakeManager = StakeManager(_stakeManagerAddress);
-        blockManager = BlockManager(_blockManagerAddress);
+        stakeManager = IStakeManager(_stakeManagerAddress);
+        blockManager = IBlockManager(_blockManagerAddress);
     }
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment);
