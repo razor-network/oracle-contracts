@@ -29,7 +29,7 @@ module.exports = async function (deployer) {
     let block = await BlockManager.deployed()
     let vote = await VoteManager.deployed()
     let stake = await StakeManager.deployed()
-    let state = await StateManager.deployed()
+    // let state = await StateManager.deployed()
     return Promise.all([
       token.addMinter(StakeManager.address),
       block.init(StakeManager.address, StateManager.address, VoteManager.address),
