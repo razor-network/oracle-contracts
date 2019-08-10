@@ -6,14 +6,14 @@
 // test penalizeEpochs
 const { assertRevert } = require('./helpers/assertRevert')
 // let functions = require('./helpers/functions')
-// let BlockManager = artifacts.require('./BlockManager.sol')
+let BlockManager = artifacts.require('./BlockManager.sol')
 let StakeManager = artifacts.require('./StakeManager.sol')
 let StateManager = artifacts.require('./StateManager.sol')
-// let VoteManager = artifacts.require('./VoteManager.sol')
+let VoteManager = artifacts.require('./VoteManager.sol')
 let SimpleToken = artifacts.require('./SimpleToken.sol')
 // let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
-// let merkle = require('@razor-network/merkle')
+let merkle = require('@razor-network/merkle')
 
 let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
 
@@ -149,6 +149,49 @@ contract('StakeManager', function (accounts) {
 
       // let staker = await stakeManager.getStaker(1)
       // assert(Number(staker.stake) === 0)
+    })
+
+    it('should be able to withdraw after withdraw lock period if revealed in last epoch', async function () {
+      let stateManager = await StateManager.deployed()
+      let stakeManager = await StakeManager.deployed()
+
+      let blockManager = await BlockManager.deployed()
+      let voteManager = await VoteManager.deployed()
+      let sch = await SimpleToken.deployed()
+
+      // await stateManager.setEpoch(3)
+      let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
+      let tree = merkle('keccak256').sync(votes)
+      console.log(tree.root())
+      let root = tree.root()
+
+      let commitment1 = web3i.utils.soliditySha3(3, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      console.log(await blockManager.isWriter(VoteManager.address))
+      await voteManager.commit(3, commitment1, { 'from': accounts[1] })
+
+      await stateManager.setState(1)
+
+      // let root = tree.root()
+      // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
+      let proof = []
+      for (let i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true))
+      }
+      await voteManager.reveal(3, tree.root(), votes, proof,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        accounts[1], { 'from': accounts[1] })
+
+      await stateManager.setEpoch(4)
+      await stateManager.setState(0)
+
+      let staker = await stakeManager.getStaker(1)
+      console.log(Number(await staker.stake))
+      // console.log(Number(await staker.epochLastRevealed))
+      await (stakeManager.withdraw(4, { 'from': accounts[1] }))
+      staker = await stakeManager.getStaker(1)
+      console.log(Number(await staker.stake))
+      assert(Number(staker.stake) === 0)
+      assert(Number(sch.balanceOf(accounts[1])) === 423000)
     })
   })
 })

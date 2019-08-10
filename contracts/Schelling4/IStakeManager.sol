@@ -11,7 +11,9 @@ interface IStakeManager {
     // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) external view returns(uint256) {
     //     return(totalStakeRevealed[epoch][assetId]);
     // }
+    function setStakerStake(uint256 _id, uint256 _stake) external;
 
+    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
     function updateCommitmentEpoch(uint256 stakerId) external;
 
     // stake during commit state only

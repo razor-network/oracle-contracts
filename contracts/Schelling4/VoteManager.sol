@@ -18,7 +18,7 @@ contract VoteManager is  Utils, VoteStorage {
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IBlockManager public blockManager;
-    
+
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
         _;
@@ -90,35 +90,37 @@ contract VoteManager is  Utils, VoteStorage {
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
     public
     checkEpoch(epoch) {
-        uint256 thisNodeId = stakeManager.getStakerId(stakerAddress);
-        require(thisNodeId > 0, "Structs.Staker does not exist");
-        Structs.Staker memory thisStaker = stakeManager.getStaker(thisNodeId);
-        require(commitments[epoch][thisNodeId] != 0x0, "not commited or already revealed");
+        uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
+        require(thisStakerId > 0, "Structs.Staker does not exist");
+        Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
+        require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
         // require(value > 0, "voted non positive value");
-        require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisNodeId],
+        require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId],
                 "incorrect secret/value");
         //if revealing self
         if (msg.sender == stakerAddress) {
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))));
-                votes[epoch][thisNodeId][i] = Structs.Vote(values[i], thisStaker.stake);
+                votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
                 voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]].add(thisStaker.stake);
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
-
             }
 
             require(stateManager.getState() == Constants.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             stakeManager.giveRewards(thisStaker, epoch);
 
-            commitments[epoch][thisNodeId] = 0x0;
+            commitments[epoch][thisStakerId] = 0x0;
             thisStaker.epochLastRevealed = epoch;
-            // emit Revealed(epoch, thisNodeId, value, thisStaker.stake);
+            stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
+            stakeManager.setStakerEpochLastRevealed(thisStakerId, thisStaker.epochLastRevealed);
+
+            // emit Revealed(epoch, thisStakerId, value, thisStaker.stake);
         } else {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");
-            commitments[epoch][thisNodeId] = 0x0;
-            stakeManager.slash(thisNodeId, msg.sender);
+            commitments[epoch][thisStakerId] = 0x0;
+            stakeManager.slash(thisStakerId, msg.sender);
         }
     }
 }

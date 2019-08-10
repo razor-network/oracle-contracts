@@ -1,4 +1,4 @@
-// var Razor = artifacts.require('./Razor.sol')
+/* global contract, it, artifacts, assert, web3 */
 var SimpleToken = artifacts.require('./SimpleToken.sol')
 var Constants = artifacts.require('./lib/Constants.sol')
 // var Utils = artifacts.require('./lib/Utils.sol')
@@ -10,6 +10,7 @@ var StakeManager = artifacts.require('./StakeManager.sol')
 var VoteManager = artifacts.require('./VoteManager.sol')
 var StateManager = artifacts.require('./StateManager.sol')
 
+// todo remove deployer write access
 module.exports = async function (deployer) {
   // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
 
@@ -34,7 +35,10 @@ module.exports = async function (deployer) {
       token.addMinter(StakeManager.address),
       block.init(StakeManager.address, StateManager.address, VoteManager.address),
       vote.init(StakeManager.address, StateManager.address, BlockManager.address),
-      stake.init(SimpleToken.address, VoteManager.address, BlockManager.address, StateManager.address)
+      stake.init(SimpleToken.address, VoteManager.address, BlockManager.address, StateManager.address),
+      block.addWriter(VoteManager.address),
+      stake.addWriter(VoteManager.address)
+      // vote.addWriter(StakeManager.address)
       // console.log(await stake.blockManager.call())
     ])
   })

@@ -38,6 +38,14 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stateManager = IStateManager(_stateManagerAddress);
     }
 
+    function setStakerStake(uint256 _id, uint256 _stake) external onlyWriter {
+        stakers[_id].stake = _stake;
+    }
+
+    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyWriter {
+        stakers[_id].epochLastRevealed = _epochLastRevealed;
+    }
+
     function getStakerId(address _address) public view returns(uint256) {
         return(stakerIds[_address]);
     }
@@ -113,7 +121,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(staker.unstakeAfter == 0, "Did not unstake");
         require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
-        givePenalties(staker, epoch);
+        _givePenalties(staker, epoch);
         require(staker.stake > 0, "Nonpositive Stake");
         // SimpleToken sch = SimpleToken(schAddress);
         // totalStake = totalStake.sub(stakers[stakerId].stake);
@@ -137,6 +145,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     // todo reduce complexity
     function givePenalties (Structs.Staker memory thisStaker, uint256 epoch) public onlyWriter {
+        _givePenalties(thisStaker, epoch);
+    }
+
+    function _givePenalties (Structs.Staker memory thisStaker, uint256 epoch) internal {
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
         if (epoch > 1 && epochLastRevealed > 0) {
             uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
