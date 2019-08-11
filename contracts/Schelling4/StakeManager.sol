@@ -39,43 +39,20 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     }
 
     function setStakerStake(uint256 _id, uint256 _stake) external onlyWriter {
-        stakers[_id].stake = _stake;
+        _setStakerStake(_id, _stake);
     }
 
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyWriter {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
 
-    function getStakerId(address _address) public view returns(uint256) {
-        return(stakerIds[_address]);
-    }
-
-    function getStaker(uint256 _id) public view returns(Structs.Staker memory staker) {
-        return(stakers[_id]);
-    }
-
-    function getNumStakers() public view returns(uint256) {
-        return(numStakers);
-    }
-
-    function getRewardPool() public view returns(uint256) {
-        return(rewardPool);
-    }
-
-    function getStakeGettingReward() public view returns(uint256) {
-        return(stakeGettingReward);
-    }
-
-    // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
-    //     return(totalStakeRevealed[epoch][assetId]);
-    // }
-    function updateCommitmentEpoch(uint256 stakerId) public onlyWriter {
+    function updateCommitmentEpoch(uint256 stakerId) external onlyWriter {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
     // stake during commit state only
     // we check epoch during every transaction to avoid withholding and rebroadcasting attacks
-    function stake (uint256 epoch, uint256 amount) external checkEpoch(epoch) checkState(Constants.commit())  {
+    function stake (uint256 epoch, uint256 amount) external checkEpoch(epoch) checkState(Constants.commit()) {
         // not allowed during reveal period
         require(stateManager.getState() != Constants.reveal(), "Incorrect state");
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
@@ -100,7 +77,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     // staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
     //after which she can call withdraw() to finally Withdraw
-    function unstake (uint256 epoch) public checkEpoch(epoch)  checkState(Constants.commit()) {
+    function unstake (uint256 epoch) external checkEpoch(epoch)  checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
@@ -113,7 +90,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     event Withdrew(uint256 stakerId, uint256 amount);
 
-    function withdraw (uint256 epoch) public checkEpoch(epoch) checkState(Constants.commit()) {
+    function withdraw (uint256 epoch) external checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker doesnt exist");
@@ -131,6 +108,71 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 
+    // todo reduce complexity
+    function givePenalties (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
+        _givePenalties(thisStaker, epoch);
+    }
+
+    function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
+        if (epoch > 1 && stakeGettingReward > 0) {
+            uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
+            require(mediansLastEpoch.length > 0);
+            //epoch->stakerid->assetid->vote
+            // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+            uint256 rewardable = 0;
+            for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
+                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
+                uint256 medianLastEpoch = mediansLastEpoch[i];
+
+        //rewardpool*stake*multiplier/stakeGettingReward
+            // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+            //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+            //         uint256(10000)));
+            //give rewards if voted in zone
+                if ((voteLastEpoch * 100 >= (99 * medianLastEpoch) ||
+                    (voteLastEpoch * 100 <= (101 * medianLastEpoch)))) {
+                    rewardable = rewardable + 1;
+                }
+            }
+            // emit DebugUint256(rewardable);
+            // emit DebugUint256(rewardPool);
+            uint256 newStake = thisStaker.stake + (thisStaker.stake*rewardPool*rewardable)/
+            (stakeGettingReward*mediansLastEpoch.length);
+            _setStakerStake(thisStaker.id, newStake);
+        }
+    }
+
+    function slash (uint256 id, address bountyHunter) external onlyWriter {
+        // SimpleToken sch = SimpleToken(schAddress);
+        uint256 halfStake = stakers[id].stake.div(2);
+        stakers[id].stake = 0;
+        if (halfStake > 1) {
+            // totalStake = totalStake.sub(halfStake);
+            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
+        }
+    }
+
+    function getStakerId(address _address) external view returns(uint256) {
+        return(stakerIds[_address]);
+    }
+
+    function getStaker(uint256 _id) external view returns(Structs.Staker memory staker) {
+        return(stakers[_id]);
+    }
+
+    function getNumStakers() external view returns(uint256) {
+        return(numStakers);
+    }
+
+    function getRewardPool() external view returns(uint256) {
+        return(rewardPool);
+    }
+
+    function getStakeGettingReward() external view returns(uint256) {
+        return(stakeGettingReward);
+    }
+
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
         if (epochs < 2) {
             return(stakeValue);
@@ -144,9 +186,12 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         }
     }
 
-    // todo reduce complexity
-    function givePenalties (Structs.Staker memory thisStaker, uint256 epoch) public onlyWriter {
-        _givePenalties(thisStaker, epoch);
+    // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+    //     return(totalStakeRevealed[epoch][assetId]);
+    // }
+
+    function _setStakerStake(uint256 _id, uint256 _stake) internal {
+        stakers[_id].stake = _stake;
     }
 
     function _givePenalties (Structs.Staker memory thisStaker, uint256 epoch) internal {
@@ -200,44 +245,6 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         }
     }
 
-    function giveRewards (Structs.Staker memory thisStaker, uint256 epoch) public onlyWriter {
-        if (epoch > 1 && stakeGettingReward > 0) {
-            uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
-            require(mediansLastEpoch.length > 0);
-            //epoch->stakerid->assetid->vote
-            // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
-            uint256 rewardable = 0;
-            for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
-                uint256 medianLastEpoch = mediansLastEpoch[i];
-
-        //rewardpool*stake*multiplier/stakeGettingReward
-            // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-            //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-            //         uint256(10000)));
-            //give rewards if voted in zone
-                if ((voteLastEpoch * 100 >= (99 * medianLastEpoch) ||
-                    (voteLastEpoch * 100 <= (101 * medianLastEpoch)))) {
-                    rewardable = rewardable + 1;
-                }
-            }
-            emit DebugUint256(rewardable);
-            emit DebugUint256(rewardPool);
-            thisStaker.stake = thisStaker.stake + (thisStaker.stake*rewardPool*rewardable)/
-            (stakeGettingReward*mediansLastEpoch.length);
-        }
-    }
-
-    function slash (uint256 id, address bountyHunter) public onlyWriter {
-        // SimpleToken sch = SimpleToken(schAddress);
-        uint256 halfStake = stakers[id].stake.div(2);
-        stakers[id].stake = 0;
-        if (halfStake > 1) {
-            // totalStake = totalStake.sub(halfStake);
-            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
-        }
-    }
     // function stakeTransfer(uint256 fromId, address to, uint256 amount) internal{
     //     // uint256 fromId = stakerIds[from];
     //     require(fromId!=0);
