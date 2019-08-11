@@ -5,17 +5,18 @@
 // // test same vote values, stakes
 // test penalizeEpochs
 const { assertRevert } = require('./helpers/assertRevert')
-// let functions = require('./helpers/functions')
+let functions = require('./helpers/functions')
 let BlockManager = artifacts.require('./BlockManager.sol')
 let StakeManager = artifacts.require('./StakeManager.sol')
 let StateManager = artifacts.require('./StateManager.sol')
 let VoteManager = artifacts.require('./VoteManager.sol')
 let SimpleToken = artifacts.require('./SimpleToken.sol')
-// let Random = artifacts.require('./lib/Random.sol')
+let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
 let merkle = require('@razor-network/merkle')
 
 let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
+let numBlocks = 10
 
 // / TODO:
 // test unstake and withdraw
@@ -155,18 +156,19 @@ contract('StakeManager', function (accounts) {
       let stateManager = await StateManager.deployed()
       let stakeManager = await StakeManager.deployed()
 
-      let blockManager = await BlockManager.deployed()
+      // let blockManager = await BlockManager.deployed()
       let voteManager = await VoteManager.deployed()
       let sch = await SimpleToken.deployed()
+      // let random = await Random.deployed()
 
       // await stateManager.setEpoch(3)
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
-      console.log(tree.root())
+      // console.log(tree.root())
       let root = tree.root()
 
+      // console.log(await blockManager.isWriter(VoteManager.address))
       let commitment1 = web3i.utils.soliditySha3(3, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
-      console.log(await blockManager.isWriter(VoteManager.address))
       await voteManager.commit(3, commitment1, { 'from': accounts[1] })
 
       await stateManager.setState(1)
@@ -181,17 +183,35 @@ contract('StakeManager', function (accounts) {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         accounts[1], { 'from': accounts[1] })
 
+      // await stateManager.setState(2)
+      // let staker = await stakeManager.getStaker(1)
+      // let numStakers = await stakeManager.getNumStakers()
+      // let stake = Number(staker.stake)
+      // let stakerId = Number(staker.id)
+      // console.log('stake', stake)
+      // let biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0]
+      // console.log('biggestStake', biggestStake)
+      // let biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1]
+      // console.log('biggestStakerId', biggestStakerId)
+      // let blockHashes = await random.blockHashes(numBlocks)
+      // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
+      // let iteration = await functions.getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
+      // console.log('iteration1b', iteration)
+      // // await blockManager.propose(3, [100, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
+      //
       await stateManager.setEpoch(4)
       await stateManager.setState(0)
-
+      // commitment1 = web3i.utils.soliditySha3(4, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      // await voteManager.commit(4, commitment1, { 'from': accounts[2] })
       let staker = await stakeManager.getStaker(1)
-      console.log(Number(await staker.stake))
+      // console.log(Number(await staker.stake))
       // console.log(Number(await staker.epochLastRevealed))
       await (stakeManager.withdraw(4, { 'from': accounts[1] }))
       staker = await stakeManager.getStaker(1)
-      console.log(Number(await staker.stake))
+      // console.log(Number(await staker.stake))
       assert(Number(staker.stake) === 0)
-      assert(Number(sch.balanceOf(accounts[1])) === 423000)
+      // console.log('bal', Number(await sch.balanceOf(accounts[1])))
+      assert(Number(await sch.balanceOf(accounts[1])) === 423000)
     })
   })
 })

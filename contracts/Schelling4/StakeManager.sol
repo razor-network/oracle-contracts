@@ -125,9 +125,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(staker.stake > 0, "Nonpositive Stake");
         // SimpleToken sch = SimpleToken(schAddress);
         // totalStake = totalStake.sub(stakers[stakerId].stake);
+        uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
         emit Withdrew(stakerId, stakers[stakerId].stake);
-        require(sch.transfer(msg.sender, stakers[stakerId].stake), "couldnt transfer");
+        require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {

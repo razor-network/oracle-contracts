@@ -58,3 +58,10 @@ async function isElectedProposer (random, iteration, biggestStake, stake, staker
   return (true)
 }
 
+module.exports = {
+  getBiggestStakeAndId: getBiggestStakeAndId,
+  prng: prng,
+  prngHash: prngHash,
+  getIteration: getIteration,
+  isElectedProposer: isElectedProposer
+}
