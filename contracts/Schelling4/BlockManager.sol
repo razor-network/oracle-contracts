@@ -17,7 +17,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IVoteManager public voteManager;
-    
+
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
         _;
@@ -83,7 +83,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         //     }
         // }
         // blocks[epoch]
-        uint256 pushAt = insertAppropriately(epoch, Structs.Block(proposerId,
+        uint256 pushAt = _insertAppropriately(epoch, Structs.Block(proposerId,
                                         medians,
                                         iteration,
                                         stakeManager.getStaker(biggestStakerId).stake,
@@ -134,7 +134,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     function finalizeDispute (uint256 epoch, uint256 blockId)
     public checkEpoch(epoch) checkState(Constants.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
-        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId));
+        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
+        "Total stake revealed doesnt match");
         uint256 median = disputes[epoch][msg.sender].median;
         // uint256 bountyHunterId = stakerIds[msg.sender];
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
@@ -174,7 +175,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         }
     }
 
-    function insertAppropriately(uint256 epoch, Structs.Block memory _block) internal returns(uint256) {
+    function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal returns(uint256) {
        // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
