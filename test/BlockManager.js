@@ -93,14 +93,13 @@ contract('BlockManager', function (accounts) {
       // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
       let iteration = await functions.getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
       // console.log('iteration1b', iteration)
-      await blockManager.propose(1, [101, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
+      await blockManager.propose(1, [100, 201, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
       let proposedBlock = await blockManager.proposedBlocks(1, 0)
       console.log(Number(proposedBlock.proposerId) === 1)
     })
 
     it('should be able to dispute', async function () {
       let stateManager = await StateManager.deployed()
-      // let stakeManager = await StakeManager.deployed()
 
       let voteManager = await VoteManager.deployed()
       let blockManager = await BlockManager.deployed()
@@ -133,11 +132,23 @@ contract('BlockManager', function (accounts) {
       // console.log('Number(await voteManager.getTotalStakeRevealed(1, 0))', Number(await voteManager.getTotalStakeRevealed(1, 0)))
       // console.log('accweight', Number((await blockManager.disputes(1, accounts[20])).accWeight))
       // console.log('median contract', Number((await blockManager.disputes(1, accounts[20])).median))
-      assert(Number((await blockManager.disputes(1, accounts[20])).assetId) === totalStakeRevealed, 'totalStakeRevealed not matching')
+      assert(Number((await blockManager.disputes(1, accounts[20])).assetId) === 1, 'assetId not matching')
       assert(Number((await blockManager.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
       assert(Number((await blockManager.disputes(1, accounts[20])).median) === median, 'median not matching')
       assert(Number((await blockManager.disputes(1, accounts[20])).lastVisited) === sortedVotes[sortedVotes.length - 1], 'lastVisited not matching')
-//      await blockManager.finalizeDispute(1, 0)
+    //      await blockManager.finalizeDispute(1, 0)
+    })
+
+    it('should be able to finalize Dispute', async function () {
+      let blockManager = await BlockManager.deployed()
+      let stakeManager = await StakeManager.deployed()
+      let sch = await SimpleToken.deployed()
+
+      await blockManager.finalizeDispute(1, 0, { 'from': accounts[20] })
+      let proposedBlock = await blockManager.proposedBlocks(1, 0)
+      assert((await proposedBlock.valid) === false)
+      assert(Number((await stakeManager.getStaker(1)).stake) === 0)
+      assert(Number(await sch.balanceOf(accounts[20])) === 210000)
     })
   })
 })

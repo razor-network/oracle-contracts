@@ -37,7 +37,8 @@ module.exports = async function (deployer) {
       vote.init(StakeManager.address, StateManager.address, BlockManager.address),
       stake.init(SimpleToken.address, VoteManager.address, BlockManager.address, StateManager.address),
       block.addWriter(VoteManager.address),
-      stake.addWriter(VoteManager.address)
+      stake.addWriter(VoteManager.address),
+      stake.addWriter(BlockManager.address)
       // vote.addWriter(StakeManager.address)
       // console.log(await stake.blockManager.call())
     ])

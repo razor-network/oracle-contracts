@@ -137,14 +137,10 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
         "Total stake revealed doesnt match");
         uint256 median = disputes[epoch][msg.sender].median;
-        // uint256 bountyHunterId = stakerIds[msg.sender];
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
-
+        //
         require(median > 0);
         if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
-            // blocks[epoch] = Structs.Block(bountyHunterId, median,
-                                    // 0, 0);
-            // emit Proposed(epoch, proposerId, median, 0, 0);
             proposedBlocks[epoch][blockId].valid = false;
             stakeManager.slash(proposerId, msg.sender);
         } else {
