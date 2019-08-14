@@ -104,7 +104,7 @@ contract('BlockManager', function (accounts) {
       let voteManager = await VoteManager.deployed()
       let blockManager = await BlockManager.deployed()
       // let random = await Random.deployed()
-      await stateManager.setState(3)
+      await stateManager.setState(3, { 'from': accounts[20] })
 
       // TODO check acutal weights from con tract
       let sortedVotes = [200]
@@ -129,9 +129,9 @@ contract('BlockManager', function (accounts) {
 
       await blockManager.giveSorted(1, 1, sortedVotes, { 'from': accounts[20] })
       // console.log('median', median)
-      // console.log('Number(await voteManager.getTotalStakeRevealed(1, 0))', Number(await voteManager.getTotalStakeRevealed(1, 0)))
-      // console.log('accweight', Number((await blockManager.disputes(1, accounts[20])).accWeight))
-      // console.log('median contract', Number((await blockManager.disputes(1, accounts[20])).median))
+      // // console.log('Number(await voteManager.getTotalStakeRevealed(1, 0))', Number(await voteManager.getTotalStakeRevealed(1, 0)))
+      // // console.log('accweight', Number((await blockManager.disputes(1, accounts[20])).accWeight))
+      // // console.log('median contract', Number((await blockManager.disputes(1, accounts[20])).median))
       assert(Number((await blockManager.disputes(1, accounts[20])).assetId) === 1, 'assetId not matching')
       assert(Number((await blockManager.disputes(1, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
       assert(Number((await blockManager.disputes(1, accounts[20])).median) === median, 'median not matching')

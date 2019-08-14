@@ -126,7 +126,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         if (epoch > 1 && stakeGettingReward > 0) {
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
             uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
-            require(mediansLastEpoch.length > 0);
+            // require(mediansLastEpoch.length > 0);
             //epoch->stakerid->assetid->vote
             // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
             uint256 rewardable = 0;
