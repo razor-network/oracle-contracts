@@ -127,28 +127,30 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
             uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
             // require(mediansLastEpoch.length > 0);
-            //epoch->stakerid->assetid->vote
-            // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
-            uint256 rewardable = 0;
-            for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
-                uint256 medianLastEpoch = mediansLastEpoch[i];
+            if (mediansLastEpoch.length > 0) {
+                //epoch->stakerid->assetid->vote
+                // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+                uint256 rewardable = 0;
+                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
+                    uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
+                    uint256 medianLastEpoch = mediansLastEpoch[i];
 
-        //rewardpool*stake*multiplier/stakeGettingReward
-            // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-            //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-            //         uint256(10000)));
-            //give rewards if voted in zone
-                if ((voteLastEpoch * 100 >= (99 * medianLastEpoch) ||
-                    (voteLastEpoch * 100 <= (101 * medianLastEpoch)))) {
-                    rewardable = rewardable + 1;
+            //rewardpool*stake*multiplier/stakeGettingReward
+                // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
+                //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
+                //         uint256(10000)));
+                //give rewards if voted in zone
+                    if ((voteLastEpoch * 100 >= (99 * medianLastEpoch) ||
+                        (voteLastEpoch * 100 <= (101 * medianLastEpoch)))) {
+                        rewardable = rewardable + 1;
+                    }
                 }
+                // emit DebugUint256(rewardable);
+                // emit DebugUint256(rewardPool);
+                uint256 newStake = thisStaker.stake + (thisStaker.stake*rewardPool*rewardable)/
+                (stakeGettingReward*mediansLastEpoch.length);
+                _setStakerStake(thisStaker.id, newStake);
             }
-            // emit DebugUint256(rewardable);
-            // emit DebugUint256(rewardPool);
-            uint256 newStake = thisStaker.stake + (thisStaker.stake*rewardPool*rewardable)/
-            (stakeGettingReward*mediansLastEpoch.length);
-            _setStakerStake(thisStaker.id, newStake);
         }
     }
 
@@ -194,7 +196,6 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             return(0);
         }
     }
-
     // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
     //     return(totalStakeRevealed[epoch][assetId]);
     // }

@@ -112,9 +112,9 @@ contract VoteManager is  Utils, VoteStorage {
             stakeManager.giveRewards(thisStaker, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
-            thisStaker.epochLastRevealed = epoch;
-            stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
-            stakeManager.setStakerEpochLastRevealed(thisStakerId, thisStaker.epochLastRevealed);
+            // thisStaker.epochLastRevealed = epoch;
+            // stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
+            stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
             emit Revealed(epoch, thisStakerId, thisStaker.stake);
         } else {
