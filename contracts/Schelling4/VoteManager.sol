@@ -84,7 +84,7 @@ contract VoteManager is  Utils, VoteStorage {
         }
     }
 
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 value, uint256 stake);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
@@ -100,7 +100,8 @@ contract VoteManager is  Utils, VoteStorage {
         //if revealing self
         if (msg.sender == stakerAddress) {
             for (uint256 i = 0; i < values.length; i++) {
-                require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))));
+                require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
+                "invalid merkle proof");
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
                 voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]].add(thisStaker.stake);
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
@@ -115,7 +116,7 @@ contract VoteManager is  Utils, VoteStorage {
             stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
             stakeManager.setStakerEpochLastRevealed(thisStakerId, thisStaker.epochLastRevealed);
 
-            // emit Revealed(epoch, thisStakerId, value, thisStaker.stake);
+            emit Revealed(epoch, thisStakerId, thisStaker.stake);
         } else {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");

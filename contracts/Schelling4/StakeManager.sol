@@ -113,6 +113,15 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         _givePenalties(thisStaker, epoch);
     }
 
+    function giveBlockReward(uint256 stakerId) external onlyWriter {
+        if (Constants.blockReward() > 0) {
+            stakers[stakerId].stake = stakers[stakerId].stake.add(Constants.blockReward());
+            // stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
+            // totalStake = totalStake.add(Constants.blockReward());
+            require(sch.mint(address(this), Constants.blockReward()));
+        }
+    }
+
     function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
         if (epoch > 1 && stakeGettingReward > 0) {
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;

@@ -91,7 +91,7 @@ contract('BlockManager', function (accounts) {
       // console.log('biggestStakerId', biggestStakerId)
       let blockHashes = await random.blockHashes(numBlocks)
       // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
-      let iteration = await functions.getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
+      let iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes)
       // console.log('iteration1b', iteration)
       await blockManager.propose(1, [100, 201, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
       let proposedBlock = await blockManager.proposedBlocks(1, 0)

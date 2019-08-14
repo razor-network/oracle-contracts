@@ -33,7 +33,7 @@ async function prngHash (seed, blockHashes) {
   return (sum)
 }
 
-async function getIteration (schelling, random, biggestStake, stake, stakerId, numStakers, blockHashes) {
+async function getIteration (random, biggestStake, stake, stakerId, numStakers, blockHashes) {
   let j = 0
   console.log(blockHashes)
   for (let i = 0; i < 10000000000; i++) {

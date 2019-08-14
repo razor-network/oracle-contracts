@@ -37,6 +37,23 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         return(_blockMedians);
     }
 
+    function getProposedBlock(uint256 epoch, uint256 proposedBlock)
+    external view returns(Structs.Block memory _block) {
+        _block = proposedBlocks[epoch][proposedBlock];
+        return(_block);
+    }
+
+    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
+    external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
+        return(_blockMedians);
+    }
+
+    function getNumProposedBlocks(uint256 epoch)
+    external view returns(uint256) {
+        return(proposedBlocks[epoch].length);
+    }
+    
     //disable after init.
     function init(address _stakeManagerAddress, address _stateManagerAddress, address _voteManagerAddress) public {
         stakeManager = IStakeManager(_stakeManagerAddress);
@@ -166,6 +183,9 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
+                    uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+                    stakeManager.giveBlockReward(proposerId);
+                    return;
                 }
             }
         }
