@@ -16,12 +16,12 @@ contract StateManager {
     function setState (uint256 state) external { STATE = state;}
 
     function getEpoch () external view returns(uint256) {
-        return(EPOCH);
+        // return(EPOCH);
         return(block.number.div(Constants.epochLength()));
     }
 
     function getState () external view returns(uint256) {
-        return (STATE);
+        // return (STATE);
         uint256 state = (block.number.div(Constants.epochLength()/Constants.numStates()));
         return (state.mod(Constants.numStates()));
     }

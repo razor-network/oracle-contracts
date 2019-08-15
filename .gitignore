@@ -1,4 +1,5 @@
 build/
 .secret
 .infura
+.mnemonic
 node_modules/

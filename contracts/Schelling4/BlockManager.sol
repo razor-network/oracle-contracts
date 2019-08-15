@@ -53,7 +53,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     external view returns(uint256) {
         return(proposedBlocks[epoch].length);
     }
-    
+
     //disable after init.
     function init(address _stakeManagerAddress, address _stateManagerAddress, address _voteManagerAddress) public {
         stakeManager = IStakeManager(_stakeManagerAddress);
@@ -177,6 +177,10 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         return(true);
     }
 
+    event BlockConfirmed(uint256 epoch,
+                    uint256 stakerId,
+                    uint256[] medians);
+
     function confirmBlock() public onlyWriter {
         uint256 epoch = stateManager.getEpoch();
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
@@ -184,6 +188,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+                    emit BlockConfirmed(epoch-1, proposerId, proposedBlocks[epoch - 1][i].medians);
                     stakeManager.giveBlockReward(proposerId);
                     return;
                 }
