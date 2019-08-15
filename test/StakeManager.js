@@ -129,16 +129,15 @@ contract('StakeManager', function (accounts) {
       await stateManager.setEpoch(2)
       await stakeManager.unstake(2, { 'from': accounts[1] })
       let staker = await stakeManager.getStaker(1)
-
-      // let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.unstakeAfter) === 0)
+      assert(Number(staker.unstakeAfter) === 0, "UnstakeAfter should be zero")
+      assert(Number(staker.withdrawAfter) === 3, "withdrawAfter does not match")
     })
 
     it('should not be able to withdraw before withdraw lock period', async function () {
       let stakeManager = await StakeManager.deployed()
       await assertRevert(stakeManager.withdraw(2, { 'from': accounts[1] }))
-      // let staker = await stakeManager.getStaker(1)
-      // assert(Number(staker.stake) === 423000)
+      let staker = await stakeManager.getStaker(1)
+      assert(Number(staker.stake) === 423000, "Stake should not change")
     })
 
     it('should not be able to withdraw after withdraw lock period if didnt reveal in last epoch', async function () {
@@ -146,28 +145,22 @@ contract('StakeManager', function (accounts) {
       let stateManager = await StateManager.deployed()
       await stateManager.setEpoch(3)
       await assertRevert(stakeManager.withdraw(3, { 'from': accounts[1] }))
-      // await assertRevert(stakeManager.getStaker(1))
-
-      // let staker = await stakeManager.getStaker(1)
-      // assert(Number(staker.stake) === 0)
+      let staker = await stakeManager.getStaker(1)
+      assert(Number(staker.stake) == 423000, "Stake should not change");
     })
 
     it('should be able to withdraw after withdraw lock period if revealed in last epoch', async function () {
       let stateManager = await StateManager.deployed()
       let stakeManager = await StakeManager.deployed()
 
-      // let blockManager = await BlockManager.deployed()
       let voteManager = await VoteManager.deployed()
       let sch = await SimpleToken.deployed()
-      // let random = await Random.deployed()
 
-      // await stateManager.setEpoch(3)
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
-      // console.log(tree.root())
       let root = tree.root()
 
-      // console.log(await blockManager.isWriter(VoteManager.address))
+      // Here 3 => Epoch Number, root => Merkle root, 0x72... => random secret
       let commitment1 = web3i.utils.soliditySha3(3, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
       await voteManager.commit(3, commitment1, { 'from': accounts[1] })
 
