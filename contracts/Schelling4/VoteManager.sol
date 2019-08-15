@@ -99,6 +99,8 @@ contract VoteManager is  Utils, VoteStorage {
                 "incorrect secret/value");
         //if revealing self
         if (msg.sender == stakerAddress) {
+            require(stateManager.getState() == Constants.reveal(), "Not reveal state");
+            require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
                 "invalid merkle proof");
@@ -107,8 +109,6 @@ contract VoteManager is  Utils, VoteStorage {
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
             }
 
-            require(stateManager.getState() == Constants.reveal(), "Not reveal state");
-            require(thisStaker.stake > 0, "nonpositive stake");
             stakeManager.giveRewards(thisStaker, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
