@@ -10,6 +10,9 @@ import "./IVoteManager.sol";
 import "../lib/Constants.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
+/// @title StakeManager
+/// @notice StakeManager handles stake, unstake, withdraw, reward, functions
+/// for stakers
 
 contract StakeManager is Utils, WriterRole, StakeStorage {
     using SafeMath for uint256;
@@ -29,7 +32,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         _;
     }
 
-    // todo disable after init
+    /// @param _schAddress The address of the Schelling token ERC20 contract
+    /// @param _voteManagerAddress The address of the VoteManager contract
+    /// @param _blockManagerAddress The address of the BlockManager contract
+    /// @param _stateManagerAddress The address of the StateManager contract
+    /// todo disable after init
     function init (address _schAddress, address _voteManagerAddress,
         address _blockManagerAddress, address _stateManagerAddress) external {
         sch = SimpleToken(_schAddress);
@@ -38,20 +45,27 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stateManager = IStateManager(_stateManagerAddress);
     }
 
+    /// @param _id The ID of the staker
+    /// @param _stake The amount of schelling tokens that staker stakes
     function setStakerStake(uint256 _id, uint256 _stake) external onlyWriter {
         _setStakerStake(_id, _stake);
     }
 
+    /// @param _id The ID of the staker
+    /// @param _epochLastRevealed The number of epoch that staker revealed asset values
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyWriter {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
 
+    /// @param stakerId The ID of the staker
     function updateCommitmentEpoch(uint256 stakerId) external onlyWriter {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
-    // stake during commit state only
-    // we check epoch during every transaction to avoid withholding and rebroadcasting attacks
+    /// @notice stake during commit state only
+    /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
+    /// @param epoch The Epoch value for which staker is requesting to stake
+    /// @param amount The amount of schelling tokens Staker stakes
     function stake (uint256 epoch, uint256 amount) external checkEpoch(epoch) checkState(Constants.commit()) {
         // not allowed during reveal period
         require(stateManager.getState() != Constants.reveal(), "Incorrect state");
@@ -75,8 +89,9 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     event Unstaked(uint256 stakerId);
 
-    // staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
-    //after which she can call withdraw() to finally Withdraw
+    /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
+    /// after which she can call withdraw() to finally Withdraw
+    /// @param epoch The Epoch value for which staker is requesting to unstake
     function unstake (uint256 epoch) external checkEpoch(epoch)  checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
@@ -90,6 +105,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     event Withdrew(uint256 stakerId, uint256 amount);
 
+    /// @notice Helps stakers withdraw their stake if previously unstaked
+    /// @param epoch The Epoch value for which staker is requesting a withdraw
     function withdraw (uint256 epoch) external checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
@@ -108,11 +125,19 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 
-    // todo reduce complexity
+    /// @notice gives penalty to stakers for failing to reveal or
+    /// reveal value deviations
+    /// @param thisStaker The information of staker currently in consideration
+    /// @param epoch the epoch value
+    /// todo reduce complexity
     function givePenalties (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
         _givePenalties(thisStaker, epoch);
     }
 
+    /// @notice The function gives block reward for one valid proposer in the
+    /// previous epoch by minting new tokens from the schelling token contract
+    /// called from confirmBlock function of BlockManager contract
+    /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId) external onlyWriter {
         if (Constants.blockReward() > 0) {
             stakers[stakerId].stake = stakers[stakerId].stake.add(Constants.blockReward());
@@ -122,6 +147,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         }
     }
 
+    /// @notice This function is called in VoteManager reveal function to give
+    /// rewards to all the stakers who have correctly staked, committed, revealed
+    /// the Values of assets according to the razor protocol rules.
+    /// @param thisStaker The staker struct with staker info
+    /// @param epoch The epoch number for which reveal has been called
     function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
         if (epoch > 1 && stakeGettingReward > 0) {
             uint256 epochLastRevealed = thisStaker.epochLastRevealed;
@@ -135,13 +165,9 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                     uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                     uint256 medianLastEpoch = mediansLastEpoch[i];
 
-            //rewardpool*stake*multiplier/stakeGettingReward
-                // uint256 y =  ((((medianLastEpoch.sub(voteLastEpoch)).mul(medianLastEpoch.sub(
-                //         voteLastEpoch))).div(medianLastEpoch.mul(medianLastEpoch))).mul(
-                //         uint256(10000)));
-                //give rewards if voted in zone
-                    if ((voteLastEpoch * 100 >= (99 * medianLastEpoch) ||
-                        (voteLastEpoch * 100 <= (101 * medianLastEpoch)))) {
+                    //give rewards if voted in zone
+                    if ((voteLastEpoch * 100 >= (Constants.safetyMarginLower() * medianLastEpoch) ||
+                        (voteLastEpoch * 100 <= ((200-Constants.safetyMarginLower()) * medianLastEpoch)))) {
                         rewardable = rewardable + 1;
                     }
                 }
@@ -154,6 +180,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         }
     }
 
+    /// @notice The function is used by the Votemanager reveal function
+    /// to penalise the staker who lost his secret and make his stake zero and
+    /// transfer to bounty hunter half the schelling tokens of the stakers stake
+    /// @param id The ID of the staker who is penalised
+    /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter) external onlyWriter {
         // SimpleToken sch = SimpleToken(schAddress);
         uint256 halfStake = stakers[id].stake.div(2);
@@ -164,30 +195,41 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         }
     }
 
+    /// @param _address Address of the staker
+    /// @return The staker ID
     function getStakerId(address _address) external view returns(uint256) {
         return(stakerIds[_address]);
     }
 
+    /// @param _id The staker ID
+    /// @return The Struct of staker information
     function getStaker(uint256 _id) external view returns(Structs.Staker memory staker) {
         return(stakers[_id]);
     }
 
+    /// @return The number of stakers in the razor network
     function getNumStakers() external view returns(uint256) {
         return(numStakers);
     }
 
+    /// @return The rewardpool
     function getRewardPool() external view returns(uint256) {
         return(rewardPool);
     }
 
+    /// @return The stakeGettingReward value
     function getStakeGettingReward() external view returns(uint256) {
         return(stakeGettingReward);
     }
 
+    /// @notice Calculates the inactivity penalties of the staker
+    /// @param epochs The difference of epochs where the staker was inactive
+    /// @param stakeValue The Stake that staker had in last epoch
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
         if (epochs < 2) {
             return(stakeValue);
         }
+        // penalty =( epochs -1)*stakeValue*penNum/penDiv
         uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.penaltyNotRevealNum())).div(
         Constants.penaltyNotRevealDenom()));
         if (penalty < stakeValue) {
@@ -196,14 +238,20 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             return(0);
         }
     }
-    // function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
-    //     return(totalStakeRevealed[epoch][assetId]);
-    // }
 
+    /// @notice internal function for setting stake of the staker
+    /// called in the giveRewards function
+    /// @param _id of the staker
+    /// @param _stake the amount of schelling tokens staked
     function _setStakerStake(uint256 _id, uint256 _stake) internal {
         stakers[_id].stake = _stake;
     }
 
+    /// @notice The function gives out penalties to stakers during withdraw
+    /// and commit. The penalties are given for inactivity, failing to reveal
+    /// even though unstaked, deviation from the median value of particular asset
+    /// @param thisStaker The staker information
+    /// @param epoch The Epoch value in consideration
     function _givePenalties (Structs.Staker memory thisStaker, uint256 epoch) internal {
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
         if (epoch > 1 && epochLastRevealed > 0) {
