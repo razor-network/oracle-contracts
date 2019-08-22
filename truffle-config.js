@@ -76,9 +76,21 @@ module.exports = {
       provider: () => new HDWalletProvider(mnemonic, 'http://localhost:8545/'), // `${infuraKey}`),
       network_id: 421
       // production: true    // Treats this network as if it was a public net. (default: false)
+    },
+
+    goerli: {
+      provider: function () {
+        return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + `${infuraKey}`)
+      },
+      network_id: 5,
+      gas: 5500000,
+      gasPrice: 1000000000,
+      confirmations: 0,
+      timeoutBlocks: 200,
+      from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
+      skipDryRun: false // Skip dry run before migrations? (default: false for public nets )
     }
   },
-
   mocha: {
     enableTimeouts: false,
     reporter: 'eth-gas-reporter',
