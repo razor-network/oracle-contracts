@@ -1,7 +1,11 @@
-
+const { promisify } = require("util");
 let Web3 = require('web3')
 
 let web3 = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
+const BN = require("bn.js");
+const epochLength = new BN(40);
+const numStates = new BN(4);
+const stateLength = new BN(10);
 
 async function getBiggestStakeAndId (schelling) {
 // async function getBiggestStakeAndId (schelling) {
@@ -58,10 +62,68 @@ async function isElectedProposer (random, iteration, biggestStake, stake, staker
   return (true)
 }
 
+const waitNBlocks = async n => {
+  const sendAsync = promisify(web3.currentProvider.send);
+  await Promise.all(
+    [...Array(n).keys()].map(i =>
+      sendAsync({
+        jsonrpc: '2.0',
+        method: 'evm_mine',
+        id: i
+      })
+    )
+  );
+};
+
+const getEpoch = async () => {
+  let blockNumber = new BN(await web3.eth.getBlockNumber());
+  return blockNumber.div(epochLength).toNumber();
+};
+
+const getState = async () => {
+  let blockNumber = new BN(await web3.eth.getBlockNumber());
+  let state = blockNumber.div(epochLength.div(numStates));
+  return state.mod(numStates).toNumber();
+};
+
+const mineAdvance = async n => {
+  n = new BN(n);
+  let blockNumber = new BN(await web3.eth.getBlockNumber());
+  if (n.gt(blockNumber)) {
+    let diff = n.sub(blockNumber);
+    await waitNBlocks(diff.toNumber());
+  }
+};
+
+// Mines to the next Epoch from which ever block it is in the current Epoch
+const mineToNextEpoch = async () => {
+  let currentBlockNumber = await web3.eth.getBlockNumber();
+  let currentEpoch = await getEpoch();
+  let nextEpochBlockNum = (currentEpoch + 1) * epochLength.toNumber();
+  let diff = nextEpochBlockNum - currentBlockNumber;
+  await waitNBlocks(diff);
+};
+
+// Mines to the next state in the current epoch
+const mineToNextState = async () => {
+  let currentBlockNumber = new BN(await web3.eth.getBlockNumber());
+  let temp = currentBlockNumber.div(stateLength);
+  temp = temp.add(new BN(1));
+  let nextStateBlockNum = temp.mul(stateLength);
+  let diff = nextStateBlockNum.sub(currentBlockNumber);
+  await waitNBlocks(diff.toNumber());
+}
+
 module.exports = {
   getBiggestStakeAndId: getBiggestStakeAndId,
   prng: prng,
   prngHash: prngHash,
   getIteration: getIteration,
-  isElectedProposer: isElectedProposer
+  isElectedProposer: isElectedProposer,
+  waitNBlocks: waitNBlocks,
+  getEpoch: getEpoch,
+  getState: getState,
+  mineAdvance: mineAdvance,
+  mineToNextEpoch: mineToNextEpoch,
+  mineToNextState: mineToNextState
 }
