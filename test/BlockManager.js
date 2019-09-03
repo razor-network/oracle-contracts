@@ -28,7 +28,7 @@ contract('BlockManager', function (accounts) {
     // let voteManager = await VoteManager.deployed()
     // let stakeManager = await StakeManager.deployed()
 
-    it('shuld be able to initialize', async function () {
+    it('should be able to initialize', async function () {
       let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
       let sch = await SimpleToken.deployed()
@@ -58,7 +58,7 @@ contract('BlockManager', function (accounts) {
       let root = tree.root()
 
               // console.log(await blockManager.isWriter(VoteManager.address))
-      let commitment1 = web3i.utils.soliditySha3(1, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      let commitment1 = web3i.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
       await voteManager.commit(epoch, commitment1, { 'from': accounts[5] })
 
       // await stateManager.setState(1)
@@ -116,7 +116,7 @@ contract('BlockManager', function (accounts) {
       let sortedVotes = [200]
       let weights = [420000]
 
-      let totalStakeRevealed = Number(await voteManager.getTotalStakeRevealed(1, 1))
+      let totalStakeRevealed = Number(await voteManager.getTotalStakeRevealed(epoch, 1))
       let medianWeight = totalStakeRevealed / 2
       let i = 0
       let median = 0
