@@ -1,24 +1,53 @@
-// var Schelling = artifacts.require('./Schelling.sol')
-var Schelling3 = artifacts.require('./Schelling3.sol')
+/* global contract, it, artifacts, assert, web3 */
 var SimpleToken = artifacts.require('./SimpleToken.sol')
 var Constants = artifacts.require('./lib/Constants.sol')
+// var Utils = artifacts.require('./lib/Utils.sol')
 var Random = artifacts.require('./lib/Random.sol')
+var Structs = artifacts.require('./lib/Structs.sol')
+// var WriterRole = artifacts.require('./WriterRole.sol')
+var BlockManager = artifacts.require('./BlockManager.sol')
+var StakeManager = artifacts.require('./StakeManager.sol')
+var VoteManager = artifacts.require('./VoteManager.sol')
+var StateManager = artifacts.require('./StateManager.sol')
 
+// todo remove deployer write access
 module.exports = async function (deployer) {
   // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
-  deployer.deploy(SimpleToken).then(async function (toke) {
-    // await deployer.deploy(Schelling, toke.address).then(async function (sch) {
-    await deployer.deploy(Constants)
-    await deployer.link(Constants, Random)
-    await deployer.deploy(Random)
-    await deployer.link(Random, Schelling3)
-    await deployer.link(Constants, Schelling3)
-    await deployer.deploy(Schelling3, toke.address).then(async function (sch3) {
-          // let tx = await toke.addMinter(sch.address)
-      tx = await toke.addMinter(sch3.address)
 
-          // console.log(tx)
-        // })
-    })
+  deployer.then(async () => {
+    await deployer.deploy(SimpleToken)
+    await deployer.deploy(Constants)
+    await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager, StateManager])
+    await deployer.deploy(Structs)
+    await deployer.link(Structs, [StakeManager, StakeManager, BlockManager])
+    await deployer.deploy(Random)
+    await deployer.link(Random, BlockManager)
+    await deployer.deploy(VoteManager)
+    await deployer.deploy(StakeManager)
+    await deployer.deploy(BlockManager)
+    await deployer.deploy(StateManager)
+    let token = await SimpleToken.deployed()
+    let block = await BlockManager.deployed()
+    let vote = await VoteManager.deployed()
+    let stake = await StakeManager.deployed()
+    // let state = await StateManager.deployed()
+    return Promise.all([
+      token.addMinter(StakeManager.address),
+      block.init(StakeManager.address, StateManager.address, VoteManager.address),
+      vote.init(StakeManager.address, StateManager.address, BlockManager.address),
+      stake.init(SimpleToken.address, VoteManager.address, BlockManager.address, StateManager.address),
+      block.addWriter(VoteManager.address),
+      stake.addWriter(VoteManager.address),
+      stake.addWriter(BlockManager.address),
+      // uncomment following for testnet
+      token.transfer('0x09633cEE3db9BB662C35Bd32aaA5579e3d2aac3c', 1000000),
+      token.transfer('0xc807af42c30b53aA9AC20E298840D2d4e4d3f043', 1000000),
+      token.transfer('0xeF9058db9F395eefE3D2b2869C739a0770586018', 1000000),
+      token.transfer('0x0519cA2C7B556fa3699107EC8348cA2573e90A75', 1000000),
+      token.transfer('0x782672281D06E4c1a3e45E80F9bB4CD028BfBBa8', 1000000)
+
+      // vote.addWriter(StakeManager.address)
+      // console.log(await stake.blockManager.call())
+    ])
   })
 }
