@@ -32,14 +32,16 @@ contract('VoteManager', function (accounts) {
       let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
       let sch = await SimpleToken.deployed()
-      await stateManager.setEpoch(1)
-      await stateManager.setState(0)
-      await sch.transfer(accounts[1], 423000, { 'from': accounts[0] })
-      await sch.transfer(accounts[2], 19000, { 'from': accounts[0] })
-      await sch.approve(stakeManager.address, 420000, { 'from': accounts[1] })
-      await sch.approve(stakeManager.address, 19000, { 'from': accounts[2] })
-      await stakeManager.stake(1, 420000, { 'from': accounts[1] })
-      await stakeManager.stake(1, 19000, { 'from': accounts[2] })
+      // await stateManager.setEpoch(1)
+      // await stateManager.setState(0)
+      await functions.mineToNextEpoch()
+      await sch.transfer(accounts[3], 423000, { 'from': accounts[0] })
+      await sch.transfer(accounts[4], 19000, { 'from': accounts[0] })
+      await sch.approve(stakeManager.address, 420000, { 'from': accounts[3] })
+      await sch.approve(stakeManager.address, 19000, { 'from': accounts[4] })
+      let epoch = await functions.getEpoch()
+      await stakeManager.stake(epoch, 420000, { 'from': accounts[3] })
+      await stakeManager.stake(epoch, 19000, { 'from': accounts[4] })
       // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
       // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
       // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
@@ -51,46 +53,40 @@ contract('VoteManager', function (accounts) {
     })
 
     it('should be able to commit', async function () {
-      // let stateManager = await StateManager.deployed()
-      // let stakeManager = await StakeManager.deployed()
-
-      // let blockManager = await BlockManager.deployed()
+      let stakeManager = await StakeManager.deployed()
       let voteManager = await VoteManager.deployed()
-      // let sch = await SimpleToken.deployed()
-      // let random = await Random.deployed()
-
+      let epoch = await functions.getEpoch()
       // await stateManager.setEpoch(3)
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
       let root = tree.root()
-      let commitment1 = web3i.utils.soliditySha3(1, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
-      await voteManager.commit(1, commitment1, { 'from': accounts[1] })
+      let commitment1 = web3i.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
 
-      let commitment2 = await voteManager.getCommitment(1, 1)
+      await voteManager.commit(epoch, commitment1, { 'from': accounts[3] })
+      // arguments getCommitment => epoch number and stakerId
+      let stakerId_acc3 = await stakeManager.stakerIds(accounts[3])
+      let commitment2 = await voteManager.getCommitment(epoch, stakerId_acc3)
 
-      assert(commitment1 === commitment2)
+      assert(commitment1 === commitment2, "commitment1, commitment2 not equal")
 
       let votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904]
       let tree2 = merkle('keccak256').sync(votes2)
       let root2 = tree2.root()
-      let commitment3 = web3i.utils.soliditySha3(1, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
-      await voteManager.commit(1, commitment3, { 'from': accounts[2] })
+      let commitment3 = web3i.utils.soliditySha3(epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      await voteManager.commit(epoch, commitment3, { 'from': accounts[4] })
     })
 
     it('should be able to reveal', async function () {
-      let stateManager = await StateManager.deployed()
-      // let stakeManager = await StakeManager.deployed()
-
-      // let blockManager = await BlockManager.deployed()
+      let stakeManager = await StakeManager.deployed()
       let voteManager = await VoteManager.deployed()
-      // let sch = await SimpleToken.deployed()
-      // let random = await Random.deployed()
+      let epoch = await functions.getEpoch()
 
       // await stateManager.setEpoch(3)
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
       // console.log(tree.root())
-      await stateManager.setState(1)
+      // await stateManager.setState(1)
+      await functions.mineToNextState()
 
       // let root = tree.root()
       // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
@@ -98,11 +94,13 @@ contract('VoteManager', function (accounts) {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true))
       }
-      await voteManager.reveal(1, tree.root(), votes, proof,
+
+      await voteManager.reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        accounts[1], { 'from': accounts[1] })
-      // console.log((await voteManager.getVote(1, 1, 0)).value)
-      assert(Number((await voteManager.getVote(1, 1, 0)).value) === 100)
+        accounts[3], { 'from': accounts[3] })
+      // arguments getvVote => epoch, stakerId, assetId
+      let stakerId_acc3 = await stakeManager.stakerIds(accounts[3])
+      assert(Number((await voteManager.getVote(epoch, stakerId_acc3, 0)).value) === 100, "Vote not equal to 100")
 
       let votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904]
       let tree2 = merkle('keccak256').sync(votes2)
@@ -111,9 +109,9 @@ contract('VoteManager', function (accounts) {
       for (let i = 0; i < votes2.length; i++) {
         proof2.push(tree2.getProofPath(i, true, true))
       }
-      await voteManager.reveal(1, root2, votes2, proof2,
+      await voteManager.reveal(epoch, root2, votes2, proof2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        accounts[2], { 'from': accounts[2] })
+        accounts[4], { 'from': accounts[4] })
     })
   })
 })
