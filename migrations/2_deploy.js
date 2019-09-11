@@ -39,6 +39,7 @@ module.exports = async function (deployer) {
       block.init(StakeManager.address, StateManager.address, VoteManager.address, JobManager.address),
       vote.init(StakeManager.address, StateManager.address, BlockManager.address),
       stake.init(SimpleToken.address, VoteManager.address, BlockManager.address, StateManager.address),
+      job.init(StateManager.address),
       block.addWriter(VoteManager.address),
       stake.addWriter(VoteManager.address),
       stake.addWriter(BlockManager.address),

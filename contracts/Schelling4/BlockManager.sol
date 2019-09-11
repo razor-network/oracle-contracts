@@ -196,7 +196,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
-                    emit BlockConfirmed(epoch-1, proposerId, proposedBlocks[epoch - 1][i].medians, proposedBlocks[epoch - 1][i].jobIds);
+                    emit BlockConfirmed(epoch-1, proposerId, proposedBlocks[epoch - 1][i].medians,
+                    proposedBlocks[epoch - 1][i].jobIds);
                     for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                         jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j]);
                     }

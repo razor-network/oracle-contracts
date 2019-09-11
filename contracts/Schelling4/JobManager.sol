@@ -7,24 +7,40 @@ pragma experimental ABIEncoderV2;
 // import "./IStateManager.sol";
 // import "./IVoteManager.sol";
 import "./JobStorage.sol";
+import "./IStateManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./WriterRole.sol";
 
 
 contract JobManager is WriterRole, JobStorage {
-    event JobFulfilled(uint256 numJobs, string url, string selector, bool repeat,
+    event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
                         address creator, uint256 credit, bool fulfulled);
+
+    event JobCreteted(uint256 id, uint256 epoch, string url, string selector, bool repeat,
+                        address creator, uint256 credit);
+
+    IStateManager public stateManager;
+
+    //disable after init.
+    function init(address _stateManagerAddress) external {
+        stateManager = IStateManager(_stateManagerAddress);
+    }
 
     function createJob (string calldata url, string calldata selector, bool repeat) external payable {
         numJobs = numJobs + 1;
-        Structs.Job memory job = Structs.Job(numJobs, url, selector, repeat, msg.sender, msg.value, false);
+        uint256 epoch = stateManager.getEpoch();
+        Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, false);
         jobs[numJobs] = job;
+        emit JobCreteted(numJobs, epoch, url, selector, repeat, msg.sender, msg.value);
         // jobs.push(job);
     }
 
     function fulfillJob(uint256 jobId) external onlyWriter {
         Structs.Job storage job = jobs[jobId];
-        job.fulfilled = true;
-        emit JobFulfilled(job.id, job.url, job.selector, job.repeat, job.creator, job.credit, job.fulfilled);
+        if (!job.repeat) {
+            job.fulfilled = true;
+            uint256 epoch = stateManager.getEpoch();
+            emit JobFulfilled(job.id, epoch, job.url, job.selector, job.repeat, job.creator, job.credit, job.fulfilled);
+        }
     }
 }

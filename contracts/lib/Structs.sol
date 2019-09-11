@@ -35,6 +35,7 @@ library Structs {
 
     struct Job {
         uint256 id;
+        uint256 epoch;
         string url;
         string selector;
         bool repeat;
