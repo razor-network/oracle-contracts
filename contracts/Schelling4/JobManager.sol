@@ -13,11 +13,16 @@ import "./WriterRole.sol";
 
 
 contract JobManager is WriterRole, JobStorage {
-    event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
-                        address creator, uint256 credit, bool fulfulled);
 
     event JobCreteted(uint256 id, uint256 epoch, string url, string selector, bool repeat,
-                        address creator, uint256 credit);
+                            address creator, uint256 credit);
+
+    // event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
+    //                     address creator, uint256 credit, bool fulfulled);
+
+    event JobReported(uint256 id, uint256 value, uint256 epoch, uint256 timestamp,
+                        string url, string selector, bool repeat,
+                        address creator, uint256 credit, bool fulfilled);
 
     IStateManager public stateManager;
 
@@ -35,12 +40,16 @@ contract JobManager is WriterRole, JobStorage {
         // jobs.push(job);
     }
 
-    function fulfillJob(uint256 jobId) external onlyWriter {
+    function fulfillJob(uint256 jobId, uint256 value) external onlyWriter {
         Structs.Job storage job = jobs[jobId];
+        uint256 epoch = stateManager.getEpoch();
+
         if (!job.repeat) {
             job.fulfilled = true;
-            uint256 epoch = stateManager.getEpoch();
-            emit JobFulfilled(job.id, epoch, job.url, job.selector, job.repeat, job.creator, job.credit, job.fulfilled);
+            // emit JobFulfilled(job.id, epoch, job.url, job.selector,
+            //job.repeat, job.creator, job.credit, job.fulfilled);
         }
+        emit JobReported(job.id, value, epoch, now, job.url, job.selector, job.repeat,
+        job.creator, job.credit, job.fulfilled);
     }
 }

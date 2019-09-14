@@ -17,5 +17,5 @@ interface IJobManager {
 
     function createJob (string calldata url, string calldata selector, bool repeat) external;
 
-    function fulfillJob(uint256 jobId) external;
+    function fulfillJob(uint256 jobId, uint256 value) external;
 }
