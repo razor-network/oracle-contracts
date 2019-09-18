@@ -74,7 +74,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         if (stakerId == 0) {
             numStakers = numStakers.add(1);
-            stakers[numStakers] = Structs.Staker(numStakers, amount, epoch, 0, 0,
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
             epoch.add(Constants.unstakeLockPeriod()), 0);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;

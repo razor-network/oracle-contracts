@@ -9,6 +9,7 @@ library Structs {
 
     struct Staker {
         uint256 id;
+        address _address;
         uint256 stake;
         uint256 epochStaked;
         uint256 epochLastCommitted;

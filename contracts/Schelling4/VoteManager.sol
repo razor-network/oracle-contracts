@@ -84,7 +84,7 @@ contract VoteManager is  Utils, VoteStorage {
         }
     }
 
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
@@ -116,7 +116,7 @@ contract VoteManager is  Utils, VoteStorage {
             // stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
-            emit Revealed(epoch, thisStakerId, thisStaker.stake);
+            emit Revealed(epoch, thisStakerId, thisStaker.stake, values);
         } else {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");
