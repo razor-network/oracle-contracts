@@ -8,10 +8,7 @@ interface IVoteManager {
 
     function init (address _stakeManagerAddress, address _blockManagerAddress) external;
 
-    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment);
     function commit (uint256 epoch, bytes32 commitment) external;
-
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 value, uint256 stake);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] calldata values,
                     bytes32[][] calldata proofs, bytes32 secret, address stakerAddress)

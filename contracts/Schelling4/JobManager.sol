@@ -14,15 +14,14 @@ import "./WriterRole.sol";
 
 contract JobManager is WriterRole, JobStorage {
 
-    event JobCreteted(uint256 id, uint256 epoch, string url, string selector, bool repeat,
-                            address creator, uint256 credit);
-
+    event JobCreated(uint256 id, uint256 epoch, string url, string selector, bool repeat,
+                            address creator, uint256 credit, uint256 timestamp);
     // event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
     //                     address creator, uint256 credit, bool fulfulled);
 
-    event JobReported(uint256 id, uint256 value, uint256 epoch, uint256 timestamp,
+    event JobReported(uint256 id, uint256 value, uint256 epoch,
                         string url, string selector, bool repeat,
-                        address creator, uint256 credit, bool fulfilled);
+                        address creator, uint256 credit, bool fulfilled, uint256 timestamp);
 
     IStateManager public stateManager;
 
@@ -36,7 +35,7 @@ contract JobManager is WriterRole, JobStorage {
         uint256 epoch = stateManager.getEpoch();
         Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, false);
         jobs[numJobs] = job;
-        emit JobCreteted(numJobs, epoch, url, selector, repeat, msg.sender, msg.value);
+        emit JobCreated(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, now);
         // jobs.push(job);
     }
 
@@ -49,7 +48,7 @@ contract JobManager is WriterRole, JobStorage {
             // emit JobFulfilled(job.id, epoch, job.url, job.selector,
             //job.repeat, job.creator, job.credit, job.fulfilled);
         }
-        emit JobReported(job.id, value, epoch, now, job.url, job.selector, job.repeat,
-        job.creator, job.credit, job.fulfilled);
+        emit JobReported(job.id, value, epoch, job.url, job.selector, job.repeat,
+        job.creator, job.credit, job.fulfilled, now);
     }
 }

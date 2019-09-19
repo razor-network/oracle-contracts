@@ -70,7 +70,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                     uint256[] medians,
                     uint256[] jobIds,
                     uint256 iteration,
-                    uint256 biggestStakerId);
+                    uint256 biggestStakerId,
+                    uint256 timestamp);
 
     // elected proposer proposes block. we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this. select a staker pseudorandomly (not weighted by anything)
@@ -119,7 +120,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         //     totalStake = totalStake.add(Constants.blockReward());
         //     require(sch.mint(address(this), Constants.blockReward()));
         // }
-        emit Proposed(epoch, proposerId, medians, jobIds, iteration, biggestStakerId);
+        emit Proposed(epoch, proposerId, medians, jobIds, iteration, biggestStakerId, now);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -187,7 +188,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     event BlockConfirmed(uint256 epoch,
                     uint256 stakerId,
                     uint256[] medians,
-                    uint256[] jobIds);
+                    uint256[] jobIds,
+                    uint256 timestamp);
 
     function confirmBlock() public onlyWriter {
         uint256 epoch = stateManager.getEpoch();
@@ -197,7 +199,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
                     emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians,
-                    proposedBlocks[epoch - 1][i].jobIds);
+                    proposedBlocks[epoch - 1][i].jobIds, now);
                     for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                         jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                             proposedBlocks[epoch - 1][i].medians[j]);
