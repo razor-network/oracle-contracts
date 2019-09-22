@@ -23,6 +23,4 @@ interface IStakeManager {
     function getNumStakers() external view returns(uint256);
     function getRewardPool() external view returns(uint256);
     function getStakeGettingReward() external view returns(uint256);
-    event Unstaked(uint256 stakerId);
-    event Withdrew(uint256 stakerId, uint256 amount);
 }

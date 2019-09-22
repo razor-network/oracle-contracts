@@ -7,6 +7,7 @@ import "./BlockStorage.sol";
 import "./IStakeManager.sol";
 import "./IStateManager.sol";
 import "./IVoteManager.sol";
+import "./IJobManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./WriterRole.sol";
 
@@ -17,6 +18,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IVoteManager public voteManager;
+    IJobManager public jobManager;
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
@@ -55,17 +57,21 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     }
 
     //disable after init.
-    function init(address _stakeManagerAddress, address _stateManagerAddress, address _voteManagerAddress) public {
+    function init(address _stakeManagerAddress, address _stateManagerAddress,
+                address _voteManagerAddress, address _jobManagerAddress) public {
         stakeManager = IStakeManager(_stakeManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
         voteManager = IVoteManager(_voteManagerAddress);
+        jobManager = IJobManager(_jobManagerAddress);
     }
 
     event Proposed(uint256 epoch,
                     uint256 stakerId,
                     uint256[] medians,
+                    uint256[] jobIds,
                     uint256 iteration,
-                    uint256 biggestStakerId);
+                    uint256 biggestStakerId,
+                    uint256 timestamp);
 
     // elected proposer proposes block. we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this. select a staker pseudorandomly (not weighted by anything)
@@ -77,6 +83,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     // stakers with lower iteration do not propose for some reason
     function propose (uint256 epoch,
                     uint256[] memory medians,
+                    uint256[] memory jobIds,
                     uint256 iteration,
                     uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
@@ -102,6 +109,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         // blocks[epoch]
         uint256 pushAt = _insertAppropriately(epoch, Structs.Block(proposerId,
                                         medians,
+                                        jobIds,
                                         iteration,
                                         stakeManager.getStaker(biggestStakerId).stake,
                                         true));
@@ -112,7 +120,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         //     totalStake = totalStake.add(Constants.blockReward());
         //     require(sch.mint(address(this), Constants.blockReward()));
         // }
-        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId);
+        emit Proposed(epoch, proposerId, medians, jobIds, iteration, biggestStakerId, now);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -179,7 +187,9 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
 
     event BlockConfirmed(uint256 epoch,
                     uint256 stakerId,
-                    uint256[] medians);
+                    uint256[] medians,
+                    uint256[] jobIds,
+                    uint256 timestamp);
 
     function confirmBlock() public onlyWriter {
         uint256 epoch = stateManager.getEpoch();
@@ -188,7 +198,12 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
-                    emit BlockConfirmed(epoch-1, proposerId, proposedBlocks[epoch - 1][i].medians);
+                    emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians,
+                    proposedBlocks[epoch - 1][i].jobIds, now);
+                    for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
+                        jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
+                                            proposedBlocks[epoch - 1][i].medians[j]);
+                    }
                     stakeManager.giveBlockReward(proposerId);
                     return;
                 }

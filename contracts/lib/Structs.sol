@@ -9,6 +9,7 @@ library Structs {
 
     struct Staker {
         uint256 id;
+        address _address;
         uint256 stake;
         uint256 epochStaked;
         uint256 epochLastCommitted;
@@ -20,6 +21,7 @@ library Structs {
     struct Block {
         uint256 proposerId;
         uint256[] medians;
+        uint256[] jobIds;
         uint256 iteration;
         uint256 biggestStake;
         bool valid;
@@ -30,6 +32,17 @@ library Structs {
         uint256 median;
         uint256 lastVisited;
         uint256 assetId;
+    }
+
+    struct Job {
+        uint256 id;
+        uint256 epoch;
+        string url;
+        string selector;
+        bool repeat;
+        address creator;
+        uint256 credit;
+        bool fulfilled;
     }
 
 }

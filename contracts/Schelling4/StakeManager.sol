@@ -16,7 +16,6 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract StakeManager is Utils, WriterRole, StakeStorage {
     using SafeMath for uint256;
-    event Staked(uint256 stakerId, uint256 amount);
     SimpleToken public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
@@ -62,6 +61,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
+    event Staked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
+
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
@@ -74,7 +75,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         if (stakerId == 0) {
             numStakers = numStakers.add(1);
-            stakers[numStakers] = Structs.Staker(numStakers, amount, epoch, 0, 0,
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
             epoch.add(Constants.unstakeLockPeriod()), 0);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
@@ -84,10 +85,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
         }
         // totalStake = totalStake.add(amount);
-        emit Staked(stakerId, amount);
+        emit Staked(epoch, stakerId, amount, now);
     }
 
-    event Unstaked(uint256 stakerId);
+    event Unstaked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
 
     /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
@@ -100,10 +101,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0, "locked");
         staker.unstakeAfter = 0;
         staker.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
-        emit Unstaked(stakerId);
+        emit Unstaked(epoch, stakerId, staker.stake, now);
     }
 
-    event Withdrew(uint256 stakerId, uint256 amount);
+    event Withdrew(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
@@ -121,7 +122,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         // totalStake = totalStake.sub(stakers[stakerId].stake);
         uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
-        emit Withdrew(stakerId, stakers[stakerId].stake);
+        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, now);
         require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 

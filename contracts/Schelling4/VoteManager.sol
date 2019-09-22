@@ -35,7 +35,7 @@ contract VoteManager is  Utils, VoteStorage {
         blockManager = IBlockManager(_blockManagerAddress);
     }
 
-    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment);
+    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
 
     function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
         //epoch->stakerid->commitment
@@ -80,11 +80,11 @@ contract VoteManager is  Utils, VoteStorage {
             commitments[epoch][stakerId] = commitment;
             stakeManager.updateCommitmentEpoch(stakerId);
             // thisStaker.epochLastCommitted = epoch;
-            emit Committed(epoch, stakerId, commitment);
+            emit Committed(epoch, stakerId, commitment, now);
         }
     }
 
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
 
     function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
                     bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
@@ -116,7 +116,7 @@ contract VoteManager is  Utils, VoteStorage {
             // stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
-            emit Revealed(epoch, thisStakerId, thisStaker.stake);
+            emit Revealed(epoch, thisStakerId, thisStaker.stake, values, now);
         } else {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");
