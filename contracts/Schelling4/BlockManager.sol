@@ -204,7 +204,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                         jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                             proposedBlocks[epoch - 1][i].medians[j]);
                     }
-                    stakeManager.giveBlockReward(proposerId);
+                    stakeManager.giveBlockReward(proposerId, epoch);
                     return;
                 }
             }

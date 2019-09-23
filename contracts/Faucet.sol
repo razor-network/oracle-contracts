@@ -10,12 +10,15 @@ contract Faucet is ERC20 {
         token = ERC20(_address);
     }
 
+    event Donate(address _address, uint256 value);
+
 //WARNING FOR TESTNET ONLY DISABLE FOR PROD.
 //give 1000 sch once per staker
     function faucet(address _address) external {
         if (!requested[_address]) {
             requested[_address] = true;
             token.transfer(_address, 1000);
+            emit Donate(_address, 1000);
         }
     }
 }

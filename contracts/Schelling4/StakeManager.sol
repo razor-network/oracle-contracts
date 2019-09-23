@@ -44,10 +44,16 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stateManager = IStateManager(_stateManagerAddress);
     }
 
+    event StakeChange(uint256 stakerId, uint256 previousStake, uint256 newStake,
+                    string reason, uint256 epoch, uint256 timestamp);
+
+    event RewardPoolChange(uint256 epoch, uint256 value, uint256 timestamp);
+    event StakeGettingRewardChange(uint256 epoch, uint256 value, uint256 timestamp);
+
     /// @param _id The ID of the staker
     /// @param _stake The amount of schelling tokens that staker stakes
-    function setStakerStake(uint256 _id, uint256 _stake) external onlyWriter {
-        _setStakerStake(_id, _stake);
+    function setStakerStake(uint256 _id, uint256 _stake, string calldata _reason, uint256 _epoch) external onlyWriter {
+        _setStakerStake(_id, _stake, _reason, _epoch);
     }
 
     /// @param _id The ID of the staker
@@ -61,7 +67,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
-    event Staked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
+    event Staked(uint256 epoch, uint256 stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
@@ -73,6 +79,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
+        uint256 previousStake = 0;
         if (stakerId == 0) {
             numStakers = numStakers.add(1);
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
@@ -82,13 +89,14 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         } else {
             require(stakers[stakerId].stake > 0,
                     "adding stake is not possible after withdrawal/slash. Please use a new address");
+            previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
         }
         // totalStake = totalStake.add(amount);
-        emit Staked(epoch, stakerId, amount, now);
+        emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
     }
 
-    event Unstaked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
+    event Unstaked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
@@ -101,10 +109,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0, "locked");
         staker.unstakeAfter = 0;
         staker.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
-        emit Unstaked(epoch, stakerId, staker.stake, now);
+        emit Unstaked(epoch, stakerId, staker.stake, staker.stake, now);
     }
 
-    event Withdrew(uint256 epoch, uint256 stakerId, uint256 amount, uint256 timestamp);
+    event Withdrew(uint256 epoch, uint256 stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
@@ -122,7 +130,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         // totalStake = totalStake.sub(stakers[stakerId].stake);
         uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
-        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, now);
+        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, 0, now);
         require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 
@@ -139,9 +147,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// previous epoch by minting new tokens from the schelling token contract
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
-    function giveBlockReward(uint256 stakerId) external onlyWriter {
+    function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyWriter {
         if (Constants.blockReward() > 0) {
-            stakers[stakerId].stake = stakers[stakerId].stake.add(Constants.blockReward());
+            uint256 newStake = stakers[stakerId].stake.add(Constants.blockReward());
+            _setStakerStake(stakerId, newStake, "Block Reward", epoch);
             // stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
             // totalStake = totalStake.add(Constants.blockReward());
             require(sch.mint(address(this), Constants.blockReward()));
@@ -174,9 +183,15 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                 }
                 // emit DebugUint256(rewardable);
                 // emit DebugUint256(rewardPool);
-                uint256 newStake = thisStaker.stake + (thisStaker.stake*rewardPool*rewardable)/
+                uint256 reward = (thisStaker.stake*rewardPool*rewardable)/
                 (stakeGettingReward*mediansLastEpoch.length);
-                _setStakerStake(thisStaker.id, newStake);
+                if (reward > 0) {
+                    stakeGettingReward = stakeGettingReward - reward;
+                    emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
+
+                    uint256 newStake = thisStaker.stake + reward;
+                    _setStakerStake(thisStaker.id, newStake, "Voting Rewards", epoch);
+                }
             }
         }
     }
@@ -244,8 +259,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// called in the giveRewards function
     /// @param _id of the staker
     /// @param _stake the amount of schelling tokens staked
-    function _setStakerStake(uint256 _id, uint256 _stake) internal {
+    function _setStakerStake(uint256 _id, uint256 _stake, string memory _reason, uint256 _epoch) internal {
+        uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
+        emit StakeChange(_id, previousStake, _stake, _reason, _epoch, now);
     }
 
     /// @notice The function gives out penalties to stakers during withdraw
@@ -262,7 +279,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             // penalize or reward if last active more than epoch - 1
             uint256 penalizeEpochs = epoch.sub(epochLastActive);
             uint256 previousStake = thisStaker.stake;
-            thisStaker.stake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+            uint256 currentStake = previousStake;
+            uint256 newStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+            if (newStake < previousStake) {
+                _setStakerStake(thisStaker.id, newStake, "Inactivity Penalty", epoch);
+                currentStake = newStake;
+            }
+
             // return(0);
 
             uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
@@ -274,8 +297,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                     uint256 medianLastEpoch = mediansLastEpoch[i];
 
                     if (voteLastEpoch > (medianLastEpoch.mul(2))) {
-                        thisStaker.stake = 0;
+                        _setStakerStake(thisStaker.id, 0, "Voting Penalty", epoch);
+                        newStake = 0;
                         rewardPool = rewardPool.add(previousStake);
+                        emit RewardPoolChange(epoch, rewardPool, now);
+                        return;
                         // return(0);
                     } else if (voteLastEpoch > 0 &&
                         (voteLastEpoch < (medianLastEpoch.mul(Constants.safetyMarginLower())).div(100) ||
@@ -291,14 +317,18 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                 }
 
                 if (y > 0) {
-                    thisStaker.stake = previousStake.sub(((y - 1).mul(previousStake)).div(100*mediansLastEpoch.length));
+                    newStake = currentStake.sub(((y - 1).mul(currentStake)).div(100*mediansLastEpoch.length));
+                    _setStakerStake(thisStaker.id, newStake, "Voting Penalty", epoch);
                 // thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
 
-                    rewardPool = rewardPool.add(previousStake.sub(thisStaker.stake));
+                    rewardPool = rewardPool.add(previousStake.sub(newStake));
+                    emit RewardPoolChange(epoch, rewardPool, now);
                     // return(y);
-                } else {
+                } else if (previousStake == newStake) {
                 //no penalty. only reward??
                     stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
+                    emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
+
                 }
             }
         }
