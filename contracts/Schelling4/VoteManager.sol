@@ -121,7 +121,7 @@ contract VoteManager is  Utils, VoteStorage {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");
             commitments[epoch][thisStakerId] = 0x0;
-            stakeManager.slash(thisStakerId, msg.sender);
+            stakeManager.slash(thisStakerId, msg.sender, epoch);
         }
     }
 }
