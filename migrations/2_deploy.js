@@ -58,6 +58,12 @@ module.exports = async function (deployer) {
       token.transfer('0x04b8129d730ad55C3DA2f8BF8e0Ce1a6D118ccd6', 1000000),
       token.transfer('0x1Dc0b62436A1db4E28743E66c8bcF02D8103Ad8c', 1000000),
       token.transfer(Faucet.address, 1000000)
+      // ,
+      // job.createJob('https://api.gemini.com/v1/pubticker/ethusd', 'last', true),
+      // job.createJob('https://api.gemini.com/v1/pubticker/btcusd', 'last', true),
+      // job.createJob('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=E1BN9Y09VQ32BQ00',
+      //   'Global Quote["05. price"]', true)
+      // function createJob (string calldata url, string calldata selector, bool repeat) external payable {
 
       // vote.addWriter(StakeManager.address)
       // console.log(await stake.blockManager.call())

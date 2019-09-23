@@ -66,6 +66,7 @@ module.exports = {
        // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`),
       network_id: 4,
       gas: 5500000,
+      gasPrice: 2000000000,
       confirmations: 0,
       timeoutBlocks: 200,
       from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
