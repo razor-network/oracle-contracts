@@ -47,8 +47,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     event StakeChange(uint256 stakerId, uint256 previousStake, uint256 newStake,
                     string reason, uint256 epoch, uint256 timestamp);
 
-    event RewardPoolChange(uint256 epoch, uint256 value, uint256 timestamp);
-    event StakeGettingRewardChange(uint256 epoch, uint256 value, uint256 timestamp);
+    event RewardPoolChange(uint256 epoch, uint256 prevRewardPool, uint256 rewardPool, uint256 timestamp);
+    event StakeGettingRewardChange(uint256 epoch, uint256 prevStakeGettingReward, uint256 stakeGettingReward, uint256 timestamp);
 
     /// @param _id The ID of the staker
     /// @param _stake The amount of schelling tokens that staker stakes
@@ -165,6 +165,12 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
         if (epoch < 2 && stakeGettingReward == 0) return;
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
+
+        //never revealed
+        if(epochLastRevealed < 1) return;
+
+        // no rewards if you didn't reveal last epoch
+        if((epoch - epochLastRevealed) != 1) return;
         // uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
@@ -181,8 +187,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
 
                 //give rewards if voted in zone
-                if ((voteLastEpoch >= lowerCutoffLastEpoch) ||
-                    (voteLastEpoch <= higherCutoffLastEpoch)) {
+                if ((voteLastEpoch > lowerCutoffLastEpoch) ||
+                    (voteLastEpoch < higherCutoffLastEpoch)) {
                     rewardable = rewardable + 1;
                 }
             }
@@ -192,9 +198,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             uint256 reward = (thisStaker.stake*rewardPool*rewardable)/
             (stakeGettingReward*lowerCutoffsLastEpoch.length);
             if (reward > 0) {
-                stakeGettingReward = stakeGettingReward.sub(reward);
-                emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
+                uint256 prevStakeGettingReward = stakeGettingReward;
+                stakeGettingReward = stakeGettingReward.sub(thisStaker.stake);
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
                 uint256 newStake = thisStaker.stake + reward;
+                uint256 prevRewardPool = rewardPool;
+                rewardPool = rewardPool.sub(reward);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
                 _setStakerStake(thisStaker.id, newStake, "Voting Rewards", epoch);
             }
         }
@@ -246,8 +256,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
-        //not really inactive. do nothing
-        if (epochs < 2) {
+        //not really inactive. do nothing. give 1 epoch grace
+        if (epochs < 3) {
             return(stakeValue);
         }
         // penalty =( epochs -1)*stakeValue*penNum/penDiv
@@ -277,7 +287,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param epoch The Epoch value in consideration
     function _givePenalties (Structs.Staker memory thisStaker, uint256 epoch) internal {
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-        if (epoch < 5 && epochLastRevealed == 0) return;
+        // if (epoch < 5 && epochLastRevealed == 0) return;
 
         uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
                                 thisStaker.epochLastRevealed :
@@ -295,14 +305,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
         if (lowerCutoffsLastEpoch.length > 0) {
 
-            uint256 y;
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
 
-                if (voteLastEpoch < lowerCutoffLastEpoch ||
-                    voteLastEpoch > higherCutoffLastEpoch) {
+                if (voteLastEpoch <= lowerCutoffLastEpoch ||
+                    voteLastEpoch >= higherCutoffLastEpoch) {
                     //WARNING: Potential security vulnerability. Could increase stake maliciously
                     //WARNING: unchecked underflow
                     currentStake = currentStake - (currentStake/Constants.exposureDenominator());
@@ -311,12 +320,14 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
             if (previousStake > currentStake) {
                 _setStakerStake(thisStaker.id, currentStake, "Voting Penalty", epoch);
+                uint256 prevRewardPool = rewardPool;
                 rewardPool = rewardPool.add(previousStake.sub(currentStake));
-                emit RewardPoolChange(epoch, rewardPool, now);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
             } else {
                 //no penalty. only reward
+                uint256 prevStakeGettingReward = stakeGettingReward;
                 stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-                emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
             }
         }
     }

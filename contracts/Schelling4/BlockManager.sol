@@ -50,9 +50,12 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     }
 
     function getProposedBlock(uint256 epoch, uint256 proposedBlock)
-    external view returns(Structs.Block memory _block) {
+    external view returns(Structs.Block memory _block,
+    uint256[] memory _blockMedians,
+    uint256[] memory _lowerCutoffs,
+    uint256[] memory _higherCutoffs ) {
         _block = proposedBlocks[epoch][proposedBlock];
-        return(_block);
+        return(_block, _block.medians, _block.lowerCutoffs, _block.higherCutoffs);
     }
 
     function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
@@ -129,7 +132,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                                         iteration,
                                         stakeManager.getStaker(biggestStakerId).stake,
                                         true));
-        emit DebugUint256(pushAt);
+        // emit DebugUint256(pushAt);
         // mint and give block reward
         // if (Constants.blockReward() > 0) {
         //     stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
@@ -204,6 +207,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     event BlockConfirmed(uint256 epoch,
                     uint256 stakerId,
                     uint256[] medians,
+                    uint256[] lowerCutoffs,
+                    uint256[] higherCutoffs,
                     uint256[] jobIds,
                     uint256 timestamp);
 
@@ -214,8 +219,13 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                 if (proposedBlocks[epoch - 1][i].valid) {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
-                    emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians,
-                    proposedBlocks[epoch - 1][i].jobIds, now);
+                    emit BlockConfirmed(epoch - 1,
+                     proposerId,
+                     proposedBlocks[epoch - 1][i].medians,
+                     proposedBlocks[epoch - 1][i].lowerCutoffs,
+                     proposedBlocks[epoch - 1][i].higherCutoffs,
+                     proposedBlocks[epoch - 1][i].jobIds,
+                     now);
                     for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                         jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                             proposedBlocks[epoch - 1][i].medians[j]);
