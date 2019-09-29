@@ -79,7 +79,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
-        uint256 previousStake = 0;
+        uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers.add(1);
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
@@ -87,10 +87,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
-            require(stakers[stakerId].stake > 0,
-                    "adding stake is not possible after withdrawal/slash. Please use a new address");
-            previousStake = stakers[stakerId].stake;
+            //WARNING: ALLOWING STAKE TO BE ADDEDD AFTER WITHDRAW/SLASH. consequences unknown
+            // require(stakers[stakerId].stake > 0,
+            //         "adding stake is not possible after withdrawal/slash. Please use a new address");
+            // previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
+            stakers[numStakers].unstakeAfter = epoch.add(Constants.unstakeLockPeriod());
+            stakers[numStakers].withdrawAfter = 0;
         }
         // totalStake = totalStake.add(amount);
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
@@ -167,10 +170,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
 
         //never revealed
-        if(epochLastRevealed < 1) return;
+        // if (epochLastRevealed < 1) return;
 
         // no rewards if you didn't reveal last epoch
-        if((epoch - epochLastRevealed) != 1) return;
+        if ((epoch - epochLastRevealed) != 1) return;
         // uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
@@ -299,19 +302,26 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         uint256 currentStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
         if (currentStake < previousStake) {
             _setStakerStake(thisStaker.id, currentStake, "Inactivity Penalty", epoch);
+            uint256 prevRewardPool = rewardPool;
+            rewardPool = rewardPool.add(previousStake.sub(currentStake));
+            emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
         }
 
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
+        uint256[] memory mediansLastEpoch = blockManager.mediansLastEpoch(epochLastRevealed);
+
         if (lowerCutoffsLastEpoch.length > 0) {
 
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
+                uint256 medianLastEpoch = mediansLastEpoch[i];
 
-                if (voteLastEpoch <= lowerCutoffLastEpoch ||
-                    voteLastEpoch >= higherCutoffLastEpoch) {
+                if ((voteLastEpoch <= lowerCutoffLastEpoch ||
+                    voteLastEpoch >= higherCutoffLastEpoch) &&
+                    (voteLastEpoch != medianLastEpoch) {
                     //WARNING: Potential security vulnerability. Could increase stake maliciously
                     //WARNING: unchecked underflow
                     currentStake = currentStake - (currentStake/Constants.exposureDenominator());

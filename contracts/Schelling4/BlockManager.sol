@@ -172,7 +172,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     // //todo test
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute (uint256 epoch) public checkEpoch(epoch) checkState(Constants.dispute()) {
-        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0 ,0);
+        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
@@ -220,12 +220,12 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                     blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                     uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
                     emit BlockConfirmed(epoch - 1,
-                     proposerId,
-                     proposedBlocks[epoch - 1][i].medians,
-                     proposedBlocks[epoch - 1][i].lowerCutoffs,
-                     proposedBlocks[epoch - 1][i].higherCutoffs,
-                     proposedBlocks[epoch - 1][i].jobIds,
-                     now);
+                                        proposerId,
+                                        proposedBlocks[epoch - 1][i].medians,
+                                        proposedBlocks[epoch - 1][i].lowerCutoffs,
+                                        proposedBlocks[epoch - 1][i].higherCutoffs,
+                                        proposedBlocks[epoch - 1][i].jobIds,
+                                        now);
                     for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                         jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                             proposedBlocks[epoch - 1][i].medians[j]);
