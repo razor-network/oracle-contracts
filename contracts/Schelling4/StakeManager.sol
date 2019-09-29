@@ -79,7 +79,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
-        uint256 previousStake = 0;
+        uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers.add(1);
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
@@ -87,10 +87,13 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
-            require(stakers[stakerId].stake > 0,
-                    "adding stake is not possible after withdrawal/slash. Please use a new address");
-            previousStake = stakers[stakerId].stake;
+            //WARNING: ALLOWING STAKE TO BE ADDEDD AFTER WITHDRAW/SLASH. consequences unknown
+            // require(stakers[stakerId].stake > 0,
+            //         "adding stake is not possible after withdrawal/slash. Please use a new address");
+            // previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
+            stakers[numStakers].unstakeAfter = epoch.add(Constants.unstakeLockPeriod());
+            stakers[numStakers].withdrawAfter = 0;
         }
         // totalStake = totalStake.add(amount);
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
