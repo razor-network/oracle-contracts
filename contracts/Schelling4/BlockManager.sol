@@ -124,14 +124,14 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         //     }
         // }
         // blocks[epoch]
-        uint256 pushAt = _insertAppropriately(epoch, Structs.Block(proposerId,
-                                        jobIds,
-                                        medians,
-                                        lowerCutoffs,
-                                        higherCutoffs,
-                                        iteration,
-                                        stakeManager.getStaker(biggestStakerId).stake,
-                                        true));
+        _insertAppropriately(epoch, Structs.Block(proposerId,
+                            jobIds,
+                            medians,
+                            lowerCutoffs,
+                            higherCutoffs,
+                            iteration,
+                            stakeManager.getStaker(biggestStakerId).stake,
+                            true));
         // emit DebugUint256(pushAt);
         // mint and give block reward
         // if (Constants.blockReward() > 0) {
@@ -146,7 +146,8 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
     checkEpoch(epoch) checkState(Constants.dispute()) {
         uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId).div(2);
-        //accWeight = accumulatedWeight
+        uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId).div(4);
+        uint256 higherCutoffWeight = (voteManager.getTotalStakeRevealed(epoch, assetId).mul(3)).div(4);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
         if (disputes[epoch][msg.sender].accWeight == 0) {
@@ -159,8 +160,14 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
             lastVisited = sorted[i];
             accWeight = accWeight.add(voteManager.getVoteWeight(epoch, assetId, sorted[i]));
             //set  median, if conditions meet
+            if (disputes[epoch][msg.sender].lowerCutoff == 0 && accWeight >= lowerCutoffWeight) {
+                disputes[epoch][msg.sender].lowerCutoff = sorted[i];
+            }
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sorted[i];
+            }
+            if (disputes[epoch][msg.sender].higherCutoff == 0 && accWeight > higherCutoffWeight) {
+                disputes[epoch][msg.sender].higherCutoff = sorted[i];
             }
             //TODO verify how much gas required for below operations and update this value
             if (gasleft() < 10000) break;
@@ -181,10 +188,14 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
         "Total stake revealed doesnt match");
         uint256 median = disputes[epoch][msg.sender].median;
+        uint256 lowerCutoff = disputes[epoch][msg.sender].lowerCutoff;
+        uint256 higherCutoff = disputes[epoch][msg.sender].higherCutoff;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
         //
         require(median > 0);
-        if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
+        if (proposedBlocks[epoch][blockId].medians[assetId] != median ||
+            proposedBlocks[epoch][blockId].lowerCutoffs[assetId] != lowerCutoff ||
+            proposedBlocks[epoch][blockId].higherCutoffs[assetId] != higherCutoff) {
             proposedBlocks[epoch][blockId].valid = false;
             stakeManager.slash(proposerId, msg.sender, epoch);
         } else {
@@ -237,11 +248,11 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         }
     }
 
-    function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal returns(uint256) {
+    function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal {
        // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
-            return(0);
+            // return(0);
         }
        // Structs.Block[] memory temp = proposedBlocks[epoch];
        // delete (proposedBlocks[epoch]);
@@ -273,7 +284,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }
-        return(pushAt);
+        // return(pushAt);
     }
 
 

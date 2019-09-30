@@ -28,6 +28,7 @@ interface IBlockManager {
                     uint256[] calldata higherCutoffs,
                     uint256 iteration,
                     uint256 biggestStakerId) external;
+                    
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] calldata sorted) external;

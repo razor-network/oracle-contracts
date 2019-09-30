@@ -35,27 +35,26 @@ contract('StakeManager', function (accounts) {
       // await stateManager.setEpoch(1)
       await functions.mineToNextEpoch()
       // await stateManager.setState(0)
-      await sch.transfer(accounts[1], 423000, { 'from': accounts[0] })
-      await sch.transfer(accounts[2], 19000, { 'from': accounts[0] })
-      // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[6], 700000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[7], 3000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[8], 4000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[9], 5000, { 'from': accounts[0]})
-      // await sch.transfer(accounts[10], 6000, { 'from': accounts[0]})
+      await sch.transfer(accounts[1], 423000, { 'from': accounts[0]})
+      await sch.transfer(accounts[2], 19000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[6], 700000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[7], 3000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[8], 4000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[9], 5000, { 'from': accounts[0]})
+    // await sch.transfer(accounts[10], 6000, { 'from': accounts[0]})
     })
 
     it('should be able to stake', async function () {
-
       let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
       console.log('epoch, state', Number(await stateManager.getEpoch()), Number(await stateManager.getState()))
       let epoch = await functions.getEpoch()
       let sch = await SimpleToken.deployed()
-      await sch.approve(stakeManager.address, 420000, { 'from': accounts[1] })
-      await stakeManager.stake(epoch, 420000, { 'from': accounts[1] })
+      await sch.approve(stakeManager.address, 420000, { 'from': accounts[1]})
+      await stakeManager.stake(epoch, 420000, { 'from': accounts[1]})
       // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
 
       let stakerId = await stakeManager.stakerIds(accounts[1])
@@ -71,8 +70,8 @@ contract('StakeManager', function (accounts) {
       let sch = await SimpleToken.deployed()
       let stakeManager = await StakeManager.deployed()
       let epoch = await functions.getEpoch()
-      await sch.approve(stakeManager.address, 19000, { 'from': accounts[2] })
-      await stakeManager.stake(epoch, 19000, { 'from': accounts[2] })
+      await sch.approve(stakeManager.address, 19000, { 'from': accounts[2]})
+      await stakeManager.stake(epoch, 19000, { 'from': accounts[2]})
 
       let stakerId = await stakeManager.stakerIds(accounts[2])
       assert(stakerId.toString() === '2')
@@ -101,19 +100,22 @@ contract('StakeManager', function (accounts) {
       let staker = await stakeManager.stakers(1)
       let staker2 = await stakeManager.getStaker(1)
       assert(staker.id.toString() === String(staker2.id))
+      console.log(String(staker2.stake))
       assert(staker.stake.toString() === String(staker2.stake))
-      // let totalStake = await stakeManager.totalStake()
-      // assert(totalStake.toString() === '420000')
+    // let totalStake = await stakeManager.totalStake()
+    // assert(totalStake.toString() === '420000')
     })
 
     it('should be able to increase stake', async function () {
       let stakeManager = await StakeManager.deployed()
       let sch = await SimpleToken.deployed()
-      await sch.approve(stakeManager.address, 3000, { 'from': accounts[1] })
+      await sch.approve(stakeManager.address, 3000, { 'from': accounts[1]})
       let epoch = await functions.getEpoch()
       console.log(`State in epoch ${epoch} : ${await functions.getState()}`)
-      await stakeManager.stake(epoch, 3000, { 'from': accounts[1] })
+      await stakeManager.stake(epoch, 3000, { 'from': accounts[1]})
       let staker = await stakeManager.getStaker(1)
+      console.log(String(staker.stake))
+
       assert(Number(staker.stake) === 423000)
     })
 
@@ -121,9 +123,9 @@ contract('StakeManager', function (accounts) {
       let stakeManager = await StakeManager.deployed()
       let epoch = await functions.getEpoch()
       console.log(`State in epoch ${epoch} : ${await functions.getState()}`)
-      await assertRevert(stakeManager.unstake(epoch, { 'from': accounts[1] }))
-      // let staker = await stakeManager.getStaker(1)
-      // assert(Number(staker.stake) === 423000)
+      await assertRevert(stakeManager.unstake(epoch, { 'from': accounts[1]}))
+    // let staker = await stakeManager.getStaker(1)
+    // assert(Number(staker.stake) === 423000)
     })
 
     it('should be able to unstake after unstake lock period', async function () {
@@ -132,18 +134,18 @@ contract('StakeManager', function (accounts) {
       // await stateManager.setEpoch(2)
       await functions.mineToNextEpoch()
       let epoch = await functions.getEpoch()
-      await stakeManager.unstake(epoch, { 'from': accounts[1] })
+      await stakeManager.unstake(epoch, { 'from': accounts[1]})
       let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.unstakeAfter) === 0, "UnstakeAfter should be zero")
-      assert(Number(staker.withdrawAfter) === (epoch+1), "withdrawAfter does not match")
+      assert(Number(staker.unstakeAfter) === 0, 'UnstakeAfter should be zero')
+      assert(Number(staker.withdrawAfter) === (epoch + 1), 'withdrawAfter does not match')
     })
 
     it('should not be able to withdraw before withdraw lock period', async function () {
       let stakeManager = await StakeManager.deployed()
       let epoch = await functions.getEpoch()
-      await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1] }))
+      await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1]}))
       let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.stake) === 423000, "Stake should not change")
+      assert(Number(staker.stake) === 423000, 'Stake should not change')
     })
 
     it('should not be able to withdraw after withdraw lock period if didnt reveal in last epoch', async function () {
@@ -152,9 +154,9 @@ contract('StakeManager', function (accounts) {
       // await stateManager.setEpoch(3)
       await functions.mineToNextEpoch()
       let epoch = await functions.getEpoch()
-      await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1] }))
+      await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1]}))
       let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.stake) == 423000, "Stake should not change");
+      assert(Number(staker.stake) == 423000, 'Stake should not change')
     })
 
     it('should be able to withdraw after withdraw lock period if revealed in last epoch', async function () {
@@ -170,7 +172,7 @@ contract('StakeManager', function (accounts) {
       let epoch = await functions.getEpoch()
       // Here epoch => Epoch Number, root => Merkle root, 0x72... => random secret
       let commitment1 = web3i.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
-      await voteManager.commit(epoch, commitment1, { 'from': accounts[1] })
+      await voteManager.commit(epoch, commitment1, { 'from': accounts[1]})
 
       // await stateManager.setState(1)
       await functions.mineToNextState()
@@ -183,7 +185,7 @@ contract('StakeManager', function (accounts) {
       }
       await voteManager.reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        accounts[1], { 'from': accounts[1] })
+        accounts[1], { 'from': accounts[1]})
 
       // await stateManager.setState(2)
       // let staker = await stakeManager.getStaker(1)
@@ -210,7 +212,7 @@ contract('StakeManager', function (accounts) {
       // console.log(Number(await staker.stake))
       // console.log(Number(await staker.epochLastRevealed))
       let epochNext = await functions.getEpoch()
-      await (stakeManager.withdraw(epochNext, { 'from': accounts[1] }))
+      await (stakeManager.withdraw(epochNext, { 'from': accounts[1]}))
       staker = await stakeManager.getStaker(1)
       // console.log(Number(await staker.stake))
       assert(Number(staker.stake) === 0)

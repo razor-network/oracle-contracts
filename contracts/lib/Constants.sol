@@ -11,7 +11,7 @@ library Constants {
     function penaltyNotRevealDenom() public pure returns(uint256) { return (10000); }
     // uint256 constant PENALTY_NOT_IN_ZONE_NUM = 99;
     // uint256 constant PENALTY_NOT_IN_ZONE_DENOM = 100;
-    function minStake() public pure returns(uint256) { return(1000); }
+    function minStake() public pure returns(uint256) { return(100); }
     function blockReward() public pure returns(uint8) { return(5);}
     // uint256 constant REVEAL_REWARD = 5;
     // function safetyMarginLower() public pure returns(uint256) { return(99); }
