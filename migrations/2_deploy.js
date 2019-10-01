@@ -14,7 +14,7 @@ var Faucet = artifacts.require('./Faucet.sol')
 
 // todo remove deployer write access
 module.exports = async function (deployer) {
-// let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
+  // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
 
   deployer.then(async () => {
     await deployer.deploy(SimpleToken)
@@ -57,16 +57,14 @@ module.exports = async function (deployer) {
       token.transfer('0xe0431d3B7F453D008dFa92947F31Fba8969C0015', 1000000),
       token.transfer('0x04b8129d730ad55C3DA2f8BF8e0Ce1a6D118ccd6', 1000000),
       token.transfer('0x1Dc0b62436A1db4E28743E66c8bcF02D8103Ad8c', 1000000),
-      token.transfer(Faucet.address, 1000000)
-      // ,
-      // job.createJob('https://api.gemini.com/v1/pubticker/ethusd', 'last', true),
-      // job.createJob('https://api.gemini.com/v1/pubticker/btcusd', 'last', true),
-      // job.createJob('https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=AAPL&apikey=E1BN9Y09VQ32BQ00',
-      //   'Global Quote["05. price"]', true)
-      // function createJob (string calldata url, string calldata selector, bool repeat) external payable {
+      token.transfer('0x21D7ACbcAEa5dD43e28c41b37A1296d6aAa4D912', 1000000),
+      token.transfer('0x50B2740e437410f30c2f679C06357eF1d76cedAE', 1000000),
+      token.transfer('0x484D0e98f78550DBBCf95D49573F77B4Ab50a38C', 1000000),
+      token.transfer('0xa186900e0e24C5a5943Ac10dF71B574debfFC74b', 1000000),
+      token.transfer(Faucet.address, 10000000)
 
-      // vote.addWriter(StakeManager.address)
-      // console.log(await stake.blockManager.call())
+    // vote.addWriter(StakeManager.address)
+    // console.log(await stake.blockManager.call())
     ])
   })
 }

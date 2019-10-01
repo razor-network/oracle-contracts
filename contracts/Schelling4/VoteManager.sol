@@ -74,7 +74,7 @@ contract VoteManager is  Utils, VoteStorage {
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         blockManager.confirmBlock();
 
-        stakeManager.givePenalties(thisStaker, epoch);
+        stakeManager.givePenalties(stakerId, epoch);
         // emit DebugUint256(y);
         if (thisStaker.stake >= Constants.minStake()) {
             commitments[epoch][stakerId] = commitment;
@@ -109,7 +109,7 @@ contract VoteManager is  Utils, VoteStorage {
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
             }
 
-            stakeManager.giveRewards(thisStaker, epoch);
+            stakeManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
             // thisStaker.epochLastRevealed = epoch;
@@ -121,7 +121,7 @@ contract VoteManager is  Utils, VoteStorage {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");
             commitments[epoch][thisStakerId] = 0x0;
-            stakeManager.slash(thisStakerId, msg.sender);
+            stakeManager.slash(thisStakerId, msg.sender, epoch);
         }
     }
 }

@@ -51,9 +51,10 @@ module.exports = {
       // from: '0xe092b1fa25df5786d151246e492eed3d15ea4daa',
       host: '127.0.0.1',
       port: 8545,
+      // gas: 6000000,
       confirmations: 0,
       network_id: 420
-      // websockets: true
+    // websockets: true
     },
 
     // Useful for deploying to a public network.
@@ -63,20 +64,19 @@ module.exports = {
       provider: function () {
         return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/v3/' + `${infuraKey}`)
       },
-       // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`),
+      // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`),
       network_id: 4,
-      gas: 5500000,
-      gasPrice: 2000000000,
+      // gas: 7000000,
       confirmations: 0,
       timeoutBlocks: 200,
       from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
-      skipDryRun: true // Skip dry run before migrations? (default: false for public nets )
+    // skipDryRun: true // Skip dry run before migrations? (default: false for public nets )
     },
 
     private: {
       provider: () => new HDWalletProvider(mnemonic, 'http://localhost:8545/'), // `${infuraKey}`),
       network_id: 421
-      // production: true    // Treats this network as if it was a public net. (default: false)
+    // production: true    // Treats this network as if it was a public net. (default: false)
     },
 
     goerli: {
@@ -84,7 +84,7 @@ module.exports = {
         return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + `${infuraKey}`)
       },
       network_id: 5,
-      gas: 5500000,
+      gas: 7000000,
       gasPrice: 1000000000,
       confirmations: 0,
       timeoutBlocks: 200,
@@ -102,14 +102,14 @@ module.exports = {
   compilers: {
     solc: {
       version: '0.5.10' // Fetch exact version from solc-bin (default: truffle's version)
-      // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
-      // settings: {          // See the solidity docs for advice about optimization and evmVersion
-      //  optimizer: {
-      //    enabled: false,
-      //    runs: 200
-      //  },
-      //  evmVersion: "byzantium"
-      // }
+    // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
+    // settings: {          // See the solidity docs for advice about optimization and evmVersion
+    //  optimizer: {
+    //    enabled: false,
+    //    runs: 200
+    //  },
+    //  evmVersion: "byzantium"
+    // }
     }
   }
 }

@@ -44,11 +44,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stateManager = IStateManager(_stateManagerAddress);
     }
 
-    event StakeChange(uint256 stakerId, uint256 previousStake, uint256 newStake,
+    event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake,
                     string reason, uint256 epoch, uint256 timestamp);
 
-    event RewardPoolChange(uint256 epoch, uint256 value, uint256 timestamp);
-    event StakeGettingRewardChange(uint256 epoch, uint256 value, uint256 timestamp);
+    event RewardPoolChange(uint256 epoch, uint256 prevRewardPool, uint256 rewardPool, uint256 timestamp);
+    event StakeGettingRewardChange(uint256 epoch, uint256 prevStakeGettingReward, uint256 stakeGettingReward, uint256 timestamp);
 
     /// @param _id The ID of the staker
     /// @param _stake The amount of schelling tokens that staker stakes
@@ -67,7 +67,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
-    event Staked(uint256 epoch, uint256 stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Staked(uint256 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
@@ -99,7 +99,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
     }
 
-    event Unstaked(uint256 epoch, uint256 stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
@@ -115,7 +115,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         emit Unstaked(epoch, stakerId, staker.stake, staker.stake, now);
     }
 
-    event Withdrew(uint256 epoch, uint256 stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
@@ -127,7 +127,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(staker.unstakeAfter == 0, "Did not unstake");
         require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
-        _givePenalties(staker, epoch);
+        _givePenalties(staker.id, epoch);
         require(staker.stake > 0, "Nonpositive Stake");
         // SimpleToken sch = SimpleToken(schAddress);
         // totalStake = totalStake.sub(stakers[stakerId].stake);
@@ -139,11 +139,11 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
-    /// @param thisStaker The information of staker currently in consideration
+    /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
-        _givePenalties(thisStaker, epoch);
+    function givePenalties (uint256 stakerId, uint256 epoch) external onlyWriter {
+        _givePenalties(stakerId, epoch);
     }
 
     /// @notice The function gives block reward for one valid proposer in the
@@ -163,38 +163,54 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed
     /// the Values of assets according to the razor protocol rules.
-    /// @param thisStaker The staker struct with staker info
+    /// @param stakerId The staker id
     /// @param epoch The epoch number for which reveal has been called
-    function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external onlyWriter {
-        if (epoch > 1 && stakeGettingReward > 0) {
-            uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
-            // require(mediansLastEpoch.length > 0);
-            if (mediansLastEpoch.length > 0) {
-                //epoch->stakerid->assetid->vote
-                // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
-                uint256 rewardable = 0;
-                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                    uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
-                    uint256 medianLastEpoch = mediansLastEpoch[i];
+    function giveRewards (uint256 stakerId, uint256 epoch) external onlyWriter {
+        if (stakeGettingReward == 0) return;
+        Structs.Staker memory thisStaker = stakers[stakerId];
+        uint256 epochLastRevealed = thisStaker.epochLastRevealed;
 
-                    //give rewards if voted in zone
-                    if ((voteLastEpoch * 100 >= (Constants.safetyMarginLower() * medianLastEpoch) ||
-                        (voteLastEpoch * 100 <= ((200-Constants.safetyMarginLower()) * medianLastEpoch)))) {
-                        rewardable = rewardable + 1;
-                    }
-                }
-                // emit DebugUint256(rewardable);
-                // emit DebugUint256(rewardPool);
-                uint256 reward = (thisStaker.stake*rewardPool*rewardable)/
-                (stakeGettingReward*mediansLastEpoch.length);
-                if (reward > 0) {
-                    stakeGettingReward = stakeGettingReward - reward;
-                    emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
+        //never revealed
+        // if (epochLastRevealed < 1) return;
 
-                    uint256 newStake = thisStaker.stake + reward;
-                    _setStakerStake(thisStaker.id, newStake, "Voting Rewards", epoch);
+        // no rewards if you didn't reveal last epoch
+        if ((epoch - epochLastRevealed) != 1) return;
+        uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
+        uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
+        uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
+
+        // require(mediansLastEpoch.length > 0);
+        if (lowerCutoffsLastEpoch.length > 0) {
+            //epoch->stakerid->assetid->vote
+            // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+            uint256 rewardable = 0;
+            for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
+                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
+                uint256 medianLastEpoch = mediansLastEpoch[i];
+                uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
+                uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
+
+                //give rewards if voted in zone
+                if ((voteLastEpoch == medianLastEpoch) ||
+                ((voteLastEpoch > lowerCutoffLastEpoch) ||
+                    (voteLastEpoch < higherCutoffLastEpoch))) {
+                    rewardable = rewardable + 1;
                 }
+            }
+            // emit DebugUint256(rewardable);
+            // emit DebugUint256(rewardPool);
+            //reward = S*RP*n/SR*N
+            uint256 reward = (thisStaker.stake*rewardPool*rewardable)/
+            (stakeGettingReward*lowerCutoffsLastEpoch.length);
+            if (reward > 0) {
+                uint256 prevStakeGettingReward = stakeGettingReward;
+                stakeGettingReward = stakeGettingReward >= thisStaker.stake ? stakeGettingReward.sub(thisStaker.stake) : 0;
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
+                uint256 newStake = thisStaker.stake + reward;
+                uint256 prevRewardPool = rewardPool;
+                rewardPool = rewardPool.sub(reward);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+                _setStakerStake(thisStaker.id, newStake, "Voting Rewards", epoch);
             }
         }
     }
@@ -204,10 +220,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// transfer to bounty hunter half the schelling tokens of the stakers stake
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
-    function slash (uint256 id, address bountyHunter) external onlyWriter {
+    function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyWriter {
         // SimpleToken sch = SimpleToken(schAddress);
         uint256 halfStake = stakers[id].stake.div(2);
-        stakers[id].stake = 0;
+        _setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {
             // totalStake = totalStake.sub(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
@@ -245,7 +261,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
-        if (epochs < 2) {
+        //not really inactive. do nothing. give 1 epoch grace
+        if (epochs < 3) {
             return(stakeValue);
         }
         // penalty =( epochs -1)*stakeValue*penNum/penDiv
@@ -271,68 +288,66 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @notice The function gives out penalties to stakers during withdraw
     /// and commit. The penalties are given for inactivity, failing to reveal
     /// even though unstaked, deviation from the median value of particular asset
-    /// @param thisStaker The staker information
+    /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
-    function _givePenalties (Structs.Staker memory thisStaker, uint256 epoch) internal {
+    function _giveInactivityPenalties(uint256 stakerId, uint256 epoch) internal {
+        Structs.Staker memory thisStaker = stakers[stakerId];
+
+        uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
+                                thisStaker.epochLastRevealed :
+                                thisStaker.epochStaked;
+        // penalize or reward if last active more than epoch - 1
+        uint256 penalizeEpochs = epoch.sub(epochLastActive);
+        uint256 previousStake = thisStaker.stake;
+        // uint256 currentStake = previousStake;
+        uint256 currentStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+        if (currentStake < previousStake) {
+            _setStakerStake(thisStaker.id, currentStake, "Inactivity Penalty", epoch);
+            uint256 prevRewardPool = rewardPool;
+            rewardPool = rewardPool.add(previousStake.sub(currentStake));
+            emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+        }
+    }
+    function _givePenalties (uint256 stakerId, uint256 epoch) internal {
+        _giveInactivityPenalties(stakerId, epoch);
+        Structs.Staker storage thisStaker = stakers[stakerId];
+        uint256 previousStake = thisStaker.stake;
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-        if (epoch > 1 && epochLastRevealed > 0) {
-            uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed ?
-                                    thisStaker.epochLastRevealed :
-                                    thisStaker.epochStaked;
-            // penalize or reward if last active more than epoch - 1
-            uint256 penalizeEpochs = epoch.sub(epochLastActive);
-            uint256 previousStake = thisStaker.stake;
-            uint256 currentStake = previousStake;
-            uint256 newStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
-            if (newStake < previousStake) {
-                _setStakerStake(thisStaker.id, newStake, "Inactivity Penalty", epoch);
-                currentStake = newStake;
+
+        Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
+
+        uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
+        uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
+        uint256[] memory mediansLastEpoch = _block.medians;
+
+        if (lowerCutoffsLastEpoch.length > 0) {
+            uint256 penalty = 0;
+            for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
+                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
+                uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
+                uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
+                uint256 medianLastEpoch = mediansLastEpoch[i];
+
+                if (((voteLastEpoch <= lowerCutoffLastEpoch) ||
+                    (voteLastEpoch >= higherCutoffLastEpoch)) &&
+                    (voteLastEpoch != medianLastEpoch)) {
+                    //WARNING: Potential security vulnerability. Could increase stake maliciously
+                    //WARNING: unchecked underflow
+                    penalty = penalty + (previousStake/Constants.exposureDenominator());
+                }
             }
 
-            // return(0);
-
-            uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
-            if (mediansLastEpoch.length > 0) {
-
-                uint256 y;
-                for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                    uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
-                    uint256 medianLastEpoch = mediansLastEpoch[i];
-
-                    if (voteLastEpoch > (medianLastEpoch.mul(2))) {
-                        _setStakerStake(thisStaker.id, 0, "Voting Penalty", epoch);
-                        newStake = 0;
-                        rewardPool = rewardPool.add(previousStake);
-                        emit RewardPoolChange(epoch, rewardPool, now);
-                        return;
-                        // return(0);
-                    } else if (voteLastEpoch > 0 &&
-                        (voteLastEpoch < (medianLastEpoch.mul(Constants.safetyMarginLower())).div(100) ||
-                        voteLastEpoch > (medianLastEpoch.mul(uint256(200).sub(
-                                        Constants.safetyMarginLower()))).div(100))) {
-
-                        if (medianLastEpoch > voteLastEpoch) {
-                            y = y + (100 * (medianLastEpoch - voteLastEpoch))/medianLastEpoch;
-                        } else {
-                            y = y + (100 * (voteLastEpoch - medianLastEpoch))/medianLastEpoch;
-                        }
-                    }
-                }
-
-                if (y > 0) {
-                    newStake = currentStake.sub(((y - 1).mul(currentStake)).div(100*mediansLastEpoch.length));
-                    _setStakerStake(thisStaker.id, newStake, "Voting Penalty", epoch);
-                // thisStaker.stake = previousStake.sub(((y.sub(1)).mul(previousStake)).div(10000));
-
-                    rewardPool = rewardPool.add(previousStake.sub(newStake));
-                    emit RewardPoolChange(epoch, rewardPool, now);
-                    // return(y);
-                } else if (previousStake == newStake) {
-                //no penalty. only reward??
-                    stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-                    emit StakeGettingRewardChange(epoch, stakeGettingReward, now);
-
-                }
+            if (penalty > 0) {
+                penalty = (penalty > previousStake) ? previousStake : penalty;
+                _setStakerStake(thisStaker.id, (previousStake.sub(penalty)), "Voting Penalty", epoch);
+                uint256 prevRewardPool = rewardPool;
+                rewardPool = rewardPool.add(penalty);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+            } else {
+                //no penalty. only reward
+                uint256 prevStakeGettingReward = stakeGettingReward;
+                stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
             }
         }
     }

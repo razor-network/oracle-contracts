@@ -20,8 +20,10 @@ library Structs {
 
     struct Block {
         uint256 proposerId;
-        uint256[] medians;
         uint256[] jobIds;
+        uint256[] medians;
+        uint256[] lowerCutoffs;
+        uint256[] higherCutoffs;
         uint256 iteration;
         uint256 biggestStake;
         bool valid;
@@ -30,6 +32,8 @@ library Structs {
     struct Dispute {
         uint256 accWeight;
         uint256 median;
+        uint256 lowerCutoff;
+        uint256 higherCutoff;
         uint256 lastVisited;
         uint256 assetId;
     }

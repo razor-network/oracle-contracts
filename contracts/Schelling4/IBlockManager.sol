@@ -22,9 +22,13 @@ interface IBlockManager {
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
     function propose (uint256 epoch,
+                    uint256[] calldata jobIds,
                     uint256[] calldata medians,
+                    uint256[] calldata lowerCutoffs,
+                    uint256[] calldata higherCutoffs,
                     uint256 iteration,
                     uint256 biggestStakerId) external;
+                    
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] calldata sorted) external;
@@ -35,6 +39,10 @@ interface IBlockManager {
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block);
     function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians);
+
+    function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs);
+
+    function getHigherCutoffs(uint256 epoch) external view returns(uint256[] memory _higherCutoffs);
 
     function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
     external view returns(uint256[] memory _blockMedians);

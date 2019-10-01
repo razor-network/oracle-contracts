@@ -13,10 +13,10 @@ interface IStakeManager {
     function stake (uint256 epoch, uint256 amount) external;
     function unstake (uint256 epoch) external;
     function withdraw (uint256 epoch) external;
-    function givePenalties (Structs.Staker calldata thisStaker, uint256 epoch) external;
+    function givePenalties (uint256 stakerId, uint256 epoch) external;
     function giveBlockReward(uint256 stakerId, uint256 epoch) external;
-    function giveRewards (Structs.Staker calldata thisStaker, uint256 epoch) external;
-    function slash (uint256 id, address bountyHunter) external;
+    function giveRewards (uint256 stakerId, uint256 epoch) external;
+    function slash (uint256 id, address bountyHunter, uint256 epoch) external;
     // function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256);
     function getStakerId(address _address) external view returns(uint256);
     function getStaker(uint256 _id) external view returns(Structs.Staker memory staker);

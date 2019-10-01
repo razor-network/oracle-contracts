@@ -37,11 +37,11 @@ contract('BlockManager', function (accounts) {
       // await stateManager.setEpoch(1)
       // await stateManager.setState(0)
       await functions.mineToNextEpoch()
-      await sch.transfer(accounts[5], 423000, { 'from': accounts[0] })
-      await sch.transfer(accounts[6], 19000, { 'from': accounts[0] })
-      await sch.approve(stakeManager.address, 420000, { 'from': accounts[5] })
+      await sch.transfer(accounts[5], 423000, { 'from': accounts[0]})
+      await sch.transfer(accounts[6], 19000, { 'from': accounts[0]})
+      await sch.approve(stakeManager.address, 420000, { 'from': accounts[5]})
       let epoch = await functions.getEpoch()
-      await stakeManager.stake(epoch, 420000, { 'from': accounts[5] })
+      await stakeManager.stake(epoch, 420000, { 'from': accounts[5]})
       // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
       // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
       // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
@@ -51,28 +51,28 @@ contract('BlockManager', function (accounts) {
       // await sch.transfer(accounts[9], 5000, { 'from': accounts[0]})
       // await sch.transfer(accounts[10], 6000, { 'from': accounts[0]})
 
-              // await stateManager.setEpoch(3)
+      // await stateManager.setEpoch(3)
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
-              // console.log(tree.root())
+      // console.log(tree.root())
       let root = tree.root()
 
-              // console.log(await blockManager.isWriter(VoteManager.address))
+      // console.log(await blockManager.isWriter(VoteManager.address))
       let commitment1 = web3i.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
-      await voteManager.commit(epoch, commitment1, { 'from': accounts[5] })
+      await voteManager.commit(epoch, commitment1, { 'from': accounts[5]})
 
       // await stateManager.setState(1)
       await functions.mineToNextState()
 
-              // let root = tree.root()
-              // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
+      // let root = tree.root()
+      // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
       let proof = []
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true))
       }
       await voteManager.reveal(epoch, tree.root(), votes, proof,
-                '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-                accounts[5], { 'from': accounts[5] })
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        accounts[5], { 'from': accounts[5]})
     })
 
     it('should be able to propose', async function () {
@@ -98,7 +98,14 @@ contract('BlockManager', function (accounts) {
       // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
       let iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes)
       // console.log('iteration1b', iteration)
-      await blockManager.propose(epoch, [100, 201, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[5] })
+      await blockManager.propose(epoch,
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        [99, 199, 299, 399, 499, 599, 699, 799, 899],
+        [101, 201, 301, 401, 501, 601, 701, 801, 901],
+        iteration,
+        biggestStakerId,
+        { 'from': accounts[5]})
       let proposedBlock = await blockManager.proposedBlocks(epoch, 0)
       console.log(Number(proposedBlock.proposerId) === 1)
     })
@@ -117,23 +124,29 @@ contract('BlockManager', function (accounts) {
       let weights = [420000]
 
       let totalStakeRevealed = Number(await voteManager.getTotalStakeRevealed(epoch, 1))
-      let medianWeight = totalStakeRevealed / 2
+      let medianWeight = Math.floor(totalStakeRevealed / 2)
+      let lowerCutoffWeight = Math.floor(totalStakeRevealed / 4)
+      let higherCutoffWeight = Math.floor(totalStakeRevealed * 3 / 4)
       let i = 0
       let median = 0
+      let lowerCutoff = 0
+      let higherCutoff = 0
       let weight = 0
       for (i = 0; i < sortedVotes.length; i++) {
         weight += weights[i]
         if (weight > medianWeight && median === 0) median = sortedVotes[i]
+        if (weight > lowerCutoffWeight && lowerCutoff === 0) lowerCutoff = sortedVotes[i]
+        if (weight > higherCutoffWeight && higherCutoff === 0) higherCutoff = sortedVotes[i]
       }
       // //console.log('totalStakeRevealed', totalStakeRevealed)
-      // //console.log('medianWeight', medianWeight)
-      // //console.log('twoFiveWeight', twoFiveWeight)
-      // //console.log('sevenFiveWeight', sevenFiveWeight)
-      // //console.log('twofive', twoFive)
-      // //console.log('sevenFive', sevenFive)
+      console.log('medianWeight', medianWeight)
+      console.log('twoFiveWeight', lowerCutoffWeight)
+      console.log('sevenFiveWeight', higherCutoffWeight)
+      console.log('twofive', lowerCutoff)
+      console.log('sevenFive', higherCutoff)
       // //console.log('---------------------------')
 
-      await blockManager.giveSorted(epoch, 1, sortedVotes, { 'from': accounts[20] })
+      await blockManager.giveSorted(epoch, 1, sortedVotes, { 'from': accounts[20]})
       // console.log('median', median)
       // // console.log('Number(await voteManager.getTotalStakeRevealed(1, 0))', Number(await voteManager.getTotalStakeRevealed(1, 0)))
       // // console.log('accweight', Number((await blockManager.disputes(1, accounts[20])).accWeight))
@@ -150,7 +163,7 @@ contract('BlockManager', function (accounts) {
       let stakeManager = await StakeManager.deployed()
       let sch = await SimpleToken.deployed()
       let epoch = await functions.getEpoch()
-      await blockManager.finalizeDispute(epoch, 0, { 'from': accounts[20] })
+      await blockManager.finalizeDispute(epoch, 0, { 'from': accounts[20]})
       let proposedBlock = await blockManager.proposedBlocks(epoch, 0)
       assert((await proposedBlock.valid) === false)
       let stakerId_acc5 = await stakeManager.stakerIds(accounts[5])
