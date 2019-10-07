@@ -33,7 +33,7 @@ contract JobManager is WriterRole, JobStorage {
     function createJob (string calldata url, string calldata selector, bool repeat) external payable {
         numJobs = numJobs + 1;
         uint256 epoch = stateManager.getEpoch();
-        Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, false);
+        Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, false,0);
         jobs[numJobs] = job;
         emit JobCreated(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, now);
         // jobs.push(job);
@@ -50,5 +50,15 @@ contract JobManager is WriterRole, JobStorage {
         }
         emit JobReported(job.id, value, epoch, job.url, job.selector, job.repeat,
         job.creator, job.credit, job.fulfilled, now);
+        job.result = value;
+    }
+
+    function getResult(uint256 id) external view returns(uint256) {
+        return jobs[id].result;
+    }
+
+    function getJob(uint256 id) external view returns(string memory url, string memory selector, bool repeat, uint256 result) {
+        Structs.Job memory job = jobs[id];
+        return(job.url, job.selector, job.repeat, job.result);
     }
 }

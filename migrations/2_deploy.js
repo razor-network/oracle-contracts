@@ -11,6 +11,7 @@ var VoteManager = artifacts.require('./VoteManager.sol')
 var StateManager = artifacts.require('./StateManager.sol')
 var JobManager = artifacts.require('./JobManager.sol')
 var Faucet = artifacts.require('./Faucet.sol')
+var Delegator = artifacts.require('./Delegator.sol')
 
 // todo remove deployer write access
 module.exports = async function (deployer) {
@@ -30,12 +31,14 @@ module.exports = async function (deployer) {
     await deployer.deploy(StateManager)
     await deployer.deploy(JobManager)
     await deployer.deploy(Faucet)
+    await deployer.deploy(Delegator)
     let token = await SimpleToken.deployed()
     let block = await BlockManager.deployed()
     let vote = await VoteManager.deployed()
     let stake = await StakeManager.deployed()
     let job = await JobManager.deployed()
     let faucet = await Faucet.deployed()
+    let delegator = await Delegator.deployed()
     // let state = await StateManager.deployed()
     return Promise.all([
       token.addMinter(StakeManager.address),
@@ -48,6 +51,7 @@ module.exports = async function (deployer) {
       stake.addWriter(VoteManager.address),
       stake.addWriter(BlockManager.address),
       job.addWriter(BlockManager.address),
+      delegator.upgradeDelegate(JobManager.address),
       // uncomment following for testnet
       token.transfer('0x09633cEE3db9BB662C35Bd32aaA5579e3d2aac3c', 1000000),
       token.transfer('0xc807af42c30b53aA9AC20E298840D2d4e4d3f043', 1000000),

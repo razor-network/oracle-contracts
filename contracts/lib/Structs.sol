@@ -47,6 +47,7 @@ library Structs {
         address creator;
         uint256 credit;
         bool fulfilled;
+        uint256 result;
     }
 
 }

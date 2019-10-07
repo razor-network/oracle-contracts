@@ -8,7 +8,7 @@ library Constants {
     function dispute() public pure returns(uint8) { return(3);}
     // penalty not reveal = 0.01% per epch
     function penaltyNotRevealNum() public pure returns(uint256) { return (1);}
-    function penaltyNotRevealDenom() public pure returns(uint256) { return (10000); }
+    function penaltyNotRevealDenom() public pure returns(uint256) { return (100000); }
     // uint256 constant PENALTY_NOT_IN_ZONE_NUM = 99;
     // uint256 constant PENALTY_NOT_IN_ZONE_DENOM = 100;
     function minStake() public pure returns(uint256) { return(100); }
@@ -20,7 +20,7 @@ library Constants {
     function maxAltBlocks() public pure returns(uint256) { return(5); }
     function epochLength() public pure returns(uint256) { return(40); }
     function numStates() public pure returns(uint256) { return(4); }
-    function exposureDenominator() public pure returns(uint256) { return(1000); }
+    function exposureDenominator() public pure returns(uint256) { return(10000); }
 
  // Constants(0, 1, 2, 3, 1, 10000, 99, 100, 1000, 5, 5, 99, 1, 1);
 }
