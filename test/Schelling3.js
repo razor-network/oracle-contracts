@@ -6,7 +6,7 @@
 // test penalizeEpochs
 const { assertRevert } = require('./helpers/assertRevert')
 // let Schelling = artifacts.require('./Schelling3.sol')
-let SimpleToken = artifacts.require('./SimpleToken.sol')
+let SchellingCoin = artifacts.require('./SchellingCoin.sol')
 let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
 let merkle = require('@razor-network/merkle')
@@ -26,10 +26,10 @@ let biggestStakerId
 // test cases where nobody votes, too low stake (1-4)
 // describe.('Fullscale test', function () {
 contract.skip('Schelling', function (accounts) {
-  contract('SimpleToken', function () {
+  contract('SchellingCoin', function () {
     it('shuld be able to initialize', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
 
       await schelling.setEpoch(1)
       await sch.transfer(accounts[1], 420000, { 'from': accounts[0] })
@@ -45,7 +45,7 @@ contract.skip('Schelling', function (accounts) {
     })
     it('should be able to stake', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
 
       // console.log(web3i.eth.accounts)
 
@@ -66,7 +66,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should handle second staker correctly', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       await sch.approve(schelling.address, 19000, { 'from': accounts[2]})
       let tx = await schelling.stake(1, 19000, { 'from': accounts[2]})
       // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
@@ -84,7 +84,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should handle other stakers correctly', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       await sch.approve(schelling.address, 800000, { 'from': accounts[3]})
       let tx = await schelling.stake(1, 800000, { 'from': accounts[3]})
       // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
@@ -124,7 +124,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should be able to increase stake', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
 
       await sch.approve(schelling.address, 3000, { 'from': accounts[8]})
       let tx = await schelling.stake(1, 3000, { 'from': accounts[8]})
@@ -132,7 +132,7 @@ contract.skip('Schelling', function (accounts) {
 //
     it('should be able to commit', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
       console.log(tree.root())
       let root = tree.root()
@@ -178,7 +178,7 @@ contract.skip('Schelling', function (accounts) {
     })
     it('should be able to reveal someone elses commitment and get bounty', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let stakerId = await schelling.stakerIds(accounts[2])
       let stakeBefore = await schelling.stakers(stakerId)
       let tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
@@ -193,7 +193,7 @@ contract.skip('Schelling', function (accounts) {
 //
     it('should not be able to reveal incorrectly', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
       // console.log(tree.root())
@@ -215,7 +215,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should be able to reveal', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let epoch = Number(await schelling.getEpoch())
       await schelling.setState(1)
 
@@ -279,7 +279,7 @@ contract.skip('Schelling', function (accounts) {
 
     // it('should not be able to reveal again', async function () {
     //   let schelling = await Schelling.deployed()
-    //   let sch = await SimpleToken.deployed()
+    //   let sch = await SchellingCoin.deployed()
     //   await assertRevert(schelling.reveal(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', accounts[1], { 'from': accounts[1]}))
     // })
 
@@ -329,7 +329,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('prngHash should work as expected', async function () {
       // let schelling = await Schelling.deployed()
-      // let sch = await SimpleToken.deployed()
+      // let sch = await SchellingCoin.deployed()
       let random = await Random.deployed()
 
       // async function prng (seed, max, blockHashes) {
@@ -345,7 +345,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('prng should work as expected', async function () {
       // let schelling = await Schelling.deployed()
-      // let sch = await SimpleToken.deployed()
+      // let sch = await SchellingCoin.deployed()
       let random = await Random.deployed()
 
       // async function prng (seed, max, blockHashes) {
@@ -361,7 +361,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should be able to propose', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let random = await Random.deployed()
       await schelling.setState(2)
 
@@ -394,7 +394,7 @@ contract.skip('Schelling', function (accounts) {
 
     it('should be able to propose multiple blocks', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let random = await Random.deployed()
 
       // await schelling.setState(2)
@@ -547,7 +547,7 @@ contract.skip('Schelling', function (accounts) {
     //
     it('should be able to giveSortedVotes', async function () {
       let schelling = await Schelling.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       await schelling.setState(3)
 
       // TODO check acutal weights from con tract
@@ -581,7 +581,7 @@ contract.skip('Schelling', function (accounts) {
 // //
 //     it('should be able to giveSortedVotes in batches', async function () {
 //       let schelling = await Schelling.deployed()
-//       let sch = await SimpleToken.deployed()
+//       let sch = await SchellingCoin.deployed()
 //
 //       let sortedVotes = [1, 4, 160, 161, 168, 1000000]
 //       let weights = [5000, 600000, 420000, 4000, 800000, 6000]
@@ -617,7 +617,7 @@ contract.skip('Schelling', function (accounts) {
 //
 //     it('should get reward for correct proposeAlt', async function () {
 //       let schelling = await Schelling.deployed()
-//       let sch = await SimpleToken.deployed()
+//       let sch = await SchellingCoin.deployed()
 //       let proposerId = Number((await schelling.blocks(1)).proposerId)
 //       let proposerStake = Number((await schelling.stakers(proposerId)).stake)
 //       let totalStake = Number(await schelling.totalStake())
@@ -772,14 +772,14 @@ contract.skip('Schelling', function (accounts) {
     })
 
     it('should not be able to withdraw in same epoch', async function () {
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let schelling = await Schelling.deployed()
 
       await assertRevert(schelling.withdraw(3, { 'from': accounts[5]}))
     })
 
     it('should not be able to withdraw if didnt reveal last epoch', async function () {
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let schelling = await Schelling.deployed()
       await schelling.setEpoch(3)
       await schelling.setState(0)
@@ -788,7 +788,7 @@ contract.skip('Schelling', function (accounts) {
     })
 
     // it('should be able to withdraw in next epoch if revealed last epoch', async function () {
-    //   let sch = await SimpleToken.deployed()
+    //   let sch = await SchellingCoin.deployed()
     //   let schelling = await Schelling.deployed()
     //   let random = await Random.deployed()
     //   tree = merkle('keccak256').sync([100, 200, 300, 400, 500, 600, 700, 800, 900])
@@ -826,7 +826,7 @@ contract.skip('Schelling', function (accounts) {
     //
     // it('should be able to commit in next epoch', async function () {
     //   let schelling = await Schelling.deployed()
-    //   let sch = await SimpleToken.deployed()
+    //   let sch = await SchellingCoin.deployed()
     //   await schelling.setEpoch(2)
     //
     //   // let maxStakers = Number(await schelling.maxStakers())
@@ -855,7 +855,7 @@ contract.skip('Schelling', function (accounts) {
     //
     // it('should be able to reveal in next epoch', async function () {
     //   let schelling = await Schelling.deployed()
-    //   let sch = await SimpleToken.deployed()
+    //   let sch = await SchellingCoin.deployed()
     //   // let commitment = web3i.utils.soliditySha3(1, 160, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
     //   let staker = await schelling.stakers(6)
     //   // //console.log('epochLastRevealed', staker.epochLastRevealed.toString())// === '42000')

@@ -8,7 +8,7 @@ contract StakeStorage {
     mapping (address => uint256) public stakerIds;
     mapping (uint256 => Structs.Staker) public stakers;
     uint256 public numStakers = 0;
-    // SimpleToken public sch;
+    // SchellingCoin public sch;
     uint256 public rewardPool = 0;
     uint256 public stakeGettingReward = 0;
 

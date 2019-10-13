@@ -1,11 +1,5 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-// import "../SimpleToken.sol";
-// import "./Utils.sol";
-// import "./BlockStorage.sol";
-// import "./IStakeManager.sol";
-// import "./IStateManager.sol";
-// import "./IVoteManager.sol";
 import "./JobStorage.sol";
 import "./IStateManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";

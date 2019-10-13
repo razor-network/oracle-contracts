@@ -10,9 +10,11 @@ let BlockManager = artifacts.require('./BlockManager.sol')
 let StakeManager = artifacts.require('./StakeManager.sol')
 let StateManager = artifacts.require('./StateManager.sol')
 let VoteManager = artifacts.require('./VoteManager.sol')
-let SimpleToken = artifacts.require('./SimpleToken.sol')
+let SchellingCoin = artifacts.require('./SchellingCoin.sol')
 let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
+const BN = require('bn.js')
+
 let merkle = require('@razor-network/merkle')
 
 let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
@@ -23,20 +25,22 @@ let numBlocks = 10
 // test cases where nobody votes, too low stake (1-4)
 
 contract('StakeManager', function (accounts) {
-  contract('SimpleToken', async function () {
+  contract('SchellingCoin', async function () {
     // let blockManager = await BlockManager.deployed()
     // let voteManager = await VoteManager.deployed()
     // let stakeManager = await StakeManager.deployed()
 
-    it('shuld be able to initialize', async function () {
+    it('should be able to initialize', async function () {
       // let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       // await stateManager.setEpoch(1)
       await functions.mineToNextEpoch()
       // await stateManager.setState(0)
-      await sch.transfer(accounts[1], 423000, { 'from': accounts[0]})
-      await sch.transfer(accounts[2], 19000, { 'from': accounts[0]})
+      let stake1 = new BN('423000').mul(new BN('10').pow(new BN(18)))
+      // let stake2 = new BN('423000e18')
+      await sch.transfer(accounts[1], stake1, { 'from': accounts[0]})
+      await sch.transfer(accounts[2], stake1, { 'from': accounts[0]})
     // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
     // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
     // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
@@ -52,9 +56,11 @@ contract('StakeManager', function (accounts) {
       let stateManager = await StateManager.deployed()
       console.log('epoch, state', Number(await stateManager.getEpoch()), Number(await stateManager.getState()))
       let epoch = await functions.getEpoch()
-      let sch = await SimpleToken.deployed()
-      await sch.approve(stakeManager.address, 420000, { 'from': accounts[1]})
-      await stakeManager.stake(epoch, 420000, { 'from': accounts[1]})
+      let sch = await SchellingCoin.deployed()
+      let stake1 = new BN('420000').mul(new BN('10').pow(new BN(18)))
+      await sch.approve(stakeManager.address, stake1, { 'from': accounts[1]})
+      console.log('stake1', String(stake1))
+      await stakeManager.stake(epoch, stake1, { 'from': accounts[1]})
       // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
 
       let stakerId = await stakeManager.stakerIds(accounts[1])
@@ -63,15 +69,17 @@ contract('StakeManager', function (accounts) {
       assert(numStakers.toString() === '1')
       let staker = await stakeManager.stakers(1)
       assert(staker.id.toString() === '1')
-      assert(staker.stake.toString() === '420000')
+      assert(staker.stake.toString() === String(stake1))
     })
 
     it('should handle second staker correctly', async function () {
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       let stakeManager = await StakeManager.deployed()
       let epoch = await functions.getEpoch()
-      await sch.approve(stakeManager.address, 19000, { 'from': accounts[2]})
-      await stakeManager.stake(epoch, 19000, { 'from': accounts[2]})
+      let stake = new BN('19000').mul(new BN('10').pow(new BN(18)))
+
+      await sch.approve(stakeManager.address, stake, { 'from': accounts[2]})
+      await stakeManager.stake(epoch, stake, { 'from': accounts[2]})
 
       let stakerId = await stakeManager.stakerIds(accounts[2])
       assert(stakerId.toString() === '2')
@@ -79,7 +87,7 @@ contract('StakeManager', function (accounts) {
       assert(numStakers.toString() === '2')
       let staker = await stakeManager.stakers(2)
       assert(staker.id.toString() === '2')
-      assert(staker.stake.toString() === '19000')
+      assert(staker.stake.toString() === String(stake))
     })
 
     it('getters should work as expected', async function () {
@@ -88,7 +96,7 @@ contract('StakeManager', function (accounts) {
       // let stateManager = await StateManager.deployed()
       // console.log('epoch, state', Number(await stateManager.getEpoch()), Number(await stateManager.getState()))
       // console.log('epoch', Number(await stakeManager.wtfEpoch()))
-      // let sch = await SimpleToken.deployed()
+      // let sch = await SchellingCoin.deployed()
       // await sch.approve(stakeManager.address, 420000, { 'from': accounts[1] })
       // await stakeManager.stake(1, 420000, { 'from': accounts[1] })
       // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
@@ -108,15 +116,18 @@ contract('StakeManager', function (accounts) {
 
     it('should be able to increase stake', async function () {
       let stakeManager = await StakeManager.deployed()
-      let sch = await SimpleToken.deployed()
-      await sch.approve(stakeManager.address, 3000, { 'from': accounts[1]})
+      let sch = await SchellingCoin.deployed()
+      let stake = new BN('3000').mul(new BN('10').pow(new BN(18)))
+      let stake2 = new BN('423000').mul(new BN('10').pow(new BN(18)))
+
+      await sch.approve(stakeManager.address, stake, { 'from': accounts[1]})
       let epoch = await functions.getEpoch()
       console.log(`State in epoch ${epoch} : ${await functions.getState()}`)
-      await stakeManager.stake(epoch, 3000, { 'from': accounts[1]})
+      await stakeManager.stake(epoch, stake, { 'from': accounts[1]})
       let staker = await stakeManager.getStaker(1)
       console.log(String(staker.stake))
 
-      assert(Number(staker.stake) === 423000)
+      assert(String(staker.stake) === String(stake2))
     })
 
     it('should not be able to unstake before unstake lock period', async function () {
@@ -145,18 +156,22 @@ contract('StakeManager', function (accounts) {
       let epoch = await functions.getEpoch()
       await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1]}))
       let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.stake) === 423000, 'Stake should not change')
+      let stake = new BN('423000').mul(new BN('10').pow(new BN(18)))
+      // console.log('lmaoooo', String(stake))
+      assert(String(staker.stake) === String(stake), 'Stake should not change')
     })
 
     it('should not be able to withdraw after withdraw lock period if didnt reveal in last epoch', async function () {
       let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
       // await stateManager.setEpoch(3)
+      let stake = new BN('423000').mul(new BN('10').pow(new BN(18)))
+
       await functions.mineToNextEpoch()
       let epoch = await functions.getEpoch()
       await assertRevert(stakeManager.withdraw(epoch, { 'from': accounts[1]}))
       let staker = await stakeManager.getStaker(1)
-      assert(Number(staker.stake) == 423000, 'Stake should not change')
+      assert(Number(staker.stake) == String(stake), 'Stake should not change')
     })
 
     it('should be able to withdraw after withdraw lock period if revealed in last epoch', async function () {
@@ -164,7 +179,8 @@ contract('StakeManager', function (accounts) {
       let stakeManager = await StakeManager.deployed()
 
       let voteManager = await VoteManager.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
+      let stake = new BN('423000').mul(new BN('10').pow(new BN(18)))
 
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
@@ -217,7 +233,7 @@ contract('StakeManager', function (accounts) {
       // console.log(Number(await staker.stake))
       assert(Number(staker.stake) === 0)
       // console.log('bal', Number(await sch.balanceOf(accounts[1])))
-      assert(Number(await sch.balanceOf(accounts[1])) === 423000)
+      assert(String(await sch.balanceOf(accounts[1])) === String(stake))
     })
   })
 })

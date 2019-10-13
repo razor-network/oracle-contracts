@@ -1,6 +1,6 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-import "../SimpleToken.sol";
+import "../SchellingCoin.sol";
 import "./Utils.sol";
 import "./WriterRole.sol";
 import "./StakeStorage.sol";
@@ -16,7 +16,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 contract StakeManager is Utils, WriterRole, StakeStorage {
     using SafeMath for uint256;
-    SimpleToken public sch;
+    SchellingCoin public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
     IStateManager public stateManager;
@@ -38,7 +38,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// todo disable after init
     function init (address _schAddress, address _voteManagerAddress,
         address _blockManagerAddress, address _stateManagerAddress) external {
-        sch = SimpleToken(_schAddress);
+        sch = SchellingCoin(_schAddress);
         voteManager = IVoteManager(_voteManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
@@ -129,7 +129,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
         _givePenalties(staker.id, epoch);
         require(staker.stake > 0, "Nonpositive Stake");
-        // SimpleToken sch = SimpleToken(schAddress);
+        // SchellingCoin sch = SchellingCoin(schAddress);
         // totalStake = totalStake.sub(stakers[stakerId].stake);
         uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
@@ -158,6 +158,10 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
             // totalStake = totalStake.add(Constants.blockReward());
             require(sch.mint(address(this), Constants.blockReward()));
         }
+        uint256 prevStakeGettingReward = stakeGettingReward;
+        stakeGettingReward = 0;
+        emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
+
     }
 
     /// @notice This function is called in VoteManager reveal function to give
@@ -221,7 +225,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyWriter {
-        // SimpleToken sch = SimpleToken(schAddress);
+        // SchellingCoin sch = SchellingCoin(schAddress);
         uint256 halfStake = stakers[id].stake.div(2);
         _setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {

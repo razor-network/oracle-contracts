@@ -15,7 +15,7 @@ let delegatorBuild = require('../build/contracts/Delegator.json')
 // let StakeManager = artifacts.require('./StakeManager.sol')
 let StateManager = artifacts.require('./StateManager.sol')
 // let VoteManager = artifacts.require('./VoteManager.sol')
-// let SimpleToken = artifacts.require('./SimpleToken.sol')
+// let SchellingCoin = artifacts.require('./SchellingCoin.sol')
 // let Random = artifacts.require('./lib/Random.sol')
 // let Web3 = require('web3')
 // let merkle = require('@razor-network/merkle')
@@ -25,7 +25,7 @@ let StateManager = artifacts.require('./StateManager.sol')
 
 contract('JobManager', function (accounts) {
   contract('Delegator', function (accounts) {
-    // contract('SimpleToken', async function () {
+    // contract('SchellingCoin', async function () {
     // let blockManager = await BlockManager.deployed()
     // let voteManager = await VoteManager.deployed()
     // let stakeManager = await StakeManager.deployed()

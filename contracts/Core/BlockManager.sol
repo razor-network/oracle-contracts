@@ -1,7 +1,6 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
 import "../lib/Random.sol";
-// import "../SimpleToken.sol";
 import "./Utils.sol";
 import "./BlockStorage.sol";
 import "./IStakeManager.sol";
@@ -104,7 +103,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                     uint256 iteration,
                     uint256 biggestStakerId) public checkEpoch(epoch) checkState(Constants.propose()) {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
-        // SimpleToken sch = SimpleToken(schAddress);
+        // SchellingCoin sch = SchellingCoin(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(stakeManager.getStaker(proposerId).stake >= Constants.minStake(), "stake below minimum stake");
 

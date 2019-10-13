@@ -10,7 +10,7 @@ let BlockManager = artifacts.require('./BlockManager.sol')
 let StakeManager = artifacts.require('./StakeManager.sol')
 let StateManager = artifacts.require('./StateManager.sol')
 let VoteManager = artifacts.require('./VoteManager.sol')
-let SimpleToken = artifacts.require('./SimpleToken.sol')
+let SchellingCoin = artifacts.require('./SchellingCoin.sol')
 let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
 let merkle = require('@razor-network/merkle')
@@ -23,7 +23,7 @@ let numBlocks = 10
 // test cases where nobody votes, too low stake (1-4)
 
 contract('VoteManager', function (accounts) {
-  contract('SimpleToken', async function () {
+  contract('SchellingCoin', async function () {
     // let blockManager = await BlockManager.deployed()
     // let voteManager = await VoteManager.deployed()
     // let stakeManager = await StakeManager.deployed()
@@ -31,7 +31,7 @@ contract('VoteManager', function (accounts) {
     it('shuld be able to initialize', async function () {
       let stakeManager = await StakeManager.deployed()
       let stateManager = await StateManager.deployed()
-      let sch = await SimpleToken.deployed()
+      let sch = await SchellingCoin.deployed()
       // await stateManager.setEpoch(1)
       // await stateManager.setState(0)
       await functions.mineToNextEpoch()

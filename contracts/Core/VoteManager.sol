@@ -1,15 +1,14 @@
 pragma solidity 0.5.10;
 pragma experimental ABIEncoderV2;
-// import "../SimpleToken.sol";
 import "./Utils.sol";
-// import "../lib/Random.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-// import "../lib/Structs.sol";
 import "./IStakeManager.sol";
 import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./VoteStorage.sol";
 import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
+import "../lib/Constants.sol";
+
 // import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 

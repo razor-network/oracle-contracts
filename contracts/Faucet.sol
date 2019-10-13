@@ -17,8 +17,8 @@ contract Faucet is ERC20 {
     function faucet(address _address) external {
         if (!requested[_address]) {
             requested[_address] = true;
-            token.transfer(_address, 10000);
-            emit Donate(_address, 10000);
+            token.transfer(_address, 10000*(10**uint256(18)));
+            emit Donate(_address,  10000*(10**uint256(18)));
         }
     }
 }

@@ -1,6 +1,6 @@
 pragma solidity 0.5.10;
 // pragma experimental ABIEncoderV2;
-// import "../SimpleToken.sol";
+// import "../SchellingCoin.sol";
 // import "./Utils.sol";
 // import "./BlockStorage.sol";
 // import "./IStakeManager.sol";
