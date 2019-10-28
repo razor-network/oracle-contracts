@@ -84,8 +84,8 @@ module.exports = {
         return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + `${infuraKey}`)
       },
       network_id: 5,
-      gas: 7000000,
-      gasPrice: 1000000000,
+      // gas: 8000000,
+      // gasPrice: 1000000000,
       confirmations: 0,
       timeoutBlocks: 200,
       from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
