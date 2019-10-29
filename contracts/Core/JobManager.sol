@@ -8,7 +8,7 @@ import "./WriterRole.sol";
 
 contract JobManager is WriterRole, JobStorage {
 
-    event JobCreated(uint256 id, uint256 epoch, string url, string selector, bool repeat,
+    event JobCreated(uint256 id, uint256 epoch, string url, string selector, string name, bool repeat,
                             address creator, uint256 credit, uint256 timestamp);
     // event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
     //                     address creator, uint256 credit, bool fulfulled);
@@ -24,12 +24,12 @@ contract JobManager is WriterRole, JobStorage {
         stateManager = IStateManager(_stateManagerAddress);
     }
 
-    function createJob (string calldata url, string calldata selector, bool repeat) external payable {
+    function createJob (string calldata url, string calldata selector, string calldata name, bool repeat) external payable {
         numJobs = numJobs + 1;
         uint256 epoch = stateManager.getEpoch();
-        Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, false,0);
+        Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, name, repeat, msg.sender, msg.value, false, 0);
         jobs[numJobs] = job;
-        emit JobCreated(numJobs, epoch, url, selector, repeat, msg.sender, msg.value, now);
+        emit JobCreated(numJobs, epoch, url, selector, name, repeat, msg.sender, msg.value, now);
         // jobs.push(job);
     }
 

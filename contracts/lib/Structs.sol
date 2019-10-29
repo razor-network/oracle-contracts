@@ -43,6 +43,7 @@ library Structs {
         uint256 epoch;
         string url;
         string selector;
+        string name;
         bool repeat;
         address creator;
         uint256 credit;
