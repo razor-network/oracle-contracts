@@ -20,13 +20,18 @@ These are the contracts for Razor network testnet.
 9. Deploy on rinkeby (.secret file must be present with mnemonic of the private key used to deploy)
 `truffle migrate --network rinkeby --reset`
 
-Schelling2.sol is the main contract that is used in testnet.
-#features
-[x] support voting multiple assets
-[x] support disputing for multiple assets
-[x] support proposing multiple blocks in single epoch
-[x] support submit/getBlockReward
-[] support getPenalties
-[] support finalize dispute
-[] do we need totalStake? if not, remove
-[] vuln - someone can repeatedly propose same block
+# Migration guide
+1. `truffle migrate --reset --network goerli`
+2. `sh copy-build.sh`
+3. `cd ../cli && git add . && git commit -m 'redeploy' && git push`
+4. `cd ../synthetic-assets`
+5. Change the delegator address in `synthetic-assets/migrations/2_deploy.js`
+6. `truffle migrate --reset --network goerli`
+7. `git add . && git commit -m 'redeploy' && git push`
+8. `cd ../dashboard`
+9. `git add . && git commit -m 'redeploy' && git push`
+6. In remote server:
+   1. `cd cli && git pull`
+   2. `pm2 stop all`
+   3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
+   4. `pm2 start all` once staked

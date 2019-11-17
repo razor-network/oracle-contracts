@@ -25,7 +25,7 @@ contract Delegator {
         return jobManager.getResult(id);
     }
 
-    function getJob(uint256 id) external view returns(string memory url, string memory selector, bool repeat, uint256 result) {
+    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result) {
             return jobManager.getJob(id);
     }
 

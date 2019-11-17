@@ -69,7 +69,7 @@ module.exports = {
       // gas: 7000000,
       confirmations: 0,
       timeoutBlocks: 200,
-      from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
+      from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA'
     // skipDryRun: true // Skip dry run before migrations? (default: false for public nets )
     },
 
@@ -89,7 +89,7 @@ module.exports = {
       confirmations: 0,
       timeoutBlocks: 200,
       from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
-      skipDryRun: false // Skip dry run before migrations? (default: false for public nets )
+      skipDryRun: true // Skip dry run before migrations? (default: false for public nets )
     }
   },
   mocha: {

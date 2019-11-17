@@ -14,7 +14,7 @@ contract JobManager is WriterRole, JobStorage {
     //                     address creator, uint256 credit, bool fulfulled);
 
     event JobReported(uint256 id, uint256 value, uint256 epoch,
-                        string url, string selector, bool repeat,
+                        string url, string selector, string name, bool repeat,
                         address creator, uint256 credit, bool fulfilled, uint256 timestamp);
 
     IStateManager public stateManager;
@@ -42,7 +42,7 @@ contract JobManager is WriterRole, JobStorage {
             // emit JobFulfilled(job.id, epoch, job.url, job.selector,
             //job.repeat, job.creator, job.credit, job.fulfilled);
         }
-        emit JobReported(job.id, value, epoch, job.url, job.selector, job.repeat,
+        emit JobReported(job.id, value, epoch, job.url, job.selector, job.name, job.repeat,
         job.creator, job.credit, job.fulfilled, now);
         job.result = value;
     }
@@ -51,8 +51,8 @@ contract JobManager is WriterRole, JobStorage {
         return jobs[id].result;
     }
 
-    function getJob(uint256 id) external view returns(string memory url, string memory selector, bool repeat, uint256 result) {
+    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result) {
         Structs.Job memory job = jobs[id];
-        return(job.url, job.selector, job.repeat, job.result);
+        return(job.url, job.selector, job.name, job.repeat, job.result);
     }
 }
