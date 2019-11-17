@@ -35,5 +35,6 @@ These are the contracts for Razor network testnet.
    2. `pm2 stop all`
    3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
    4. `pm2 start all` once staked
-#Addresses
+
+# Addresses
 Contract addresses can be found [here](ADDRESSES.md)
