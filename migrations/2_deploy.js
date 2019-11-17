@@ -13,6 +13,7 @@ var JobManager = artifacts.require('./JobManager.sol')
 var Faucet = artifacts.require('./Faucet.sol')
 var Delegator = artifacts.require('./Delegator.sol')
 const BN = require('bn.js')
+var fs = require('fs')
 
 // todo remove deployer write access
 module.exports = async function (deployer) {
@@ -47,7 +48,7 @@ module.exports = async function (deployer) {
     // faucetSeed = new BN('10').pow(new BN ('24'))
 
     // let state = await StateManager.deployed()
-    return Promise.all([
+    await Promise.all([
       token.addMinter(StakeManager.address),
       block.init(StakeManager.address, StateManager.address, VoteManager.address, JobManager.address),
       vote.init(StakeManager.address, StateManager.address, BlockManager.address),
@@ -60,22 +61,24 @@ module.exports = async function (deployer) {
       job.addWriter(BlockManager.address),
       delegator.upgradeDelegate(JobManager.address),
       // uncomment following for testnet
-      token.transfer('0x09633cEE3db9BB662C35Bd32aaA5579e3d2aac3c', seed),
-      token.transfer('0xc807af42c30b53aA9AC20E298840D2d4e4d3f043', seed),
-      token.transfer('0xeF9058db9F395eefE3D2b2869C739a0770586018', seed),
-      token.transfer('0x0519cA2C7B556fa3699107EC8348cA2573e90A75', seed),
-      token.transfer('0x782672281D06E4c1a3e45E80F9bB4CD028BfBBa8', seed),
-      token.transfer('0xe0431d3B7F453D008dFa92947F31Fba8969C0015', seed),
-      token.transfer('0x04b8129d730ad55C3DA2f8BF8e0Ce1a6D118ccd6', seed),
-      token.transfer('0x1Dc0b62436A1db4E28743E66c8bcF02D8103Ad8c', seed),
-      token.transfer('0x21D7ACbcAEa5dD43e28c41b37A1296d6aAa4D912', seed),
-      token.transfer('0x50B2740e437410f30c2f679C06357eF1d76cedAE', seed),
-      token.transfer('0x484D0e98f78550DBBCf95D49573F77B4Ab50a38C', seed),
-      token.transfer('0xa186900e0e24C5a5943Ac10dF71B574debfFC74b', seed),
+      // server stakers
+      token.transfer('0x3Dd6cA6859776584d2Ec714746B5A3eFF429576b', seed),
+      token.transfer('0xEa416170dfAb0eBD7cebE2E28E042027AB96732d', seed),
+      token.transfer('0xeA279c981ce9146831BA09e6467683D81A5135a2', seed),
+      token.transfer('0x43F826321e326F571a31Ba9f2061b06A868bF350', seed),
+      token.transfer('0xF80a267A160A0604C1Fa47d7aF5CF978BDa54B41', seed),
       token.transfer(Faucet.address, seed)
-
-    // vote.addWriter(StakeManager.address)
-    // console.log(await stake.blockManager.call())
     ])
+    fs.writeFile('ADDRESSES.md', 'Current contract addresses on Görli testnet: \\\n' +
+    'Token: ' + SchellingCoin.address +
+    '\\\n Stake Manager: ' + StakeManager.address +
+    '\\\n Vote Manager: ' + VoteManager.address +
+    '\\\n Block Manager: ' + BlockManager.address +
+    '\\\n Job Manager: ' + JobManager.address +
+    '\\\n Delegator: ' + Delegator.address,
+      function (err) {
+        if (err) throw err
+        console.log('Replaced ADDRESSES.md!')
+      })
   })
 }
