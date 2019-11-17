@@ -17,8 +17,8 @@ These are the contracts for Razor network testnet.
 7. Deploy on ganache
 `truffle migrate --reset`
 8. create .secret file with mnemonic of the private key used to deploy on rinkeby
-9. Deploy on rinkeby (.secret file must be present with mnemonic of the private key used to deploy)
-`truffle migrate --network rinkeby --reset`
+9. Deploy on görli (.secret file must be present with mnemonic of the private key used to deploy)
+`truffle migrate --network goerli --reset`
 
 # Migration guide
 1. `truffle migrate --reset --network goerli`
@@ -35,3 +35,5 @@ These are the contracts for Razor network testnet.
    2. `pm2 stop all`
    3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
    4. `pm2 start all` once staked
+#Addresses
+Contract addresses can be found [here](ADDRESSES.md)
