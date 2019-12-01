@@ -25,7 +25,7 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
 //
 const fs = require('fs')
-const infuraKey = fs.readFileSync('.infura').toString().trim()
+//const infuraKey = fs.readFileSync('.infura').toString().trim()
 const mnemonic = fs.readFileSync('.mnemonic').toString().trim()
 
 module.exports = {
@@ -62,7 +62,7 @@ module.exports = {
     // actually we are using rinkeby not ropsten
     rinkeby: {
       provider: function () {
-        return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/v3/' + `${infuraKey}`)
+  //      return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/v3/' + `${infuraKey}`)
       },
       // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`),
       network_id: 4,
@@ -81,7 +81,7 @@ module.exports = {
 
     goerli: {
       provider: function () {
-        return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + `${infuraKey}`)
+        return new HDWalletProvider(mnemonic, 'http://localhost:8545')
       },
       network_id: 5,
       gas: 8000000,
