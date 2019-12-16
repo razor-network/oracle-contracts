@@ -70,15 +70,15 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"newDelegateAddress\",\"type\":\"address\"}],\"name\":\"upgradeDelegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getJob\",\"outputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/hrishikesh/contracts/contracts/IDelegator.sol\":\"IDelegator\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/hrishikesh/contracts/contracts/IDelegator.sol\":{\"keccak256\":\"0xb79ad533df4559ab13767e912a8cd44ac8c10c86a5ca298c5886ca3853d538cf\",\"urls\":[\"bzzr://5ae98d5f0d6877a0fd22949b1daac5c22eed9c303e8fb13fe9f99db7c05dc59b\",\"dweb:/ipfs/QmUJpjnSWzN9nRt5GWnHddvhFiUPX3PtNsR5xFdFBbHGbt\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"newDelegateAddress\",\"type\":\"address\"}],\"name\":\"upgradeDelegate\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getJob\",\"outputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/IDelegator.sol\":\"IDelegator\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/IDelegator.sol\":{\"keccak256\":\"0xb79ad533df4559ab13767e912a8cd44ac8c10c86a5ca298c5886ca3853d538cf\",\"urls\":[\"bzzr://5ae98d5f0d6877a0fd22949b1daac5c22eed9c303e8fb13fe9f99db7c05dc59b\",\"dweb:/ipfs/QmUJpjnSWzN9nRt5GWnHddvhFiUPX3PtNsR5xFdFBbHGbt\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n\n\ninterface IDelegator {\n    function upgradeDelegate(address newDelegateAddress) external;\n    function getResult(uint256 id) external view returns(uint256);\n    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result);\n}\n",
-  "sourcePath": "/home/hrishikesh/contracts/contracts/IDelegator.sol",
+  "sourcePath": "/Users/hrishi/contracts/contracts/IDelegator.sol",
   "ast": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/IDelegator.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/IDelegator.sol",
     "exportedSymbols": {
       "IDelegator": [
         4212
@@ -448,7 +448,7 @@
     "src": "0:366:19"
   },
   "legacyAST": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/IDelegator.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/IDelegator.sol",
     "exportedSymbols": {
       "IDelegator": [
         4212
@@ -823,7 +823,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-01T08:14:27.475Z",
+  "updatedAt": "2019-12-15T16:00:08.626Z",
   "devdoc": {
     "methods": {}
   },

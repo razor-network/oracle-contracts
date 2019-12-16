@@ -96,15 +96,15 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"}],\"name\":\"createJob\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"jobId\",\"type\":\"uint256\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"fulfillJob\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getJob\",\"outputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/hrishikesh/contracts/contracts/Core/IJobManager.sol\":\"IJobManager\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/hrishikesh/contracts/contracts/Core/IJobManager.sol\":{\"keccak256\":\"0xa501803e35c7a45045c09f7bfabd7ede2ea29144b15a2ec0a8e08c4409f7cd3d\",\"urls\":[\"bzzr://b9498008844ce1c564150878a9b4a134a70b59341c4d874bd3f590a67c468684\",\"dweb:/ipfs/QmU97hFFneKYxFNCncwSTFfMt1pVPxnjdvC7yNHhsucauV\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"}],\"name\":\"createJob\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"jobId\",\"type\":\"uint256\"},{\"name\":\"value\",\"type\":\"uint256\"}],\"name\":\"fulfillJob\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getJob\",\"outputs\":[{\"name\":\"url\",\"type\":\"string\"},{\"name\":\"selector\",\"type\":\"string\"},{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"repeat\",\"type\":\"bool\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Core/IJobManager.sol\":\"IJobManager\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Core/IJobManager.sol\":{\"keccak256\":\"0xa501803e35c7a45045c09f7bfabd7ede2ea29144b15a2ec0a8e08c4409f7cd3d\",\"urls\":[\"bzzr://b9498008844ce1c564150878a9b4a134a70b59341c4d874bd3f590a67c468684\",\"dweb:/ipfs/QmU97hFFneKYxFNCncwSTFfMt1pVPxnjdvC7yNHhsucauV\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
   "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n\ninterface IJobManager {\n\n    function createJob (string calldata url, string calldata selector, bool repeat) external;\n    function fulfillJob(uint256 jobId, uint256 value) external;\n    function getResult(uint256 id) external view returns(uint256);\n    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result);\n}\n",
-  "sourcePath": "/home/hrishikesh/contracts/contracts/Core/IJobManager.sol",
+  "sourcePath": "/Users/hrishi/contracts/contracts/Core/IJobManager.sol",
   "ast": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/Core/IJobManager.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/Core/IJobManager.sol",
     "exportedSymbols": {
       "IJobManager": [
         1443
@@ -605,7 +605,7 @@
     "src": "0:458:4"
   },
   "legacyAST": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/Core/IJobManager.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/Core/IJobManager.sol",
     "exportedSymbols": {
       "IJobManager": [
         1443
@@ -1111,7 +1111,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-01T08:14:27.395Z",
+  "updatedAt": "2019-12-15T16:00:08.564Z",
   "devdoc": {
     "methods": {}
   },

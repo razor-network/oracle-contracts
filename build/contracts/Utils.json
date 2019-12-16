@@ -14,15 +14,15 @@
       "type": "event"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/home/hrishikesh/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/hrishikesh/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0xc765a80e953c4b71665ff50717ca7aaf23e54897d581eb47d650c0d13f420b9e\",\"urls\":[\"bzzr://4ef61ed1438cccaef09eafb2319945359e9b777823feedbb664035d6ca60242d\",\"dweb:/ipfs/QmP83ghD6YcgDGufoUMo1nmZvabdeQiTKiVvYGADdtYhYx\"]}},\"version\":1}",
-  "bytecode": "0x6080604052348015600f57600080fd5b50604c80601d6000396000f3fe6080604052600080fdfea365627a7a723058200652f026260d6f17d27da47befe02ae0610897709b2b4b80614721fe299967c86c6578706572696d656e74616cf564736f6c634300050a0040",
-  "deployedBytecode": "0x6080604052600080fdfea365627a7a723058200652f026260d6f17d27da47befe02ae0610897709b2b4b80614721fe299967c86c6578706572696d656e74616cf564736f6c634300050a0040",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0xc765a80e953c4b71665ff50717ca7aaf23e54897d581eb47d650c0d13f420b9e\",\"urls\":[\"bzzr://4ef61ed1438cccaef09eafb2319945359e9b777823feedbb664035d6ca60242d\",\"dweb:/ipfs/QmP83ghD6YcgDGufoUMo1nmZvabdeQiTKiVvYGADdtYhYx\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50604c80601d6000396000f3fe6080604052600080fdfea365627a7a72305820488ece811c3e447aa1bd4b7c5e72f6796b1a962ba41b4612a3ea39193038c8766c6578706572696d656e74616cf564736f6c634300050a0040",
+  "deployedBytecode": "0x6080604052600080fdfea365627a7a72305820488ece811c3e447aa1bd4b7c5e72f6796b1a962ba41b4612a3ea39193038c8766c6578706572696d656e74616cf564736f6c634300050a0040",
   "sourceMap": "60:96:13:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;60:96:13;;;;;;;",
   "deployedSourceMap": "60:96:13:-;;;;;",
   "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n\n\ncontract Utils {\n    // IStateManager public stateManager;\n\n    event DebugUint256(uint256 a);\n}\n",
-  "sourcePath": "/home/hrishikesh/contracts/contracts/Core/Utils.sol",
+  "sourcePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
   "ast": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
         3365
@@ -113,7 +113,7 @@
     "src": "0:157:13"
   },
   "legacyAST": {
-    "absolutePath": "/home/hrishikesh/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
         3365
@@ -209,7 +209,7 @@
   },
   "networks": {},
   "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-01T08:14:27.450Z",
+  "updatedAt": "2019-12-15T16:00:08.608Z",
   "devdoc": {
     "methods": {}
   },

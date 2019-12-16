@@ -62,11 +62,11 @@ module.exports = async function (deployer) {
       delegator.upgradeDelegate(JobManager.address),
       // uncomment following for testnet
       // server stakers
-      token.transfer('0x3Dd6cA6859776584d2Ec714746B5A3eFF429576b', seed),
-      token.transfer('0xEa416170dfAb0eBD7cebE2E28E042027AB96732d', seed),
-      token.transfer('0xeA279c981ce9146831BA09e6467683D81A5135a2', seed),
-      token.transfer('0x43F826321e326F571a31Ba9f2061b06A868bF350', seed),
-      token.transfer('0xF80a267A160A0604C1Fa47d7aF5CF978BDa54B41', seed),
+      token.transfer('0x1D68ad204637173b2d8656B7972c57dcE41Bc80e', seed),
+      token.transfer('0x9FF5085aa345C019cDF2A427B02Bd6746DeF549B', seed),
+      token.transfer('0xc4695904751Ad8414c75798d6Ff2579f55e61522', seed),
+      token.transfer('0x40d57C3F5c3BAbac3033E2D50AB7C6886A595F46', seed),
+      token.transfer('0xa2B827aCF6073f5D9e2350cbf0646Ba2535a5B0C', seed),
       token.transfer(Faucet.address, seed)
     ])
     fs.writeFile('ADDRESSES.md', 'Current contract addresses on Görli testnet: \\\n' +
