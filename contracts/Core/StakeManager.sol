@@ -265,8 +265,8 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
     function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
-        //not really inactive. do nothing. give 1 epoch grace
-        if (epochs < 3) {
+        //not really inactive. do nothing. give 10 epoch grace
+        if (epochs < 10) {
             return(stakeValue);
         }
         // penalty =( epochs -1)*stakeValue*penNum/penDiv
@@ -332,9 +332,9 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
                 uint256 medianLastEpoch = mediansLastEpoch[i];
 
-                if (((voteLastEpoch <= lowerCutoffLastEpoch) ||
-                    (voteLastEpoch >= higherCutoffLastEpoch)) &&
-                    (voteLastEpoch != medianLastEpoch)) {
+                if (((voteLastEpoch < lowerCutoffLastEpoch) ||
+                    (voteLastEpoch > higherCutoffLastEpoch))) {//} &&
+                    // (voteLastEpoch != medianLastEpoch)) {
                     //WARNING: Potential security vulnerability. Could increase stake maliciously
                     //WARNING: unchecked underflow
                     penalty = penalty + (previousStake/Constants.exposureDenominator());

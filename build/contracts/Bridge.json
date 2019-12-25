@@ -53,11 +53,11 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"name\":\"setResult\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Bridge.sol\":\"Bridge\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":false,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Bridge.sol\":{\"keccak256\":\"0x88f3b9bae99abb285fb01872e35082afc35dc5ebfa906823dc8e821b1881fba0\",\"urls\":[\"bzzr://a732fd3e9b454ee3ac8c4c87056dfeaab0d1f1a4755eb3c584db3011fbafec29\",\"dweb:/ipfs/Qmb5THhzioKjaqR2aXW2GKBsuBxKwEurNwmLNNqkAyjZbv\"]}},\"version\":1}",
-  "bytecode": "0x608060405233600160006101000a81548173ffffffffffffffffffffffffffffffffffffffff021916908373ffffffffffffffffffffffffffffffffffffffff16021790555034801561005157600080fd5b506101f6806100616000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c8063310efb48146100465780638da5cb5b1461007e578063995e4339146100c8575b600080fd5b61007c6004803603604081101561005c57600080fd5b81019080803590602001909291908035906020019092919050505061010a565b005b61008661017f565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6100f4600480360360208110156100de57600080fd5b81019080803590602001909291905050506101a5565b6040518082815260200191505060405180910390f35b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461016457600080fd5b80600080848152602001908152602001600020819055505050565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600080600083815260200190815260200160002054905091905056fea265627a7a723058200de6c137571dcd723fb39e1e30ef30e3e084e46d69aed20f9f19606e496800e064736f6c634300050a0032",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100415760003560e01c8063310efb48146100465780638da5cb5b1461007e578063995e4339146100c8575b600080fd5b61007c6004803603604081101561005c57600080fd5b81019080803590602001909291908035906020019092919050505061010a565b005b61008661017f565b604051808273ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff16815260200191505060405180910390f35b6100f4600480360360208110156100de57600080fd5b81019080803590602001909291905050506101a5565b6040518082815260200191505060405180910390f35b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1673ffffffffffffffffffffffffffffffffffffffff163373ffffffffffffffffffffffffffffffffffffffff161461016457600080fd5b80600080848152602001908152602001600020819055505050565b600160009054906101000a900473ffffffffffffffffffffffffffffffffffffffff1681565b600080600083815260200190815260200160002054905091905056fea265627a7a723058200de6c137571dcd723fb39e1e30ef30e3e084e46d69aed20f9f19606e496800e064736f6c634300050a0032",
-  "sourceMap": "413:501:0:-;;;501:10;478:33;;;;;;;;;;;;;;;;;;;;413:501;8:9:-1;5:2;;;30:1;27;20:12;5:2;413:501:0;;;;;;;",
-  "deployedSourceMap": "413:501:0:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;413:501:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;678:131;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;678:131:0;;;;;;;;;;;;;;;;;;;;;;;;;;:::i;:::-;;478:33;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;815:97;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;815:97:0;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;678:131;766:5;;;;;;;;;;;752:19;;:10;:19;;;744:28;;;;;;796:6;782:7;:11;790:2;782:11;;;;;;;;;;;:20;;;;678:131;;:::o;478:33::-;;;;;;;;;;;;;:::o;815:97::-;868:7;894;:11;902:2;894:11;;;;;;;;;;;;887:18;;815:97;;;:::o",
+  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"},{\"name\":\"result\",\"type\":\"uint256\"}],\"name\":\"setResult\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"name\":\"\",\"type\":\"address\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Bridge.sol\":\"Bridge\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Bridge.sol\":{\"keccak256\":\"0x88f3b9bae99abb285fb01872e35082afc35dc5ebfa906823dc8e821b1881fba0\",\"urls\":[\"bzzr://a732fd3e9b454ee3ac8c4c87056dfeaab0d1f1a4755eb3c584db3011fbafec29\",\"dweb:/ipfs/Qmb5THhzioKjaqR2aXW2GKBsuBxKwEurNwmLNNqkAyjZbv\"]}},\"version\":1}",
+  "bytecode": "0x6080604052600180546001600160a01b0319163317905534801561002257600080fd5b5061012f806100326000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea265627a7a723058204a80a60506c7637d0f09b67368d3891a4a69134b7eecf689fadedd1576c4ce0c64736f6c634300050a0032",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea265627a7a723058204a80a60506c7637d0f09b67368d3891a4a69134b7eecf689fadedd1576c4ce0c64736f6c634300050a0032",
+  "sourceMap": "413:501:0:-;;;478:33;;;-1:-1:-1;;;;;;478:33:0;501:10;478:33;;;413:501;5:2:-1;;;;30:1;27;20:12;5:2;413:501:0;;;;;;;",
+  "deployedSourceMap": "413:501:0:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;413:501:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;678:131;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;678:131:0;;;;;;;:::i;:::-;;478:33;;;:::i;:::-;;;;-1:-1:-1;;;;;478:33:0;;;;;;;;;;;;;;815:97;;;;;;13:2:-1;8:3;5:11;2:2;;;29:1;26;19:12;2:2;-1:-1;815:97:0;;:::i;:::-;;;;;;;;;;;;;;;;678:131;766:5;;-1:-1:-1;;;;;766:5:0;752:10;:19;744:28;;;;;;782:7;:11;;;;;;;;;;;:20;678:131::o;478:33::-;;;-1:-1:-1;;;;;478:33:0;;:::o;815:97::-;868:7;894:11;;;;;;;;;;;;815:97::o",
   "source": "pragma solidity 0.5.10;\n// pragma experimental ABIEncoderV2;\n// import \"../SchellingCoin.sol\";\n// import \"./Utils.sol\";\n// import \"./BlockStorage.sol\";\n// import \"./IStakeManager.sol\";\n// import \"./IStateManager.sol\";\n// import \"./IVoteManager.sol\";\n// import \"./JobStorage.sol\";\n// import \"./IStateManager.sol\";\n// import \"openzeppelin-solidity/contracts/math/SafeMath.sol\";\n// import \"./Core/WriterRole.sol\";\n\n\ncontract Bridge {\n\n    mapping (uint256 => uint256) results;\n    address public owner = msg.sender;\n    //disable after init.\n    // function init(address _stateManagerAddress) external {\n    //     stateManager = IStateManager(_stateManagerAddress);\n    // }\n\n    function setResult(uint256 id, uint256 result) external {\n        require(msg.sender == owner);\n        results[id] = result;\n    }\n\n    function getResult(uint256 id) external view returns(uint256) {\n        return results[id];\n    }\n}\n",
   "sourcePath": "/Users/hrishi/contracts/contracts/Bridge.sol",
   "ast": {
@@ -170,7 +170,7 @@
                 "name": "msg",
                 "nodeType": "Identifier",
                 "overloadedDeclarations": [],
-                "referencedDeclaration": 5631,
+                "referencedDeclaration": 5626,
                 "src": "501:3:0",
                 "typeDescriptions": {
                   "typeIdentifier": "t_magic_message",
@@ -222,7 +222,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5631,
+                            "referencedDeclaration": 5626,
                             "src": "752:3:0",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -276,10 +276,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        5634,
-                        5635
+                        5629,
+                        5630
                       ],
-                      "referencedDeclaration": 5634,
+                      "referencedDeclaration": 5629,
                       "src": "744:7:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -707,7 +707,7 @@
                 "name": "msg",
                 "nodeType": "Identifier",
                 "overloadedDeclarations": [],
-                "referencedDeclaration": 5631,
+                "referencedDeclaration": 5626,
                 "src": "501:3:0",
                 "typeDescriptions": {
                   "typeIdentifier": "t_magic_message",
@@ -759,7 +759,7 @@
                             "name": "msg",
                             "nodeType": "Identifier",
                             "overloadedDeclarations": [],
-                            "referencedDeclaration": 5631,
+                            "referencedDeclaration": 5626,
                             "src": "752:3:0",
                             "typeDescriptions": {
                               "typeIdentifier": "t_magic_message",
@@ -813,10 +813,10 @@
                       "name": "require",
                       "nodeType": "Identifier",
                       "overloadedDeclarations": [
-                        5634,
-                        5635
+                        5629,
+                        5630
                       ],
-                      "referencedDeclaration": 5634,
+                      "referencedDeclaration": 5629,
                       "src": "744:7:0",
                       "typeDescriptions": {
                         "typeIdentifier": "t_function_require_pure$_t_bool_$returns$__$",
@@ -1139,8 +1139,8 @@
     "version": "0.5.10+commit.5a6ea5b1.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.19",
-  "updatedAt": "2019-12-15T16:00:08.523Z",
+  "schemaVersion": "3.0.20",
+  "updatedAt": "2019-12-25T04:19:39.107Z",
   "devdoc": {
     "methods": {}
   },

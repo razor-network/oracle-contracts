@@ -3,7 +3,6 @@ pragma experimental ABIEncoderV2;
 
 
 contract Utils {
-    // IStateManager public stateManager;
 
     event DebugUint256(uint256 a);
 }
