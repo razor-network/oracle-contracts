@@ -1,6 +1,6 @@
-# Razor network - Testnet Contracts
+# Razor network - Contracts
 
-These are the contracts for Razor network testnet.
+These are the contracts for Razor network.
 # Deployment
 
 1. Install truffle
