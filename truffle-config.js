@@ -51,7 +51,7 @@ module.exports = {
             // from: '0xe092b1fa25df5786d151246e492eed3d15ea4daa',
             host: '127.0.0.1',
             port: 8545,
-            gas: 8000000,
+            gas: 4000000,
             confirmations: 0,
             network_id: 420
             // websockets: true
