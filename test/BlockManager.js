@@ -14,7 +14,7 @@ let SchellingCoin = artifacts.require('./SchellingCoin.sol')
 let Random = artifacts.require('./lib/Random.sol')
 let Web3 = require('web3')
 let merkle = require('@razor-network/merkle')
-
+const BN = require('bn.js')
 let web3i = new Web3(Web3.givenProvider || 'ws://localhost:8545', null, {})
 let numBlocks = 10
 
@@ -37,11 +37,11 @@ contract('BlockManager', function (accounts) {
       // await stateManager.setEpoch(1)
       // await stateManager.setState(0)
       await functions.mineToNextEpoch()
-      await sch.transfer(accounts[5], 423000, { 'from': accounts[0]})
-      await sch.transfer(accounts[6], 19000, { 'from': accounts[0]})
-      await sch.approve(stakeManager.address, 420000, { 'from': accounts[5]})
+      await sch.transfer(accounts[5], new BN(423000).mul(new BN(10).pow(new BN('18'))), { 'from': accounts[0]})
+      await sch.transfer(accounts[6], new BN(19000).mul(new BN(10).pow(new BN('18'))), { 'from': accounts[0]})
+      await sch.approve(stakeManager.address, new BN(420000).mul(new BN(10).pow(new BN('18'))), { 'from': accounts[5]})
       let epoch = await functions.getEpoch()
-      await stakeManager.stake(epoch, 420000, { 'from': accounts[5]})
+      await stakeManager.stake(epoch, new BN(420000).mul(new BN(10).pow(new BN('18'))), { 'from': accounts[5]})
       // await sch.transfer(accounts[3], 800000, { 'from': accounts[0]})
       // await sch.transfer(accounts[4], 600000, { 'from': accounts[0]})
       // await sch.transfer(accounts[5], 2000, { 'from': accounts[0]})
@@ -121,7 +121,7 @@ contract('BlockManager', function (accounts) {
       let epoch = await functions.getEpoch()
       // TODO check acutal weights from con tract
       let sortedVotes = [200]
-      let weights = [420000]
+      let weights = [new BN(420000).mul(new BN(10).pow(new BN('18')))]
 
       let totalStakeRevealed = Number(await voteManager.getTotalStakeRevealed(epoch, 1))
       let medianWeight = Math.floor(totalStakeRevealed / 2)
@@ -150,7 +150,7 @@ contract('BlockManager', function (accounts) {
       // console.log('median', median)
       // // console.log('Number(await voteManager.getTotalStakeRevealed(1, 0))', Number(await voteManager.getTotalStakeRevealed(1, 0)))
       // // console.log('accweight', Number((await blockManager.disputes(1, accounts[20])).accWeight))
-      // // console.log('median contract', Number((await blockManager.disputes(1, accounts[20])).median))
+      // // console.log('median contract', Number((await blockManager.disputes(epoch, accounts[20])).median),' median', median)
       assert(Number((await blockManager.disputes(epoch, accounts[20])).assetId) === 1, 'assetId not matching')
       assert(Number((await blockManager.disputes(epoch, accounts[20])).accWeight) === totalStakeRevealed, 'totalStakeRevealed not matching')
       assert(Number((await blockManager.disputes(epoch, accounts[20])).median) === median, 'median not matching')
@@ -168,7 +168,7 @@ contract('BlockManager', function (accounts) {
       assert((await proposedBlock.valid) === false)
       let stakerId_acc5 = await stakeManager.stakerIds(accounts[5])
       assert(Number((await stakeManager.getStaker(stakerId_acc5)).stake) === 0)
-      assert(Number(await sch.balanceOf(accounts[20])) === 210000)
+      assert(Number(await sch.balanceOf(accounts[20])) === Number(new BN(210000).mul(new BN(10).pow(new BN('18')))))
     })
   })
 })

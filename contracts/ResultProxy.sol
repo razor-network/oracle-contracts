@@ -1,4 +1,5 @@
-pragma solidity 0.5.10;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.11;
 import "./Core/WriterRole.sol";
 
 contract ResultProxy is WriterRole {

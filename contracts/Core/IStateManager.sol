@@ -1,15 +1,16 @@
-pragma solidity 0.5.10;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 // import "../lib/Structs.sol";
 
 
-contract IStateManager {
+abstract contract IStateManager {
     // for testing only. diable in prod
-    function setEpoch (uint256 epoch) external;
+    function setEpoch (uint256 epoch) external virtual;
 
-    function setState (uint256 state) external;
+    function setState (uint256 state) external virtual;
 
-    function getEpoch () external view returns(uint256);
+    function getEpoch () external virtual view returns(uint256);
 
-    function getState () external view returns(uint256);
+    function getState () external virtual view returns(uint256);
 }

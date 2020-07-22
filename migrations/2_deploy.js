@@ -20,7 +20,7 @@ module.exports = async function(deployer,network) {
     // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
 
     deployer.then(async () => {
-        await deployer.deploy(SchellingCoin)
+        
         await deployer.deploy(Constants)
         await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager, StateManager])
         await deployer.deploy(Structs)
@@ -34,6 +34,7 @@ module.exports = async function(deployer,network) {
         await deployer.deploy(JobManager)
         await deployer.deploy(Faucet)
         await deployer.deploy(Delegator)
+        await deployer.deploy(SchellingCoin,StakeManager.address)
         let token = await SchellingCoin.deployed()
         let block = await BlockManager.deployed()
         let vote = await VoteManager.deployed()
@@ -48,8 +49,8 @@ module.exports = async function(deployer,network) {
         // faucetSeed = new BN('10').pow(new BN ('24'))
 
         // let state = await StateManager.deployed()
+        console.log('Deployed')
         await Promise.all([
-            token.addMinter(StakeManager.address),
             block.init(StakeManager.address, StateManager.address, VoteManager.address, JobManager.address),
             vote.init(StakeManager.address, StateManager.address, BlockManager.address),
             stake.init(SchellingCoin.address, VoteManager.address, BlockManager.address, StateManager.address),

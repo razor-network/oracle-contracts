@@ -2,87 +2,9 @@
   "contractName": "BlockStorage",
   "abi": [
     {
-      "constant": true,
       "inputs": [
         {
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "disputes",
-      "outputs": [
-        {
-          "name": "accWeight",
-          "type": "uint256"
-        },
-        {
-          "name": "median",
-          "type": "uint256"
-        },
-        {
-          "name": "lowerCutoff",
-          "type": "uint256"
-        },
-        {
-          "name": "higherCutoff",
-          "type": "uint256"
-        },
-        {
-          "name": "lastVisited",
-          "type": "uint256"
-        },
-        {
-          "name": "assetId",
-          "type": "uint256"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
-          "name": "",
-          "type": "uint256"
-        },
-        {
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "name": "proposedBlocks",
-      "outputs": [
-        {
-          "name": "proposerId",
-          "type": "uint256"
-        },
-        {
-          "name": "iteration",
-          "type": "uint256"
-        },
-        {
-          "name": "biggestStake",
-          "type": "uint256"
-        },
-        {
-          "name": "valid",
-          "type": "bool"
-        }
-      ],
-      "payable": false,
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "constant": true,
-      "inputs": [
-        {
+          "internalType": "uint256",
           "name": "",
           "type": "uint256"
         }
@@ -90,145 +12,242 @@
       "name": "blocks",
       "outputs": [
         {
+          "internalType": "uint256",
           "name": "proposerId",
           "type": "uint256"
         },
         {
+          "internalType": "uint256",
           "name": "iteration",
           "type": "uint256"
         },
         {
+          "internalType": "uint256",
           "name": "biggestStake",
           "type": "uint256"
         },
         {
+          "internalType": "bool",
           "name": "valid",
           "type": "bool"
         }
       ],
-      "payable": false,
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "disputes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "accWeight",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lowerCutoff",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "higherCutoff",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastVisited",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "proposedBlocks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposerId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "biggestStake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "valid",
+          "type": "bool"
+        }
+      ],
       "stateMutability": "view",
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"address\"}],\"name\":\"disputes\",\"outputs\":[{\"name\":\"accWeight\",\"type\":\"uint256\"},{\"name\":\"median\",\"type\":\"uint256\"},{\"name\":\"lowerCutoff\",\"type\":\"uint256\"},{\"name\":\"higherCutoff\",\"type\":\"uint256\"},{\"name\":\"lastVisited\",\"type\":\"uint256\"},{\"name\":\"assetId\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"},{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposedBlocks\",\"outputs\":[{\"name\":\"proposerId\",\"type\":\"uint256\"},{\"name\":\"iteration\",\"type\":\"uint256\"},{\"name\":\"biggestStake\",\"type\":\"uint256\"},{\"name\":\"valid\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"blocks\",\"outputs\":[{\"name\":\"proposerId\",\"type\":\"uint256\"},{\"name\":\"iteration\",\"type\":\"uint256\"},{\"name\":\"biggestStake\",\"type\":\"uint256\"},{\"name\":\"valid\",\"type\":\"bool\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Core/BlockStorage.sol\":\"BlockStorage\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Core/BlockStorage.sol\":{\"keccak256\":\"0x94fae90684232feae988120bc85296a8de0e8fff0aee5363ef244c9dd5aad530\",\"urls\":[\"bzzr://195f1b48c5fcbc2819d0bb947fa2ccaea1ea6e40faf4cbce9b2d163edd4868a5\",\"dweb:/ipfs/QmSmrCXAtkS5BAbqcfmFa6nE7PNkP7TndoLhzEDDGjW7Qt\"]},\"/Users/hrishi/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0x67e2064bc878832c24a01efe7203e61488556353238a52616d112174fd41145a\",\"urls\":[\"bzzr://934f2528e76ac6f2558d5c98bc173948c1280c496f13ba9601751355dff087a4\",\"dweb:/ipfs/QmVzpAc6RkKuHAHdDKKTwpBz5q23YPLVmmUN8G3RyxYUSu\"]}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b50610335806100206000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b610059610054366004610199565b6100aa565b60405161006b96959493929190610259565b60405180910390f35b6100876100823660046101d3565b6100e7565b60405161006b949392919061021b565b6100876100a5366004610173565b61012d565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010057fe5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b8035610162816102d2565b92915050565b8035610162816102e9565b60006020828403121561018557600080fd5b60006101918484610168565b949350505050565b600080604083850312156101ac57600080fd5b60006101b88585610168565b92505060206101c985828601610157565b9150509250929050565b600080604083850312156101e657600080fd5b60006101f28585610168565b92505060206101c985828601610168565b61020c816102be565b82525050565b61020c816102cf565b608081016102298287610212565b6102366020830186610212565b6102436040830185610212565b6102506060830184610203565b95945050505050565b60c081016102678289610212565b6102746020830188610212565b6102816040830187610212565b61028e6060830186610212565b61029b6080830185610212565b6102a860a0830184610212565b979650505050505050565b6000610162826102c3565b151590565b6001600160a01b031690565b90565b6102db816102b3565b81146102e657600080fd5b50565b6102db816102cf56fea365627a7a723058207dd6ac84f78774bb4c784d5f40cf476a2560bdaa46eb1d93d15c35980483d7de6c6578706572696d656e74616cf564736f6c634300050a0040",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b610059610054366004610199565b6100aa565b60405161006b96959493929190610259565b60405180910390f35b6100876100823660046101d3565b6100e7565b60405161006b949392919061021b565b6100876100a5366004610173565b61012d565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010057fe5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b8035610162816102d2565b92915050565b8035610162816102e9565b60006020828403121561018557600080fd5b60006101918484610168565b949350505050565b600080604083850312156101ac57600080fd5b60006101b88585610168565b92505060206101c985828601610157565b9150509250929050565b600080604083850312156101e657600080fd5b60006101f28585610168565b92505060206101c985828601610168565b61020c816102be565b82525050565b61020c816102cf565b608081016102298287610212565b6102366020830186610212565b6102436040830185610212565b6102506060830184610203565b95945050505050565b60c081016102678289610212565b6102746020830188610212565b6102816040830187610212565b61028e6060830186610212565b61029b6080830185610212565b6102a860a0830184610212565b979650505050505050565b6000610162826102c3565b151590565b6001600160a01b031690565b90565b6102db816102b3565b81146102e657600080fd5b50565b6102db816102cf56fea365627a7a723058207dd6ac84f78774bb4c784d5f40cf476a2560bdaa46eb1d93d15c35980483d7de6c6578706572696d656e74616cf564736f6c634300050a0040",
-  "sourceMap": "90:530:2:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;90:530:2;;;;;;;",
-  "deployedSourceMap": "90:530:2:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;90:530:2;;;;;;;;;;;;;;;;;;;;;;;;;;;;;157:73;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;370:58;;;;;;;;;:::i;:::-;;;;;;;;;;;434:48;;;;;;;;;:::i;157:73::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;370:58::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;370:58:2;-1:-1:-1;370:58:2;;;:::o;434:48::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;5:130:-1:-;72:20;;97:33;72:20;97:33;;;57:78;;;;;142:130;209:20;;234:33;209:20;234:33;;279:241;;383:2;371:9;362:7;358:23;354:32;351:2;;;399:1;396;389:12;351:2;434:1;451:53;496:7;476:9;451:53;;;441:63;345:175;-1:-1;;;;345:175;527:366;;;648:2;636:9;627:7;623:23;619:32;616:2;;;664:1;661;654:12;616:2;699:1;716:53;761:7;741:9;716:53;;;706:63;;678:97;806:2;824:53;869:7;860:6;849:9;845:22;824:53;;;814:63;;785:98;610:283;;;;;;900:366;;;1021:2;1009:9;1000:7;996:23;992:32;989:2;;;1037:1;1034;1027:12;989:2;1072:1;1089:53;1134:7;1114:9;1089:53;;;1079:63;;1051:97;1179:2;1197:53;1242:7;1233:6;1222:9;1218:22;1197:53;;1273:104;1350:21;1365:5;1350:21;;;1345:3;1338:34;1332:45;;;1384:113;1467:24;1485:5;1467:24;;1504:535;1700:3;1685:19;;1715:71;1689:9;1759:6;1715:71;;;1797:72;1865:2;1854:9;1850:18;1841:6;1797:72;;;1880;1948:2;1937:9;1933:18;1924:6;1880:72;;;1963:66;2025:2;2014:9;2010:18;2001:6;1963:66;;;1671:368;;;;;;;;2046:771;2304:3;2289:19;;2319:71;2293:9;2363:6;2319:71;;;2401:72;2469:2;2458:9;2454:18;2445:6;2401:72;;;2484;2552:2;2541:9;2537:18;2528:6;2484:72;;;2567;2635:2;2624:9;2620:18;2611:6;2567:72;;;2650:73;2718:3;2707:9;2703:19;2694:6;2650:73;;;2734;2802:3;2791:9;2787:19;2778:6;2734:73;;;2275:542;;;;;;;;;;2824:91;;2886:24;2904:5;2886:24;;2922:85;2988:13;2981:21;;2964:43;3014:121;-1:-1;;;;;3076:54;;3059:76;3142:72;3204:5;3187:27;3221:117;3290:24;3308:5;3290:24;;;3283:5;3280:35;3270:2;;3329:1;3326;3319:12;3270:2;3264:74;;3345:117;3414:24;3432:5;3414:24;",
-  "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n\nimport \"../lib/Structs.sol\";\n\n\ncontract BlockStorage {\n    //epoch->address->dispute->assetid\n    mapping (uint256 => mapping (address => Structs.Dispute)) public disputes;\n    //epoch -> numProposedBlocks\n    // mapping (uint256 => uint256) public numProposedBlocks;\n    //epoch -> proposalNumber -> block\n    mapping (uint256 => Structs.Block[]) public proposedBlocks;\n    mapping (uint256 => Structs.Block) public blocks;\n\n    // function getBlock(uint256 epoch) public view returns(Structs.Block memory _block) {\n    //     return(blocks[epoch]);\n    // }\n}\n",
-  "sourcePath": "/Users/hrishi/contracts/contracts/Core/BlockStorage.sol",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"blocks\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"proposerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"iteration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"biggestStake\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"disputes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"accWeight\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"median\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lowerCutoff\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"higherCutoff\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"lastVisited\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"assetId\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposedBlocks\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"proposerId\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"iteration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"biggestStake\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"valid\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/BlockStorage.sol\":\"BlockStorage\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/BlockStorage.sol\":{\"keccak256\":\"0x514e8ab68784ddab6f78f7f2287e86c95beffd5f1c22f89b010d3ebc56fbb756\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://15d04016cae6bfa506fb5a76287282853e21a61ce77fe60cd60caf62f119cb32\",\"dweb:/ipfs/Qmc2hskZpTUb3oj6N71hR6XJ1k4QjJBjeynxytDtRJYX22\"]},\"/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0x305db0a22f904ccaca9c0aa6176ccaa0714a89f6962ee22005673ad572c7b215\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://42ea703ef1c1d21577ce7c94a58c444cb20fa002dd1b3a112cca33c47c75b781\",\"dweb:/ipfs/QmQTD4EHuiqKs8u75gbtjaSHq8zqRxoiNuCC4vqz9H3Rcb\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b50610245806100206000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b61005961005436600461016f565b6100aa565b60405161006b969594939291906101e7565b60405180910390f35b6100876100823660046101a9565b6100e7565b60405161006b94939291906101ca565b6100876100a5366004610157565b61012d565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010057fe5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b600060208284031215610168578081fd5b5035919050565b60008060408385031215610181578081fd5b8235915060208301356001600160a01b038116811461019e578182fd5b809150509250929050565b600080604083850312156101bb578182fd5b50508035926020909101359150565b938452602084019290925260408301521515606082015260800190565b958652602086019490945260408501929092526060840152608083015260a082015260c0019056fea2646970667358221220cd4cc744ae04a169a43b53425656abb85cc477ece9f63e542000402d25f22d8464736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b61005961005436600461016f565b6100aa565b60405161006b969594939291906101e7565b60405180910390f35b6100876100823660046101a9565b6100e7565b60405161006b94939291906101ca565b6100876100a5366004610157565b61012d565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010057fe5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b600060208284031215610168578081fd5b5035919050565b60008060408385031215610181578081fd5b8235915060208301356001600160a01b038116811461019e578182fd5b809150509250929050565b600080604083850312156101bb578182fd5b50508035926020909101359150565b938452602084019290925260408301521515606082015260800190565b958652602086019490945260408501929092526060840152608083015260a082015260c0019056fea2646970667358221220cd4cc744ae04a169a43b53425656abb85cc477ece9f63e542000402d25f22d8464736f6c634300060b0033",
+  "immutableReferences": {},
+  "sourceMap": "126:530:2:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "126:530:2:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;193:73;;;;;;:::i;:::-;;:::i;:::-;;;;;;;;;;;;:::i;:::-;;;;;;;;406:58;;;;;;:::i;:::-;;:::i;:::-;;;;;;;;;;:::i;470:48::-;;;;;;:::i;:::-;;:::i;193:73::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;406:58::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;406:58:2;-1:-1:-1;406:58:2;;;:::o;470:48::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;279:241:-1:-;;383:2;371:9;362:7;358:23;354:32;351:2;;;-1:-1;;389:12;351:2;-1:-1;209:20;;345:175;-1:-1;345:175::o;527:366::-;;;648:2;636:9;627:7;623:23;619:32;616:2;;;-1:-1;;654:12;616:2;209:20;;;-1:-1;806:2;845:22;;72:20;-1:-1;;;;;3094:54;;3298:35;;3288:2;;-1:-1;;3337:12;3288:2;814:63;;;;610:283;;;;;:::o;900:366::-;;;1021:2;1009:9;1000:7;996:23;992:32;989:2;;;-1:-1;;1027:12;989:2;-1:-1;;209:20;;;1179:2;1218:22;;;209:20;;-1:-1;983:283::o;1504:544::-;1455:37;;;1874:2;1859:18;;1455:37;;;;1957:2;1942:18;;1455:37;3006:13;2999:21;2034:2;2019:18;;1338:34;1709:3;1694:19;;1680:368::o;2055:780::-;1455:37;;;2487:2;2472:18;;1455:37;;;;2570:2;2555:18;;1455:37;;;;2653:2;2638:18;;1455:37;2736:3;2721:19;;1455:37;2820:3;2805:19;;1455:37;2322:3;2307:19;;2293:542::o",
+  "source": "// SPDX-License-Identifier: GPL-3.0\npragma solidity 0.6.11;\npragma experimental ABIEncoderV2;\n\nimport \"../lib/Structs.sol\";\n\n\ncontract BlockStorage {\n    //epoch->address->dispute->assetid\n    mapping (uint256 => mapping (address => Structs.Dispute)) public disputes;\n    //epoch -> numProposedBlocks\n    // mapping (uint256 => uint256) public numProposedBlocks;\n    //epoch -> proposalNumber -> block\n    mapping (uint256 => Structs.Block[]) public proposedBlocks;\n    mapping (uint256 => Structs.Block) public blocks;\n\n    // function getBlock(uint256 epoch) public view returns(Structs.Block memory _block) {\n    //     return(blocks[epoch]);\n    // }\n}\n",
+  "sourcePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/BlockStorage.sol",
   "ast": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/BlockStorage.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/BlockStorage.sol",
     "exportedSymbols": {
       "BlockStorage": [
-        1287
+        1288
       ]
     },
-    "id": 1288,
+    "id": 1289,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1269,
+        "id": 1270,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:2"
+        "src": "36:23:2"
       },
       {
-        "id": 1270,
+        "id": 1271,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "24:33:2"
+        "src": "60:33:2"
       },
       {
-        "absolutePath": "/Users/hrishi/contracts/contracts/lib/Structs.sol",
+        "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol",
         "file": "../lib/Structs.sol",
-        "id": 1271,
+        "id": 1272,
         "nodeType": "ImportDirective",
-        "scope": 1288,
-        "sourceUnit": 4673,
-        "src": "59:28:2",
+        "scope": 1289,
+        "sourceUnit": 4734,
+        "src": "95:28:2",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 1287,
+        "id": 1288,
         "linearizedBaseContracts": [
-          1287
+          1288
         ],
         "name": "BlockStorage",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1277,
+            "functionSelector": "828496d6",
+            "id": 1278,
+            "mutability": "mutable",
             "name": "disputes",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "157:73:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "193:73:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$_$",
               "typeString": "mapping(uint256 => mapping(address => struct Structs.Dispute))"
             },
             "typeName": {
-              "id": 1276,
+              "id": 1277,
               "keyType": {
-                "id": 1272,
+                "id": 1273,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "166:7:2",
+                "src": "202:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "157:57:2",
+              "src": "193:57:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$_$",
                 "typeString": "mapping(uint256 => mapping(address => struct Structs.Dispute))"
               },
               "valueType": {
-                "id": 1275,
+                "id": 1276,
                 "keyType": {
-                  "id": 1273,
+                  "id": 1274,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "186:7:2",
+                  "src": "222:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
                     "typeString": "address"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "177:36:2",
+                "src": "213:36:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$",
+                  "typeIdentifier": "t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$",
                   "typeString": "mapping(address => struct Structs.Dispute)"
                 },
                 "valueType": {
                   "contractScope": null,
-                  "id": 1274,
+                  "id": 1275,
                   "name": "Structs.Dispute",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 4650,
-                  "src": "197:15:2",
+                  "referencedDeclaration": 4711,
+                  "src": "233:15:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Dispute_$4650_storage_ptr",
+                    "typeIdentifier": "t_struct$_Dispute_$4711_storage_ptr",
                     "typeString": "struct Structs.Dispute"
                   }
                 }
@@ -239,54 +258,57 @@
           },
           {
             "constant": false,
-            "id": 1282,
+            "functionSelector": "92b48411",
+            "id": 1283,
+            "mutability": "mutable",
             "name": "proposedBlocks",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "370:58:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "406:58:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4637_storage_$dyn_storage_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4698_storage_$dyn_storage_$",
               "typeString": "mapping(uint256 => struct Structs.Block[])"
             },
             "typeName": {
-              "id": 1281,
+              "id": 1282,
               "keyType": {
-                "id": 1278,
+                "id": 1279,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "379:7:2",
+                "src": "415:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "370:36:2",
+              "src": "406:36:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4637_storage_$dyn_storage_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4698_storage_$dyn_storage_$",
                 "typeString": "mapping(uint256 => struct Structs.Block[])"
               },
               "valueType": {
                 "baseType": {
                   "contractScope": null,
-                  "id": 1279,
+                  "id": 1280,
                   "name": "Structs.Block",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 4637,
-                  "src": "390:13:2",
+                  "referencedDeclaration": 4698,
+                  "src": "426:13:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Block_$4637_storage_ptr",
+                    "typeIdentifier": "t_struct$_Block_$4698_storage_ptr",
                     "typeString": "struct Structs.Block"
                   }
                 },
-                "id": 1280,
+                "id": 1281,
                 "length": null,
                 "nodeType": "ArrayTypeName",
-                "src": "390:15:2",
+                "src": "426:15:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_Block_$4637_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_Block_$4698_storage_$dyn_storage_ptr",
                   "typeString": "struct Structs.Block[]"
                 }
               }
@@ -296,44 +318,47 @@
           },
           {
             "constant": false,
-            "id": 1286,
+            "functionSelector": "f25b3f99",
+            "id": 1287,
+            "mutability": "mutable",
             "name": "blocks",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "434:48:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "470:48:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4637_storage_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4698_storage_$",
               "typeString": "mapping(uint256 => struct Structs.Block)"
             },
             "typeName": {
-              "id": 1285,
+              "id": 1286,
               "keyType": {
-                "id": 1283,
+                "id": 1284,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "443:7:2",
+                "src": "479:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "434:34:2",
+              "src": "470:34:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4637_storage_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4698_storage_$",
                 "typeString": "mapping(uint256 => struct Structs.Block)"
               },
               "valueType": {
                 "contractScope": null,
-                "id": 1284,
+                "id": 1285,
                 "name": "Structs.Block",
                 "nodeType": "UserDefinedTypeName",
-                "referencedDeclaration": 4637,
-                "src": "454:13:2",
+                "referencedDeclaration": 4698,
+                "src": "490:13:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_Block_$4637_storage_ptr",
+                  "typeIdentifier": "t_struct$_Block_$4698_storage_ptr",
                   "typeString": "struct Structs.Block"
                 }
               }
@@ -342,123 +367,128 @@
             "visibility": "public"
           }
         ],
-        "scope": 1288,
-        "src": "90:530:2"
+        "scope": 1289,
+        "src": "126:530:2"
       }
     ],
-    "src": "0:621:2"
+    "src": "36:621:2"
   },
   "legacyAST": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/BlockStorage.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/BlockStorage.sol",
     "exportedSymbols": {
       "BlockStorage": [
-        1287
+        1288
       ]
     },
-    "id": 1288,
+    "id": 1289,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1269,
+        "id": 1270,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:2"
+        "src": "36:23:2"
       },
       {
-        "id": 1270,
+        "id": 1271,
         "literals": [
           "experimental",
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "24:33:2"
+        "src": "60:33:2"
       },
       {
-        "absolutePath": "/Users/hrishi/contracts/contracts/lib/Structs.sol",
+        "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol",
         "file": "../lib/Structs.sol",
-        "id": 1271,
+        "id": 1272,
         "nodeType": "ImportDirective",
-        "scope": 1288,
-        "sourceUnit": 4673,
-        "src": "59:28:2",
+        "scope": 1289,
+        "sourceUnit": 4734,
+        "src": "95:28:2",
         "symbolAliases": [],
         "unitAlias": ""
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 1287,
+        "id": 1288,
         "linearizedBaseContracts": [
-          1287
+          1288
         ],
         "name": "BlockStorage",
         "nodeType": "ContractDefinition",
         "nodes": [
           {
             "constant": false,
-            "id": 1277,
+            "functionSelector": "828496d6",
+            "id": 1278,
+            "mutability": "mutable",
             "name": "disputes",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "157:73:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "193:73:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$_$",
               "typeString": "mapping(uint256 => mapping(address => struct Structs.Dispute))"
             },
             "typeName": {
-              "id": 1276,
+              "id": 1277,
               "keyType": {
-                "id": 1272,
+                "id": 1273,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "166:7:2",
+                "src": "202:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "157:57:2",
+              "src": "193:57:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$_$",
                 "typeString": "mapping(uint256 => mapping(address => struct Structs.Dispute))"
               },
               "valueType": {
-                "id": 1275,
+                "id": 1276,
                 "keyType": {
-                  "id": 1273,
+                  "id": 1274,
                   "name": "address",
                   "nodeType": "ElementaryTypeName",
-                  "src": "186:7:2",
+                  "src": "222:7:2",
                   "typeDescriptions": {
                     "typeIdentifier": "t_address",
                     "typeString": "address"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "177:36:2",
+                "src": "213:36:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_mapping$_t_address_$_t_struct$_Dispute_$4650_storage_$",
+                  "typeIdentifier": "t_mapping$_t_address_$_t_struct$_Dispute_$4711_storage_$",
                   "typeString": "mapping(address => struct Structs.Dispute)"
                 },
                 "valueType": {
                   "contractScope": null,
-                  "id": 1274,
+                  "id": 1275,
                   "name": "Structs.Dispute",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 4650,
-                  "src": "197:15:2",
+                  "referencedDeclaration": 4711,
+                  "src": "233:15:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Dispute_$4650_storage_ptr",
+                    "typeIdentifier": "t_struct$_Dispute_$4711_storage_ptr",
                     "typeString": "struct Structs.Dispute"
                   }
                 }
@@ -469,54 +499,57 @@
           },
           {
             "constant": false,
-            "id": 1282,
+            "functionSelector": "92b48411",
+            "id": 1283,
+            "mutability": "mutable",
             "name": "proposedBlocks",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "370:58:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "406:58:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4637_storage_$dyn_storage_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4698_storage_$dyn_storage_$",
               "typeString": "mapping(uint256 => struct Structs.Block[])"
             },
             "typeName": {
-              "id": 1281,
+              "id": 1282,
               "keyType": {
-                "id": 1278,
+                "id": 1279,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "379:7:2",
+                "src": "415:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "370:36:2",
+              "src": "406:36:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4637_storage_$dyn_storage_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_array$_t_struct$_Block_$4698_storage_$dyn_storage_$",
                 "typeString": "mapping(uint256 => struct Structs.Block[])"
               },
               "valueType": {
                 "baseType": {
                   "contractScope": null,
-                  "id": 1279,
+                  "id": 1280,
                   "name": "Structs.Block",
                   "nodeType": "UserDefinedTypeName",
-                  "referencedDeclaration": 4637,
-                  "src": "390:13:2",
+                  "referencedDeclaration": 4698,
+                  "src": "426:13:2",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_struct$_Block_$4637_storage_ptr",
+                    "typeIdentifier": "t_struct$_Block_$4698_storage_ptr",
                     "typeString": "struct Structs.Block"
                   }
                 },
-                "id": 1280,
+                "id": 1281,
                 "length": null,
                 "nodeType": "ArrayTypeName",
-                "src": "390:15:2",
+                "src": "426:15:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_array$_t_struct$_Block_$4637_storage_$dyn_storage_ptr",
+                  "typeIdentifier": "t_array$_t_struct$_Block_$4698_storage_$dyn_storage_ptr",
                   "typeString": "struct Structs.Block[]"
                 }
               }
@@ -526,44 +559,47 @@
           },
           {
             "constant": false,
-            "id": 1286,
+            "functionSelector": "f25b3f99",
+            "id": 1287,
+            "mutability": "mutable",
             "name": "blocks",
             "nodeType": "VariableDeclaration",
-            "scope": 1287,
-            "src": "434:48:2",
+            "overrides": null,
+            "scope": 1288,
+            "src": "470:48:2",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4637_storage_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4698_storage_$",
               "typeString": "mapping(uint256 => struct Structs.Block)"
             },
             "typeName": {
-              "id": 1285,
+              "id": 1286,
               "keyType": {
-                "id": 1283,
+                "id": 1284,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "443:7:2",
+                "src": "479:7:2",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "434:34:2",
+              "src": "470:34:2",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4637_storage_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Block_$4698_storage_$",
                 "typeString": "mapping(uint256 => struct Structs.Block)"
               },
               "valueType": {
                 "contractScope": null,
-                "id": 1284,
+                "id": 1285,
                 "name": "Structs.Block",
                 "nodeType": "UserDefinedTypeName",
-                "referencedDeclaration": 4637,
-                "src": "454:13:2",
+                "referencedDeclaration": 4698,
+                "src": "490:13:2",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_struct$_Block_$4637_storage_ptr",
+                  "typeIdentifier": "t_struct$_Block_$4698_storage_ptr",
                   "typeString": "struct Structs.Block"
                 }
               }
@@ -572,23 +608,27 @@
             "visibility": "public"
           }
         ],
-        "scope": 1288,
-        "src": "90:530:2"
+        "scope": 1289,
+        "src": "126:530:2"
       }
     ],
-    "src": "0:621:2"
+    "src": "36:621:2"
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.10+commit.5a6ea5b1.Emscripten.clang"
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-25T04:19:39.143Z",
+  "schemaVersion": "3.2.2",
+  "updatedAt": "2020-07-22T10:04:38.938Z",
   "devdoc": {
-    "methods": {}
+    "kind": "dev",
+    "methods": {},
+    "version": 1
   },
   "userdoc": {
-    "methods": {}
+    "kind": "user",
+    "methods": {},
+    "version": 1
   }
 }

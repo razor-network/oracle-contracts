@@ -1,29 +1,27 @@
-pragma solidity 0.5.10;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.11;
 
-import "openzeppelin-solidity/contracts/access/Roles.sol";
+import "openzeppelin-solidity/contracts/access/AccessControl.sol";
 
 
-contract WriterRole {
-    using Roles for Roles.Role;
-
+contract WriterRole is AccessControl {
+    
     event WriterAdded(address indexed account);
     event WriterRemoved(address indexed account);
-
-    Roles.Role private _writers;
-
+    
     constructor () internal {
-        _addWriter(msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
+    
     modifier onlyWriter() {
         require(isWriter(msg.sender), "WriterRole: caller does not have the Writer role");
         _;
     }
 
     function isWriter(address account) public view returns (bool) {
-        return _writers.has(account);
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
     }
-
+    
     function addWriter(address account) public onlyWriter {
         _addWriter(account);
     }
@@ -31,14 +29,14 @@ contract WriterRole {
     function renounceWriter() public {
         _removeWriter(msg.sender);
     }
-
+    
     function _addWriter(address account) internal {
-        _writers.add(account);
+        grantRole(DEFAULT_ADMIN_ROLE, account);
         emit WriterAdded(account);
     }
-
+    
     function _removeWriter(address account) internal {
-        _writers.remove(account);
+        renounceRole(DEFAULT_ADMIN_ROLE, account);
         emit WriterRemoved(account);
     }
 }

@@ -1,4 +1,5 @@
-pragma solidity 0.5.10;
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity 0.6.11;
 // pragma experimental ABIEncoderV2;
 // import "../SchellingCoin.sol";
 // import "./Utils.sol";
