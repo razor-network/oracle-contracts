@@ -2,3 +2,4 @@
 .infura
 .mnemonic
 node_modules/
+build/

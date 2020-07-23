@@ -156,6 +156,7 @@ contract('VoteManager', function (accounts) {
       let stakeBefore2 = Number((await stakeManager.stakers(stakerId_acc4)).stake)
       await functions.mineToNextState() // dispute
       await functions.mineToNextState() // commit
+      await functions.mineToNextEpoch()
       epoch = await functions.getEpoch()
       let votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]
       let tree = merkle('keccak256').sync(votes)
@@ -178,14 +179,14 @@ contract('VoteManager', function (accounts) {
         penalty += Math.floor(stakeBefore2 / 1000)
       }
       console.log(stakeBefore2 - penalty, stakeAfter2)
-      assert(stakeBefore + 5 === stakeAfter)
-      assert(stakeBefore2 - penalty === stakeAfter2)
+      assert(stakeBefore + 5 === stakeAfter, 'Error 1')
+      assert(stakeBefore2 - penalty === stakeAfter2, 'Error 2')
       let stakeGettingReward = Number(await stakeManager.stakeGettingReward())
       console.log('stakeGettingReward', stakeGettingReward)
-      assert(stakeGettingReward === stakeAfter)
+      assert(stakeGettingReward === stakeAfter, 'Error 3')
       let rewardPool = Number(await stakeManager.rewardPool())
       console.log('rewardPool', rewardPool)
-      assert(rewardPool === penalty)
+      assert(rewardPool === penalty, 'Error 4')
     // let votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904]
     // let tree2 = merkle('keccak256').sync(votes2)
     // let root2 = tree2.root()

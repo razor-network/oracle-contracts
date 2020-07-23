@@ -25,8 +25,8 @@
 const HDWalletProvider = require('truffle-hdwallet-provider')
 //
 const fs = require('fs')
-//const infuraKey = fs.readFileSync('.infura').toString().trim()
-//const mnemonic = fs.readFileSync('.mnemonic').toString().trim()
+const infuraKey = fs.readFileSync('.infura').toString().trim()
+const mnemonic = fs.readFileSync('.mnemonic').toString().trim()
 
 module.exports = {
     /**
@@ -85,7 +85,7 @@ module.exports = {
                     return new HDWalletProvider(mnemonic, 'http://34.67.242.174:8545')
             },
             network_id: 5,
-            gas: 4000000,
+            gas: 8000000,
             // gasPrice: 1000000000,
             confirmations: 1,
             timeoutBlocks: 200,
