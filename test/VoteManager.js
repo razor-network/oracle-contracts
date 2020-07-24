@@ -175,18 +175,15 @@ contract('VoteManager', function (accounts) {
       let stakeAfter2 = Number((await stakeManager.stakers(stakerId_acc4)).stake)
       console.log(stakeBefore, stakeAfter)
       let penalty = 0
-      for (let i = 0; i < votes.length; i++) {
-        penalty += Math.floor(stakeBefore2 / 1000)
-      }
       console.log(stakeBefore2 - penalty, stakeAfter2)
-      assert(stakeBefore + 5 === stakeAfter, 'Error 1')
-      assert(stakeBefore2 - penalty === stakeAfter2, 'Error 2')
+      assert(stakeBefore + 5 === stakeAfter, 'Not rewarded')
+      assert(stakeBefore2 - penalty === stakeAfter2, 'Penalty should not be applied')
       let stakeGettingReward = Number(await stakeManager.stakeGettingReward())
       console.log('stakeGettingReward', stakeGettingReward)
       assert(stakeGettingReward === stakeAfter, 'Error 3')
       let rewardPool = Number(await stakeManager.rewardPool())
       console.log('rewardPool', rewardPool)
-      assert(rewardPool === penalty, 'Error 4')
+      assert(rewardPool === penalty, 'If not penalised, reward pool should be zero')
     // let votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904]
     // let tree2 = merkle('keccak256').sync(votes2)
     // let root2 = tree2.root()
