@@ -16,7 +16,7 @@ const BN = require('bn.js')
 var fs = require('fs')
 
 // todo remove deployer write access
-module.exports = async function(deployer,network) {
+module.exports = async function(deployer,network, accounts) {
     // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
 
     deployer.then(async () => {

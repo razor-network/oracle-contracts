@@ -26,6 +26,7 @@ contract SchellingCoin is ERC20, AccessControl {
     function mint(address account, uint256 amount) external returns (bool) {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
         _mint(account, amount);
+	return true;
     }
 
 }
