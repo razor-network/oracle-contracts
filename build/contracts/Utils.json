@@ -15,23 +15,23 @@
       "type": "event"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/intern/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/intern/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0x5214e2dd4cdfb1aae1d8a23e5c6b75f751b90b06ea09c1f8ca4abcab7b15b1cb\",\"urls\":[\"bzz-raw://9303c22e5635b38530151dd50fb1fc7d8ead6772659555927310b29cc8175241\",\"dweb:/ipfs/QmSH1Qk7oyfj7bnHjXn2CfMvTex69oJrYLptEcyBtmfbDY\"]}},\"version\":1}",
-  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122024d7720b5cbe8e5b3d2479d3a7ab7393f62ab3716decabc4e2f40e8ed6327caa64736f6c634300060b0033",
-  "deployedBytecode": "0x6080604052600080fdfea264697066735822122024d7720b5cbe8e5b3d2479d3a7ab7393f62ab3716decabc4e2f40e8ed6327caa64736f6c634300060b0033",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0xf5afaf5152e57cebba42dc38fc747a8fa4be41fe2f8d8a1fdf66e8dee8d3bfa0\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://92d311e70cb5ecf43e239eb3a4dd99dcaf9f9e1b0347dfd5c4bada63b3d6a3a6\",\"dweb:/ipfs/QmVd4rJGtkb1BxEUnJ6P7AeoASS8Pa5Pzrz4bNfAsn93zR\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220ccb2af91e294f1bfe0cfd109ee4b9d38a106e82824341402b8af4fb6e556982264736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220ccb2af91e294f1bfe0cfd109ee4b9d38a106e82824341402b8af4fb6e556982264736f6c634300060b0033",
   "immutableReferences": {},
-  "sourceMap": "60:54:13:-:0;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "60:54:13:-:0;;;;;",
-  "source": "pragma solidity 0.6.11;\npragma experimental ABIEncoderV2;\n\n\ncontract Utils {\n\n    event DebugUint256(uint256 a);\n}\n",
-  "sourcePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
+  "sourceMap": "96:54:13:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "96:54:13:-:0;;;;;",
+  "source": "// SPDX-License-Identifier: GPL-3.0\npragma solidity 0.6.11;\npragma experimental ABIEncoderV2;\n\n\ncontract Utils {\n\n    event DebugUint256(uint256 a);\n}\n",
+  "sourcePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/Utils.sol",
   "ast": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
         3389
       ]
     },
     "id": 3390,
-    "license": null,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -42,7 +42,7 @@
           ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:13"
+        "src": "36:23:13"
       },
       {
         "id": 3384,
@@ -51,7 +51,7 @@
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "24:33:13"
+        "src": "60:33:13"
       },
       {
         "abstract": false,
@@ -86,7 +86,7 @@
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
                   "scope": 3388,
-                  "src": "101:9:13",
+                  "src": "137:9:13",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -97,7 +97,7 @@
                     "id": 3385,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "101:7:13",
+                    "src": "137:7:13",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -107,26 +107,26 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "100:11:13"
+              "src": "136:11:13"
             },
-            "src": "82:30:13"
+            "src": "118:30:13"
           }
         ],
         "scope": 3390,
-        "src": "60:54:13"
+        "src": "96:54:13"
       }
     ],
-    "src": "0:115:13"
+    "src": "36:115:13"
   },
   "legacyAST": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
         3389
       ]
     },
     "id": 3390,
-    "license": null,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -137,7 +137,7 @@
           ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:13"
+        "src": "36:23:13"
       },
       {
         "id": 3384,
@@ -146,7 +146,7 @@
           "ABIEncoderV2"
         ],
         "nodeType": "PragmaDirective",
-        "src": "24:33:13"
+        "src": "60:33:13"
       },
       {
         "abstract": false,
@@ -181,7 +181,7 @@
                   "nodeType": "VariableDeclaration",
                   "overrides": null,
                   "scope": 3388,
-                  "src": "101:9:13",
+                  "src": "137:9:13",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -192,7 +192,7 @@
                     "id": 3385,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "101:7:13",
+                    "src": "137:7:13",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -202,16 +202,16 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "100:11:13"
+              "src": "136:11:13"
             },
-            "src": "82:30:13"
+            "src": "118:30:13"
           }
         ],
         "scope": 3390,
-        "src": "60:54:13"
+        "src": "96:54:13"
       }
     ],
-    "src": "0:115:13"
+    "src": "36:115:13"
   },
   "compiler": {
     "name": "solc",
@@ -219,7 +219,7 @@
   },
   "networks": {},
   "schemaVersion": "3.2.2",
-  "updatedAt": "2020-07-27T12:27:12.537Z",
+  "updatedAt": "2020-07-22T10:04:38.971Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},

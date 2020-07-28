@@ -113,23 +113,23 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"commitments\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"totalStakeRevealed\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"voteWeights\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"votes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"weight\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/intern/contracts/contracts/Core/VoteStorage.sol\":\"VoteStorage\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/intern/contracts/contracts/Core/VoteStorage.sol\":{\"keccak256\":\"0x2bb61b5503be9215aa3fbb0107cb572c10e4c08c14c8b2fc8ecbbc55ade5613b\",\"urls\":[\"bzz-raw://a86ac388f8c241a1bd2093bb313859a3f41c090c266090001eeb844441fcf32f\",\"dweb:/ipfs/QmP77o9ecKtyntvkiHzC2Wzwjawy2344nchPimsLG4uerU\"]},\"/home/user/Documents/intern/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0xa2684f917a51d655a7f3348f43cf34de800ab43de2c2e29c004d57a833667c09\",\"urls\":[\"bzz-raw://e6af428b91cc8d457d4f4a1bb95a13a3b50295f2e4aa982b8effb38a19985038\",\"dweb:/ipfs/QmPYTmGd8tZu7QuBsFZV5JcZFKW1MH4EHamybbNGkTR5Yq\"]}},\"version\":1}",
-  "bytecode": "0x608060405234801561001057600080fd5b506101cc806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea2646970667358221220c60e77965f70cacc8b0d102d770fb492f25b1f6c2b64cd21bbec2dd469a62a3364736f6c634300060b0033",
-  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea2646970667358221220c60e77965f70cacc8b0d102d770fb492f25b1f6c2b64cd21bbec2dd469a62a3364736f6c634300060b0033",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"commitments\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"totalStakeRevealed\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"voteWeights\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"votes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"weight\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/VoteStorage.sol\":\"VoteStorage\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/Razor-Internship/contracts/contracts/Core/VoteStorage.sol\":{\"keccak256\":\"0xe26b543a6d57a5351b2b42ddfbd408684633e66777eba546515504928ac132b1\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://b732221dcb140a2898f53d66eed267442d531360c220b9f104dc243c6e23622f\",\"dweb:/ipfs/QmYqrpoJaNxsA12ZSyx2UyMjh2rmDjzwigd2Nd2wrfzM3P\"]},\"/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0x305db0a22f904ccaca9c0aa6176ccaa0714a89f6962ee22005673ad572c7b215\",\"license\":\"GPL-3.0\",\"urls\":[\"bzz-raw://42ea703ef1c1d21577ce7c94a58c444cb20fa002dd1b3a112cca33c47c75b781\",\"dweb:/ipfs/QmQTD4EHuiqKs8u75gbtjaSHq8zqRxoiNuCC4vqz9H3Rcb\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506101cc806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea264697066735822122030c01643f74e841122f21cb959e193417d521271656d8da3730222b0100eb75064736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea264697066735822122030c01643f74e841122f21cb959e193417d521271656d8da3730222b0100eb75064736f6c634300060b0033",
   "immutableReferences": {},
-  "sourceMap": "56:520:15:-:0;;;;;;;;;;;;;;;;;;;",
-  "deployedSourceMap": "56:520:15:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;228:89;;;;;;;;;;;;;;;;-1:-1:-1;228:89:15;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;360:76;;;;;;;;;;;;;;;;-1:-1:-1;360:76:15;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;482:90;;;;;;;;;;;;;;;;-1:-1:-1;482:90:15;;;;;;;;;;;;:::i;117:68::-;;;;;;;;;;;;;;;;-1:-1:-1;117:68:15;;;;;;;:::i;228:89::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;360:76::-;;;;;;;;;;;;;;;;;;;;;;;;:::o;482:90::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;117:68::-;;;;;;;;;;;;;;;;;;;;;;:::o",
-  "source": "pragma solidity 0.6.11;\n\nimport \"../lib/Structs.sol\";\n\n\ncontract VoteStorage {\n    //epoch->stakerid->commitment\n    mapping (uint256 => mapping (uint256 => bytes32)) public commitments;\n    //epoch->stakerid->assetid->vote\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;\n    // epoch -> asset -> stakeWeight\n    mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;\n    //epoch->assetid->voteValue->weight\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;\n\n}\n",
-  "sourcePath": "/home/user/Documents/intern/contracts/contracts/Core/VoteStorage.sol",
+  "sourceMap": "92:520:15:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "92:520:15:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;264:89;;;;;;;;;;;;;;;;-1:-1:-1;264:89:15;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;396:76;;;;;;;;;;;;;;;;-1:-1:-1;396:76:15;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;518:90;;;;;;;;;;;;;;;;-1:-1:-1;518:90:15;;;;;;;;;;;;:::i;153:68::-;;;;;;;;;;;;;;;;-1:-1:-1;153:68:15;;;;;;;:::i;264:89::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;396:76::-;;;;;;;;;;;;;;;;;;;;;;;;:::o;518:90::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;153:68::-;;;;;;;;;;;;;;;;;;;;;;:::o",
+  "source": "// SPDX-License-Identifier: GPL-3.0\npragma solidity 0.6.11;\n\nimport \"../lib/Structs.sol\";\n\n\ncontract VoteStorage {\n    //epoch->stakerid->commitment\n    mapping (uint256 => mapping (uint256 => bytes32)) public commitments;\n    //epoch->stakerid->assetid->vote\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;\n    // epoch -> asset -> stakeWeight\n    mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;\n    //epoch->assetid->voteValue->weight\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;\n\n}\n",
+  "sourcePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/VoteStorage.sol",
   "ast": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/VoteStorage.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/VoteStorage.sol",
     "exportedSymbols": {
       "VoteStorage": [
         3957
       ]
     },
     "id": 3958,
-    "license": null,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -140,16 +140,16 @@
           ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:15"
+        "src": "36:23:15"
       },
       {
-        "absolutePath": "/home/user/Documents/intern/contracts/contracts/lib/Structs.sol",
+        "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol",
         "file": "../lib/Structs.sol",
         "id": 3928,
         "nodeType": "ImportDirective",
         "scope": 3958,
-        "sourceUnit": 4780,
-        "src": "25:28:15",
+        "sourceUnit": 4734,
+        "src": "61:28:15",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -176,7 +176,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "117:68:15",
+            "src": "153:68:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -189,14 +189,14 @@
                 "id": 3929,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "126:7:15",
+                "src": "162:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "117:49:15",
+              "src": "153:49:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
@@ -207,14 +207,14 @@
                   "id": 3930,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "146:7:15",
+                  "src": "182:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "137:28:15",
+                "src": "173:28:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_bytes32_$",
                   "typeString": "mapping(uint256 => bytes32)"
@@ -223,7 +223,7 @@
                   "id": 3931,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "157:7:15",
+                  "src": "193:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -243,11 +243,11 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "228:89:15",
+            "src": "264:89:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$_$",
               "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
             },
             "typeName": {
@@ -256,16 +256,16 @@
                 "id": 3935,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "237:7:15",
+                "src": "273:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "228:76:15",
+              "src": "264:76:15",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
               },
               "valueType": {
@@ -274,16 +274,16 @@
                   "id": 3936,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "257:7:15",
+                  "src": "293:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "248:55:15",
+                "src": "284:55:15",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$",
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$",
                   "typeString": "mapping(uint256 => mapping(uint256 => struct Structs.Vote))"
                 },
                 "valueType": {
@@ -292,16 +292,16 @@
                     "id": 3937,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "278:7:15",
+                    "src": "314:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
                   "nodeType": "Mapping",
-                  "src": "269:33:15",
+                  "src": "305:33:15",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$",
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$",
                     "typeString": "mapping(uint256 => struct Structs.Vote)"
                   },
                   "valueType": {
@@ -309,10 +309,10 @@
                     "id": 3938,
                     "name": "Structs.Vote",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4706,
-                    "src": "289:12:15",
+                    "referencedDeclaration": 4660,
+                    "src": "325:12:15",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Vote_$4706_storage_ptr",
+                      "typeIdentifier": "t_struct$_Vote_$4660_storage_ptr",
                       "typeString": "struct Structs.Vote"
                     }
                   }
@@ -331,7 +331,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "360:76:15",
+            "src": "396:76:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -344,14 +344,14 @@
                 "id": 3943,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "369:7:15",
+                "src": "405:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "360:50:15",
+              "src": "396:50:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
@@ -362,14 +362,14 @@
                   "id": 3944,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "390:7:15",
+                  "src": "426:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "381:28:15",
+                "src": "417:28:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
                   "typeString": "mapping(uint256 => uint256)"
@@ -378,7 +378,7 @@
                   "id": 3945,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "401:7:15",
+                  "src": "437:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -398,7 +398,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "482:90:15",
+            "src": "518:90:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -411,14 +411,14 @@
                 "id": 3949,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "491:7:15",
+                "src": "527:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "482:71:15",
+              "src": "518:71:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
@@ -429,14 +429,14 @@
                   "id": 3950,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "511:7:15",
+                  "src": "547:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "502:50:15",
+                "src": "538:50:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
                   "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
@@ -447,14 +447,14 @@
                     "id": 3951,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "532:7:15",
+                    "src": "568:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
                   "nodeType": "Mapping",
-                  "src": "523:28:15",
+                  "src": "559:28:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
                     "typeString": "mapping(uint256 => uint256)"
@@ -463,7 +463,7 @@
                     "id": 3952,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "543:7:15",
+                    "src": "579:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -477,20 +477,20 @@
           }
         ],
         "scope": 3958,
-        "src": "56:520:15"
+        "src": "92:520:15"
       }
     ],
-    "src": "0:577:15"
+    "src": "36:577:15"
   },
   "legacyAST": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/VoteStorage.sol",
+    "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/Core/VoteStorage.sol",
     "exportedSymbols": {
       "VoteStorage": [
         3957
       ]
     },
     "id": 3958,
-    "license": null,
+    "license": "GPL-3.0",
     "nodeType": "SourceUnit",
     "nodes": [
       {
@@ -501,16 +501,16 @@
           ".11"
         ],
         "nodeType": "PragmaDirective",
-        "src": "0:23:15"
+        "src": "36:23:15"
       },
       {
-        "absolutePath": "/home/user/Documents/intern/contracts/contracts/lib/Structs.sol",
+        "absolutePath": "/home/user/Documents/Razor-Internship/contracts/contracts/lib/Structs.sol",
         "file": "../lib/Structs.sol",
         "id": 3928,
         "nodeType": "ImportDirective",
         "scope": 3958,
-        "sourceUnit": 4780,
-        "src": "25:28:15",
+        "sourceUnit": 4734,
+        "src": "61:28:15",
         "symbolAliases": [],
         "unitAlias": ""
       },
@@ -537,7 +537,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "117:68:15",
+            "src": "153:68:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -550,14 +550,14 @@
                 "id": 3929,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "126:7:15",
+                "src": "162:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "117:49:15",
+              "src": "153:49:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
@@ -568,14 +568,14 @@
                   "id": 3930,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "146:7:15",
+                  "src": "182:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "137:28:15",
+                "src": "173:28:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_bytes32_$",
                   "typeString": "mapping(uint256 => bytes32)"
@@ -584,7 +584,7 @@
                   "id": 3931,
                   "name": "bytes32",
                   "nodeType": "ElementaryTypeName",
-                  "src": "157:7:15",
+                  "src": "193:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_bytes32",
                     "typeString": "bytes32"
@@ -604,11 +604,11 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "228:89:15",
+            "src": "264:89:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
-              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$_$",
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$_$",
               "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
             },
             "typeName": {
@@ -617,16 +617,16 @@
                 "id": 3935,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "237:7:15",
+                "src": "273:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "228:76:15",
+              "src": "264:76:15",
               "typeDescriptions": {
-                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$_$",
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
               },
               "valueType": {
@@ -635,16 +635,16 @@
                   "id": 3936,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "257:7:15",
+                  "src": "293:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "248:55:15",
+                "src": "284:55:15",
                 "typeDescriptions": {
-                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$_$",
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$_$",
                   "typeString": "mapping(uint256 => mapping(uint256 => struct Structs.Vote))"
                 },
                 "valueType": {
@@ -653,16 +653,16 @@
                     "id": 3937,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "278:7:15",
+                    "src": "314:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
                   "nodeType": "Mapping",
-                  "src": "269:33:15",
+                  "src": "305:33:15",
                   "typeDescriptions": {
-                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$4706_storage_$",
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$4660_storage_$",
                     "typeString": "mapping(uint256 => struct Structs.Vote)"
                   },
                   "valueType": {
@@ -670,10 +670,10 @@
                     "id": 3938,
                     "name": "Structs.Vote",
                     "nodeType": "UserDefinedTypeName",
-                    "referencedDeclaration": 4706,
-                    "src": "289:12:15",
+                    "referencedDeclaration": 4660,
+                    "src": "325:12:15",
                     "typeDescriptions": {
-                      "typeIdentifier": "t_struct$_Vote_$4706_storage_ptr",
+                      "typeIdentifier": "t_struct$_Vote_$4660_storage_ptr",
                       "typeString": "struct Structs.Vote"
                     }
                   }
@@ -692,7 +692,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "360:76:15",
+            "src": "396:76:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -705,14 +705,14 @@
                 "id": 3943,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "369:7:15",
+                "src": "405:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "360:50:15",
+              "src": "396:50:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
@@ -723,14 +723,14 @@
                   "id": 3944,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "390:7:15",
+                  "src": "426:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "381:28:15",
+                "src": "417:28:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
                   "typeString": "mapping(uint256 => uint256)"
@@ -739,7 +739,7 @@
                   "id": 3945,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "401:7:15",
+                  "src": "437:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
@@ -759,7 +759,7 @@
             "nodeType": "VariableDeclaration",
             "overrides": null,
             "scope": 3957,
-            "src": "482:90:15",
+            "src": "518:90:15",
             "stateVariable": true,
             "storageLocation": "default",
             "typeDescriptions": {
@@ -772,14 +772,14 @@
                 "id": 3949,
                 "name": "uint256",
                 "nodeType": "ElementaryTypeName",
-                "src": "491:7:15",
+                "src": "527:7:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_uint256",
                   "typeString": "uint256"
                 }
               },
               "nodeType": "Mapping",
-              "src": "482:71:15",
+              "src": "518:71:15",
               "typeDescriptions": {
                 "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
                 "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
@@ -790,14 +790,14 @@
                   "id": 3950,
                   "name": "uint256",
                   "nodeType": "ElementaryTypeName",
-                  "src": "511:7:15",
+                  "src": "547:7:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_uint256",
                     "typeString": "uint256"
                   }
                 },
                 "nodeType": "Mapping",
-                "src": "502:50:15",
+                "src": "538:50:15",
                 "typeDescriptions": {
                   "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
                   "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
@@ -808,14 +808,14 @@
                     "id": 3951,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "532:7:15",
+                    "src": "568:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
                     }
                   },
                   "nodeType": "Mapping",
-                  "src": "523:28:15",
+                  "src": "559:28:15",
                   "typeDescriptions": {
                     "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
                     "typeString": "mapping(uint256 => uint256)"
@@ -824,7 +824,7 @@
                     "id": 3952,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "543:7:15",
+                    "src": "579:7:15",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -838,10 +838,10 @@
           }
         ],
         "scope": 3958,
-        "src": "56:520:15"
+        "src": "92:520:15"
       }
     ],
-    "src": "0:577:15"
+    "src": "36:577:15"
   },
   "compiler": {
     "name": "solc",
@@ -849,7 +849,7 @@
   },
   "networks": {},
   "schemaVersion": "3.2.2",
-  "updatedAt": "2020-07-27T12:27:12.546Z",
+  "updatedAt": "2020-07-22T10:04:38.977Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
