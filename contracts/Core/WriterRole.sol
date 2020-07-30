@@ -7,14 +7,13 @@ import "openzeppelin-solidity/contracts/access/AccessControl.sol";
 contract WriterRole is AccessControl {
     
     bytes32 private constant MY_ROLE = keccak256("WRITER");
-    bytes32 private constant ADMIN = keccak256("ADMIN");
     
     event WriterAdded(address indexed account);
     event WriterRemoved(address indexed account);
     
     constructor () internal {
-        _setRoleAdmin(MY_ROLE,ADMIN);
-        _setupRole(ADMIN, msg.sender);
+        _setRoleAdmin(MY_ROLE,DEFAULT_ADMIN_ROLE);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
     
     modifier onlyWriter() {
@@ -28,7 +27,7 @@ contract WriterRole is AccessControl {
     }
 
     function isAdmin(address account) public view returns (bool) {
-        return hasRole(ADMIN,account);
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
     }
 
     function isWriter(address account) public view returns (bool) {
@@ -39,8 +38,8 @@ contract WriterRole is AccessControl {
         _addWriter(account);
     }
 
-    function renounceWriter() public onlyWriter {
-        _removeWriter(msg.sender);
+    function renounceWriter(address account) public onlyAdmin {
+        _removeWriter(account);
     }
     
     function _addWriter(address account) internal {
@@ -49,7 +48,7 @@ contract WriterRole is AccessControl {
     }
     
     function _removeWriter(address account) internal {
-        renounceRole(MY_ROLE, account);
+        revokeRole(MY_ROLE, account);
         emit WriterRemoved(account);
     }
 }
