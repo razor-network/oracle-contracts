@@ -2318,8 +2318,7 @@
             }
           ],
           "name": "Donate",
-          "type": "event",
-          "signature": "0x0553260a2e46b0577270d8992db02d30856ca880144c72d6e9503760946aef13"
+          "type": "event"
         },
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -2341,8 +2340,7 @@
             }
           ],
           "name": "Transfer",
-          "type": "event",
-          "signature": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+          "type": "event"
         },
         "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
           "anonymous": false,
@@ -2364,12 +2362,11 @@
             }
           ],
           "name": "Approval",
-          "type": "event",
-          "signature": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+          "type": "event"
         }
       },
       "links": {},
-      "address": "0xA6c15899264B34D4701208D1aF12Fa11e192DAC5",
+      "address": "0x912588c79dE184342B04834A2Eab089b10192348",
       "transactionHash": "0x010d326c73ad6fd32e4f79802b3689ecdc4dcdea0667280e0aa15fe78cfab4df"
     },
     "420": {
@@ -2389,8 +2386,7 @@
             }
           ],
           "name": "Donate",
-          "type": "event",
-          "signature": "0x0553260a2e46b0577270d8992db02d30856ca880144c72d6e9503760946aef13"
+          "type": "event"
         },
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -2412,8 +2408,7 @@
             }
           ],
           "name": "Transfer",
-          "type": "event",
-          "signature": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+          "type": "event"
         },
         "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
           "anonymous": false,
@@ -2435,8 +2430,7 @@
             }
           ],
           "name": "Approval",
-          "type": "event",
-          "signature": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+          "type": "event"
         }
       },
       "links": {},
@@ -2444,8 +2438,8 @@
       "transactionHash": "0x8b323ef9512237ba2f605a1947aa84fc56cea76d38cdc0c20e267a7f352ee97d"
     }
   },
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-25T04:41:08.211Z",
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-07-31T18:22:51.085Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {

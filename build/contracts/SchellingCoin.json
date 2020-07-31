@@ -1488,8 +1488,7 @@
             }
           ],
           "name": "MinterAdded",
-          "type": "event",
-          "signature": "0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6"
+          "type": "event"
         },
         "0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692": {
           "anonymous": false,
@@ -1501,8 +1500,7 @@
             }
           ],
           "name": "MinterRemoved",
-          "type": "event",
-          "signature": "0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692"
+          "type": "event"
         },
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -1524,8 +1522,7 @@
             }
           ],
           "name": "Transfer",
-          "type": "event",
-          "signature": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+          "type": "event"
         },
         "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
           "anonymous": false,
@@ -1547,13 +1544,12 @@
             }
           ],
           "name": "Approval",
-          "type": "event",
-          "signature": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+          "type": "event"
         }
       },
       "links": {},
-      "address": "0xEfA795b6Cc429ad59FE22C006D0e1265ab16aF4B",
-      "transactionHash": "0xefb199f0a24c5dd4bc6aa3b8ec974f8ea1993dd95b967660557a11e8fca02333"
+      "address": "0x4a8a46610EB407923098587e02AC5f4b1c8b47F6",
+      "transactionHash": "0x5a3463433337c3fb88d8235a15563c3e865ef59bb1e55bb6cff7d70db5641fa4"
     },
     "420": {
       "events": {
@@ -1567,8 +1563,7 @@
             }
           ],
           "name": "MinterAdded",
-          "type": "event",
-          "signature": "0x6ae172837ea30b801fbfcdd4108aa1d5bf8ff775444fd70256b44e6bf3dfc3f6"
+          "type": "event"
         },
         "0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692": {
           "anonymous": false,
@@ -1580,8 +1575,7 @@
             }
           ],
           "name": "MinterRemoved",
-          "type": "event",
-          "signature": "0xe94479a9f7e1952cc78f2d6baab678adc1b772d936c6583def489e524cb66692"
+          "type": "event"
         },
         "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": {
           "anonymous": false,
@@ -1603,8 +1597,7 @@
             }
           ],
           "name": "Transfer",
-          "type": "event",
-          "signature": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef"
+          "type": "event"
         },
         "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925": {
           "anonymous": false,
@@ -1626,8 +1619,7 @@
             }
           ],
           "name": "Approval",
-          "type": "event",
-          "signature": "0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925"
+          "type": "event"
         }
       },
       "links": {},
@@ -1635,8 +1627,8 @@
       "transactionHash": "0xed2a5c15882d8a9c365f4f0dbcd0dfcea8040e62991ca26a2a04c96b9b8d38f0"
     }
   },
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-25T04:41:08.113Z",
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-07-31T18:22:50.996Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "Very simple ERC20 Token example, where all tokens are pre-assigned to the creator. Note they can later distribute these tokens as they wish using `transfer` and other `ERC20` functions.",

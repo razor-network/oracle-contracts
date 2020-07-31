@@ -81,8 +81,8 @@ module.exports = {
 
         goerli: {
             provider: function() {
-                // return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + infuraKey)
-                    return new HDWalletProvider(mnemonic, 'http://34.67.242.174:8545')
+                return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + infuraKey)
+                    // return new HDWalletProvider(mnemonic, 'http://34.67.242.174:8545')
             },
             network_id: 5,
             gas: 8000000,

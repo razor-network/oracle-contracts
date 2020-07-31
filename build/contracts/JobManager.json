@@ -6771,8 +6771,7 @@
             }
           ],
           "name": "JobCreated",
-          "type": "event",
-          "signature": "0xd4ae17fdeb78e69409330361e8f8475f8027928c6f28eae2195e5ae56570aba0"
+          "type": "event"
         },
         "0x9028bea5bfa7ed26c48df402d89085a995447dc8c1fb167cb92a3c7411b54480": {
           "anonymous": false,
@@ -6834,8 +6833,7 @@
             }
           ],
           "name": "JobReported",
-          "type": "event",
-          "signature": "0x9028bea5bfa7ed26c48df402d89085a995447dc8c1fb167cb92a3c7411b54480"
+          "type": "event"
         },
         "0x6ff3aa2ea7b53070f6d9d07a445d338d89e8edef44250ffa8be19f53910d4a2e": {
           "anonymous": false,
@@ -6847,8 +6845,7 @@
             }
           ],
           "name": "WriterAdded",
-          "type": "event",
-          "signature": "0x6ff3aa2ea7b53070f6d9d07a445d338d89e8edef44250ffa8be19f53910d4a2e"
+          "type": "event"
         },
         "0x86e5bbceda94081c32220d685f37cc4e3ea7bb0be2dfbf0cb703579505a5390e": {
           "anonymous": false,
@@ -6860,13 +6857,12 @@
             }
           ],
           "name": "WriterRemoved",
-          "type": "event",
-          "signature": "0x86e5bbceda94081c32220d685f37cc4e3ea7bb0be2dfbf0cb703579505a5390e"
+          "type": "event"
         }
       },
       "links": {},
-      "address": "0x6FFF54EECc33dD85845493D6ac9dbBbe83730C75",
-      "transactionHash": "0x1e6abd8e83c459ea75847d3d2517061344403e4b9d3ea49e4a4e66916f4c19c7"
+      "address": "0xd6CDcFDD054A351d3B95D8ac37f689665990abb3",
+      "transactionHash": "0xf846fceea9a323f3efc1ed36a96932f25371f2074fccb1fedcf452e69ef5951f"
     },
     "420": {
       "events": {
@@ -6920,8 +6916,7 @@
             }
           ],
           "name": "JobCreated",
-          "type": "event",
-          "signature": "0xd4ae17fdeb78e69409330361e8f8475f8027928c6f28eae2195e5ae56570aba0"
+          "type": "event"
         },
         "0x9028bea5bfa7ed26c48df402d89085a995447dc8c1fb167cb92a3c7411b54480": {
           "anonymous": false,
@@ -6983,8 +6978,7 @@
             }
           ],
           "name": "JobReported",
-          "type": "event",
-          "signature": "0x9028bea5bfa7ed26c48df402d89085a995447dc8c1fb167cb92a3c7411b54480"
+          "type": "event"
         },
         "0x6ff3aa2ea7b53070f6d9d07a445d338d89e8edef44250ffa8be19f53910d4a2e": {
           "anonymous": false,
@@ -6996,8 +6990,7 @@
             }
           ],
           "name": "WriterAdded",
-          "type": "event",
-          "signature": "0x6ff3aa2ea7b53070f6d9d07a445d338d89e8edef44250ffa8be19f53910d4a2e"
+          "type": "event"
         },
         "0x86e5bbceda94081c32220d685f37cc4e3ea7bb0be2dfbf0cb703579505a5390e": {
           "anonymous": false,
@@ -7009,8 +7002,7 @@
             }
           ],
           "name": "WriterRemoved",
-          "type": "event",
-          "signature": "0x86e5bbceda94081c32220d685f37cc4e3ea7bb0be2dfbf0cb703579505a5390e"
+          "type": "event"
         }
       },
       "links": {},
@@ -7018,8 +7010,8 @@
       "transactionHash": "0x1d0439600abac11edda7330975385c8260bf7410b4414a1d10eb5edd5d39b2c3"
     }
   },
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-25T04:41:08.206Z",
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-07-31T18:22:51.079Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {}
