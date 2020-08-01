@@ -1548,8 +1548,8 @@
         }
       },
       "links": {},
-      "address": "0x4a8a46610EB407923098587e02AC5f4b1c8b47F6",
-      "transactionHash": "0x5a3463433337c3fb88d8235a15563c3e865ef59bb1e55bb6cff7d70db5641fa4"
+      "address": "0xDcE95c6ad23d3954150eB40330D28A5AdfFea29C",
+      "transactionHash": "0x5540797249d67f41b8fc0aafc7a18be34de144f87c9300229dbc021530842e3c"
     },
     "420": {
       "events": {
@@ -1628,7 +1628,7 @@
     }
   },
   "schemaVersion": "3.2.3",
-  "updatedAt": "2020-07-31T18:22:50.996Z",
+  "updatedAt": "2020-08-01T07:40:16.582Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "Very simple ERC20 Token example, where all tokens are pre-assigned to the creator. Note they can later distribute these tokens as they wish using `transfer` and other `ERC20` functions.",
