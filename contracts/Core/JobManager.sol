@@ -55,4 +55,8 @@ contract JobManager is WriterRole, JobStorage {
         Structs.Job memory job = jobs[id];
         return(job.url, job.selector, job.name, job.repeat, job.result);
     }
+
+    function getNumJobs() external view returns(uint256) {
+        return numJobs;
+    }
 }
