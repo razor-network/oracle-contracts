@@ -251,7 +251,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
        // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
-            // return(0);
+            return;
         }
        // Structs.Block[] memory temp = proposedBlocks[epoch];
        // delete (proposedBlocks[epoch]);
@@ -283,7 +283,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }
-        // return(pushAt);
+        return;
     }
 
 
