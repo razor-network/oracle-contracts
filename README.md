@@ -9,7 +9,7 @@ These are the contracts for Razor network.
 3. Run ganache-cli
 `ganache-cli -s 0 -i 420 -a 30`
 4. Run tests
-`truffle test test/Schelling.js `
+`truffle test`
 5. For bigSchelling.js large number of accounts are required
 `ganache-cli -s 0 -i 420 -a 101`
 6. For testing with cli, set blocktime

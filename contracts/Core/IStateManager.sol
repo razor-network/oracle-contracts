@@ -1,9 +1,9 @@
-pragma solidity 0.5.10;
+pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 // import "../lib/Structs.sol";
 
 
-contract IStateManager {
+interface IStateManager {
     // for testing only. diable in prod
     function setEpoch (uint256 epoch) external;
 

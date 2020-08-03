@@ -1,4 +1,4 @@
-pragma solidity 0.5.10;
+pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 import "../SchellingCoin.sol";
 import "./Utils.sol";
@@ -241,7 +241,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     }
 
     /// @param _id The staker ID
-    /// @return The Struct of staker information
+    /// @return staker The Struct of staker information
     function getStaker(uint256 _id) external view returns(Structs.Staker memory staker) {
         return(stakers[_id]);
     }

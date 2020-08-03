@@ -1,44 +1,54 @@
-pragma solidity 0.5.10;
-
-import "openzeppelin-solidity/contracts/access/Roles.sol";
+pragma solidity 0.6.11;
 
 
-contract WriterRole {
-    using Roles for Roles.Role;
+import "openzeppelin-solidity/contracts/access/AccessControl.sol";
 
+
+contract WriterRole is AccessControl {
+    
+    bytes32 private constant WRITER_ROLE = keccak256("WRITER");
+    
     event WriterAdded(address indexed account);
     event WriterRemoved(address indexed account);
-
-    Roles.Role private _writers;
-
+    
     constructor () internal {
-        _addWriter(msg.sender);
+        _setRoleAdmin(WRITER_ROLE,DEFAULT_ADMIN_ROLE);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
+    
     modifier onlyWriter() {
         require(isWriter(msg.sender), "WriterRole: caller does not have the Writer role");
         _;
     }
 
-    function isWriter(address account) public view returns (bool) {
-        return _writers.has(account);
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender), "AdminRole: caller does not have the Admin role");
+        _;
     }
 
-    function addWriter(address account) public onlyWriter {
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
+    }
+
+    function isWriter(address account) public view returns (bool) {
+        return hasRole(WRITER_ROLE,account);
+    }
+    
+    function addWriter(address account) public onlyAdmin {
         _addWriter(account);
     }
 
-    function renounceWriter() public {
-        _removeWriter(msg.sender);
+    function renounceWriter(address account) public onlyAdmin {
+        _removeWriter(account);
     }
-
+    
     function _addWriter(address account) internal {
-        _writers.add(account);
+        grantRole(WRITER_ROLE, account);
         emit WriterAdded(account);
     }
-
+    
     function _removeWriter(address account) internal {
-        _writers.remove(account);
+        revokeRole(WRITER_ROLE, account);
         emit WriterRemoved(account);
     }
 }

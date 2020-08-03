@@ -35,8 +35,9 @@ contract('JobManager', function (accounts) {
       let jobManager = await JobManager.deployed()
       let url = 'http://testurl.com'
       let selector = 'selector'
+      let name = 'test'
       let repeat = true
-      await jobManager.createJob(url, selector, repeat)
+      await jobManager.createJob(url, selector, name, repeat)
       let job = await jobManager.jobs(1)
       assert(job.url === url)
       assert(job.selector === selector)
@@ -59,8 +60,9 @@ contract('JobManager', function (accounts) {
 
       let url = 'http://testurl.com/2'
       let selector = 'selector/2'
+      let name = 'test2'
       let repeat = true
-      await jobManager.createJob(url, selector, repeat)
+      await jobManager.createJob(url, selector, name, repeat)
       console.log(Number(await jobManager.numJobs()))
       // await jobManager.addWriter(accounts[0]),
       await jobManager.fulfillJob(2, 222)
