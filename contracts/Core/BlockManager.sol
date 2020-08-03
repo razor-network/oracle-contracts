@@ -283,7 +283,6 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
         if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }
-        return;
     }
 
 
