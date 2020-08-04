@@ -107,7 +107,16 @@ contract('BlockManager', function (accounts) {
         biggestStakerId,
         { 'from': accounts[5]})
       let proposedBlock = await blockManager.proposedBlocks(epoch, 0)
-      console.log(Number(proposedBlock.proposerId) === 1)
+      console.log(Number(proposedBlock.proposerId) === 1,"incorrect proposalID")
+    })
+
+    it('Number of proposals should be 1', async function(){
+      let blockManager = await BlockManager.deployed()
+      let epoch = await functions.getEpoch()
+
+      let nblocks = await blockManager.getNumProposedBlocks(epoch)
+
+      assert(Number(nblocks) === 1,"Only one block has been proposed till now. Incorrect Answer")
     })
 
     it('should be able to dispute', async function () {
