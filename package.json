@@ -22,7 +22,7 @@
   "dependencies": {
     "@razor-network/merkle": "^0.6.0",
     "openzeppelin-solidity": "^3.1.0",
-    "truffle-hdwallet-provider": "^1.0.12",
+    "@truffle/hdwallet-provider": "^1.0.40",
     "web3": "^1.2.1"
   },
   "devDependencies": {
