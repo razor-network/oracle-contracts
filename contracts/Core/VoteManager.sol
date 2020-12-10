@@ -72,7 +72,7 @@ contract VoteManager is  Utils, VoteStorage {
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         blockManager.confirmBlock();
-
+ 
         stakeManager.givePenalties(stakerId, epoch);
         // emit DebugUint256(y);
         if (thisStaker.stake >= Constants.minStake()) {
