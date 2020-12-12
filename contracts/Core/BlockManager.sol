@@ -8,10 +8,10 @@ import "./IStateManager.sol";
 import "./IVoteManager.sol";
 import "./IJobManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./WriterRole.sol";
+import "./ACL/BlockConfirmer.sol";
 
 
-contract BlockManager is Utils, WriterRole, BlockStorage {
+contract BlockManager is Utils, BlockConfirmer, BlockStorage {
     using SafeMath for uint256;
 
     IStakeManager public stakeManager;
@@ -222,7 +222,7 @@ contract BlockManager is Utils, WriterRole, BlockStorage {
                     uint256[] jobIds,
                     uint256 timestamp);
 
-    function confirmBlock() public onlyWriter {
+    function confirmBlock() public onlyblockConfirmer {
         uint256 epoch = stateManager.getEpoch();
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {

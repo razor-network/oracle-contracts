@@ -16,11 +16,11 @@ const BN = require('bn.js')
 var fs = require('fs')
 
 // todo remove deployer write access
-module.exports = async function(deployer,network, accounts) {
+module.exports = async function (deployer, network, accounts) {
     // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
 
     deployer.then(async () => {
-        
+
         await deployer.deploy(Constants)
         await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager, StateManager])
         await deployer.deploy(Structs)
@@ -34,7 +34,7 @@ module.exports = async function(deployer,network, accounts) {
         await deployer.deploy(JobManager)
         await deployer.deploy(Faucet)
         await deployer.deploy(Delegator)
-        await deployer.deploy(SchellingCoin,StakeManager.address)
+        await deployer.deploy(SchellingCoin, StakeManager.address)
         let token = await SchellingCoin.deployed()
         let block = await BlockManager.deployed()
         let vote = await VoteManager.deployed()
@@ -56,10 +56,11 @@ module.exports = async function(deployer,network, accounts) {
             stake.init(SchellingCoin.address, VoteManager.address, BlockManager.address, StateManager.address),
             job.init(StateManager.address),
             faucet.init(SchellingCoin.address),
-            block.addWriter(VoteManager.address),
-            stake.addWriter(VoteManager.address),
-            stake.addWriter(BlockManager.address),
-            job.addWriter(BlockManager.address),
+            block.addBlockConfirmer(VoteManager.address),
+            stake.addStakeModifier(BlockManager.address),
+            stake.addStakeModifier(VoteManager.address),
+            stake.addStakerActivityUpdater(VoteManager.address),
+            job.addJobConfirmer(BlockManager.address),
             delegator.upgradeDelegate(JobManager.address),
             // uncomment following for testnet
             // server stakers
@@ -78,7 +79,7 @@ module.exports = async function(deployer,network, accounts) {
                 '\\\n Block Manager: ' + BlockManager.address +
                 '\\\n Job Manager: ' + JobManager.address +
                 '\\\n Delegator: ' + Delegator.address,
-                function(err) {
+                function (err) {
                     if (err) throw err
                     console.log('Replaced ADDRESSES.md!')
                 })

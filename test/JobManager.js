@@ -55,8 +55,10 @@ contract('JobManager', function (accounts) {
       // console.log('addy', delegator.address)
       //
       let proxy = new web3.eth.Contract(jobManagerBuild['abi'], delegator.address,
-        { gas: 5000000,
-        gasPrice: 2000000000})
+        {
+          gas: 5000000,
+          gasPrice: 2000000000
+        })
 
       let url = 'http://testurl.com/2'
       let selector = 'selector/2'
