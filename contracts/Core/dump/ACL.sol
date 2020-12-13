@@ -28,46 +28,60 @@ contract JobConfirmer is AccessControl {
     constructor() internal {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender), "AccessControl: sender must be an admin to grant");
+        _;
+    }
     modifier onlyJobConfirmer() {
         require(isJobConfirmer(msg.sender), "AccessControl: sender must be an JobConfirmer to call this function");
         _;
-    }  
+    }
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
+    }
     function isJobConfirmer(address account) public view returns (bool) {
         return hasRole(JobConfirmerRole,account);
     }
-    function grantJobConfirmer(address account) public {
-        grantRole(JobConfirmerRole, account); // Restricted to Admin role
+    function grantJobConfirmer(address account) public onlyAdmin {
+        grantRole(JobConfirmerRole, account);
         emit JobConfirmerAdded(account);
     }
-    function revokeJobConfirmer (address account) public  {
-        revokeRole(JobConfirmerRole, account); // Restricted to Admin role
+    function revokeJobConfirmer (address account) public onlyAdmin {
+        revokeRole(JobConfirmerRole, account);
         emit JobConfirmerRemoved(account);
     }
 }
 contract BlockConfirmer is AccessControl {
 
     bytes32 public constant BlockConfirmerRole = keccak256("BlockConfirmer");
-
     event BlockConfirmerAdded(address indexed account);
     event BlockConfirmerRemoved(address indexed account);
 
     constructor() internal {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender), "AccessControl: sender must be an admin to grant");
+        _;
+    }
     modifier onlyblockConfirmer() {
         require(isBlockConfirmer(msg.sender), "AccessControl: sender must be an BlockConfirmer to call this function");
         _;
     }
+
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
+    }
     function isBlockConfirmer(address account) public view returns (bool) {
         return hasRole(BlockConfirmerRole,account);
     }
-    function grantBlockConfirmer(address account) public {
-        grantRole(BlockConfirmerRole, account); // Restricted to Admin role
+    function grantBlockConfirmer(address account) public onlyAdmin {
+        grantRole(BlockConfirmerRole, account);
         emit BlockConfirmerAdded(account);
     }
-    function revokeBlockConfirmer (address account) public {
-        revokeRole(BlockConfirmerRole, account); // Restricted to Admin role
+    function revokeBlockConfirmer (address account) public onlyAdmin {
+        revokeRole(BlockConfirmerRole, account);
         emit BlockConfirmerRemoved(account);
     }
 }
@@ -81,20 +95,26 @@ contract StakeModifier is AccessControl {
     constructor() internal {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender), "AccessControl: sender must be an admin to grant");
+        _;
+    }
     modifier onlyStakeModifier() {
         require(isStakeModifier(msg.sender), "AccessControl: sender must be an StakeModifier to call this function");
         _;
     }
-
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
+    }
     function isStakeModifier(address account) public view returns (bool) {
         return hasRole(StakeModifierRole,account);
     }
-    function grantStakeModifier(address account) public  {
-        grantRole(StakeModifierRole, account); // Restricted to Admin role
+    function grantStakeModifier(address account) public onlyAdmin {
+        grantRole(StakeModifierRole, account);
         emit StakeModifierAdded(account);
     }
-    function revokeStakeModifier (address account) public {
-        revokeRole(StakeModifierRole, account); // Restricted to Admin role
+    function revokeStakeModifier (address account) public onlyAdmin {
+        revokeRole(StakeModifierRole, account);
         emit StakeModifierRemoved(account);
     }
 }
@@ -109,19 +129,26 @@ contract StakerActivityUpdater is AccessControl {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    modifier onlyAdmin() {
+        require(isAdmin(msg.sender), "AccessControl: sender must be an admin to grant");
+        _;
+    }
     modifier onlyStakerActivityUpdater() {
         require(isStakerActivityUpdater(msg.sender), "AccessControl: sender must be an StakerActivityUpdater to call this function");
         _;
     }
+    function isAdmin(address account) public view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE,account);
+    }
     function isStakerActivityUpdater(address account) public view returns (bool) {
         return hasRole(StakerActivityUpdaterRole,account);
     }
-    function grantStakerActivityUpdater(address account) public  {
-        grantRole(StakerActivityUpdaterRole, account); // Restricted to Admin role
+    function grantStakerActivityUpdater(address account) public onlyAdmin {
+        grantRole(StakerActivityUpdaterRole, account);
         emit StakerActivityUpdaterAdded(account);
     }
-    function revokeStakerActivityUpdater (address account) public  {
-        revokeRole(StakerActivityUpdaterRole, account); // Restricted to Admin role
+    function revokeStakerActivityUpdater (address account) public onlyAdmin {
+        revokeRole(StakerActivityUpdaterRole, account);
         emit StakerActivityUpdaterRemoved(account);
     }
 }

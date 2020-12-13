@@ -8,8 +8,7 @@ import "./IStateManager.sol";
 import "./IVoteManager.sol";
 import "./IJobManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./ACL/BlockConfirmer.sol";
-
+import "./ACL.sol";
 
 contract BlockManager is Utils, BlockConfirmer, BlockStorage {
     using SafeMath for uint256;

@@ -3,8 +3,7 @@ pragma experimental ABIEncoderV2;
 import "./JobStorage.sol";
 import "./IStateManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "./ACL/JobConfirmer.sol";
-
+import "./ACL.sol";
 
 contract JobManager is JobConfirmer, JobStorage {
 

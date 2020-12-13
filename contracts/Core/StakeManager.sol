@@ -7,8 +7,8 @@ import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./IVoteManager.sol";
 import "../lib/Constants.sol";
-import "./ACL/StakeModifier.sol";
-import "./ACL/StakerActivityUpdater.sol";
+import "./ACL.sol";
+import "./ACL.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
 /// @title StakeManager
