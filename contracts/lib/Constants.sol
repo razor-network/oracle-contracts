@@ -22,5 +22,9 @@ library Constants {
     function numStates() public pure returns(uint256) { return(4); }
     function exposureDenominator() public pure returns(uint256) { return(1000); }
 
+    function getJobConfirmerHash() public pure returns(bytes32) { return(0xbe7b58e17bf6adaa0f209cd0db8b128282fc68a42f2dd649b4d8ea579f1b078f); /*keccak256("JOB_CONFIRMER_ROLE")*/}
+    function getBlockConfirmerHash() public pure returns(bytes32) { return(0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f);/*keccak256("BLOCK_CONFIRMER_ROLE"))*/}
+    function getStakeModifierHash() public pure returns(bytes32) { return(0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804);/*keccak256("STAKE_MODIFIER_ROLE"))*/}
+    function getStakerActivityUpdaterHash() public pure returns(bytes32) { return(0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece); /*keccak256("STAKER_ACTIVITY_UPDATER_ROLE"))*/}
  // Constants(0, 1, 2, 3, 1, 10000, 99, 100, 1000, 5, 5, 99, 1, 1);
 }

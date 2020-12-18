@@ -1,0 +1,233 @@
+{
+  "contractName": "Utils",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "a",
+          "type": "uint256"
+        }
+      ],
+      "name": "DebugUint256",
+      "type": "event"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0x10ddfbfc87860275cd3eb5495921aecb01f48871261c894e814208293e0942e7\",\"urls\":[\"bzz-raw://7f19ecc9da3c6a917adf07aa2a5bf1719fdcf4394f50c89ae1c4a87024b77884\",\"dweb:/ipfs/QmWwAKca5FyuAVUcwwR7NpApBXKRNwE8ECh8naY4V2oZVi\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220d35f960dc7356ff15006748110fee7c3d41c5f3979a26e88d94b6fff014e1c4264736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052600080fdfea2646970667358221220d35f960dc7356ff15006748110fee7c3d41c5f3979a26e88d94b6fff014e1c4264736f6c634300060b0033",
+  "immutableReferences": {},
+  "sourceMap": "64:57:14:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "64:57:14:-:0;;;;;",
+  "source": "pragma solidity 0.6.11;\r\npragma experimental ABIEncoderV2;\r\n\r\n\r\ncontract Utils {\r\n\r\n    event DebugUint256(uint256 a);\r\n}\r\n",
+  "sourcePath": "C:\\Users\\ASUS\\Desktop\\Razor\\contracts\\contracts\\Core\\Utils.sol",
+  "ast": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/Utils.sol",
+    "exportedSymbols": {
+      "Utils": [
+        3460
+      ]
+    },
+    "id": 3461,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3454,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:14"
+      },
+      {
+        "id": 3455,
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "25:33:14"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 3460,
+        "linearizedBaseContracts": [
+          3460
+        ],
+        "name": "Utils",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 3459,
+            "name": "DebugUint256",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 3458,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3457,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "a",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 3459,
+                  "src": "107:9:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3456,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "107:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "106:11:14"
+            },
+            "src": "88:30:14"
+          }
+        ],
+        "scope": 3461,
+        "src": "64:57:14"
+      }
+    ],
+    "src": "0:123:14"
+  },
+  "legacyAST": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/Utils.sol",
+    "exportedSymbols": {
+      "Utils": [
+        3460
+      ]
+    },
+    "id": 3461,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3454,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:14"
+      },
+      {
+        "id": 3455,
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "25:33:14"
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 3460,
+        "linearizedBaseContracts": [
+          3460
+        ],
+        "name": "Utils",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "anonymous": false,
+            "documentation": null,
+            "id": 3459,
+            "name": "DebugUint256",
+            "nodeType": "EventDefinition",
+            "parameters": {
+              "id": 3458,
+              "nodeType": "ParameterList",
+              "parameters": [
+                {
+                  "constant": false,
+                  "id": 3457,
+                  "indexed": false,
+                  "mutability": "mutable",
+                  "name": "a",
+                  "nodeType": "VariableDeclaration",
+                  "overrides": null,
+                  "scope": 3459,
+                  "src": "107:9:14",
+                  "stateVariable": false,
+                  "storageLocation": "default",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  },
+                  "typeName": {
+                    "id": 3456,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "107:7:14",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "value": null,
+                  "visibility": "internal"
+                }
+              ],
+              "src": "106:11:14"
+            },
+            "src": "88:30:14"
+          }
+        ],
+        "scope": 3461,
+        "src": "64:57:14"
+      }
+    ],
+    "src": "0:123:14"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.3.2",
+  "updatedAt": "2020-12-17T07:49:54.163Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

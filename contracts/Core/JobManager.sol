@@ -4,8 +4,9 @@ import "./JobStorage.sol";
 import "./IStateManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ACL.sol";
+import "../lib/Constants.sol";
 
-contract JobManager is JobConfirmer, JobStorage {
+contract JobManager is ACL, JobStorage {
 
     event JobCreated(uint256 id, uint256 epoch, string url, string selector, string name, bool repeat,
                             address creator, uint256 credit, uint256 timestamp);
@@ -32,7 +33,7 @@ contract JobManager is JobConfirmer, JobStorage {
         // jobs.push(job);
     }
 
-    function fulfillJob(uint256 jobId, uint256 value) external onlyJobConfirmer {
+    function fulfillJob(uint256 jobId, uint256 value) external onlyRole(Constants.getJobConfirmerHash()){
         Structs.Job storage job = jobs[jobId];
         uint256 epoch = stateManager.getEpoch();
 

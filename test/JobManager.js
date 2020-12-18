@@ -9,6 +9,7 @@ let functions = require('./helpers/functions')
 // let BlockManager = artifacts.require('./BlockManager.sol')
 let JobManager = artifacts.require('./JobManager.sol')
 let Delegator = artifacts.require('./Delegator.sol')
+var Constants = artifacts.require('./lib/Constants.sol')
 
 let jobManagerBuild = require('../build/contracts/JobManager.json')
 let delegatorBuild = require('../build/contracts/Delegator.json')
@@ -47,6 +48,7 @@ contract('JobManager', function (accounts) {
     })
 
     it('should be able to get result using proxy', async function () {
+      let constants = await Constants.deployed()
       // let stakeManager = await StakeManager.deployed()
       let jobManager = await JobManager.deployed()
       let delegator = await Delegator.deployed()
@@ -66,7 +68,7 @@ contract('JobManager', function (accounts) {
       let repeat = true
       await jobManager.createJob(url, selector, name, repeat)
       console.log(Number(await jobManager.numJobs()))
-      // await jobManager.addWriter(accounts[0]),
+      jobManager.grantRole(await constants.getJobConfirmerHash(), accounts[0])
       await jobManager.fulfillJob(2, 222)
       // function fulfillJob(uint256 jobId, uint256 value) external onlyWriter {
 

@@ -9,10 +9,10 @@ import "./IVoteManager.sol";
 import "./IJobManager.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "./ACL.sol";
+import "../lib/Constants.sol";
 
-contract BlockManager is Utils, BlockConfirmer, BlockStorage {
+contract BlockManager is Utils, ACL, BlockStorage {
     using SafeMath for uint256;
-
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IVoteManager public voteManager;
@@ -221,7 +221,7 @@ contract BlockManager is Utils, BlockConfirmer, BlockStorage {
                     uint256[] jobIds,
                     uint256 timestamp);
 
-    function confirmBlock() public onlyblockConfirmer {
+    function confirmBlock() public onlyRole(Constants.getBlockConfirmerHash()) {
         uint256 epoch = stateManager.getEpoch();
         if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
             for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {

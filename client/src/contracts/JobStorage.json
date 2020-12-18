@@ -1,0 +1,389 @@
+{
+  "contractName": "JobStorage",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "jobs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "url",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "selector",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "bool",
+          "name": "repeat",
+          "type": "bool"
+        },
+        {
+          "internalType": "address",
+          "name": "creator",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "credit",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "fulfilled",
+          "type": "bool"
+        },
+        {
+          "internalType": "uint256",
+          "name": "result",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "numJobs",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"jobs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"epoch\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"url\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"selector\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"name\",\"type\":\"string\"},{\"internalType\":\"bool\",\"name\":\"repeat\",\"type\":\"bool\"},{\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"credit\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"fulfilled\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"numJobs\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/JobStorage.sol\":\"JobStorage\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/JobStorage.sol\":{\"keccak256\":\"0x33ae8161836ebba302163c0471f4d621d45003b49a1fde8eee0ff8c94c717336\",\"urls\":[\"bzz-raw://5e2e60dd3e13f02f45816a120073d8393fc7cd43c4434acbbfe941abeeb6ee91\",\"dweb:/ipfs/QmdnG3FkwpFkVxH7oUiWiVyz8K8LTKLVS9dC5oJMqUeud9\"]},\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0xadbabfc413f3c10c59b61621036b6f5f6c8185d2de156da5302af9670789424c\",\"urls\":[\"bzz-raw://ad0cef2dcff5dea032e75a420869130c24186584116063de9effe68f6f22c0a8\",\"dweb:/ipfs/QmbKtodyRwEbZgS3DMuLikva8Nv215omdmmoLFKFwKYaG3\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506103a4806100206000396000f3fe608060405234801561001057600080fd5b50600436106100365760003560e01c8063180aedf31461003b5780639212051c1461006d575b600080fd5b61004e610049366004610280565b610082565b6040516100649a999897969594939291906102ec565b60405180910390f35b61007561027a565b60405161006491906102e3565b6000602081815291815260409081902080546001808301546002808501805487519481161561010002600019011691909104601f810188900488028401880190965285835292959094919291908301828280156101205780601f106100f557610100808354040283529160200191610120565b820191906000526020600020905b81548152906001019060200180831161010357829003601f168201915b5050505060038301805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529495949350908301828280156101b05780601f10610185576101008083540402835291602001916101b0565b820191906000526020600020905b81548152906001019060200180831161019357829003601f168201915b5050505060048301805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529495949350908301828280156102405780601f1061021557610100808354040283529160200191610240565b820191906000526020600020905b81548152906001019060200180831161022357829003601f168201915b50505050600583015460068401546007850154600890950154939460ff808416956101009094046001600160a01b0316945091929116908a565b60015481565b600060208284031215610291578081fd5b5035919050565b60008151808452815b818110156102bd576020818501810151868301820152016102a1565b818111156102ce5782602083870101525b50601f01601f19169290920160200192915050565b90815260200190565b60006101408c83528b602084015280604084015261030c8184018c610298565b838103606085015261031e818c610298565b9150508281036080840152610333818a610298565b97151560a084015250506001600160a01b039490941660c085015260e08401929092521515610100830152610120909101529594505050505056fea264697066735822122007994a893447af4d4b3999b73d9dddfc8a40df10baa361e8a5787b3c8e523c0564736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100365760003560e01c8063180aedf31461003b5780639212051c1461006d575b600080fd5b61004e610049366004610280565b610082565b6040516100649a999897969594939291906102ec565b60405180910390f35b61007561027a565b60405161006491906102e3565b6000602081815291815260409081902080546001808301546002808501805487519481161561010002600019011691909104601f810188900488028401880190965285835292959094919291908301828280156101205780601f106100f557610100808354040283529160200191610120565b820191906000526020600020905b81548152906001019060200180831161010357829003601f168201915b5050505060038301805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529495949350908301828280156101b05780601f10610185576101008083540402835291602001916101b0565b820191906000526020600020905b81548152906001019060200180831161019357829003601f168201915b5050505060048301805460408051602060026001851615610100026000190190941693909304601f81018490048402820184019092528181529495949350908301828280156102405780601f1061021557610100808354040283529160200191610240565b820191906000526020600020905b81548152906001019060200180831161022357829003601f168201915b50505050600583015460068401546007850154600890950154939460ff808416956101009094046001600160a01b0316945091929116908a565b60015481565b600060208284031215610291578081fd5b5035919050565b60008151808452815b818110156102bd576020818501810151868301820152016102a1565b818111156102ce5782602083870101525b50601f01601f19169290920160200192915050565b90815260200190565b60006101408c83528b602084015280604084015261030c8184018c610298565b838103606085015261031e818c610298565b9150508281036080840152610333818a610298565b97151560a084015250506001600160a01b039490941660c085015260e08401929092521515610100830152610120909101529594505050505056fea264697066735822122007994a893447af4d4b3999b73d9dddfc8a40df10baa361e8a5787b3c8e523c0564736f6c634300060b0033",
+  "immutableReferences": {},
+  "sourceMap": "94:104:10:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "94:104:10:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;121:44;;;;;;:::i;:::-;;:::i;:::-;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;172:22;;;:::i;:::-;;;;;;;:::i;121:44::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;121:44:10;;;;;;;;;;;;;;;;-1:-1:-1;;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;121:44:10;;;;;;;;;;;;;;;;-1:-1:-1;;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;121:44:10;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;121:44:10;;-1:-1:-1;121:44:10;;;;;;:::o;172:22::-;;;;:::o;142:241:-1:-;;246:2;234:9;225:7;221:23;217:32;214:2;;;-1:-1;;252:12;214:2;-1:-1;72:20;;208:175;-1:-1;208:175::o;621:347::-;;766:5;2887:12;3044:6;3039:3;3032:19;-1:-1;3570:101;3584:6;3581:1;3578:13;3570:101;;;3081:4;3651:11;;;;;3645:18;3632:11;;;;;3625:39;3599:10;3570:101;;;3686:6;3683:1;3680:13;3677:2;;;-1:-1;3081:4;3742:6;3076:3;3733:16;;3726:27;3677:2;-1:-1;3858:7;3842:14;-1:-1;;3838:28;924:39;;;;3081:4;924:39;;713:255;-1:-1;;713:255::o;1095:222::-;1046:37;;;1222:2;1207:18;;1193:124::o;1324:1468::-;;1751:3;1076:5;1053:3;1046:37;1076:5;1916:2;1905:9;1901:18;1046:37;1751:3;1953:2;1942:9;1938:18;1931:48;1993:78;1751:3;1740:9;1736:19;2057:6;1993:78;:::i;:::-;2119:9;2113:4;2109:20;2104:2;2093:9;2089:18;2082:48;2144:78;2217:4;2208:6;2144:78;:::i;:::-;2136:86;;;2271:9;2265:4;2261:20;2255:3;2244:9;2240:19;2233:49;2296:78;2369:4;2360:6;2296:78;:::i;:::-;3264:13;;3257:21;2447:3;2432:19;;575:34;-1:-1;;;;;;;3352:54;;;;2531:3;2516:19;;461:37;2615:3;2600:19;;1046:37;;;;3264:13;3257:21;2693:3;2678:19;;575:34;2777:3;2762:19;;;1046:37;2288:86;1722:1070;-1:-1;;;;;1722:1070::o",
+  "source": "pragma solidity 0.6.11;\r\npragma experimental ABIEncoderV2;\r\nimport \"../lib/Structs.sol\";\r\n\r\n\r\ncontract JobStorage {\r\n    mapping (uint256 => Structs.Job) public jobs;\r\n    uint256 public numJobs;\r\n}\r\n",
+  "sourcePath": "C:\\Users\\ASUS\\Desktop\\Razor\\contracts\\contracts\\Core\\JobStorage.sol",
+  "ast": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/JobStorage.sol",
+    "exportedSymbols": {
+      "JobStorage": [
+        1977
+      ]
+    },
+    "id": 1978,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1968,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:10"
+      },
+      {
+        "id": 1969,
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "25:33:10"
+      },
+      {
+        "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol",
+        "file": "../lib/Structs.sol",
+        "id": 1970,
+        "nodeType": "ImportDirective",
+        "scope": 1978,
+        "sourceUnit": 5637,
+        "src": "60:28:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1977,
+        "linearizedBaseContracts": [
+          1977
+        ],
+        "name": "JobStorage",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "functionSelector": "180aedf3",
+            "id": 1974,
+            "mutability": "mutable",
+            "name": "jobs",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 1977,
+            "src": "121:44:10",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Job_$5635_storage_$",
+              "typeString": "mapping(uint256 => struct Structs.Job)"
+            },
+            "typeName": {
+              "id": 1973,
+              "keyType": {
+                "id": 1971,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "130:7:10",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "121:32:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Job_$5635_storage_$",
+                "typeString": "mapping(uint256 => struct Structs.Job)"
+              },
+              "valueType": {
+                "contractScope": null,
+                "id": 1972,
+                "name": "Structs.Job",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 5635,
+                "src": "141:11:10",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_Job_$5635_storage_ptr",
+                  "typeString": "struct Structs.Job"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "9212051c",
+            "id": 1976,
+            "mutability": "mutable",
+            "name": "numJobs",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 1977,
+            "src": "172:22:10",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 1975,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "172:7:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1978,
+        "src": "94:104:10"
+      }
+    ],
+    "src": "0:200:10"
+  },
+  "legacyAST": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/JobStorage.sol",
+    "exportedSymbols": {
+      "JobStorage": [
+        1977
+      ]
+    },
+    "id": 1978,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 1968,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:10"
+      },
+      {
+        "id": 1969,
+        "literals": [
+          "experimental",
+          "ABIEncoderV2"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "25:33:10"
+      },
+      {
+        "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol",
+        "file": "../lib/Structs.sol",
+        "id": 1970,
+        "nodeType": "ImportDirective",
+        "scope": 1978,
+        "sourceUnit": 5637,
+        "src": "60:28:10",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 1977,
+        "linearizedBaseContracts": [
+          1977
+        ],
+        "name": "JobStorage",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "functionSelector": "180aedf3",
+            "id": 1974,
+            "mutability": "mutable",
+            "name": "jobs",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 1977,
+            "src": "121:44:10",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Job_$5635_storage_$",
+              "typeString": "mapping(uint256 => struct Structs.Job)"
+            },
+            "typeName": {
+              "id": 1973,
+              "keyType": {
+                "id": 1971,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "130:7:10",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "121:32:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Job_$5635_storage_$",
+                "typeString": "mapping(uint256 => struct Structs.Job)"
+              },
+              "valueType": {
+                "contractScope": null,
+                "id": 1972,
+                "name": "Structs.Job",
+                "nodeType": "UserDefinedTypeName",
+                "referencedDeclaration": 5635,
+                "src": "141:11:10",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_struct$_Job_$5635_storage_ptr",
+                  "typeString": "struct Structs.Job"
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "9212051c",
+            "id": 1976,
+            "mutability": "mutable",
+            "name": "numJobs",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 1977,
+            "src": "172:22:10",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_uint256",
+              "typeString": "uint256"
+            },
+            "typeName": {
+              "id": 1975,
+              "name": "uint256",
+              "nodeType": "ElementaryTypeName",
+              "src": "172:7:10",
+              "typeDescriptions": {
+                "typeIdentifier": "t_uint256",
+                "typeString": "uint256"
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 1978,
+        "src": "94:104:10"
+      }
+    ],
+    "src": "0:200:10"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.3.2",
+  "updatedAt": "2020-12-17T07:49:54.160Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

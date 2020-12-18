@@ -1,0 +1,863 @@
+{
+  "contractName": "VoteStorage",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "commitments",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "totalStakeRevealed",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "voteWeights",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "votes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "value",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "weight",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"commitments\",\"outputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"totalStakeRevealed\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"voteWeights\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"votes\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"value\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"weight\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/VoteStorage.sol\":\"VoteStorage\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/VoteStorage.sol\":{\"keccak256\":\"0x81c5693f0e5327c10e868ccbb8a3a8fe838767aac6807dfd3f502f036e1642e7\",\"urls\":[\"bzz-raw://f49bb861498b07f7782e526087eef055f2f5b05546882efaab5591cfbab33e81\",\"dweb:/ipfs/QmXp6Yo5cNHb32dqiAo2Fhh45C2AKWytUat7t2fjcu7fLr\"]},\"/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol\":{\"keccak256\":\"0xadbabfc413f3c10c59b61621036b6f5f6c8185d2de156da5302af9670789424c\",\"urls\":[\"bzz-raw://ad0cef2dcff5dea032e75a420869130c24186584116063de9effe68f6f22c0a8\",\"dweb:/ipfs/QmbKtodyRwEbZgS3DMuLikva8Nv215omdmmoLFKFwKYaG3\"]}},\"version\":1}",
+  "bytecode": "0x608060405234801561001057600080fd5b506101cc806100206000396000f3fe608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea26469706673582212205a65710fc8675919eb0cc24f00b48917f8304e1a9241ae363884f9c4b8c5b2b764736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b506004361061004c5760003560e01c8063283e2905146100515780638a757ecc146100935780638fd5ff00146100c8578063d13e2e60146100f1575b600080fd5b61007a6004803603606081101561006757600080fd5b5080359060208101359060400135610114565b6040805192835260208301919091528051918290030190f35b6100b6600480360360408110156100a957600080fd5b508035906020013561013c565b60408051918252519081900360200190f35b6100b6600480360360608110156100de57600080fd5b5080359060208101359060400135610159565b6100b66004803603604081101561010757600080fd5b508035906020013561017c565b6001602081815260009485526040808620825293855283852090529083529120805491015482565b600260209081526000928352604080842090915290825290205481565b600360209081526000938452604080852082529284528284209052825290205481565b60006020818152928152604080822090935290815220548156fea26469706673582212205a65710fc8675919eb0cc24f00b48917f8304e1a9241ae363884f9c4b8c5b2b764736f6c634300060b0033",
+  "immutableReferences": {},
+  "sourceMap": "61:530:16:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "61:530:16:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;237:89;;;;;;;;;;;;;;;;-1:-1:-1;237:89:16;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;371:76;;;;;;;;;;;;;;;;-1:-1:-1;371:76:16;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;495:90;;;;;;;;;;;;;;;;-1:-1:-1;495:90:16;;;;;;;;;;;;:::i;124:68::-;;;;;;;;;;;;;;;;-1:-1:-1;124:68:16;;;;;;;:::i;237:89::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;371:76::-;;;;;;;;;;;;;;;;;;;;;;;;:::o;495:90::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;124:68::-;;;;;;;;;;;;;;;;;;;;;;:::o",
+  "source": "pragma solidity 0.6.11;\r\n\r\nimport \"../lib/Structs.sol\";\r\n\r\n\r\ncontract VoteStorage {\r\n    //epoch->stakerid->commitment\r\n    mapping (uint256 => mapping (uint256 => bytes32)) public commitments;\r\n    //epoch->stakerid->assetid->vote\r\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;\r\n    // epoch -> asset -> stakeWeight\r\n    mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;\r\n    //epoch->assetid->voteValue->weight\r\n    mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;\r\n\r\n}\r\n",
+  "sourcePath": "C:\\Users\\ASUS\\Desktop\\Razor\\contracts\\contracts\\Core\\VoteStorage.sol",
+  "ast": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/VoteStorage.sol",
+    "exportedSymbols": {
+      "VoteStorage": [
+        4028
+      ]
+    },
+    "id": 4029,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3998,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:16"
+      },
+      {
+        "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol",
+        "file": "../lib/Structs.sol",
+        "id": 3999,
+        "nodeType": "ImportDirective",
+        "scope": 4029,
+        "sourceUnit": 5637,
+        "src": "27:28:16",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 4028,
+        "linearizedBaseContracts": [
+          4028
+        ],
+        "name": "VoteStorage",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "functionSelector": "d13e2e60",
+            "id": 4005,
+            "mutability": "mutable",
+            "name": "commitments",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "124:68:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
+            },
+            "typeName": {
+              "id": 4004,
+              "keyType": {
+                "id": 4000,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "133:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "124:49:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
+              },
+              "valueType": {
+                "id": 4003,
+                "keyType": {
+                  "id": 4001,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "153:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "144:28:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_bytes32_$",
+                  "typeString": "mapping(uint256 => bytes32)"
+                },
+                "valueType": {
+                  "id": 4002,
+                  "name": "bytes32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "164:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "283e2905",
+            "id": 4013,
+            "mutability": "mutable",
+            "name": "votes",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "237:89:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
+            },
+            "typeName": {
+              "id": 4012,
+              "keyType": {
+                "id": 4006,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "246:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "237:76:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
+              },
+              "valueType": {
+                "id": 4011,
+                "keyType": {
+                  "id": 4007,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "266:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "257:55:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$",
+                  "typeString": "mapping(uint256 => mapping(uint256 => struct Structs.Vote))"
+                },
+                "valueType": {
+                  "id": 4010,
+                  "keyType": {
+                    "id": 4008,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "287:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "Mapping",
+                  "src": "278:33:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$",
+                    "typeString": "mapping(uint256 => struct Structs.Vote)"
+                  },
+                  "valueType": {
+                    "contractScope": null,
+                    "id": 4009,
+                    "name": "Structs.Vote",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 5563,
+                    "src": "298:12:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Vote_$5563_storage_ptr",
+                      "typeString": "struct Structs.Vote"
+                    }
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "8a757ecc",
+            "id": 4019,
+            "mutability": "mutable",
+            "name": "totalStakeRevealed",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "371:76:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+            },
+            "typeName": {
+              "id": 4018,
+              "keyType": {
+                "id": 4014,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "380:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "371:50:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+              },
+              "valueType": {
+                "id": 4017,
+                "keyType": {
+                  "id": 4015,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "401:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "392:28:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
+                  "typeString": "mapping(uint256 => uint256)"
+                },
+                "valueType": {
+                  "id": 4016,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "412:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "8fd5ff00",
+            "id": 4027,
+            "mutability": "mutable",
+            "name": "voteWeights",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "495:90:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
+            },
+            "typeName": {
+              "id": 4026,
+              "keyType": {
+                "id": 4020,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "504:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "495:71:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
+              },
+              "valueType": {
+                "id": 4025,
+                "keyType": {
+                  "id": 4021,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "524:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "515:50:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+                  "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+                },
+                "valueType": {
+                  "id": 4024,
+                  "keyType": {
+                    "id": 4022,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "545:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "Mapping",
+                  "src": "536:28:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
+                    "typeString": "mapping(uint256 => uint256)"
+                  },
+                  "valueType": {
+                    "id": 4023,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "556:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 4029,
+        "src": "61:530:16"
+      }
+    ],
+    "src": "0:593:16"
+  },
+  "legacyAST": {
+    "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/Core/VoteStorage.sol",
+    "exportedSymbols": {
+      "VoteStorage": [
+        4028
+      ]
+    },
+    "id": 4029,
+    "license": null,
+    "nodeType": "SourceUnit",
+    "nodes": [
+      {
+        "id": 3998,
+        "literals": [
+          "solidity",
+          "0.6",
+          ".11"
+        ],
+        "nodeType": "PragmaDirective",
+        "src": "0:23:16"
+      },
+      {
+        "absolutePath": "/C/Users/ASUS/Desktop/Razor/contracts/contracts/lib/Structs.sol",
+        "file": "../lib/Structs.sol",
+        "id": 3999,
+        "nodeType": "ImportDirective",
+        "scope": 4029,
+        "sourceUnit": 5637,
+        "src": "27:28:16",
+        "symbolAliases": [],
+        "unitAlias": ""
+      },
+      {
+        "abstract": false,
+        "baseContracts": [],
+        "contractDependencies": [],
+        "contractKind": "contract",
+        "documentation": null,
+        "fullyImplemented": true,
+        "id": 4028,
+        "linearizedBaseContracts": [
+          4028
+        ],
+        "name": "VoteStorage",
+        "nodeType": "ContractDefinition",
+        "nodes": [
+          {
+            "constant": false,
+            "functionSelector": "d13e2e60",
+            "id": 4005,
+            "mutability": "mutable",
+            "name": "commitments",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "124:68:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
+            },
+            "typeName": {
+              "id": 4004,
+              "keyType": {
+                "id": 4000,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "133:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "124:49:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_bytes32_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => bytes32))"
+              },
+              "valueType": {
+                "id": 4003,
+                "keyType": {
+                  "id": 4001,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "153:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "144:28:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_bytes32_$",
+                  "typeString": "mapping(uint256 => bytes32)"
+                },
+                "valueType": {
+                  "id": 4002,
+                  "name": "bytes32",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "164:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_bytes32",
+                    "typeString": "bytes32"
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "283e2905",
+            "id": 4013,
+            "mutability": "mutable",
+            "name": "votes",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "237:89:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
+            },
+            "typeName": {
+              "id": 4012,
+              "keyType": {
+                "id": 4006,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "246:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "237:76:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => struct Structs.Vote)))"
+              },
+              "valueType": {
+                "id": 4011,
+                "keyType": {
+                  "id": 4007,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "266:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "257:55:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$_$",
+                  "typeString": "mapping(uint256 => mapping(uint256 => struct Structs.Vote))"
+                },
+                "valueType": {
+                  "id": 4010,
+                  "keyType": {
+                    "id": 4008,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "287:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "Mapping",
+                  "src": "278:33:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_struct$_Vote_$5563_storage_$",
+                    "typeString": "mapping(uint256 => struct Structs.Vote)"
+                  },
+                  "valueType": {
+                    "contractScope": null,
+                    "id": 4009,
+                    "name": "Structs.Vote",
+                    "nodeType": "UserDefinedTypeName",
+                    "referencedDeclaration": 5563,
+                    "src": "298:12:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_struct$_Vote_$5563_storage_ptr",
+                      "typeString": "struct Structs.Vote"
+                    }
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "8a757ecc",
+            "id": 4019,
+            "mutability": "mutable",
+            "name": "totalStakeRevealed",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "371:76:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+            },
+            "typeName": {
+              "id": 4018,
+              "keyType": {
+                "id": 4014,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "380:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "371:50:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+              },
+              "valueType": {
+                "id": 4017,
+                "keyType": {
+                  "id": 4015,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "401:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "392:28:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
+                  "typeString": "mapping(uint256 => uint256)"
+                },
+                "valueType": {
+                  "id": 4016,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "412:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          },
+          {
+            "constant": false,
+            "functionSelector": "8fd5ff00",
+            "id": 4027,
+            "mutability": "mutable",
+            "name": "voteWeights",
+            "nodeType": "VariableDeclaration",
+            "overrides": null,
+            "scope": 4028,
+            "src": "495:90:16",
+            "stateVariable": true,
+            "storageLocation": "default",
+            "typeDescriptions": {
+              "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
+              "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
+            },
+            "typeName": {
+              "id": 4026,
+              "keyType": {
+                "id": 4020,
+                "name": "uint256",
+                "nodeType": "ElementaryTypeName",
+                "src": "504:7:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_uint256",
+                  "typeString": "uint256"
+                }
+              },
+              "nodeType": "Mapping",
+              "src": "495:71:16",
+              "typeDescriptions": {
+                "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$_$",
+                "typeString": "mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256)))"
+              },
+              "valueType": {
+                "id": 4025,
+                "keyType": {
+                  "id": 4021,
+                  "name": "uint256",
+                  "nodeType": "ElementaryTypeName",
+                  "src": "524:7:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_uint256",
+                    "typeString": "uint256"
+                  }
+                },
+                "nodeType": "Mapping",
+                "src": "515:50:16",
+                "typeDescriptions": {
+                  "typeIdentifier": "t_mapping$_t_uint256_$_t_mapping$_t_uint256_$_t_uint256_$_$",
+                  "typeString": "mapping(uint256 => mapping(uint256 => uint256))"
+                },
+                "valueType": {
+                  "id": 4024,
+                  "keyType": {
+                    "id": 4022,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "545:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  },
+                  "nodeType": "Mapping",
+                  "src": "536:28:16",
+                  "typeDescriptions": {
+                    "typeIdentifier": "t_mapping$_t_uint256_$_t_uint256_$",
+                    "typeString": "mapping(uint256 => uint256)"
+                  },
+                  "valueType": {
+                    "id": 4023,
+                    "name": "uint256",
+                    "nodeType": "ElementaryTypeName",
+                    "src": "556:7:16",
+                    "typeDescriptions": {
+                      "typeIdentifier": "t_uint256",
+                      "typeString": "uint256"
+                    }
+                  }
+                }
+              }
+            },
+            "value": null,
+            "visibility": "public"
+          }
+        ],
+        "scope": 4029,
+        "src": "61:530:16"
+      }
+    ],
+    "src": "0:593:16"
+  },
+  "compiler": {
+    "name": "solc",
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
+  },
+  "networks": {},
+  "schemaVersion": "3.3.2",
+  "updatedAt": "2020-12-17T07:49:54.165Z",
+  "devdoc": {
+    "kind": "dev",
+    "methods": {},
+    "version": 1
+  },
+  "userdoc": {
+    "kind": "user",
+    "methods": {},
+    "version": 1
+  }
+}

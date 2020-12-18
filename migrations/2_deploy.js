@@ -18,11 +18,9 @@ var fs = require('fs')
 // todo remove deployer write access
 module.exports = async function (deployer, network, accounts) {
     // let dai = await deployer.deploy(Dai, 'DAI', 'DAI')
-
     deployer.then(async () => {
-
         await deployer.deploy(Constants)
-        await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager, StateManager])
+        await deployer.link(Constants, [Random, VoteManager, StakeManager, BlockManager, StateManager, JobManager])
         await deployer.deploy(Structs)
         await deployer.link(Structs, [StakeManager, StakeManager, BlockManager, JobManager])
         await deployer.deploy(Random)
@@ -42,6 +40,7 @@ module.exports = async function (deployer, network, accounts) {
         let job = await JobManager.deployed()
         let faucet = await Faucet.deployed()
         let delegator = await Delegator.deployed()
+        let constants = await Constants.deployed()
         let seed = new BN('10')
         let pow = new BN('24')
         seed = seed.pow(pow)
@@ -56,11 +55,13 @@ module.exports = async function (deployer, network, accounts) {
             stake.init(SchellingCoin.address, VoteManager.address, BlockManager.address, StateManager.address),
             job.init(StateManager.address),
             faucet.init(SchellingCoin.address),
-            block.addBlockConfirmer(VoteManager.address),
-            stake.addStakeModifier(BlockManager.address),
-            stake.addStakeModifier(VoteManager.address),
-            stake.addStakerActivityUpdater(VoteManager.address),
-            job.addJobConfirmer(BlockManager.address),
+
+            job.grantRole(await constants.getJobConfirmerHash(), BlockManager.address),
+            block.grantRole(await constants.getBlockConfirmerHash(), VoteManager.address),
+            stake.grantRole(await constants.getStakeModifierHash(), BlockManager.address),
+            stake.grantRole(await constants.getStakeModifierHash(), VoteManager.address),
+            stake.grantRole(await constants.getStakerActivityUpdaterHash(), VoteManager.address),
+
             delegator.upgradeDelegate(JobManager.address),
             // uncomment following for testnet
             // server stakers
