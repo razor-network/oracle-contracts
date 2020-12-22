@@ -2,91 +2,88 @@
   "contractName": "IStateManager",
   "abi": [
     {
-      "constant": false,
       "inputs": [
         {
+          "internalType": "uint256",
           "name": "epoch",
           "type": "uint256"
         }
       ],
       "name": "setEpoch",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": false,
       "inputs": [
         {
+          "internalType": "uint256",
           "name": "state",
           "type": "uint256"
         }
       ],
       "name": "setState",
       "outputs": [],
-      "payable": false,
       "stateMutability": "nonpayable",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "getEpoch",
       "outputs": [
         {
+          "internalType": "uint256",
           "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     },
     {
-      "constant": true,
       "inputs": [],
       "name": "getState",
       "outputs": [
         {
+          "internalType": "uint256",
           "name": "",
           "type": "uint256"
         }
       ],
-      "payable": false,
       "stateMutability": "view",
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"constant\":false,\"inputs\":[{\"name\":\"epoch\",\"type\":\"uint256\"}],\"name\":\"setEpoch\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getState\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":true,\"inputs\":[],\"name\":\"getEpoch\",\"outputs\":[{\"name\":\"\",\"type\":\"uint256\"}],\"payable\":false,\"stateMutability\":\"view\",\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"state\",\"type\":\"uint256\"}],\"name\":\"setState\",\"outputs\":[],\"payable\":false,\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Core/IStateManager.sol\":\"IStateManager\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Core/IStateManager.sol\":{\"keccak256\":\"0xd399600c3a13af09d51529c6ed6a338d64fc567f7be8349231ddd651f0ba3c07\",\"urls\":[\"bzzr://c84e4d140edff6a5b6b64ea0031224c5d4be6e055b3b80042d4910463c706d64\",\"dweb:/ipfs/QmPq79yimRaj7orEmuJoUhhhCWBuZuUEtjWkcds7Fh3su9\"]}},\"version\":1}",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"getEpoch\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"getState\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"epoch\",\"type\":\"uint256\"}],\"name\":\"setEpoch\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"state\",\"type\":\"uint256\"}],\"name\":\"setState\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/intern/contracts/contracts/Core/IStateManager.sol\":\"IStateManager\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/intern/contracts/contracts/Core/IStateManager.sol\":{\"keccak256\":\"0x6af8edf21ac830c8b99a121ee8e77d64e0b9988191ffd4e2dddbf3b1175eb25c\",\"urls\":[\"bzz-raw://59b9667ccfda6805680c3fbfb8106e6bdabea3f7092155a0d75a522854ae62ee\",\"dweb:/ipfs/Qmc7LFwb34fQEiQfartXgLvDsoaWQWqmJupdacU4a6nXXh\"]}},\"version\":1}",
   "bytecode": "0x",
   "deployedBytecode": "0x",
   "sourceMap": "",
   "deployedSourceMap": "",
-  "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n// import \"../lib/Structs.sol\";\n\n\ncontract IStateManager {\n    // for testing only. diable in prod\n    function setEpoch (uint256 epoch) external;\n\n    function setState (uint256 state) external;\n\n    function getEpoch () external view returns(uint256);\n\n    function getState () external view returns(uint256);\n}\n",
-  "sourcePath": "/Users/hrishi/contracts/contracts/Core/IStateManager.sol",
+  "source": "pragma solidity 0.6.11;\npragma experimental ABIEncoderV2;\n// import \"../lib/Structs.sol\";\n\n\ninterface IStateManager {\n    // for testing only. diable in prod\n    function setEpoch (uint256 epoch) external;\n\n    function setState (uint256 state) external;\n\n    function getEpoch () external view returns(uint256);\n\n    function getState () external view returns(uint256);\n}\n",
+  "sourcePath": "/home/user/Documents/intern/contracts/contracts/Core/IStateManager.sol",
   "ast": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/IStateManager.sol",
+    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/IStateManager.sol",
     "exportedSymbols": {
       "IStateManager": [
-        1582
+        1584
       ]
     },
-    "id": 1583,
+    "id": 1585,
+    "license": null,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1560,
+        "id": 1562,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
         "src": "0:23:6"
       },
       {
-        "id": 1561,
+        "id": 1563,
         "literals": [
           "experimental",
           "ABIEncoderV2"
@@ -95,14 +92,15 @@
         "src": "24:33:6"
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
-        "contractKind": "contract",
+        "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 1582,
+        "id": 1584,
         "linearizedBaseContracts": [
-          1582
+          1584
         ],
         "name": "IStateManager",
         "nodeType": "ContractDefinition",
@@ -110,23 +108,27 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1566,
+            "functionSelector": "0ceb2cef",
+            "id": 1568,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setEpoch",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1564,
+              "id": 1566,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1563,
+                  "id": 1565,
+                  "mutability": "mutable",
                   "name": "epoch",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1566,
-                  "src": "180:13:6",
+                  "overrides": null,
+                  "scope": 1568,
+                  "src": "181:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -134,10 +136,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1562,
+                    "id": 1564,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "180:7:6",
+                    "src": "181:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -147,40 +149,44 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "179:15:6"
+              "src": "180:15:6"
             },
             "returnParameters": {
-              "id": 1565,
+              "id": 1567,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "203:0:6"
+              "src": "204:0:6"
             },
-            "scope": 1582,
-            "src": "161:43:6",
+            "scope": 1584,
+            "src": "162:43:6",
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1571,
+            "functionSelector": "a9e966b7",
+            "id": 1573,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setState",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1569,
+              "id": 1571,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1568,
+                  "id": 1570,
+                  "mutability": "mutable",
                   "name": "state",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1571,
-                  "src": "229:13:6",
+                  "overrides": null,
+                  "scope": 1573,
+                  "src": "230:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -188,10 +194,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1567,
+                    "id": 1569,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "229:7:6",
+                    "src": "230:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -201,46 +207,50 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "228:15:6"
+              "src": "229:15:6"
             },
             "returnParameters": {
-              "id": 1570,
+              "id": 1572,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "252:0:6"
+              "src": "253:0:6"
             },
-            "scope": 1582,
-            "src": "210:43:6",
+            "scope": 1584,
+            "src": "211:43:6",
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1576,
+            "functionSelector": "757991a8",
+            "id": 1578,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getEpoch",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1572,
+              "id": 1574,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "277:2:6"
+              "src": "278:2:6"
             },
             "returnParameters": {
-              "id": 1575,
+              "id": 1577,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1574,
+                  "id": 1576,
+                  "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1576,
-                  "src": "302:7:6",
+                  "overrides": null,
+                  "scope": 1578,
+                  "src": "303:7:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -248,10 +258,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1573,
+                    "id": 1575,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "302:7:6",
+                    "src": "303:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -261,40 +271,44 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "301:9:6"
+              "src": "302:9:6"
             },
-            "scope": 1582,
-            "src": "259:52:6",
+            "scope": 1584,
+            "src": "260:52:6",
             "stateMutability": "view",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1581,
+            "functionSelector": "1865c57d",
+            "id": 1583,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getState",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1577,
+              "id": 1579,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "335:2:6"
+              "src": "336:2:6"
             },
             "returnParameters": {
-              "id": 1580,
+              "id": 1582,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1579,
+                  "id": 1581,
+                  "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1581,
-                  "src": "360:7:6",
+                  "overrides": null,
+                  "scope": 1583,
+                  "src": "361:7:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -302,10 +316,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1578,
+                    "id": 1580,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "360:7:6",
+                    "src": "361:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -315,43 +329,44 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "359:9:6"
+              "src": "360:9:6"
             },
-            "scope": 1582,
-            "src": "317:52:6",
+            "scope": 1584,
+            "src": "318:52:6",
             "stateMutability": "view",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 1583,
-        "src": "92:279:6"
+        "scope": 1585,
+        "src": "92:280:6"
       }
     ],
-    "src": "0:372:6"
+    "src": "0:373:6"
   },
   "legacyAST": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/IStateManager.sol",
+    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/IStateManager.sol",
     "exportedSymbols": {
       "IStateManager": [
-        1582
+        1584
       ]
     },
-    "id": 1583,
+    "id": 1585,
+    "license": null,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 1560,
+        "id": 1562,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
         "src": "0:23:6"
       },
       {
-        "id": 1561,
+        "id": 1563,
         "literals": [
           "experimental",
           "ABIEncoderV2"
@@ -360,14 +375,15 @@
         "src": "24:33:6"
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
-        "contractKind": "contract",
+        "contractKind": "interface",
         "documentation": null,
         "fullyImplemented": false,
-        "id": 1582,
+        "id": 1584,
         "linearizedBaseContracts": [
-          1582
+          1584
         ],
         "name": "IStateManager",
         "nodeType": "ContractDefinition",
@@ -375,23 +391,27 @@
           {
             "body": null,
             "documentation": null,
-            "id": 1566,
+            "functionSelector": "0ceb2cef",
+            "id": 1568,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setEpoch",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1564,
+              "id": 1566,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1563,
+                  "id": 1565,
+                  "mutability": "mutable",
                   "name": "epoch",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1566,
-                  "src": "180:13:6",
+                  "overrides": null,
+                  "scope": 1568,
+                  "src": "181:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -399,10 +419,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1562,
+                    "id": 1564,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "180:7:6",
+                    "src": "181:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -412,40 +432,44 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "179:15:6"
+              "src": "180:15:6"
             },
             "returnParameters": {
-              "id": 1565,
+              "id": 1567,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "203:0:6"
+              "src": "204:0:6"
             },
-            "scope": 1582,
-            "src": "161:43:6",
+            "scope": 1584,
+            "src": "162:43:6",
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1571,
+            "functionSelector": "a9e966b7",
+            "id": 1573,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "setState",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1569,
+              "id": 1571,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1568,
+                  "id": 1570,
+                  "mutability": "mutable",
                   "name": "state",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1571,
-                  "src": "229:13:6",
+                  "overrides": null,
+                  "scope": 1573,
+                  "src": "230:13:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -453,10 +477,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1567,
+                    "id": 1569,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "229:7:6",
+                    "src": "230:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -466,46 +490,50 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "228:15:6"
+              "src": "229:15:6"
             },
             "returnParameters": {
-              "id": 1570,
+              "id": 1572,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "252:0:6"
+              "src": "253:0:6"
             },
-            "scope": 1582,
-            "src": "210:43:6",
+            "scope": 1584,
+            "src": "211:43:6",
             "stateMutability": "nonpayable",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1576,
+            "functionSelector": "757991a8",
+            "id": 1578,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getEpoch",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1572,
+              "id": 1574,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "277:2:6"
+              "src": "278:2:6"
             },
             "returnParameters": {
-              "id": 1575,
+              "id": 1577,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1574,
+                  "id": 1576,
+                  "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1576,
-                  "src": "302:7:6",
+                  "overrides": null,
+                  "scope": 1578,
+                  "src": "303:7:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -513,10 +541,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1573,
+                    "id": 1575,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "302:7:6",
+                    "src": "303:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -526,40 +554,44 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "301:9:6"
+              "src": "302:9:6"
             },
-            "scope": 1582,
-            "src": "259:52:6",
+            "scope": 1584,
+            "src": "260:52:6",
             "stateMutability": "view",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           },
           {
             "body": null,
             "documentation": null,
-            "id": 1581,
+            "functionSelector": "1865c57d",
+            "id": 1583,
             "implemented": false,
             "kind": "function",
             "modifiers": [],
             "name": "getState",
             "nodeType": "FunctionDefinition",
+            "overrides": null,
             "parameters": {
-              "id": 1577,
+              "id": 1579,
               "nodeType": "ParameterList",
               "parameters": [],
-              "src": "335:2:6"
+              "src": "336:2:6"
             },
             "returnParameters": {
-              "id": 1580,
+              "id": 1582,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 1579,
+                  "id": 1581,
+                  "mutability": "mutable",
                   "name": "",
                   "nodeType": "VariableDeclaration",
-                  "scope": 1581,
-                  "src": "360:7:6",
+                  "overrides": null,
+                  "scope": 1583,
+                  "src": "361:7:6",
                   "stateVariable": false,
                   "storageLocation": "default",
                   "typeDescriptions": {
@@ -567,10 +599,10 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 1578,
+                    "id": 1580,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
-                    "src": "360:7:6",
+                    "src": "361:7:6",
                     "typeDescriptions": {
                       "typeIdentifier": "t_uint256",
                       "typeString": "uint256"
@@ -580,32 +612,36 @@
                   "visibility": "internal"
                 }
               ],
-              "src": "359:9:6"
+              "src": "360:9:6"
             },
-            "scope": 1582,
-            "src": "317:52:6",
+            "scope": 1584,
+            "src": "318:52:6",
             "stateMutability": "view",
-            "superFunction": null,
+            "virtual": false,
             "visibility": "external"
           }
         ],
-        "scope": 1583,
-        "src": "92:279:6"
+        "scope": 1585,
+        "src": "92:280:6"
       }
     ],
-    "src": "0:372:6"
+    "src": "0:373:6"
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.10+commit.5a6ea5b1.Emscripten.clang"
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2019-12-25T04:19:39.151Z",
+  "schemaVersion": "3.0.23",
+  "updatedAt": "2020-12-21T11:27:27.983Z",
   "devdoc": {
-    "methods": {}
+    "kind": "dev",
+    "methods": {},
+    "version": 1
   },
   "userdoc": {
-    "methods": {}
+    "kind": "user",
+    "methods": {},
+    "version": 1
   }
 }

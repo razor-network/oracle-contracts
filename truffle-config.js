@@ -89,7 +89,6 @@ module.exports = {
             // gasPrice: 1000000000,
             confirmations: 1,
             timeoutBlocks: 200,
-            from: '0xe092b1fa25DF5786D151246E492Eed3d15EA4dAA',
             skipDryRun: true // Skip dry run before migrations? (default: false for public nets )
         }
     },

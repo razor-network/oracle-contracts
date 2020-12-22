@@ -6,6 +6,7 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "uint256",
           "name": "a",
           "type": "uint256"
         }
@@ -14,35 +15,36 @@
       "type": "event"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.5.10+commit.5a6ea5b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"methods\":{}},\"userdoc\":{\"methods\":{}}},\"settings\":{\"compilationTarget\":{\"/Users/hrishi/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"petersburg\",\"libraries\":{},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/hrishi/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0x665d18bbc29c12c7af94f54c11f3bbcd8ee91d1a5cf00b4d7c1da01429159300\",\"urls\":[\"bzzr://f2691a6a80da9d99fb6d21eb257ae0ff7aadc7593ed84279af54699e7760de17\",\"dweb:/ipfs/QmVBLU1w7zqiNnXAHNkMPGVdcVWacDeRRFoPP1yugvAzX3\"]}},\"version\":1}",
-  "bytecode": "0x6080604052348015600f57600080fd5b50604c80601d6000396000f3fe6080604052600080fdfea365627a7a723058205eeea465cd64e3ee6c3f015a631d82689d544a71320e4a97ae1b6f154b3973386c6578706572696d656e74616cf564736f6c634300050a0040",
-  "deployedBytecode": "0x6080604052600080fdfea365627a7a723058205eeea465cd64e3ee6c3f015a631d82689d544a71320e4a97ae1b6f154b3973386c6578706572696d656e74616cf564736f6c634300050a0040",
-  "sourceMap": "60:54:13:-;;;;8:9:-1;5:2;;;30:1;27;20:12;5:2;60:54:13;;;;;;;",
-  "deployedSourceMap": "60:54:13:-;;;;;",
-  "source": "pragma solidity 0.5.10;\npragma experimental ABIEncoderV2;\n\n\ncontract Utils {\n\n    event DebugUint256(uint256 a);\n}\n",
-  "sourcePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"a\",\"type\":\"uint256\"}],\"name\":\"DebugUint256\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/intern/contracts/contracts/Core/Utils.sol\":\"Utils\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/intern/contracts/contracts/Core/Utils.sol\":{\"keccak256\":\"0x5214e2dd4cdfb1aae1d8a23e5c6b75f751b90b06ea09c1f8ca4abcab7b15b1cb\",\"urls\":[\"bzz-raw://9303c22e5635b38530151dd50fb1fc7d8ead6772659555927310b29cc8175241\",\"dweb:/ipfs/QmSH1Qk7oyfj7bnHjXn2CfMvTex69oJrYLptEcyBtmfbDY\"]}},\"version\":1}",
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea264697066735822122024d7720b5cbe8e5b3d2479d3a7ab7393f62ab3716decabc4e2f40e8ed6327caa64736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052600080fdfea264697066735822122024d7720b5cbe8e5b3d2479d3a7ab7393f62ab3716decabc4e2f40e8ed6327caa64736f6c634300060b0033",
+  "sourceMap": "60:54:13:-:0;;;;;;;;;;;;;;;;;;;",
+  "deployedSourceMap": "60:54:13:-:0;;;;;",
+  "source": "pragma solidity 0.6.11;\npragma experimental ABIEncoderV2;\n\n\ncontract Utils {\n\n    event DebugUint256(uint256 a);\n}\n",
+  "sourcePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
   "ast": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
-        3360
+        3398
       ]
     },
-    "id": 3361,
+    "id": 3399,
+    "license": null,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3354,
+        "id": 3392,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
         "src": "0:23:13"
       },
       {
-        "id": 3355,
+        "id": 3393,
         "literals": [
           "experimental",
           "ABIEncoderV2"
@@ -51,14 +53,15 @@
         "src": "24:33:13"
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 3360,
+        "id": 3398,
         "linearizedBaseContracts": [
-          3360
+          3398
         ],
         "name": "Utils",
         "nodeType": "ContractDefinition",
@@ -66,20 +69,22 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3359,
+            "id": 3397,
             "name": "DebugUint256",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3358,
+              "id": 3396,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3357,
+                  "id": 3395,
                   "indexed": false,
+                  "mutability": "mutable",
                   "name": "a",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3359,
+                  "overrides": null,
+                  "scope": 3397,
                   "src": "101:9:13",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -88,7 +93,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3356,
+                    "id": 3394,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "101:7:13",
@@ -106,34 +111,35 @@
             "src": "82:30:13"
           }
         ],
-        "scope": 3361,
+        "scope": 3399,
         "src": "60:54:13"
       }
     ],
     "src": "0:115:13"
   },
   "legacyAST": {
-    "absolutePath": "/Users/hrishi/contracts/contracts/Core/Utils.sol",
+    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Core/Utils.sol",
     "exportedSymbols": {
       "Utils": [
-        3360
+        3398
       ]
     },
-    "id": 3361,
+    "id": 3399,
+    "license": null,
     "nodeType": "SourceUnit",
     "nodes": [
       {
-        "id": 3354,
+        "id": 3392,
         "literals": [
           "solidity",
-          "0.5",
-          ".10"
+          "0.6",
+          ".11"
         ],
         "nodeType": "PragmaDirective",
         "src": "0:23:13"
       },
       {
-        "id": 3355,
+        "id": 3393,
         "literals": [
           "experimental",
           "ABIEncoderV2"
@@ -142,14 +148,15 @@
         "src": "24:33:13"
       },
       {
+        "abstract": false,
         "baseContracts": [],
         "contractDependencies": [],
         "contractKind": "contract",
         "documentation": null,
         "fullyImplemented": true,
-        "id": 3360,
+        "id": 3398,
         "linearizedBaseContracts": [
-          3360
+          3398
         ],
         "name": "Utils",
         "nodeType": "ContractDefinition",
@@ -157,20 +164,22 @@
           {
             "anonymous": false,
             "documentation": null,
-            "id": 3359,
+            "id": 3397,
             "name": "DebugUint256",
             "nodeType": "EventDefinition",
             "parameters": {
-              "id": 3358,
+              "id": 3396,
               "nodeType": "ParameterList",
               "parameters": [
                 {
                   "constant": false,
-                  "id": 3357,
+                  "id": 3395,
                   "indexed": false,
+                  "mutability": "mutable",
                   "name": "a",
                   "nodeType": "VariableDeclaration",
-                  "scope": 3359,
+                  "overrides": null,
+                  "scope": 3397,
                   "src": "101:9:13",
                   "stateVariable": false,
                   "storageLocation": "default",
@@ -179,7 +188,7 @@
                     "typeString": "uint256"
                   },
                   "typeName": {
-                    "id": 3356,
+                    "id": 3394,
                     "name": "uint256",
                     "nodeType": "ElementaryTypeName",
                     "src": "101:7:13",
@@ -197,7 +206,7 @@
             "src": "82:30:13"
           }
         ],
-        "scope": 3361,
+        "scope": 3399,
         "src": "60:54:13"
       }
     ],
@@ -205,15 +214,19 @@
   },
   "compiler": {
     "name": "solc",
-    "version": "0.5.10+commit.5a6ea5b1.Emscripten.clang"
+    "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.20",
-  "updatedAt": "2020-07-31T16:34:54.598Z",
+  "schemaVersion": "3.0.23",
+  "updatedAt": "2020-12-21T11:27:28.051Z",
   "devdoc": {
-    "methods": {}
+    "kind": "dev",
+    "methods": {},
+    "version": 1
   },
   "userdoc": {
-    "methods": {}
+    "kind": "user",
+    "methods": {},
+    "version": 1
   }
 }
