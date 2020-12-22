@@ -51,7 +51,7 @@ module.exports = {
             // from: '0xe092b1fa25df5786d151246e492eed3d15ea4daa',
             host: '127.0.0.1',
             port: 8545,
-            gas: 4000000,
+            gas: 7000000,
             confirmations: 0,
             network_id: 420
             // websockets: true
@@ -61,7 +61,7 @@ module.exports = {
         // NB: It's important to wrap the provider as a function.
         // actually we are using rinkeby not ropsten
         rinkeby: {
-            provider: function() {
+            provider: function () {
                 //      return new HDWalletProvider(mnemonic, 'https://rinkeby.infura.io/v3/' + `${infuraKey}`)
             },
             // provider: () => new HDWalletProvider(mnemonic, `https://rinkeby.infura.io/v3/`), // `${infuraKey}`),
@@ -80,9 +80,9 @@ module.exports = {
         },
 
         goerli: {
-            provider: function() {
+            provider: function () {
                 return new HDWalletProvider(mnemonic, 'https://goerli.infura.io/v3/' + infuraKey)
-                    // return new HDWalletProvider(mnemonic, 'http://34.67.242.174:8545')
+                // return new HDWalletProvider(mnemonic, 'http://34.67.242.174:8545')
             },
             network_id: 5,
             gas: 8000000,
@@ -104,11 +104,11 @@ module.exports = {
             version: '0.6.11', // Fetch exact version from solc-bin (default: truffle's version)
             // docker: true,        // Use "0.5.1" you've installed locally with docker (default: false)
             settings: {          // See the solidity docs for advice about optimization and evmVersion
-             optimizer: {
-               enabled: true,
-               runs: 200
-             }
-            //  evmVersion: "byzantium"
+                optimizer: {
+                    enabled: true,
+                    runs: 200
+                }
+                //  evmVersion: "byzantium"
             }
         }
     }

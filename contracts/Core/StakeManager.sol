@@ -2,11 +2,12 @@ pragma solidity 0.6.11;
 pragma experimental ABIEncoderV2;
 import "../SchellingCoin.sol";
 import "./Utils.sol";
-import "./WriterRole.sol";
 import "./StakeStorage.sol";
 import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./IVoteManager.sol";
+import "../lib/Constants.sol";
+import "./ACL.sol";
 import "../lib/Constants.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 
@@ -14,7 +15,7 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Utils, WriterRole, StakeStorage {
+contract StakeManager is Utils, ACL, StakeStorage {
     using SafeMath for uint256;
     SchellingCoin public sch;
     IVoteManager public voteManager;
@@ -52,18 +53,19 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
 
     /// @param _id The ID of the staker
     /// @param _stake The amount of schelling tokens that staker stakes
-    function setStakerStake(uint256 _id, uint256 _stake, string calldata _reason, uint256 _epoch) external onlyWriter {
+    // The Suspension over following function is redundant is raised on issue : 42
+    function setStakerStake(uint256 _id, uint256 _stake, string calldata _reason, uint256 _epoch) external onlyRole(Constants.getStakeModifierHash()) {
         _setStakerStake(_id, _stake, _reason, _epoch);
     }
 
     /// @param _id The ID of the staker
     /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyWriter {
+    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyRole(Constants.getStakerActivityUpdaterHash()) {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
 
     /// @param stakerId The ID of the staker
-    function updateCommitmentEpoch(uint256 stakerId) external onlyWriter {
+    function updateCommitmentEpoch(uint256 stakerId) external onlyRole(Constants.getStakerActivityUpdaterHash()) {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
@@ -142,7 +144,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties (uint256 stakerId, uint256 epoch) external onlyWriter {
+    function givePenalties (uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         _givePenalties(stakerId, epoch);
     }
 
@@ -150,7 +152,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// previous epoch by minting new tokens from the schelling token contract
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
-    function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyWriter {
+    function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         if (Constants.blockReward() > 0) {
             uint256 newStake = stakers[stakerId].stake.add(Constants.blockReward());
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
@@ -169,7 +171,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// the Values of assets according to the razor protocol rules.
     /// @param stakerId The staker id
     /// @param epoch The epoch number for which reveal has been called
-    function giveRewards (uint256 stakerId, uint256 epoch) external onlyWriter {
+    function giveRewards (uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakers[stakerId];
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
@@ -224,7 +226,7 @@ contract StakeManager is Utils, WriterRole, StakeStorage {
     /// transfer to bounty hunter half the schelling tokens of the stakers stake
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
-    function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyWriter {
+    function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         // SchellingCoin sch = SchellingCoin(schAddress);
         uint256 halfStake = stakers[id].stake.div(2);
         _setStakerStake(id, 0, "Slashed", epoch);

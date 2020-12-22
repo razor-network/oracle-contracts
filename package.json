@@ -21,14 +21,14 @@
   "homepage": "https://github.com/schelling-network/contracts#readme",
   "dependencies": {
     "@razor-network/merkle": "^0.6.0",
+    "@truffle/hdwallet-provider": "^1.2.0",
     "openzeppelin-solidity": "^3.1.0",
-    "@truffle/hdwallet-provider": "^1.0.40",
+    "truffle": "^5.1.57",
     "web3": "^1.2.1"
   },
   "devDependencies": {
     "eth-gas-reporter": "^0.2.17",
     "prettier": "^1.18.2",
-    "prettier-plugin-solidity": "^1.0.0-alpha.32",
-    "solidity-coverage": "^0.7.9"
+    "prettier-plugin-solidity": "^1.0.0-alpha.32"
   }
 }
