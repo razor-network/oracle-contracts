@@ -313,4 +313,23 @@ contract("Access Control Test", async accounts => {
         await stakeManager.updateCommitmentEpoch(1)
         stakeManager.revokeRole(await constants.getStakerActivityUpdaterHash(), accounts[0]);
     });
+
+    it("Default Admin should able to change, New admin should able to grant/revoke", async () => {
+        let stakeManager = await StakeManager.deployed();
+        let constants = await Constants.deployed();
+        let DEFAULT_ADMIN_ROLE_HASH = "0x00";
+
+        // Old admin should be able to grant admin role to another account
+        stakeManager.grantRole(DEFAULT_ADMIN_ROLE_HASH, accounts[1]);
+
+        // New admin should be able to revoke admin access from old admin
+        stakeManager.revokeRole(DEFAULT_ADMIN_ROLE_HASH, accounts[0], { 'from': accounts[1] });
+
+        // Old admin should not able to assign roles anymore
+        await assertRevert(stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), accounts[0]));
+
+        // New admin should be able to assign roles
+        stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), accounts[0], { 'from': accounts[1] });
+
+    });
 });
