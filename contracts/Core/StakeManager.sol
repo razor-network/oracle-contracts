@@ -52,13 +52,6 @@ contract StakeManager is Utils, ACL, StakeStorage {
     event StakeGettingRewardChange(uint256 epoch, uint256 prevStakeGettingReward, uint256 stakeGettingReward, uint256 timestamp);
 
     /// @param _id The ID of the staker
-    /// @param _stake The amount of schelling tokens that staker stakes
-    // The Suspension over following function is redundant is raised on issue : 42
-    function setStakerStake(uint256 _id, uint256 _stake, string calldata _reason, uint256 _epoch) external onlyRole(Constants.getStakeModifierHash()) {
-        _setStakerStake(_id, _stake, _reason, _epoch);
-    }
-
-    /// @param _id The ID of the staker
     /// @param _epochLastRevealed The number of epoch that staker revealed asset values
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyRole(Constants.getStakerActivityUpdaterHash()) {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
