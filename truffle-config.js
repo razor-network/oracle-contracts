@@ -25,8 +25,8 @@
 const HDWalletProvider = require('@truffle/hdwallet-provider')
 //
 const fs = require('fs')
-const infuraKey = fs.readFileSync('.infura').toString().trim()
-const mnemonic = fs.readFileSync('.mnemonic').toString().trim()
+const infuraKey = "x"//fs.readFileSync('.infura').toString().trim()
+const mnemonic = "y"//fs.readFileSync('.mnemonic').toString().trim()
 
 module.exports = {
     /**
@@ -56,7 +56,6 @@ module.exports = {
             network_id: 420
             // websockets: true
         },
-
         // Useful for deploying to a public network.
         // NB: It's important to wrap the provider as a function.
         // actually we are using rinkeby not ropsten
@@ -111,5 +110,6 @@ module.exports = {
                 //  evmVersion: "byzantium"
             }
         }
-    }
+    },
+    plugins: ["solidity-coverage"]
 }
