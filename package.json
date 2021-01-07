@@ -1,7 +1,7 @@
 {
   "name": "contracts",
   "version": "1.0.0",
-  "description": "These are the contracts for Razor network testnet. # Deployment",
+  "description": "These are the contracts for Razor network testnet. #Deployment",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
