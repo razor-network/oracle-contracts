@@ -19,6 +19,9 @@ These are the contracts for Razor network.
 8. create .secret file with mnemonic of the private key used to deploy on rinkeby
 9. Deploy on görli (.secret file must be present with mnemonic of the private key used to deploy)
 `truffle migrate --network goerli --reset`
+10. For test coverage,<br/> 
+   `npm install --save-dev solidity-coverage`<br/>
+   `npm run coverage` 
 
 # Migration guide
 1. `truffle migrate --reset --network goerli`
@@ -36,5 +39,8 @@ These are the contracts for Razor network.
    3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
    4. `pm2 start all` once staked
 
+
+
 # Addresses
 Contract addresses can be found [here](ADDRESSES.md)
+
