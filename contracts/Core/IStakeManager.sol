@@ -7,7 +7,6 @@ interface IStakeManager {
     function init (address _schAddress, address _voteManagerAddress,
     address _blockManagerAddress, address _stateManagerAddress) external;
 
-    function setStakerStake(uint256 _id, uint256 _stake, string calldata _reason, uint256 _epoch) external;
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
     function updateCommitmentEpoch(uint256 stakerId) external;
     function stake (uint256 epoch, uint256 amount) external;
