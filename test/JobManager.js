@@ -68,7 +68,7 @@ contract('JobManager', function (accounts) {
       let repeat = true
       await jobManager.createJob(url, selector, name, repeat)
       console.log(Number(await jobManager.numJobs()))
-      jobManager.grantRole(await constants.getJobConfirmerHash(), accounts[0])
+      await jobManager.grantRole(await constants.getJobConfirmerHash(), accounts[0])
       await jobManager.fulfillJob(2, 222)
       // function fulfillJob(uint256 jobId, uint256 value) external onlyWriter {
 

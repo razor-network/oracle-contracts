@@ -7,13 +7,13 @@ These are the contracts for Razor network.
 2. Install openzeppelin
 `npm i openzeppelin-solidity`
 3. Run ganache-cli
-`ganache-cli -s 0 -i 420 -a 30`
+`ganache-cli -s 0 -i 420 -a 30 -l 7000000`
 4. Run tests
 `truffle test`
 5. For bigSchelling.js large number of accounts are required
-`ganache-cli -s 0 -i 420 -a 101`
+`ganache-cli -s 0 -i 420 -a 101 -l 7000000`
 6. For testing with cli, set blocktime
-`ganache-cli -s 0 -i 420 -a 30 -b 5`
+`ganache-cli -s 0 -i 420 -a 30 -b 5 -l 7000000`
 7. Deploy on ganache
 `truffle migrate --reset`
 8. create .secret file with mnemonic of the private key used to deploy on rinkeby
