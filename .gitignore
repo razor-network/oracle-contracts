@@ -2,4 +2,5 @@
 .infura
 .mnemonic
 node_modules/
+coverage.json
 

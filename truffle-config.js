@@ -57,6 +57,12 @@ module.exports = {
             // websockets: true
         },
 
+        testNetwork: {
+            host: '127.0.0.1',
+            port: 8545,
+            network_id: 420,
+            disableConfirmationListener: true
+        },
         // Useful for deploying to a public network.
         // NB: It's important to wrap the provider as a function.
         // actually we are using rinkeby not ropsten
@@ -111,5 +117,6 @@ module.exports = {
                 //  evmVersion: "byzantium"
             }
         }
-    }
+    },
+    plugins: ["solidity-coverage"]
 }

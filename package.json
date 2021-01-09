@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "bash ./scripts/run_tests.sh"
+    "test": "bash ./scripts/run_tests.sh",
+    "coverage": "truffle run coverage --network testNetwork"
   },
   "repository": {
     "type": "git",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "eth-gas-reporter": "^0.2.17",
     "prettier": "^1.18.2",
-    "prettier-plugin-solidity": "^1.0.0-alpha.32"
+    "prettier-plugin-solidity": "^1.0.0-alpha.32",
+    "solidity-coverage": "^0.7.13"
   }
 }
