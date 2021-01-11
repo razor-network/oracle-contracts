@@ -1,13 +1,13 @@
 {
   "name": "contracts",
   "version": "1.0.0",
-  "description": "These are the contracts for Razor network testnet. # Deployment",
+  "description": "These are the contracts for Razor network testnet. #Deployment",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "bash ./scripts/run_tests.sh",
     "coverage": "truffle run coverage --network testNetwork"
   },
   "repository": {
