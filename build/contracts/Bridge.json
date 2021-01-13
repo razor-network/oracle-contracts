@@ -52,15 +52,16 @@
       "type": "function"
     }
   ],
-  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"name\":\"setResult\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/home/user/Documents/intern/contracts/contracts/Bridge.sol\":\"Bridge\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/home/user/Documents/intern/contracts/contracts/Bridge.sol\":{\"keccak256\":\"0x86e85671446453c92c74e1d188b6d823300c2e00822907b82d0d8a03fad638d7\",\"urls\":[\"bzz-raw://f5cd4ef6ced0d7df528f5bc355e11f5a238c8d50518ee2c6a3eab3666c61953d\",\"dweb:/ipfs/Qmejz1Dpmo7VJRQmbH8c4WrokqD6NecGQCrhNW9Rdz1JFS\"]}},\"version\":1}",
-  "bytecode": "0x6080604052600180546001600160a01b0319163317905534801561002257600080fd5b50610130806100326000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea2646970667358221220db836216f5dbf6e63a580655e17087777b8e7383571fed2bcc39bec8e40c1b0364736f6c634300060b0033",
-  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea2646970667358221220db836216f5dbf6e63a580655e17087777b8e7383571fed2bcc39bec8e40c1b0364736f6c634300060b0033",
+  "metadata": "{\"compiler\":{\"version\":\"0.6.11+commit.5ef660b1\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"}],\"name\":\"getResult\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"owner\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"result\",\"type\":\"uint256\"}],\"name\":\"setResult\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"version\":1}},\"settings\":{\"compilationTarget\":{\"/Users/skanda/Projects/contracts/contracts/Bridge.sol\":\"Bridge\"},\"evmVersion\":\"istanbul\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[]},\"sources\":{\"/Users/skanda/Projects/contracts/contracts/Bridge.sol\":{\"keccak256\":\"0x86e85671446453c92c74e1d188b6d823300c2e00822907b82d0d8a03fad638d7\",\"urls\":[\"bzz-raw://f5cd4ef6ced0d7df528f5bc355e11f5a238c8d50518ee2c6a3eab3666c61953d\",\"dweb:/ipfs/Qmejz1Dpmo7VJRQmbH8c4WrokqD6NecGQCrhNW9Rdz1JFS\"]}},\"version\":1}",
+  "bytecode": "0x6080604052600180546001600160a01b0319163317905534801561002257600080fd5b50610130806100326000396000f3fe6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea2646970667358221220c7dff7fbc474905d2cd6dfd4cb0dd784ef3687e6fb21743a0c164bbce8d04da764736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052348015600f57600080fd5b5060043610603c5760003560e01c8063310efb481460415780638da5cb5b146063578063995e4339146085575b600080fd5b606160048036036040811015605557600080fd5b508035906020013560b1565b005b606960d9565b604080516001600160a01b039092168252519081900360200190f35b609f60048036036020811015609957600080fd5b503560e8565b60408051918252519081900360200190f35b6001546001600160a01b0316331460c757600080fd5b60009182526020829052604090912055565b6001546001600160a01b031681565b6000908152602081905260409020549056fea2646970667358221220c7dff7fbc474905d2cd6dfd4cb0dd784ef3687e6fb21743a0c164bbce8d04da764736f6c634300060b0033",
+  "immutableReferences": {},
   "sourceMap": "413:501:0:-:0;;;478:33;;;-1:-1:-1;;;;;;478:33:0;501:10;478:33;;;413:501;;;;;;;;;;;;;;;;",
   "deployedSourceMap": "413:501:0:-:0;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;678:131;;;;;;;;;;;;;;;;-1:-1:-1;678:131:0;;;;;;;:::i;:::-;;478:33;;;:::i;:::-;;;;-1:-1:-1;;;;;478:33:0;;;;;;;;;;;;;;815:97;;;;;;;;;;;;;;;;-1:-1:-1;815:97:0;;:::i;:::-;;;;;;;;;;;;;;;;678:131;766:5;;-1:-1:-1;;;;;766:5:0;752:10;:19;744:28;;;;;;782:7;:11;;;;;;;;;;;:20;678:131::o;478:33::-;;;-1:-1:-1;;;;;478:33:0;;:::o;815:97::-;868:7;894:11;;;;;;;;;;;;815:97::o",
   "source": "pragma solidity 0.6.11;\n// pragma experimental ABIEncoderV2;\n// import \"../SchellingCoin.sol\";\n// import \"./Utils.sol\";\n// import \"./BlockStorage.sol\";\n// import \"./IStakeManager.sol\";\n// import \"./IStateManager.sol\";\n// import \"./IVoteManager.sol\";\n// import \"./JobStorage.sol\";\n// import \"./IStateManager.sol\";\n// import \"openzeppelin-solidity/contracts/math/SafeMath.sol\";\n// import \"./Core/WriterRole.sol\";\n\n\ncontract Bridge {\n\n    mapping (uint256 => uint256) results;\n    address public owner = msg.sender;\n    //disable after init.\n    // function init(address _stateManagerAddress) external {\n    //     stateManager = IStateManager(_stateManagerAddress);\n    // }\n\n    function setResult(uint256 id, uint256 result) external {\n        require(msg.sender == owner);\n        results[id] = result;\n    }\n\n    function getResult(uint256 id) external view returns(uint256) {\n        return results[id];\n    }\n}\n",
-  "sourcePath": "/home/user/Documents/intern/contracts/contracts/Bridge.sol",
+  "sourcePath": "/Users/skanda/Projects/contracts/contracts/Bridge.sol",
   "ast": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Bridge.sol",
+    "absolutePath": "/Users/skanda/Projects/contracts/contracts/Bridge.sol",
     "exportedSymbols": {
       "Bridge": [
         43
@@ -617,7 +618,7 @@
     "src": "0:915:0"
   },
   "legacyAST": {
-    "absolutePath": "/home/user/Documents/intern/contracts/contracts/Bridge.sol",
+    "absolutePath": "/Users/skanda/Projects/contracts/contracts/Bridge.sol",
     "exportedSymbols": {
       "Bridge": [
         43
@@ -1178,8 +1179,8 @@
     "version": "0.6.11+commit.5ef660b1.Emscripten.clang"
   },
   "networks": {},
-  "schemaVersion": "3.0.23",
-  "updatedAt": "2020-12-21T11:27:27.886Z",
+  "schemaVersion": "3.3.2",
+  "updatedAt": "2021-01-12T12:25:56.842Z",
   "devdoc": {
     "kind": "dev",
     "methods": {},
