@@ -44,3 +44,15 @@ These are the contracts for Razor network.
 # Addresses
 Contract addresses can be found [here](ADDRESSES.md)
 
+# Guidelines for Collaborators
+
+- Build 
+   - We use [git-subrepo](https://github.com/ingydotnet/git-subrepo) for Build, as its common between multiple repos.
+   - The upstream can be found at [razor-network/build](https://github.com/razor-network/build)
+   - [Installation Instrusctions for git-subrepo](https://github.com/ingydotnet/git-subrepo#installation)
+   - To pull from upstream : (from parent repo)  git subrepo pull build
+   - To push to upstream : (from parent repo) git subrepo push build
+
+
+
+   
