@@ -6,6 +6,7 @@
 [subrepo]
 	remote = https://github.com/razor-network/build.git
 	branch = master
-	commit = 
+	commit = 1098ed43b0d5099d8246a4261e9af23caf37d6ca
 	method = merge
 	cmdver = 0.4.3
+	parent = 39260c1909f39a41a911c04c664c698579244bae
