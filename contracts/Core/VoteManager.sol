@@ -71,8 +71,12 @@ contract VoteManager is  Utils, VoteStorage {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-        blockManager.confirmBlock();
- 
+
+        // Switch to call confirm block only when block in previous epoch has not been confirmed and if previous epoch do have proposed blocks
+        
+        if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
+            blockManager.confirmBlock();
+        }
         stakeManager.givePenalties(stakerId, epoch);
         // emit DebugUint256(y);
         if (thisStaker.stake >= Constants.minStake()) {

@@ -223,27 +223,27 @@ contract BlockManager is Utils, ACL, BlockStorage {
 
     function confirmBlock() public onlyRole(Constants.getBlockConfirmerHash()) {
         uint256 epoch = stateManager.getEpoch();
-        if (blocks[epoch - 1].proposerId == 0 && proposedBlocks[epoch - 1].length > 0) {
-            for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
-                if (proposedBlocks[epoch - 1][i].valid) {
-                    blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
-                    uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
-                    emit BlockConfirmed(epoch - 1,
-                                        proposerId,
-                                        proposedBlocks[epoch - 1][i].medians,
-                                        proposedBlocks[epoch - 1][i].lowerCutoffs,
-                                        proposedBlocks[epoch - 1][i].higherCutoffs,
-                                        proposedBlocks[epoch - 1][i].jobIds,
-                                        now);
-                    for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
-                        jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
+        
+        for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
+            if (proposedBlocks[epoch - 1][i].valid) {
+                blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
+                uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+                emit BlockConfirmed(epoch - 1,
+                                    proposerId,
+                                    proposedBlocks[epoch - 1][i].medians,
+                                    proposedBlocks[epoch - 1][i].lowerCutoffs,
+                                    proposedBlocks[epoch - 1][i].higherCutoffs,
+                                    proposedBlocks[epoch - 1][i].jobIds,
+                                    now);
+                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
+                    jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                             proposedBlocks[epoch - 1][i].medians[j]);
-                    }
-                    stakeManager.giveBlockReward(proposerId, epoch);
-                    return;
                 }
-            }
+                stakeManager.giveBlockReward(proposerId, epoch);
+                return;
+                }
         }
+        
     }
 
     function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal {
