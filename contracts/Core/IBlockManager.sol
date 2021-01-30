@@ -48,5 +48,4 @@ interface IBlockManager {
     external view returns(uint256[] memory _blockMedians);
 
     function getNumProposedBlocks(uint256 epoch) external view returns(uint256);
-
 }

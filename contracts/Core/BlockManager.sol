@@ -237,7 +237,7 @@ contract BlockManager is Utils, ACL, BlockStorage {
                                     now);
                 for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                     jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
-                                            proposedBlocks[epoch - 1][i].medians[j]);
+                                        proposedBlocks[epoch - 1][i].medians[j]);
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);
                 return;
