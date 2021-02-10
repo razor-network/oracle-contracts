@@ -25,7 +25,7 @@ let StakeManager = artifacts.require('./StakeManager.sol')
 //     uint256 _halvings
 // );
 
-// And emit it in _calcualteBlockRewards()
+// And emit it in _calcualteBlockRewards()   :: emit getBlockReward(genesisBlock, block.number, lastBlockRewards, halvings);
 
 // Thats all you have to do
 
