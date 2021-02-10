@@ -166,6 +166,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
         uint256 halvings = (block.number - genesisBlock) / Constants.halvingInterval();	
         if(halvings > lastHalvings) {
              lastBlockRewards = Constants.initialBlockReward() >>  halvings;
+             lastHalvings = halvings;
         }
 	    return lastBlockRewards	;		
     }
