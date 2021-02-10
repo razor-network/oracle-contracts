@@ -12,7 +12,6 @@ library Constants {
     // uint256 constant PENALTY_NOT_IN_ZONE_NUM = 99;
     // uint256 constant PENALTY_NOT_IN_ZONE_DENOM = 100;
     function minStake() public pure returns(uint256) { return(100*(10**uint256(18))); }
-    function blockReward() public pure returns(uint256) { return(40*(10**uint256(18)));}
     // uint256 constant REVEAL_REWARD = 5;
     // function safetyMarginLower() public pure returns(uint256) { return(99); }
     function unstakeLockPeriod() public pure returns(uint256) { return(1); }
@@ -26,5 +25,12 @@ library Constants {
     function getBlockConfirmerHash() public pure returns(bytes32) { return(0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f);/*keccak256("BLOCK_CONFIRMER_ROLE"))*/}
     function getStakeModifierHash() public pure returns(bytes32) { return(0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804);/*keccak256("STAKE_MODIFIER_ROLE"))*/}
     function getStakerActivityUpdaterHash() public pure returns(bytes32) { return(0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece); /*keccak256("STAKER_ACTIVITY_UPDATER_ROLE"))*/}
+ 
+    // Constants Concerned With BlockReward
+    // Please note we have to change this values as per tokenomics, they are now added just to have have blockreward function running
+    // We need constants such that we reach total mintable supply on summation
+    function initialBlockReward() public pure returns(uint256) { return(100*(10**uint256(18)));}
+    function halvingInterval() public pure returns(uint256) { return(10000000);}
+
  // Constants(0, 1, 2, 3, 1, 10000, 99, 100, 1000, 5, 5, 99, 1, 1);
 }
