@@ -4,6 +4,10 @@ import "../lib/Structs.sol";
 
 contract StakeStorage {
 
+    uint256 public genesisBlock;
+    uint256 public lastHalvings;
+    uint256 public lastBlockRewards;
+
     // Constants public constants;
     mapping (address => uint256) public stakerIds;
     mapping (uint256 => Structs.Staker) public stakers;
@@ -11,6 +15,4 @@ contract StakeStorage {
     // SchellingCoin public sch;
     uint256 public rewardPool = 0;
     uint256 public stakeGettingReward = 0;
-
-       // uint256 public totalStake = 0;
 }

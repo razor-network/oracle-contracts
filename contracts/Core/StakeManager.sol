@@ -43,6 +43,8 @@ contract StakeManager is Utils, ACL, StakeStorage {
         voteManager = IVoteManager(_voteManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
+        genesisBlock = block.number;
+        lastBlockRewards = Constants.initialBlockReward();
     }
 
     event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake,
@@ -146,19 +148,28 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
-        if (Constants.blockReward() > 0) {
-            uint256 newStake = stakers[stakerId].stake.add(Constants.blockReward());
+        uint256 blockReward = _calculateBlockReward();
+        if (blockReward > 0) {
+            uint256 newStake = stakers[stakerId].stake.add(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
             // stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
             // totalStake = totalStake.add(Constants.blockReward());
-            require(sch.mint(address(this), Constants.blockReward()));
+            require(sch.mint(address(this), blockReward));
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
         stakeGettingReward = 0;
         emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
-
     }
 
+    function _calculateBlockReward() private returns(uint256)
+    {
+        uint256 halvings = (block.number - genesisBlock) / Constants.halvingInterval();	
+        if(halvings > lastHalvings) {
+             lastBlockRewards = Constants.initialBlockReward() >>  halvings;
+             lastHalvings = halvings;
+        }
+	    return lastBlockRewards	;		
+    }
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed
     /// the Values of assets according to the razor protocol rules.
@@ -350,20 +361,5 @@ contract StakeManager is Utils, ACL, StakeStorage {
             }
         }
     }
-
-    // function stakeTransfer(uint256 fromId, address to, uint256 amount) internal{
-    //     // uint256 fromId = stakerIds[from];
-    //     require(fromId!=0);
-    //     require(stakers[fromId].stake >= amount);
-    //     uint256 toId = stakerIds[to];
-    //     stakers[fromId].stake = stakers[fromId].stake - amount;
-    //     if (toId == 0) {
-    //         numStakers = numStakers + 1;
-    //         stakers[numStakers] = Structs.Staker(numStakers, amount, 0, 0, 0);
-    //         stakerIds[to] = numStakers;
-    //     } else {
-    //         stakers[toId].stake = stakers[toId].stake + amount;
-    //     }
-    // }
 
 }
