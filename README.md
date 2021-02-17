@@ -56,5 +56,5 @@ Run the following commands:<br>
 `npm run coverage`
 
 # Addresses
-Contract addresses can be found [here](ADDRESSES.m
+Contract addresses can be found [here](ADDRESSES.md)
 
