@@ -51,6 +51,7 @@ Use `truffle test`.
 
 #### Test Coverage 
 
+Run the following commands:<br>
 `npm install --save-dev solidity-coverage`<br/>
 `npm run coverage`
 
