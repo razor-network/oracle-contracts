@@ -23,6 +23,10 @@ To install the command line version of ganache <br>
 `npm install ganache-cli`
 
 # Deployment
+
+First of all clone this repository using the following command.<br>
+`git clone https://github.com/razor-network/contracts.git`
+
 #### Local Deployment using ganache-cli
 Paste this into your terminal to run ganache-cli :
 
