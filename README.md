@@ -44,6 +44,17 @@ Paste this into your terminal to run ganache-cli :
 Having started a local blockchain using ganache (cli/gui), we now need to deploy our contracts locally. 
 Use `truffle migrate --reset` .
 
+#### Deployment on rinkeby testnet
+1.Register at [infura](https://infura.io/).<br>
+2.Create a new project, change the endpoint to Rinkeby and copy the URL of the endpoint for Rinkeby.<br>
+3.Install HDWalletProvider.<br>`npm install @truffle/hdwallet-provider`<br>
+4.Create 'mnemonic.txt' and place the mnemonic used to generate your account (Found in metamask) in it.<br>
+5.Create 'infura.txt' and place the project ID in it.<br>
+6.Paste your account address in truffle-config.js in the rinkeby object at 'from' property.<br>
+7.Run `truffle migrate --network rinkeby`<br>
+
+#### Deployment on goerli testnet 
+Same as above. Run `truffle migrate --network goerli` <br>
 
 #### Running tests
 
