@@ -241,7 +241,7 @@ contract BlockManager is Utils, ACL, BlockStorage {
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);
                 return;
-                }
+            }
         }
         
     }

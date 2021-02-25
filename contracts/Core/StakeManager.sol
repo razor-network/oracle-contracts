@@ -161,14 +161,13 @@ contract StakeManager is Utils, ACL, StakeStorage {
         emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
     }
 
-    function _calculateBlockReward() private returns(uint256)
-    {
+    function _calculateBlockReward() private returns(uint256) {
         uint256 halvings = (block.number - genesisBlock) / Constants.halvingInterval();	
         if(halvings > lastHalvings) {
-             lastBlockRewards = Constants.initialBlockReward() >>  halvings;
-             lastHalvings = halvings;
+            lastBlockRewards = Constants.initialBlockReward() >>  halvings;
+            lastHalvings = halvings;
         }
-	    return lastBlockRewards	;		
+        return lastBlockRewards;
     }
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed
@@ -328,7 +327,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
         uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
         uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
-        uint256[] memory mediansLastEpoch = _block.medians;
+        // uint256[] memory mediansLastEpoch = _block.medians;
 
         if (lowerCutoffsLastEpoch.length > 0) {
             uint256 penalty = 0;
@@ -336,7 +335,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
-                uint256 medianLastEpoch = mediansLastEpoch[i];
+                // uint256 medianLastEpoch = mediansLastEpoch[i];
 
                 if (((voteLastEpoch < lowerCutoffLastEpoch) ||
                     (voteLastEpoch > higherCutoffLastEpoch))) {//} &&

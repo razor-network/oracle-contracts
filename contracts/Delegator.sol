@@ -16,9 +16,9 @@ contract Delegator {
     // }
 
     function upgradeDelegate(address newDelegateAddress) public {
-            require(msg.sender == owner);
-            delegate = newDelegateAddress;
-            jobManager = IJobManager(newDelegateAddress);
+        require(msg.sender == owner);
+        delegate = newDelegateAddress;
+        jobManager = IJobManager(newDelegateAddress);
     }
 
     function getResult(uint256 id) public view returns(uint256) {
@@ -26,7 +26,7 @@ contract Delegator {
     }
 
     function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result) {
-            return jobManager.getJob(id);
+        return jobManager.getJob(id);
     }
 
 

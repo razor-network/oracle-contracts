@@ -1,0 +1,49 @@
+{
+    "extends": "airbnb-base",
+    "globals": {
+      "artifacts": true,
+      "web3": true,
+      "assert": true,
+      "it": true,
+      "before": true,
+      "beforeEach": true,
+      "after": true,
+      "afterEach": true,
+      "describe": true,
+      "expect": true,
+      "ethers": true
+    },
+    "rules": {
+      "no-unused-expressions": "off",
+      "func-names": "off",
+      "no-else-return": "off",
+      "no-mixed-operators": "off",
+      "no-plusplus": "off",
+      "no-shadow": "off",
+      "import/no-extraneous-dependencies": "off",
+      "space-before-function-paren": [
+        1,
+        {
+          "anonymous": "always",
+          "named": "never"
+        }
+      ],
+      "max-len": [
+        "error",
+        160
+      ],
+      "prefer-arrow-callback": "off",
+      "no-restricted-syntax": "off",
+      "no-await-in-loop": "off",
+      "comma-dangle": [
+        "error",
+        {
+          "arrays": "always-multiline",
+          "objects": "always-multiline",
+          "imports": "always-multiline",
+          "exports": "always-multiline",
+          "functions": "never"
+        }
+      ]
+    }
+  }
