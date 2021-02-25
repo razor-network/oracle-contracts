@@ -1,6 +1,8 @@
-.secret
-.infura
-.mnemonic
-node_modules/
+artifacts/
+build/
+coverage/
 coverage.json
+cache/
+deployed/ganache
+node_modules/
 

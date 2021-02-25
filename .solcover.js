@@ -1,6 +1,13 @@
 module.exports = {
+  file: 'test/*.js',
   norpc: true,
   copyPackages: ['openzeppelin-solidity'],
   skipFiles: ['Migrations.sol'],
-  providerOptions: { total_accounts: 30, seed: 0, network_id: 420 },
+  istanbulReporter: ['html', 'lcov', 'text'],
+  providerOptions: {
+    mnemonic: 'square include clarify skin garden tube tide eight eternal grit hybrid library',
+    total_accounts: 20,
+    default_balance_ether: '1000000000000000000',
+    gasLimit: 0xfffffffffff,
+  },
 }
