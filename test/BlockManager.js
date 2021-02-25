@@ -3,8 +3,14 @@ test same vote values, stakes
 test penalizeEpochs */
 
 const merkle = require('@razor-network/merkle');
-const functions = require('./helpers/functions');
-const { setupContracts } = require('./helpers/testHelpers');
+const {
+  getEpoch,
+  getBiggestStakeAndId,
+  getIteration,
+  mineToNextEpoch,
+  mineToNextState,
+} = require('./helpers/testHelpers');
+const { setupContracts } = require('./helpers/testSetup');
 const { ONE_ETHER, NUM_BLOCKS } = require('./helpers/constants');
 
 const { BigNumber, utils } = ethers;
@@ -26,12 +32,12 @@ describe('BlockManager', function () {
 
   describe('SchellingCoin', async () => {
     it('should be able to initialize', async () => {
-      await functions.mineToNextEpoch();
+      await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, BigNumber.from(423000).mul(ONE_ETHER));
       await schellingCoin.transfer(signers[6].address, BigNumber.from(19000).mul(ONE_ETHER));
 
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, BigNumber.from(420000).mul(ONE_ETHER));
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, BigNumber.from(420000).mul(ONE_ETHER));
 
       await schellingCoin.connect(signers[6]).approve(stakeManager.address, BigNumber.from(18000).mul(ONE_ETHER));
@@ -59,7 +65,7 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
 
-      await functions.mineToNextState();
+      await mineToNextState();
 
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
@@ -79,19 +85,19 @@ describe('BlockManager', function () {
     });
 
     it('should be able to propose', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
-      await functions.mineToNextState();
+      await mineToNextState();
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
       const numStakers = await stakeManager.getNumStakers();
       const stake = Number(staker.stake);
       const stakerId = Number(staker.id);
 
-      const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
-      const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+      const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
+      const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
       const blockHashes = await random.blockHashes(NUM_BLOCKS);
-      const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+      const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -105,7 +111,7 @@ describe('BlockManager', function () {
     });
 
     it('Number of proposals should be 1', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
       const nblocks = await blockManager.getNumProposedBlocks(epoch);
 
@@ -113,7 +119,7 @@ describe('BlockManager', function () {
     });
 
     it('should allow another proposals', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker = await stakeManager.getStaker(stakerIdAcc6);
@@ -121,11 +127,11 @@ describe('BlockManager', function () {
       const stake = Number(staker.stake);
       const stakerId = Number(staker.id);
 
-      const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
-      const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+      const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
+      const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
       const blockHashes = await random.blockHashes(NUM_BLOCKS);
 
-      const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+      const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
 
       await blockManager.connect(signers[6]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -140,7 +146,7 @@ describe('BlockManager', function () {
     });
 
     it('Number of proposals should be 2', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
       const nblocks = await blockManager.getNumProposedBlocks(epoch);
 
@@ -148,8 +154,8 @@ describe('BlockManager', function () {
     });
 
     it('should be able to dispute', async function () {
-      await functions.mineToNextState();
-      const epoch = await functions.getEpoch();
+      await mineToNextState();
+      const epoch = await getEpoch();
 
       const sortedVotes = [200];
       const weights = [BigNumber.from(420000).mul(ONE_ETHER), BigNumber.from(18000).mul(ONE_ETHER)];
@@ -181,7 +187,7 @@ describe('BlockManager', function () {
     });
 
     it('should be able to finalize Dispute', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assert((await proposedBlock.valid) === false);
@@ -191,10 +197,10 @@ describe('BlockManager', function () {
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
-      await functions.mineToNextState();
+      await mineToNextState();
       await schellingCoin.connect(signers[0]).transfer(signers[7].address, BigNumber.from(20000).mul(ONE_ETHER));
 
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
       await schellingCoin.connect(signers[7]).approve(stakeManager.address, BigNumber.from(19000).mul(ONE_ETHER));
       await stakeManager.connect(signers[7]).stake(epoch, BigNumber.from(19000).mul(ONE_ETHER));
@@ -222,7 +228,7 @@ describe('BlockManager', function () {
 
       assert(Number((await blockManager.getBlock(epoch - 1)).proposerId) === Number(await stakeManager.stakerIds(signers[6].address)), `${await stakeManager.stakerIds(signers[6].address)} ID is the one who proposed the block `);
 
-      await functions.mineToNextState();
+      await mineToNextState();
 
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
@@ -242,7 +248,7 @@ describe('BlockManager', function () {
     });
 
     it('all blocks being disputed', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker6 = await stakeManager.getStaker(stakerIdAcc6);
@@ -250,20 +256,20 @@ describe('BlockManager', function () {
       const stakerId6 = Number(staker6.id);
 
       const numStakers = await stakeManager.getNumStakers();
-      const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
-      const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+      const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
+      const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
       const blockHashes = await random.blockHashes(NUM_BLOCKS);
 
-      const iteration6 = await functions.getIteration(random, biggestStake, stake6, stakerId6, numStakers, blockHashes);
+      const iteration6 = await getIteration(random, biggestStake, stake6, stakerId6, numStakers, blockHashes);
 
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
       const staker7 = await stakeManager.getStaker(stakerIdAcc7);
       const stake7 = Number(staker7.stake);
       const stakerId7 = Number(staker7.id);
 
-      const iteration7 = await functions.getIteration(random, biggestStake, stake7, stakerId7, numStakers, blockHashes);
+      const iteration7 = await getIteration(random, biggestStake, stake7, stakerId7, numStakers, blockHashes);
 
-      await functions.mineToNextState();
+      await mineToNextState();
 
       await blockManager.connect(signers[6]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -281,7 +287,7 @@ describe('BlockManager', function () {
         iteration7,
         biggestStakerId);
 
-      await functions.mineToNextState();
+      await mineToNextState();
 
       const sortedVotes1 = [2000, 2010];
       const sortedVotes2 = [3000, 3010];
@@ -347,8 +353,8 @@ describe('BlockManager', function () {
     });
 
     it('no block should be confirmed in the previous epoch', async function () {
-      await functions.mineToNextState();
-      const epoch = await functions.getEpoch();
+      await mineToNextState();
+      const epoch = await getEpoch();
 
       await schellingCoin.connect(signers[19]).approve(stakeManager.address, BigNumber.from(19000).mul(ONE_ETHER));
       await stakeManager.connect(signers[19]).stake(epoch, BigNumber.from(19000).mul(ONE_ETHER));
@@ -368,7 +374,7 @@ describe('BlockManager', function () {
       assert((await blockManager.getBlock(epoch - 1)).valid === false);
       assert(Number(((await blockManager.getBlock(epoch - 1)).medians).length) === 0);
 
-      await functions.mineToNextState();
+      await mineToNextState();
 
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
@@ -380,22 +386,22 @@ describe('BlockManager', function () {
     });
 
     it('should be able to reset dispute incase of wrong values being entered', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
 
-      await functions.mineToNextState();
+      await mineToNextState();
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
       const numStakers = await stakeManager.getNumStakers();
       const stake = Number(staker.stake);
       const stakerId = Number(staker.id);
 
-      const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
+      const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
 
-      const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+      const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
 
       const blockHashes = await random.blockHashes(NUM_BLOCKS);
 
-      const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+      const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
       await blockManager.connect(signers[19]).propose(epoch,
         [10, 12, 13, 14, 15, 16, 17, 18, 19],
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
@@ -406,7 +412,7 @@ describe('BlockManager', function () {
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assert(Number(proposedBlock.proposerId) === 4, 'incorrect proposalID');
 
-      await functions.mineToNextState();
+      await mineToNextState();
       // typing error
       const sortedVotes = [20000];
       const weights = [BigNumber.from(19000).mul(ONE_ETHER)];
@@ -443,10 +449,10 @@ describe('BlockManager', function () {
 
     it('should be able to dispute in batches', async function () {
       // Commit
-      await functions.mineToNextEpoch();
+      await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, BigNumber.from(423000).mul(ONE_ETHER));
       await schellingCoin.transfer(signers[6].address, BigNumber.from(19000).mul(ONE_ETHER));
-      let epoch = await functions.getEpoch();
+      let epoch = await getEpoch();
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, BigNumber.from(420000).mul(ONE_ETHER));
 
       await stakeManager.connect(signers[5]).stake(epoch, BigNumber.from(420000).mul(ONE_ETHER));
@@ -477,7 +483,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
 
       // Reveal
-      await functions.mineToNextState();
+      await mineToNextState();
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
@@ -495,20 +501,20 @@ describe('BlockManager', function () {
         signers[6].address);
 
       // Propose
-      await functions.mineToNextState();
+      await mineToNextState();
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
       const numStakers = await stakeManager.getNumStakers();
       const stake = Number(staker.stake);
       const stakerId = Number(staker.id);
 
-      const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
+      const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
 
-      const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+      const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
 
       const blockHashes = await random.blockHashes(NUM_BLOCKS);
 
-      const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+      const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -521,8 +527,8 @@ describe('BlockManager', function () {
       assert(Number(proposedBlock.proposerId) === 1, 'incorrect proposalID');
 
       // Dispute
-      await functions.mineToNextState();
-      epoch = await functions.getEpoch();
+      await mineToNextState();
+      epoch = await getEpoch();
       const sortedVotes = [200];
       const weights = [BigNumber.from(420000).mul(ONE_ETHER), BigNumber.from(18000).mul(ONE_ETHER)];
 

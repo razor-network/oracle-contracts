@@ -18,6 +18,7 @@
       "func-names": "off",
       "no-else-return": "off",
       "no-mixed-operators": "off",
+      "no-param-reassign": "off",
       "no-plusplus": "off",
       "no-shadow": "off",
       "import/no-extraneous-dependencies": "off",

@@ -2,7 +2,8 @@
 test same vote values, stakes
 test penalizeEpochs */
 
-const { setupContracts } = require('./helpers/testHelpers');
+const { setupContracts } = require('./helpers/testSetup');
+// Commented because proxy was not being used.
 // const jobManagerBuild = require('../build/contracts/JobManager.json');
 
 describe('JobManager', function () {
@@ -32,8 +33,8 @@ describe('JobManager', function () {
     it('should be able to get result using proxy', async function () {
       await delegator.upgradeDelegate(jobManager.address);
       assert(await delegator.delegate() === jobManager.address);
-      // console.log('addy', delegator.address)
-      //
+
+      // Commented because proxy was not being used here.
       // const proxy = new web3.eth.Contract(jobManagerBuild.abi, delegator.address,
       //   {
       //     gas: 5000000,

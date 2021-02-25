@@ -3,6 +3,22 @@ const jsonfile = require('jsonfile');
 
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 
+const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
+
+const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
+
+const appendDeploymentFile = async (data) => {
+  let deployments = {};
+
+  try {
+    deployments = await readDeploymentFile();
+  } catch (e) {
+    console.log("Deployment file doesn't exist, generating it...");
+  }
+
+  await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
+};
+
 const deployContract = async (contractName, linkDependecies = [], constructorParams = []) => {
   let Contract;
 
@@ -49,20 +65,6 @@ const getdeployedContractInstance = async (contractName, contractAddress, linkDe
 
   return { Contract, contractInstance };
 };
-
-const appendDeploymentFile = async (data) => {
-  let deployments = {};
-
-  try {
-    deployments = await readDeploymentFile();
-  } catch (e) {
-    console.log("Deployment file doesn't exist, generating it...");
-  }
-
-  await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
-};
-const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
-const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
 
 module.exports = {
   deployContract,

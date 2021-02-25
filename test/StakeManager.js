@@ -5,9 +5,9 @@ test cases where nobody votes, too low stake (1-4) */
 const merkle = require('@razor-network/merkle');
 const { BigNumber } = require('ethers');
 const { ONE_ETHER } = require('./helpers/constants');
-const functions = require('./helpers/functions');
+const { getEpoch, mineToNextEpoch, mineToNextState } = require('./helpers/testHelpers');
 const { assertRevert } = require('./helpers/utils');
-const { setupContracts } = require('./helpers/testHelpers');
+const { setupContracts } = require('./helpers/testSetup');
 
 describe('StakeManager', function () {
   describe('SchellingCoin', async function () {
@@ -23,7 +23,7 @@ describe('StakeManager', function () {
 
     it('should be able to initialize', async function () {
       // await stateManager.setEpoch(1)
-      await functions.mineToNextEpoch();
+      await mineToNextEpoch();
       // await stateManager.setState(0)
       const stake1 = BigNumber.from('423000').mul(ONE_ETHER);
       // let stake2 = BigNumber.from('423000e18')
@@ -40,7 +40,7 @@ describe('StakeManager', function () {
     });
 
     it('should be able to stake', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       const stake1 = BigNumber.from('420000').mul(ONE_ETHER);
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
@@ -56,7 +56,7 @@ describe('StakeManager', function () {
     });
 
     it('should handle second staker correctly', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       const stake = BigNumber.from('19000').mul(ONE_ETHER);
 
       await schellingCoin.connect(signers[2]).approve(stakeManager.address, stake);
@@ -98,14 +98,14 @@ describe('StakeManager', function () {
       const stake2 = BigNumber.from('423000').mul(ONE_ETHER);
 
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
       const staker = await stakeManager.getStaker(1);
       assert(String(staker.stake) === String(stake2));
     });
 
     it('should not be able to unstake before unstake lock period', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       const tx = stakeManager.connect(signers[1]).unstake(epoch);
       await assertRevert(tx, 'revert locked');
     // let staker = await stakeManager.getStaker(1)
@@ -114,8 +114,8 @@ describe('StakeManager', function () {
 
     it('should be able to unstake after unstake lock period', async function () {
       // await stateManager.setEpoch(2)
-      await functions.mineToNextEpoch();
-      const epoch = await functions.getEpoch();
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).unstake(epoch);
       const staker = await stakeManager.getStaker(1);
       assert(Number(staker.unstakeAfter) === 0, 'UnstakeAfter should be zero');
@@ -123,7 +123,7 @@ describe('StakeManager', function () {
     });
 
     it('should not be able to withdraw before withdraw lock period', async function () {
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       const tx = stakeManager.connect(signers[1]).withdraw(epoch);
       await assertRevert(tx, 'Didnt reveal in last epoch');
       const staker = await stakeManager.getStaker(1);
@@ -135,8 +135,8 @@ describe('StakeManager', function () {
       // await stateManager.setEpoch(3)
       const stake = BigNumber.from('423000').mul(ONE_ETHER);
 
-      await functions.mineToNextEpoch();
-      const epoch = await functions.getEpoch();
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
       const tx = stakeManager.connect(signers[1]).withdraw(epoch);
       await assertRevert(tx, 'Didnt reveal in last epoch');
       const staker = await stakeManager.getStaker(1);
@@ -149,13 +149,13 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
-      const epoch = await functions.getEpoch();
+      const epoch = await getEpoch();
       // Here epoch => Epoch Number, root => Merkle root, 0x72... => random secret
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[1]).commit(epoch, commitment1);
 
       // await stateManager.setState(1)
-      await functions.mineToNextState();
+      await mineToNextState();
 
       // let root = tree.root()
       // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
@@ -173,25 +173,25 @@ describe('StakeManager', function () {
       // let stake = Number(staker.stake)
       // let stakerId = Number(staker.id)
       // console.log('stake', stake)
-      // let biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0]
+      // let biggestStake = (await getBiggestStakeAndId(stakeManager))[0]
       // console.log('biggestStake', biggestStake)
-      // let biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1]
+      // let biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1]
       // console.log('biggestStakerId', biggestStakerId)
       // let blockHashes = await random.blockHashes(numBlocks)
       // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
-      // let iteration = await functions.getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
+      // let iteration = await getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
       // console.log('iteration1b', iteration)
       // // await blockManager.propose(3, [100, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
       //
       // await stateManager.setEpoch(4)
       // await stateManager.setState(0)
-      await functions.mineToNextEpoch();
+      await mineToNextEpoch();
       // commitment1 = web3.utils.soliditySha3(4, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
       // await voteManager.commit(4, commitment1, { 'from': accounts[2] })
       let staker = await stakeManager.getStaker(1);
       // console.log(Number(await staker.stake))
       // console.log(Number(await staker.epochLastRevealed))
-      const epochNext = await functions.getEpoch();
+      const epochNext = await getEpoch();
       await (stakeManager.connect(signers[1]).withdraw(epochNext));
       staker = await stakeManager.getStaker(1);
       // console.log(Number(await staker.stake))

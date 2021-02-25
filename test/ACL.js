@@ -1,6 +1,6 @@
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
-const functions = require('./helpers/functions');
-const { setupContracts } = require('./helpers/testHelpers');
+const { takeSnapshot, restoreSnapshot } = require('./helpers/testHelpers');
+const { setupContracts } = require('./helpers/testSetup');
 const { assertRevert } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
@@ -20,11 +20,11 @@ describe('Access Control Test', async () => {
   });
 
   beforeEach(async () => {
-    snapShotId = await functions.takeSnapshot();
+    snapShotId = await takeSnapshot();
   });
 
   afterEach(async () => {
-    await functions.restoreSnapshot(snapShotId);
+    await restoreSnapshot(snapShotId);
   });
 
   it('fulFillJob() should not be accessable by anyone besides JobConfirmer', async () => {

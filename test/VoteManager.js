@@ -4,9 +4,15 @@ test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
 const { BigNumber, utils } = require('ethers');
-const { setupContracts } = require('./helpers/testHelpers');
 const { NUM_BLOCKS, ONE_ETHER } = require('./helpers/constants');
-const functions = require('./helpers/functions');
+const {
+  getEpoch,
+  getIteration,
+  getBiggestStakeAndId,
+  mineToNextEpoch,
+  mineToNextState,
+} = require('./helpers/testHelpers');
+const { setupContracts } = require('./helpers/testSetup');
 const { assertBNEqual } = require('./helpers/utils');
 
 describe('VoteManager', function () {
@@ -30,12 +36,12 @@ describe('VoteManager', function () {
       it('should be able to initialize', async function () {
       // await stateManager.setEpoch(1)
       // await stateManager.setState(0)
-        await functions.mineToNextEpoch();
+        await mineToNextEpoch();
         await schellingCoin.transfer(signers[3].address, BigNumber.from(423000).mul(ONE_ETHER));
         await schellingCoin.transfer(signers[4].address, BigNumber.from(19000).mul(ONE_ETHER));
         await schellingCoin.connect(signers[3]).approve(stakeManager.address, BigNumber.from(420000).mul(ONE_ETHER));
         await schellingCoin.connect(signers[4]).approve(stakeManager.address, BigNumber.from(19000).mul(ONE_ETHER));
-        const epoch = await functions.getEpoch();
+        const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, BigNumber.from(420000).mul(ONE_ETHER));
         await stakeManager.connect(signers[4]).stake(epoch, BigNumber.from(19000).mul(ONE_ETHER));
       // await schellingCoin.transfer(signers[3].address, 800000, { 'from': signers[0].address})
@@ -49,7 +55,7 @@ describe('VoteManager', function () {
       });
 
       it('should be able to commit', async function () {
-        const epoch = await functions.getEpoch();
+        const epoch = await getEpoch();
         // await stateManager.setEpoch(3)
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -78,7 +84,7 @@ describe('VoteManager', function () {
       });
 
       it('should be able to reveal', async function () {
-        const epoch = await functions.getEpoch();
+        const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
 
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
@@ -88,7 +94,7 @@ describe('VoteManager', function () {
         const tree = merkle('keccak256').sync(votes);
         // console.log(tree.root())
         // await stateManager.setState(1)
-        await functions.mineToNextState(); // reveal
+        await mineToNextState(); // reveal
 
         // let root = tree.root()
         // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
@@ -120,7 +126,7 @@ describe('VoteManager', function () {
       });
 
       it('should be able to commit again with correct rewards', async function () {
-        let epoch = await functions.getEpoch();
+        let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
@@ -128,14 +134,14 @@ describe('VoteManager', function () {
         const stake = Number(staker.stake);
         const stakerId = Number(staker.id);
         // await stateManager.setEpoch(3)
-        const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
+        const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
         // console.log('biggestStake', biggestStake)
-        const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+        const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
         // console.log('biggestStakerId', biggestStakerId)
         const blockHashes = await random.blockHashes(NUM_BLOCKS);
         // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
-        const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
-        await functions.mineToNextState(); // propose
+        const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+        await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
@@ -146,8 +152,8 @@ describe('VoteManager', function () {
 
         const stakeBefore = Number((await stakeManager.stakers(stakerIdAcc3)).stake);
         const stakeBefore2 = Number((await stakeManager.stakers(stakerIdAcc4)).stake);
-        await functions.mineToNextState(); // dispute
-        await functions.mineToNextState(); // commit
+        await mineToNextState(); // dispute
+        await mineToNextState(); // commit
         epoch = await stateManager.getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -217,7 +223,7 @@ describe('VoteManager', function () {
           proof2.push(tree2.getProofPath(i, true, true));
         }
 
-        await functions.mineToNextState(); // reveal
+        await mineToNextState(); // reveal
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
@@ -238,7 +244,7 @@ describe('VoteManager', function () {
       });
 
       it('account 4 should be penalised for trying to make fraudulent predictions in the previous epoch', async function () {
-        let epoch = await functions.getEpoch();
+        let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
@@ -246,14 +252,14 @@ describe('VoteManager', function () {
         const stake = Number(staker.stake);
         const stakerId = Number(staker.id);
 
-        const biggestStake = (await functions.getBiggestStakeAndId(stakeManager))[0];
+        const biggestStake = (await getBiggestStakeAndId(stakeManager))[0];
 
-        const biggestStakerId = (await functions.getBiggestStakeAndId(stakeManager))[1];
+        const biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1];
 
         const blockHashes = await random.blockHashes(NUM_BLOCKS);
 
-        const iteration = await functions.getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
-        await functions.mineToNextState(); // propose
+        const iteration = await getIteration(random, biggestStake, stake, stakerId, numStakers, blockHashes);
+        await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           [10, 11, 12, 13, 14, 15, 16, 17, 18],
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
@@ -264,8 +270,8 @@ describe('VoteManager', function () {
 
         const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
         const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
-        await functions.mineToNextState(); // dispute
-        await functions.mineToNextState(); // commit
+        await mineToNextState(); // dispute
+        await mineToNextState(); // commit
         epoch = await stateManager.getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -299,7 +305,7 @@ describe('VoteManager', function () {
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {
-        const epoch = await functions.getEpoch();
+        const epoch = await getEpoch();
 
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const stakeBefore = Number((await stakeManager.stakers(stakerIdAcc4)).stake);
@@ -322,7 +328,7 @@ describe('VoteManager', function () {
       });
 
       it('Account 3 should be able to reveal again with correct rewards', async function () {
-        const epoch = await functions.getEpoch();
+        const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
 
         const stakeBefore = Number((await stakeManager.stakers(stakerIdAcc3)).stake);
@@ -339,7 +345,7 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-        await functions.mineToNextState(); // reveal
+        await mineToNextState(); // reveal
         const rewardPool = Number(await stakeManager.rewardPool());
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,

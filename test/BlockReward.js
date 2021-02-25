@@ -1,5 +1,5 @@
-// const functions = require('./helpers/functions');
-// const { setupContracts } = require('./helpers/testHelpers');
+// const functions = require('./helpers/testSetup');
+// const { setupContracts } = require('./helpers/testSetup');
 
 // // By Default we skip this test as it takes very long time to pass with current defaults.
 // // So now if we want to test this we can do so by doing follwoing changes and then you can remove skip

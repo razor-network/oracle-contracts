@@ -327,6 +327,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
         uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
         uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
+        // Commented, because it was not being used, why was it defined if not being used?
         // uint256[] memory mediansLastEpoch = _block.medians;
 
         if (lowerCutoffsLastEpoch.length > 0) {
@@ -335,6 +336,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
+                // Commented, because it was not being used, why was it defined if not being used?
                 // uint256 medianLastEpoch = mediansLastEpoch[i];
 
                 if (((voteLastEpoch < lowerCutoffLastEpoch) ||

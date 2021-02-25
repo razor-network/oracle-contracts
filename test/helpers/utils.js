@@ -34,15 +34,14 @@ const assertDeepEqual = (actual, expected, context) => {
   } else if (
     typeof expected === 'string'
     || typeof actual === 'string'
-		|| typeof expected === 'number'
-		|| typeof actual === 'number'
-		|| typeof expected === 'boolean'
-		|| typeof actual === 'boolean'
+    || typeof expected === 'number'
+    || typeof actual === 'number'
+    || typeof expected === 'boolean'
+    || typeof actual === 'boolean'
   ) {
     assert.strictEqual(actual, expected, context);
-  }
-  // Otherwise dig through the deeper object and recurse
-  else if (Array.isArray(expected)) {
+  } else if (Array.isArray(expected)) { 
+    // Otherwise dig through the deeper object and recurse
     for (let i = 0; i < expected.length; i++) {
       assertDeepEqual(actual[i], expected[i], `(array index: ${i}) `);
     }
