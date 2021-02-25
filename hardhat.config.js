@@ -39,14 +39,9 @@ module.exports = {
       },
     },
   },
-  paths: {
-    sources: './contracts',
-    tests: './test',
-  },
   networks: {
     hardhat: {
       blockGasLimit: 0x1fffffffffffff,
-      allowUnlimitedContractSize: true,
       chainId: 31337,
     },
     coverage: {
@@ -69,7 +64,6 @@ module.exports = {
     },
   },
   gasReporter: {
-    outputFile: 'gas-report.txt',
     noColors: true, // Colors on terminal corrupts the output.
   },
 };

@@ -5,7 +5,6 @@ const deploySchellingCoin = async () => {
   await deployContract('SchellingCoin', [], [StakeManager]);
 };
 
-
 module.exports = async () => {
   await deploySchellingCoin();
 };

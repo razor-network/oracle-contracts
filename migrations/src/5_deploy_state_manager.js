@@ -4,7 +4,6 @@ const deployStateManager = async () => {
   await deployContract('StateManager', ['Constants']);
 };
 
-
 module.exports = async () => {
   await deployStateManager();
 };

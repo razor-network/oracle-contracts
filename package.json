@@ -7,11 +7,13 @@
     "test": "test"
   },
   "scripts": {
+    "cp-ganache-env": "cp .env.ganache .env",
+    "pretest": "npm run cp-ganache-env",
     "coverage": "hardhat coverage --network coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 97 --branches 85 --functions 97 --lines 97",
     "deploy:ganache": "./scripts/deploy.sh ganache",
     "deploy:goerli": "./scripts/deploy.sh goerli",
-    "lint": "npm run lint:js && npm run lint:sol",
+    "lint": "npm run lint:sol && npm run lint:js",
     "lint:fix": "npm run lint:js:fix",
     "lint:js": "eslint .",
     "lint:js:fix": "eslint --fix .",
