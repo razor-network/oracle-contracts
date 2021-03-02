@@ -1,46 +1,44 @@
 # Razor network - Contracts
 
 These are the contracts for Razor network.
+
+## Prerequisites :
+#### npm
+You'll need npm to install the required packages.
+To install npm , go to this [link](https://www.npmjs.com/get-npm)
 # Deployment
 
-1. Install truffle
-2. Install openzeppelin
-`npm i openzeppelin-solidity`
-3. Run ganache-cli
-`ganache-cli -s 0 -i 420 -a 30 -l 7000000`
-4. Run tests
-`truffle test`
-5. For bigSchelling.js large number of accounts are required
-`ganache-cli -s 0 -i 420 -a 101 -l 7000000`
-6. For testing with cli, set blocktime
-`ganache-cli -s 0 -i 420 -a 30 -b 5 -l 7000000`
-7. Deploy on ganache
-`truffle migrate --reset`
-8. create .secret file with mnemonic of the private key used to deploy on rinkeby
-9. Deploy on görli (.secret file must be present with mnemonic of the private key used to deploy)
-`truffle migrate --network goerli --reset`
-10. For test coverage,<br/> 
-   `npm install --save-dev solidity-coverage`<br/>
-   `npm run coverage` 
+##### Local Deployment using ganache cli/gui
+1. Run Ganache CLI/GUI (You can modify port in `hardhat.config.js`)
+2. Provide provider host & port in `.env.ganache
+3. Run command `deploy:ganache`
+
+##### Goerli Deployment using ganache cli/gui
+1. Create `.env.goerli` file (Refs - `.env.tpl`), provide `mnemonic` & `provider` for deployment.
+2. Run command `deploy:goerli`
 
 # Migration guide
-1. `truffle migrate --reset --network goerli`
-2. `sh copy-build.sh`
-3. `cd ../cli && git add . && git commit -m 'redeploy' && git push`
-4. `cd ../synthetic-assets`
-5. Change the delegator address in `synthetic-assets/migrations/2_deploy.js`
-6. `truffle migrate --reset --network goerli`
-7. `git add . && git commit -m 'redeploy' && git push`
-8. `cd ../dashboard`
-9. `git add . && git commit -m 'redeploy' && git push`
-6. In remote server:
+1. Run `npm run deploy:goerli`
+2. `cd ../cli && git add . && git commit -m 'redeploy' && git push`
+3. `cd ../synthetic-assets`
+4. Change the delegator address in `synthetic-assets/migrations/2_deploy.js`
+5. `truffle migrate --reset --network goerli`
+6. `git add . && git commit -m 'redeploy' && git push`
+7. `cd ../dashboard`
+8. `git add . && git commit -m 'redeploy' && git push`
+9. In remote server:
    1. `cd cli && git pull`
    2. `pm2 stop all`
    3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
    4. `pm2 start all` once staked
 
+#### Running tests
+
+Run `npm run test`
+
+#### Test Coverage
+Run `npm run coverage`
 
 
 # Addresses
-Contract addresses can be found [here](ADDRESSES.md)
-
+Deployed contract addresses can be found [here](deployed/goerli/addresses.json)
