@@ -1,0 +1,20 @@
+{
+  "extends": "solhint:recommended",
+  "rules": {
+    "avoid-suicide": "error",
+    "avoid-sha3": "warn",
+    "compiler-version": "off",
+    "const-name-snakecase": "warn",
+    "contract-name-camelcase": "warn",
+    "event-name-camelcase": "warn",
+    "func-name-mixedcase": "warn",
+    "func-order": "warn",
+    "imports-on-top": "warn",
+    "no-unused-vars": "error", 
+    "not-rely-on-time" : "off",
+    "quotes": ["error","double"],
+    "reason-string": ["warn",{"maxLength":32}],
+    "reentrancy": "error",
+    "visibility-modifier-order": "warn"
+  }
+}

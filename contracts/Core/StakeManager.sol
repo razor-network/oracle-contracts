@@ -161,14 +161,13 @@ contract StakeManager is Utils, ACL, StakeStorage {
         emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
     }
 
-    function _calculateBlockReward() private returns(uint256)
-    {
+    function _calculateBlockReward() private returns(uint256) {
         uint256 halvings = (block.number - genesisBlock) / Constants.halvingInterval();	
         if(halvings > lastHalvings) {
-             lastBlockRewards = Constants.initialBlockReward() >>  halvings;
-             lastHalvings = halvings;
+            lastBlockRewards = Constants.initialBlockReward() >>  halvings;
+            lastHalvings = halvings;
         }
-	    return lastBlockRewards	;		
+        return lastBlockRewards;
     }
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed

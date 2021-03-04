@@ -1,6 +1,10 @@
-.secret
-.infura
-.mnemonic
-node_modules/
+artifacts/
+build/
+coverage/
 coverage.json
+cache/
+deployed/ganache
+.env
+.env.goerli
+node_modules/
 

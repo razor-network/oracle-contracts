@@ -7,8 +7,18 @@
     "test": "test"
   },
   "scripts": {
-    "test": "bash ./scripts/run_tests.sh",
-    "coverage": "truffle run coverage --network testNetwork"
+    "cp-ganache-env": "cp .env.ganache .env",
+    "pretest": "npm run cp-ganache-env",
+    "coverage": "hardhat coverage --network coverage && npm run coverage:check",
+    "coverage:check": "istanbul check-coverage --statements 97 --branches 85 --functions 97 --lines 97",
+    "deploy:ganache": "./scripts/deploy.sh ganache",
+    "deploy:goerli": "./scripts/deploy.sh goerli",
+    "lint": "npm run lint:sol && npm run lint:js",
+    "lint:fix": "npm run lint:js:fix",
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint --fix .",
+    "lint:sol": "npx hardhat check",
+    "test": "hardhat compile && hardhat test"
   },
   "repository": {
     "type": "git",
@@ -22,15 +32,23 @@
   "homepage": "https://github.com/schelling-network/contracts#readme",
   "dependencies": {
     "@razor-network/merkle": "^0.6.0",
-    "@truffle/hdwallet-provider": "^1.2.0",
-    "openzeppelin-solidity": "^3.1.0",
-    "truffle": "^5.1.57",
-    "web3": "^1.2.1"
+    "jsonfile": "^6.1.0",
+    "openzeppelin-solidity": "^3.1.0"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-solhint": "^2.0.0",
+    "@nomiclabs/hardhat-truffle5": "^2.0.0",
+    "@nomiclabs/hardhat-web3": "^2.0.0",
+    "chai": "^4.3.0",
+    "dotenv": "8.2.0",
+    "eslint": "^5.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1",
     "eth-gas-reporter": "^0.2.17",
-    "prettier": "^1.18.2",
-    "prettier-plugin-solidity": "^1.0.0-alpha.32",
+    "ethers": "^5.0.31",
+    "hardhat": "^2.0.10",
+    "hardhat-gas-reporter": "1.0.4",
     "solidity-coverage": "^0.7.13"
   }
 }
