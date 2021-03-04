@@ -1,9 +1,7 @@
 const { getdeployedContractInstance, readDeploymentFile } = require('../migrationHelpers');
 
-const { BigNumber } = ethers;
-
+const { SEED_AMOUNT, STAKER_ADDRESSES } = process.env
 module.exports = async () => {
-  const SEED = BigNumber.from('10').pow('24');
 
   const {
     Constants: constantsAddress,
@@ -30,27 +28,27 @@ module.exports = async () => {
   const { contractInstance: faucet } = await getdeployedContractInstance('Faucet', faucetAddress);
   const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
 
-  await Promise.all([
-    blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress),
-    voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress),
-    stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress),
-    jobManager.init(stateManagerAddress),
-    faucet.init(schellingCoinAddress),
+  const promises = [];
+  const stakerAddressList = STAKER_ADDRESSES.split(',');
 
-    jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress),
-    blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress),
-    stakeManager.grantRole(await constants.getStakeModifierHash(), blockManagerAddress),
-    stakeManager.grantRole(await constants.getStakeModifierHash(), voteManagerAddress),
-    stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress),
+  stakerAddressList.forEach( stakerAddress => {
+    promises.push(schellingCoin.transfer(stakerAddress, SEED_AMOUNT));
+  })
 
-    delegator.upgradeDelegate(jobManagerAddress),
+  promises.push(blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
+  promises.push(voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
+  promises.push(stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
+  promises.push(jobManager.init(stateManagerAddress));
+  promises.push(faucet.init(schellingCoinAddress));
 
-    // Need to hardcode these addresses in ENV variable and probably seed too.
-    schellingCoin.transfer('0x1D68ad204637173b2d8656B7972c57dcE41Bc80e', SEED),
-    schellingCoin.transfer('0x9FF5085aa345C019cDF2A427B02Bd6746DeF549B', SEED),
-    schellingCoin.transfer('0xc4695904751Ad8414c75798d6Ff2579f55e61522', SEED),
-    schellingCoin.transfer('0x40d57C3F5c3BAbac3033E2D50AB7C6886A595F46', SEED),
-    schellingCoin.transfer('0xa2B827aCF6073f5D9e2350cbf0646Ba2535a5B0C', SEED),
-    schellingCoin.transfer(faucetAddress, SEED),
-  ]);
+  promises.push(jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
+  promises.push(blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
+  promises.push(stakeManager.grantRole(await constants.getStakeModifierHash(), blockManagerAddress));
+  promises.push(stakeManager.grantRole(await constants.getStakeModifierHash(), voteManagerAddress));
+  promises.push(stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress));
+
+  promises.push(delegator.upgradeDelegate(jobManagerAddress));
+  promises.push(schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
+  
+  await Promise.all(promises);
 };

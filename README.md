@@ -10,7 +10,7 @@ To install npm , go to this [link](https://www.npmjs.com/get-npm)
 
 ##### Local Deployment using ganache cli/gui
 1. Run Ganache CLI/GUI (You can modify port in `hardhat.config.js`)
-2. Provide provider host & port in `.env.ganache
+2. Provide provider host & port in `.env.ganache`
 3. Run command `deploy:ganache`
 
 ##### Goerli Deployment using ganache cli/gui
@@ -32,13 +32,11 @@ To install npm , go to this [link](https://www.npmjs.com/get-npm)
    3. Run first 5 lines in file cli/misc/deploy.sh for stakers to stake
    4. `pm2 start all` once staked
 
-#### Running tests
-
+# Running tests
 Run `npm run test`
 
-#### Test Coverage
+# Test Coverage
 Run `npm run coverage`
-
 
 # Addresses
 Deployed contract addresses can be found [here](deployed/goerli/addresses.json)

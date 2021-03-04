@@ -10,3 +10,7 @@ PROVIDER_PORT=
 
 # Provider URL for deployment
 PROVIDER_URL=
+
+# List of Stakers
+STAKER_ADDRESSES=
+SEED_AMOUNT=
