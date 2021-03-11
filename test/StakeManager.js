@@ -22,31 +22,17 @@ describe('StakeManager', function () {
     });
 
     it('should be able to initialize', async function () {
-      // await stateManager.setEpoch(1)
       await mineToNextEpoch();
-      // await stateManager.setState(0)
       const stake1 = BigNumber.from('423000').mul(ONE_ETHER);
-      // let stake2 = BigNumber.from('423000e18')
       await schellingCoin.transfer(signers[1].address, stake1);
       await schellingCoin.transfer(signers[2].address, stake1);
-      // await schellingCoin.transfer(accounts[3], 800000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[4], 600000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[5], 2000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[6], 700000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[7], 3000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[8], 4000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[9], 5000, { 'from': accounts[0]})
-      // await schellingCoin.transfer(accounts[10], 6000, { 'from': accounts[0]})
     });
 
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
-      console.log(epoch);
       const stake1 = BigNumber.from('420000').mul(ONE_ETHER);
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
-      // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
-
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       assert(stakerId.toString() === '1');
       const numStakers = await stakeManager.numStakers();
@@ -59,10 +45,8 @@ describe('StakeManager', function () {
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = BigNumber.from('19000').mul(ONE_ETHER);
-
       await schellingCoin.connect(signers[2]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[2]).stake(epoch, stake);
-
       const stakerId = await stakeManager.stakerIds(signers[2].address);
       assert(stakerId.toString() === '2');
       const numStakers = await stakeManager.numStakers();
@@ -73,15 +57,6 @@ describe('StakeManager', function () {
     });
 
     it('getters should work as expected', async function () {
-      // console.log(web3i.eth.accounts)
-      // let stateManager = await StateManager.deployed()
-      // console.log('epoch, state', Number(await stateManager.getEpoch()), Number(await stateManager.getState()))
-      // console.log('epoch', Number(await stakeManager.wtfEpoch()))
-      // let sch = await SchellingCoin.deployed()
-      // await schellingCoin.approve(stakeManager.address, 420000, { 'from': accounts[1] })
-      // await stakeManager.stake(1, 420000, { 'from': accounts[1] })
-      // ////console.log('stake gas used, usd cost', tx.receipt.gasUsed, tx.receipt.gasUsed * dollarPerGas)
-
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       assert(stakerId.toString() === String(await stakeManager.getStakerId(signers[1].address)));
       const numStakers = await stakeManager.numStakers();
@@ -90,17 +65,13 @@ describe('StakeManager', function () {
       const staker2 = await stakeManager.getStaker(1);
       assert(staker.id.toString() === String(staker2.id));
       assert(staker.stake.toString() === String(staker2.stake));
-      // let totalStake = await stakeManager.totalStake()
-      // assert(totalStake.toString() === '420000')
     });
 
     it('should be able to increase stake', async function () {
       const stake = BigNumber.from('3000').mul(ONE_ETHER);
       const stake2 = BigNumber.from('423000').mul(ONE_ETHER);
-
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
-      console.log(epoch);
       await stakeManager.connect(signers[1]).stake(epoch, stake);
       const staker = await stakeManager.getStaker(1);
       assert(String(staker.stake) === String(stake2));
@@ -108,18 +79,13 @@ describe('StakeManager', function () {
 
     it('should not be able to unstake before unstake lock period', async function () {
       const epoch = await getEpoch();
-      console.log(epoch);
       const tx = stakeManager.connect(signers[1]).unstake(epoch);
       await assertRevert(tx, 'revert locked');
-      // let staker = await stakeManager.getStaker(1)
-      // assert(Number(staker.stake) === 423000)
     });
 
     it('should be able to unstake after unstake lock period', async function () {
-      // await stateManager.setEpoch(2)
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      console.log(epoch);
       await stakeManager.connect(signers[1]).unstake(epoch);
       const staker = await stakeManager.getStaker(1);
       assert(Number(staker.unstakeAfter) === 0, 'UnstakeAfter should be zero');
@@ -128,7 +94,6 @@ describe('StakeManager', function () {
 
     it('should not be able to withdraw before withdraw lock period', async function () {
       const epoch = await getEpoch();
-      console.log(epoch);
       const tx = stakeManager.connect(signers[1]).withdraw(epoch);
       await assertRevert(tx, "Withdraw epoch not reached");
       const staker = await stakeManager.getStaker(1);
@@ -137,23 +102,17 @@ describe('StakeManager', function () {
     });
 
     it('should be able to withdraw after withdraw lock period if didnt reveal in last epoch', async function () {
-      
       // Stake of Staker 1 
       const stake = BigNumber.from('423000').mul(ONE_ETHER);
-
       await mineToNextEpoch();
-  
       const epoch = await getEpoch();
       await (stakeManager.connect(signers[1]).withdraw(epoch));
-     
       let staker = await stakeManager.getStaker(1);
       assert(Number(staker.stake) === 0); // Stake Should be zero
       assert(String(await schellingCoin.balanceOf(signers[1].address)) === String(stake)); // Balance
-
     });
 
     it('should not be able to withdraw after withdraw lock period if voted in withdraw lock period', async function () {
-
       // @notice: Checking for Staker 2
       const stake = BigNumber.from('19000').mul(ONE_ETHER);
       let epoch = await getEpoch();
@@ -174,7 +133,6 @@ describe('StakeManager', function () {
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
-  
       await mineToNextState();
 
       //Reveal
@@ -185,7 +143,6 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[2].address);
-
 
       // Next Epoch
       await mineToNextEpoch();

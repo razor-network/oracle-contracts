@@ -98,7 +98,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
     event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
+    /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
     /// @param epoch The Epoch value for which staker is requesting to unstake
     function unstake (uint256 epoch) external checkEpoch(epoch)  checkState(Constants.commit()) {
