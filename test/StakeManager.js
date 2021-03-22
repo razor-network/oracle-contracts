@@ -96,7 +96,7 @@ describe('StakeManager', function () {
     it('should be able to increase stake', async function () {
       const stake = BigNumber.from('3000').mul(ONE_ETHER);
       const stake2 = BigNumber.from('423000').mul(ONE_ETHER);
-
+      await mineToNextEpoch();
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
