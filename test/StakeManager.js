@@ -105,7 +105,7 @@ describe('StakeManager', function () {
       assert(String(staker.stake) === String(stake2));
     });
 
-        it('should be able to reset the lock periods', async function (){
+    it('should be able to reset the lock periods', async function (){
           //let stakeManager = await StakeManager.deployed()
           //let sch = await SchellingCoin.deployed()
           const stake = BigNumber.from('20000').mul(ONE_ETHER);
@@ -118,8 +118,6 @@ describe('StakeManager', function () {
           assert(Number(staker.unstakeAfter) === (epoch+1))
           assert(String(staker.withdrawAfter) === String(0))
         })
-
-
 
     it('should not be able to unstake before unstake lock period', async function () {
       const epoch = await getEpoch();
@@ -168,14 +166,14 @@ describe('StakeManager', function () {
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
       const epoch = await getEpoch();
-
+      // Here epoch => Epoch Number, root => Merkle root, 0x72... => random secret
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[1]).commit(epoch, commitment1);
-
-
+      // await stateManager.setState(1)
       await mineToNextState();
-
-
+       // let root = tree.root()
+      // console.log('proofs', [tree.level(1)[1]], [tree.level(1)[0]])
+      
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
@@ -183,17 +181,36 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[1]).reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[1].address);
-
+      // await stateManager.setState(2)
+      // let staker = await stakeManager.getStaker(1)
+      // let numStakers = await stakeManager.getNumStakers()
+      // let stake = Number(staker.stake)
+      // let stakerId = Number(staker.id)
+      // console.log('stake', stake)
+      // let biggestStake = (await getBiggestStakeAndId(stakeManager))[0]
+      // console.log('biggestStake', biggestStake)
+      // let biggestStakerId = (await getBiggestStakeAndId(stakeManager))[1]
+      // console.log('biggestStakerId', biggestStakerId)
+      // let blockHashes = await random.blockHashes(numBlocks)
+      // console.log(' biggestStake, stake, stakerId, numStakers, blockHashes', biggestStake, stake, stakerId, numStakers, blockHashes)
+      // let iteration = await getIteration(stakeManager, random, biggestStake, stake, stakerId, numStakers, blockHashes)
+      // console.log('iteration1b', iteration)
+      // // await blockManager.propose(3, [100, 200, 300, 400, 500, 600, 700, 800, 900], iteration, biggestStakerId, { 'from': accounts[1] })
+      //
+      // await stateManager.setEpoch(4)
+      // await stateManager.setState(0)
       await mineToNextEpoch();
-
+      // commitment1 = web3.utils.soliditySha3(4, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd')
+      // await voteManager.commit(4, commitment1, { 'from': accounts[2] })
       let staker = await stakeManager.getStaker(1);
-
+      // console.log(Number(await staker.stake))
+      // console.log(Number(await staker.epochLastRevealed))
       const epochNext = await getEpoch();
       await (stakeManager.connect(signers[1]).withdraw(epochNext));
       staker = await stakeManager.getStaker(1);
-
+      // console.log(Number(await staker.stake))
       assert(Number(staker.stake) === 0);
-
+      // console.log('bal', Number(await schellingCoin.balanceOf(accounts[1])))
       assert(String(await schellingCoin.balanceOf(signers[1].address)) === String(stake));
     });
   });
