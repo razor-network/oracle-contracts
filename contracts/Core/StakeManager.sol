@@ -89,8 +89,8 @@ contract StakeManager is Utils, ACL, StakeStorage {
             //         "adding stake is not possible after withdrawal/slash. Please use a new address");
             // previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
-            stakers[numStakers].unstakeAfter = epoch.add(Constants.unstakeLockPeriod());
-            stakers[numStakers].withdrawAfter = 0;
+            stakers[stakerId].unstakeAfter = epoch.add(Constants.unstakeLockPeriod());
+            stakers[stakerId].withdrawAfter = 0;
         }
         // totalStake = totalStake.add(amount);
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
