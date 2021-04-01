@@ -10,7 +10,7 @@ To install npm , go to this [link](https://www.npmjs.com/get-npm)
 #### jq 
 For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
 
-For Mac, `brew install jq` or for the most recent version `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
+For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
 
 # Deployment
 
