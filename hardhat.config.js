@@ -25,7 +25,7 @@ const GWEI = 1000000000;
 // Ref - https://chainid.network/chains.json
 const ENV_CHAIN_IDS = {
   mainnet: 1,
-  goerli: 1337,
+  goerli: 5,
 };
 
 module.exports = {
