@@ -1,12 +1,11 @@
-pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "../lib/Constants.sol";
 
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 
 contract StateManager {
-    using SafeMath for uint256;
+ 
     // for testing only. diable in prod
     // uint256 public EPOCH;
     // uint256 public STATE;
@@ -17,12 +16,12 @@ contract StateManager {
 
     function getEpoch () external view returns(uint256) {
         // return(EPOCH);
-        return(block.number.div(Constants.epochLength()));
+        return(block.number/(Constants.epochLength()));
     }
 
     function getState () external view returns(uint256) {
         // return (STATE);
-        uint256 state = (block.number.div(Constants.epochLength()/Constants.numStates()));
-        return (state.mod(Constants.numStates()));
+        uint256 state = (block.number/(Constants.epochLength()/Constants.numStates()));
+        return (state%(Constants.numStates()));
     }
 }

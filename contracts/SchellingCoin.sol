@@ -1,7 +1,7 @@
-pragma solidity 0.6.11;
+pragma solidity ^0.8.0;
 
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
-import "openzeppelin-solidity/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 
 /**
  * @title SchellingCoin

@@ -31,7 +31,7 @@ const ENV_CHAIN_IDS = {
 module.exports = {
   defaultNetwork: 'hardhat',
   solidity: {
-    version: '0.6.11',
+    version: '0.8.0',
     settings: {
       optimizer: {
         enabled: true,
