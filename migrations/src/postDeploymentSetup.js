@@ -28,27 +28,34 @@ module.exports = async () => {
   const { contractInstance: faucet } = await getdeployedContractInstance('Faucet', faucetAddress);
   const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
 
-  const promises = [];
+  const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
 
-  stakerAddressList.forEach( stakerAddress => {
-    promises.push(schellingCoin.transfer(stakerAddress, SEED_AMOUNT));
-  })
+  for (let i = 0; i < stakerAddressList.length; i++) {
+    const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
+    pendingTransactions.push(tx);
+  }
 
-  promises.push(blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
-  promises.push(voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
-  promises.push(stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
-  promises.push(jobManager.init(stateManagerAddress));
-  promises.push(faucet.init(schellingCoinAddress));
 
-  promises.push(jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
-  promises.push(blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
-  promises.push(stakeManager.grantRole(await constants.getStakeModifierHash(), blockManagerAddress));
-  promises.push(stakeManager.grantRole(await constants.getStakeModifierHash(), voteManagerAddress));
-  promises.push(stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress));
+  pendingTransactions.push(await blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
+  pendingTransactions.push(await voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
+  pendingTransactions.push(await jobManager.init(stateManagerAddress));
+  pendingTransactions.push(await faucet.init(schellingCoinAddress));
 
-  promises.push(delegator.upgradeDelegate(jobManagerAddress));
-  promises.push(schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
-  
-  await Promise.all(promises);
+  pendingTransactions.push(await jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
+  pendingTransactions.push(await blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakeModifierHash(), blockManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakeModifierHash(), voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress));
+
+  pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
+  pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
+
+  console.log("Waiting for post-deployment setup transactions to get confirmed");
+  for (let i = 0; i < pendingTransactions.length; i++) {
+    pendingTransactions[i].wait();
+  }
+
+  console.log("Contracts deployed successfully & initial setup is done");
 };
