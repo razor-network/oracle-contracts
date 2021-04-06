@@ -22,14 +22,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/schelling-network/contracts.git"
+    "url": "https://github.com/razor-network/contracts.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/schelling-network/contracts/issues"
+    "url": "https://github.com/razor-network/contracts/issues"
   },
-  "homepage": "https://github.com/schelling-network/contracts#readme",
+  "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
     "@razor-network/merkle": "^0.6.0",
     "jsonfile": "^6.1.0",
