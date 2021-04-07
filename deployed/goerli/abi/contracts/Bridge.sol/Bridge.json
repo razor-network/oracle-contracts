@@ -1,0 +1,61 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Bridge",
+  "sourceName": "contracts/Bridge.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        }
+      ],
+      "name": "getResult",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "owner",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "result",
+          "type": "uint256"
+        }
+      ],
+      "name": "setResult",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x6080604052600180546001600160a01b0319163317905534801561002257600080fd5b50610165806100326000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c8063310efb48146100465780638da5cb5b1461006b578063995e43391461009c575b600080fd5b6100696004803603604081101561005c57600080fd5b50803590602001356100cb565b005b610073610101565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6100b9600480360360208110156100b257600080fd5b503561011d565b60408051918252519081900360200190f35b60015473ffffffffffffffffffffffffffffffffffffffff1633146100ef57600080fd5b60009182526020829052604090912055565b60015473ffffffffffffffffffffffffffffffffffffffff1681565b6000908152602081905260409020549056fea264697066735822122021dbd4035fd7c00e114455de1564ef25996811aaa389660ca8e7b4011686219364736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100415760003560e01c8063310efb48146100465780638da5cb5b1461006b578063995e43391461009c575b600080fd5b6100696004803603604081101561005c57600080fd5b50803590602001356100cb565b005b610073610101565b6040805173ffffffffffffffffffffffffffffffffffffffff9092168252519081900360200190f35b6100b9600480360360208110156100b257600080fd5b503561011d565b60408051918252519081900360200190f35b60015473ffffffffffffffffffffffffffffffffffffffff1633146100ef57600080fd5b60009182526020829052604090912055565b60015473ffffffffffffffffffffffffffffffffffffffff1681565b6000908152602081905260409020549056fea264697066735822122021dbd4035fd7c00e114455de1564ef25996811aaa389660ca8e7b4011686219364736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

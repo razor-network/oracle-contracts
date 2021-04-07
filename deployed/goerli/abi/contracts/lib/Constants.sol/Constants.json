@@ -1,0 +1,258 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Constants",
+  "sourceName": "contracts/lib/Constants.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "commit",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "dispute",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "epochLength",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "exposureDenominator",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getBlockConfirmerHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getJobConfirmerHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getStakeModifierHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getStakerActivityUpdaterHash",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "halvingInterval",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialBlockReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "maxAltBlocks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "minStake",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "numStates",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "penaltyNotRevealDenom",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "penaltyNotRevealNum",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "propose",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "reveal",
+      "outputs": [
+        {
+          "internalType": "uint8",
+          "name": "",
+          "type": "uint8"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "unstakeLockPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "withdrawLockPeriod",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "pure",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x610311610026600b82828239805160001a60731461001957fe5b30600052607381538281f3fe730000000000000000000000000000000000000000301460806040526004361061015b5760003560e01c806380638d42116100d7578063c198f8ba1161008b578063e388a69e11610070578063e388a69e14610182578063f240f7c3146101f8578063f4f29c5b146102005761015b565b8063c198f8ba146101e8578063d98b3ced146101f05761015b565b8063a475b5dd116100bc578063a475b5dd146101d8578063a86f5a3f14610160578063b1cc4500146101e05761015b565b806380638d42146101c85780639cec6f8a146101d05761015b565b8063379597e01161012e57806357d775f81161011357806357d775f8146101b05780636a47aa06146101b85780637f890b11146101c05761015b565b8063379597e01461018a5780633c7a3aff146101925761015b565b80632628490f1461016057806326bf1c03146101605780633002c9ac1461017a578063375b3c0a14610182575b600080fd5b610168610208565b60408051918252519081900360200190f35b61016861020d565b610168610213565b610168610220565b61019a610225565b6040805160ff9092168252519081900360200190f35b61016861022a565b61016861022f565b610168610236565b61016861025a565b61016861027e565b61019a610208565b6101686102a2565b61019a6102a8565b6101686102ad565b61019a6102d1565b6101686102d6565b600190565b6103e890565b68056bc75e2d6310000090565b600590565b600090565b602890565b6298968090565b7fbe7b58e17bf6adaa0f209cd0db8b128282fc68a42f2dd649b4d8ea579f1b078f90565b7fdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc80490565b7f4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece90565b61271090565b600290565b7f18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f90565b600390565b60049056fea2646970667358221220ddc1fbe1eadd6d592dac2c09672c3af84414e002e701157a971639f68f0aa36c64736f6c634300060b0033",
+  "deployedBytecode": "0x730000000000000000000000000000000000000000301460806040526004361061015b5760003560e01c806380638d42116100d7578063c198f8ba1161008b578063e388a69e11610070578063e388a69e14610182578063f240f7c3146101f8578063f4f29c5b146102005761015b565b8063c198f8ba146101e8578063d98b3ced146101f05761015b565b8063a475b5dd116100bc578063a475b5dd146101d8578063a86f5a3f14610160578063b1cc4500146101e05761015b565b806380638d42146101c85780639cec6f8a146101d05761015b565b8063379597e01161012e57806357d775f81161011357806357d775f8146101b05780636a47aa06146101b85780637f890b11146101c05761015b565b8063379597e01461018a5780633c7a3aff146101925761015b565b80632628490f1461016057806326bf1c03146101605780633002c9ac1461017a578063375b3c0a14610182575b600080fd5b610168610208565b60408051918252519081900360200190f35b61016861020d565b610168610213565b610168610220565b61019a610225565b6040805160ff9092168252519081900360200190f35b61016861022a565b61016861022f565b610168610236565b61016861025a565b61016861027e565b61019a610208565b6101686102a2565b61019a6102a8565b6101686102ad565b61019a6102d1565b6101686102d6565b600190565b6103e890565b68056bc75e2d6310000090565b600590565b600090565b602890565b6298968090565b7fbe7b58e17bf6adaa0f209cd0db8b128282fc68a42f2dd649b4d8ea579f1b078f90565b7fdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc80490565b7f4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece90565b61271090565b600290565b7f18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f90565b600390565b60049056fea2646970667358221220ddc1fbe1eadd6d592dac2c09672c3af84414e002e701157a971639f68f0aa36c64736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}
