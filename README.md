@@ -6,6 +6,12 @@ These are the contracts for Razor network.
 #### npm
 You'll need npm to install the required packages.
 To install npm , go to this [link](https://www.npmjs.com/get-npm)
+
+#### jq 
+For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
+
+For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
+
 # Deployment
 
 ##### Local Deployment using ganache cli/gui
