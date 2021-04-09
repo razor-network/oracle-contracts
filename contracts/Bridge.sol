@@ -1,4 +1,4 @@
-pragma solidity 0.6.11;
+pragma solidity ^0.8.0;
 // pragma experimental ABIEncoderV2;
 // import "../SchellingCoin.sol";
 // import "./Utils.sol";
@@ -8,7 +8,7 @@ pragma solidity 0.6.11;
 // import "./IVoteManager.sol";
 // import "./JobStorage.sol";
 // import "./IStateManager.sol";
-// import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 // import "./Core/WriterRole.sol";
 
 

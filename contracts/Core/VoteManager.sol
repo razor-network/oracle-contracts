@@ -1,19 +1,18 @@
-pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "./Utils.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "./IStakeManager.sol";
 import "./IStateManager.sol";
 import "./IBlockManager.sol";
 import "./VoteStorage.sol";
-import "openzeppelin-solidity/contracts/cryptography/MerkleProof.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "../lib/Constants.sol";
 
 // import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
 contract VoteManager is  Utils, VoteStorage {
-    using SafeMath for uint256;
+
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IBlockManager public blockManager;
@@ -83,7 +82,7 @@ contract VoteManager is  Utils, VoteStorage {
             commitments[epoch][stakerId] = commitment;
             stakeManager.updateCommitmentEpoch(stakerId);
             // thisStaker.epochLastCommitted = epoch;
-            emit Committed(epoch, stakerId, commitment, now);
+            emit Committed(epoch, stakerId, commitment, block.timestamp);
         }
     }
 
@@ -108,8 +107,8 @@ contract VoteManager is  Utils, VoteStorage {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
                 "invalid merkle proof");
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
-                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]].add(thisStaker.stake);
-                totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i].add(thisStaker.stake);
+                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]]+(thisStaker.stake);
+                totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
             }
 
             stakeManager.giveRewards(thisStakerId, epoch);
@@ -119,7 +118,7 @@ contract VoteManager is  Utils, VoteStorage {
             // stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
-            emit Revealed(epoch, thisStakerId, thisStaker.stake, values, now);
+            emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
         } else {
             //bounty hunter revealing someone else's secret in commit state
             require(stateManager.getState() == Constants.commit(), "Not commit state");

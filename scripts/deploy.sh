@@ -17,9 +17,9 @@ rm -rf .contract-deployment.tmp.json
 
 # Copy ABIs to other razor apps repos locally (only works if they exists in parent directory)
 # This is a temporary solution, its subject to change (Refs - https://github.com/razor-network/contracts/issues/35)
-find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ | xargs -i cp {} ../cli/build/
-find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ | xargs -i cp {} ../dashboard/build/
-find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ | xargs -i cp {} ../bridge/build/
-find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ | xargs -i cp {} ../synthetic-assets/build/
+find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ |  xargs -i cp {} ../cli/build/ 2>/dev/null
+find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ |  xargs -i cp {} ../dashboard/build/ 2>/dev/null
+find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ |  xargs -i cp {} ../bridge/build/ 2>/dev/null
+find ./artifacts/contracts artifacts/openzeppelin-solidity  -type f | grep -i -v .dbg.json$ |  xargs -i cp {} ../synthetic-assets/build/ 2>/dev/null
 
 echo "Done"

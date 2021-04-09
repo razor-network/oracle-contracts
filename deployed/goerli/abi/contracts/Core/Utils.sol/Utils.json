@@ -1,0 +1,24 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "Utils",
+  "sourceName": "contracts/Core/Utils.sol",
+  "abi": [
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "a",
+          "type": "uint256"
+        }
+      ],
+      "name": "DebugUint256",
+      "type": "event"
+    }
+  ],
+  "bytecode": "0x6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea26469706673582212202963292d74eca8065558ffa74f2930a457a574355488ff68bcfdf17bde929b2e64736f6c634300060b0033",
+  "deployedBytecode": "0x6080604052600080fdfea26469706673582212202963292d74eca8065558ffa74f2930a457a574355488ff68bcfdf17bde929b2e64736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

@@ -1,0 +1,162 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "StakeStorage",
+  "sourceName": "contracts/Core/StakeStorage.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "genesisBlock",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastBlockRewards",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastHalvings",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "numStakers",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rewardPool",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "stakeGettingReward",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "stakerIds",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "stakers",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "_address",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "stake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epochStaked",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epochLastCommitted",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "epochLastRevealed",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "unstakeAfter",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "withdrawAfter",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405260006005556000600655600060075534801561001f57600080fd5b5061023b8061002f6000396000f3fe608060405234801561001057600080fd5b50600436106100885760003560e01c80636c8b052a1161005b5780636c8b052a146100bf578063a8264f99146100c7578063c8ae0d7d146100cf578063fd5e6dd11461010257610088565b80630ec88d3f1461008d5780632f594949146100a75780634cdc9c63146100af57806366666aa9146100b7575b600080fd5b610095610175565b60408051918252519081900360200190f35b61009561017b565b610095610181565b610095610187565b61009561018d565b610095610193565b610095600480360360208110156100e557600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16610199565b61011f6004803603602081101561011857600080fd5b50356101ab565b6040805198895273ffffffffffffffffffffffffffffffffffffffff9097166020890152878701959095526060870193909352608086019190915260a085015260c084015260e083015251908190036101000190f35b60075481565b60025481565b60005481565b60065481565b60055481565b60015481565b60036020526000908152604090205481565b600460208190526000918252604090912080546001820154600283015460038401549484015460058501546006860154600790960154949673ffffffffffffffffffffffffffffffffffffffff909416959294919290918856fea2646970667358221220d5039d553b85950350bd63c91ac938082bf70c597f52d90f8d89dc6ea696548d64736f6c634300060b0033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100885760003560e01c80636c8b052a1161005b5780636c8b052a146100bf578063a8264f99146100c7578063c8ae0d7d146100cf578063fd5e6dd11461010257610088565b80630ec88d3f1461008d5780632f594949146100a75780634cdc9c63146100af57806366666aa9146100b7575b600080fd5b610095610175565b60408051918252519081900360200190f35b61009561017b565b610095610181565b610095610187565b61009561018d565b610095610193565b610095600480360360208110156100e557600080fd5b503573ffffffffffffffffffffffffffffffffffffffff16610199565b61011f6004803603602081101561011857600080fd5b50356101ab565b6040805198895273ffffffffffffffffffffffffffffffffffffffff9097166020890152878701959095526060870193909352608086019190915260a085015260c084015260e083015251908190036101000190f35b60075481565b60025481565b60005481565b60065481565b60055481565b60015481565b60036020526000908152604090205481565b600460208190526000918252604090912080546001820154600283015460038401549484015460058501546006860154600790960154949673ffffffffffffffffffffffffffffffffffffffff909416959294919290918856fea2646970667358221220d5039d553b85950350bd63c91ac938082bf70c597f52d90f8d89dc6ea696548d64736f6c634300060b0033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

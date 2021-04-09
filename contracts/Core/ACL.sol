@@ -1,6 +1,5 @@
-pragma solidity 0.6.11;
-
-import "openzeppelin-solidity/contracts/access/AccessControl.sol";
+pragma solidity ^0.8.0;
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../lib/Constants.sol";
 
 contract ACL is AccessControl {
