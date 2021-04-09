@@ -24,8 +24,10 @@ describe('StakeManager', function () {
     it('should be able to initialize', async function () {
       await mineToNextEpoch();
       const stake1 = BigNumber.from('443000').mul(ONE_ETHER);
-      // let stake2 = BigNumber.from('423000e18')
       await schellingCoin.transfer(signers[1].address, stake1);
+      await schellingCoin.transfer(signers[2].address, stake1);
+    });
+
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = BigNumber.from('420000').mul(ONE_ETHER);
