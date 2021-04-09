@@ -23,13 +23,9 @@ describe('StakeManager', function () {
 
     it('should be able to initialize', async function () {
       await mineToNextEpoch();
-      // await stateManager.setState(0)
       const stake1 = BigNumber.from('443000').mul(ONE_ETHER);
       // let stake2 = BigNumber.from('423000e18')
       await schellingCoin.transfer(signers[1].address, stake1);
-      await schellingCoin.transfer(signers[2].address, stake1);
-    });
-
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = BigNumber.from('420000').mul(ONE_ETHER);
@@ -73,7 +69,6 @@ describe('StakeManager', function () {
       const stake = BigNumber.from('3000').mul(ONE_ETHER);
       const stake2 = BigNumber.from('423000').mul(ONE_ETHER);
       await mineToNextEpoch();
-
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
@@ -151,7 +146,6 @@ describe('StakeManager', function () {
       //Commit
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
-
       await mineToNextState();
 
       //Reveal
