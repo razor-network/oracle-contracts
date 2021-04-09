@@ -31,9 +31,9 @@
   },
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.0.0",
     "@razor-network/merkle": "^0.6.0",
-    "jsonfile": "^6.1.0",
-    "openzeppelin-solidity": "^3.1.0"
+    "jsonfile": "^6.1.0"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "2.0.2",

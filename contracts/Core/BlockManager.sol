@@ -1,5 +1,4 @@
-pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "../lib/Random.sol";
 import "./Utils.sol";
 import "./BlockStorage.sol";
@@ -7,12 +6,12 @@ import "./IStakeManager.sol";
 import "./IStateManager.sol";
 import "./IVoteManager.sol";
 import "./IJobManager.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "./ACL.sol";
 import "../lib/Constants.sol";
 
 contract BlockManager is Utils, ACL, BlockStorage {
-    using SafeMath for uint256;
+  
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IVoteManager public voteManager;
@@ -133,19 +132,19 @@ contract BlockManager is Utils, ACL, BlockStorage {
         // emit DebugUint256(pushAt);
         // mint and give block reward
         // if (Constants.blockReward() > 0) {
-        //     stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
-        //     totalStake = totalStake.add(Constants.blockReward());
+        //     stakers[proposerId].stake = stakers[proposerId].stake+(Constants.blockReward());
+        //     totalStake = totalStake+(Constants.blockReward());
         //     require(sch.mint(address(this), Constants.blockReward()));
         // }
-        emit Proposed(epoch, proposerId, jobIds, medians, lowerCutoffs, higherCutoffs, iteration, biggestStakerId, now);
+        emit Proposed(epoch, proposerId, jobIds, medians, lowerCutoffs, higherCutoffs, iteration, biggestStakerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] memory sorted) public
     checkEpoch(epoch) checkState(Constants.dispute()) {
-        uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId).div(2);
-        uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId).div(4);
-        uint256 higherCutoffWeight = (voteManager.getTotalStakeRevealed(epoch, assetId).mul(3)).div(4);
+        uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
+        uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(4);
+        uint256 higherCutoffWeight = (voteManager.getTotalStakeRevealed(epoch, assetId)*(3))/(4);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
         if (disputes[epoch][msg.sender].accWeight == 0) {
@@ -156,7 +155,7 @@ contract BlockManager is Utils, ACL, BlockStorage {
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
-            accWeight = accWeight.add(voteManager.getVoteWeight(epoch, assetId, sorted[i]));
+            accWeight = accWeight + (voteManager.getVoteWeight(epoch, assetId, sorted[i]));
             //set  median, if conditions meet
             if (disputes[epoch][msg.sender].lowerCutoff == 0 && accWeight >= lowerCutoffWeight) {
                 disputes[epoch][msg.sender].lowerCutoff = sorted[i];
@@ -204,12 +203,12 @@ contract BlockManager is Utils, ACL, BlockStorage {
     function isElectedProposer(uint256 iteration, uint256 biggestStakerId, uint256 stakerId) public view returns(bool) {
        // rand = 0 -> totalStake-1
        //add +1 since prng returns 0 to max-1 and staker start from 1
-        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration))).add(1))
+        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)))+(1))
         != stakerId) {return(false);}
         bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
-        uint256 rand = uint256(randHash).mod(2**32);
+        uint256 rand = uint256(randHash)%(2**32);
         uint256 biggestStake = stakeManager.getStaker(biggestStakerId).stake;
-        if (rand.mul(biggestStake) > stakeManager.getStaker(stakerId).stake.mul(2**32)) return(false);
+        if (rand*(biggestStake) > stakeManager.getStaker(stakerId).stake*(2**32)) return(false);
         return(true);
     }
 
@@ -234,7 +233,7 @@ contract BlockManager is Utils, ACL, BlockStorage {
                                     proposedBlocks[epoch - 1][i].lowerCutoffs,
                                     proposedBlocks[epoch - 1][i].higherCutoffs,
                                     proposedBlocks[epoch - 1][i].jobIds,
-                                    now);
+                                    block.timestamp);
                 for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
                     jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
                                         proposedBlocks[epoch - 1][i].medians[j]);
