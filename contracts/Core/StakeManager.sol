@@ -124,7 +124,6 @@ contract StakeManager is Utils, ACL, StakeStorage {
         require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
         require((staker.withdrawAfter - Constants.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Withdraw lock period, Cant withdraw");
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
-        _givePenalties(staker.id, epoch);
         require(staker.stake > 0, "Nonpositive Stake");
         // SchellingCoin sch = SchellingCoin(schAddress);
         // totalStake = totalStake.sub(stakers[stakerId].stake);
@@ -294,9 +293,9 @@ contract StakeManager is Utils, ACL, StakeStorage {
         emit StakeChange(_id, previousStake, _stake, _reason, _epoch, now);
     }
 
-    /// @notice The function gives out penalties to stakers during withdraw
-    /// and commit. The penalties are given for inactivity, failing to reveal
-    /// even though unstaked, deviation from the median value of particular asset
+    /// @notice The function gives out penalties to stakers during commit. 
+    /// The penalties are given for inactivity, failing to reveal
+    /// , deviation from the median value of particular asset
     /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
     function _giveInactivityPenalties(uint256 stakerId, uint256 epoch) internal {
