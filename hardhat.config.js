@@ -60,7 +60,7 @@ module.exports = {
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
       gas: 7700000,
-      gasPrice: 1 * GWEI,
+      gasPrice: 10 * GWEI,
     },
   },
   gasReporter: {

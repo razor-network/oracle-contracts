@@ -54,7 +54,7 @@ module.exports = async () => {
 
   console.log("Waiting for post-deployment setup transactions to get confirmed");
   for (let i = 0; i < pendingTransactions.length; i++) {
-    pendingTransactions[i].wait();
+    await pendingTransactions[i].wait();
   }
 
   console.log("Contracts deployed successfully & initial setup is done");
