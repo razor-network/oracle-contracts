@@ -1,5 +1,4 @@
-pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "../SchellingCoin.sol";
 import "./Utils.sol";
 import "./StakeStorage.sol";
@@ -9,14 +8,14 @@ import "./IVoteManager.sol";
 import "../lib/Constants.sol";
 import "./ACL.sol";
 import "../lib/Constants.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
 contract StakeManager is Utils, ACL, StakeStorage {
-    using SafeMath for uint256;
+
     SchellingCoin public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
@@ -78,9 +77,9 @@ contract StakeManager is Utils, ACL, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
-            numStakers = numStakers.add(1);
+            numStakers = numStakers+(1);
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
-            epoch.add(Constants.unstakeLockPeriod()), 0);
+            epoch+(Constants.unstakeLockPeriod()), 0);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
@@ -88,12 +87,12 @@ contract StakeManager is Utils, ACL, StakeStorage {
             // require(stakers[stakerId].stake > 0,
             //         "adding stake is not possible after withdrawal/slash. Please use a new address");
             // previousStake = stakers[stakerId].stake;
-            stakers[stakerId].stake = stakers[stakerId].stake.add(amount);
-            stakers[numStakers].unstakeAfter = epoch.add(Constants.unstakeLockPeriod());
-            stakers[numStakers].withdrawAfter = 0;
+            stakers[stakerId].stake = stakers[stakerId].stake+(amount);
+            stakers[stakerId].unstakeAfter = epoch+(Constants.unstakeLockPeriod());
+            stakers[stakerId].withdrawAfter = 0;
         }
-        // totalStake = totalStake.add(amount);
-        emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, now);
+        // totalStake = totalStake+(amount);
+        emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
     }
 
     event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
@@ -108,8 +107,8 @@ contract StakeManager is Utils, ACL, StakeStorage {
         require(staker.stake > 0, "Nonpositive stake");
         require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0, "locked");
         staker.unstakeAfter = 0;
-        staker.withdrawAfter = epoch.add(Constants.withdrawLockPeriod());
-        emit Unstaked(epoch, stakerId, staker.stake, staker.stake, now);
+        staker.withdrawAfter = epoch+(Constants.withdrawLockPeriod());
+        emit Unstaked(epoch, stakerId, staker.stake, staker.stake, block.timestamp);
     }
 
     event Withdrew(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
@@ -126,10 +125,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
         require(staker.stake > 0, "Nonpositive Stake");
         // SchellingCoin sch = SchellingCoin(schAddress);
-        // totalStake = totalStake.sub(stakers[stakerId].stake);
+        // totalStake = totalStake-(stakers[stakerId].stake);
         uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
-        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, 0, now);
+        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, 0, block.timestamp);
         require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
     }
 
@@ -149,15 +148,15 @@ contract StakeManager is Utils, ACL, StakeStorage {
     function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         uint256 blockReward = _calculateBlockReward();
         if (blockReward > 0) {
-            uint256 newStake = stakers[stakerId].stake.add(blockReward);
+            uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
-            // stakers[proposerId].stake = stakers[proposerId].stake.add(Constants.blockReward());
-            // totalStake = totalStake.add(Constants.blockReward());
+            // stakers[proposerId].stake = stakers[proposerId].stake+(Constants.blockReward());
+            // totalStake = totalStake+(Constants.blockReward());
             require(sch.mint(address(this), blockReward));
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
         stakeGettingReward = 0;
-        emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
+        emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, block.timestamp);
     }
 
     function _calculateBlockReward() private returns(uint256) {
@@ -212,12 +211,12 @@ contract StakeManager is Utils, ACL, StakeStorage {
             (stakeGettingReward*lowerCutoffsLastEpoch.length);
             if (reward > 0) {
                 uint256 prevStakeGettingReward = stakeGettingReward;
-                stakeGettingReward = stakeGettingReward >= thisStaker.stake ? stakeGettingReward.sub(thisStaker.stake) : 0;
-                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
+                stakeGettingReward = stakeGettingReward >= thisStaker.stake ? stakeGettingReward-(thisStaker.stake) : 0;
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, block.timestamp);
                 uint256 newStake = thisStaker.stake + reward;
                 uint256 prevRewardPool = rewardPool;
-                rewardPool = rewardPool.sub(reward);
-                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+                rewardPool = rewardPool-(reward);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, block.timestamp);
                 _setStakerStake(thisStaker.id, newStake, "Voting Rewards", epoch);
             }
         }
@@ -230,10 +229,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
         // SchellingCoin sch = SchellingCoin(schAddress);
-        uint256 halfStake = stakers[id].stake.div(2);
+        uint256 halfStake = stakers[id].stake/(2);
         _setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {
-            // totalStake = totalStake.sub(halfStake);
+            // totalStake = totalStake-(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     }
@@ -274,10 +273,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
             return(stakeValue);
         }
         // penalty =( epochs -1)*stakeValue*penNum/penDiv
-        uint256 penalty = (epochs.sub(1)).mul((stakeValue.mul(Constants.penaltyNotRevealNum())).div(
+        uint256 penalty = (epochs-(1))*((stakeValue*(Constants.penaltyNotRevealNum()))/(
         Constants.penaltyNotRevealDenom()));
         if (penalty < stakeValue) {
-            return(stakeValue.sub(penalty));
+            return(stakeValue-(penalty));
         } else {
             return(0);
         }
@@ -290,7 +289,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
     function _setStakerStake(uint256 _id, uint256 _stake, string memory _reason, uint256 _epoch) internal {
         uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
-        emit StakeChange(_id, previousStake, _stake, _reason, _epoch, now);
+        emit StakeChange(_id, previousStake, _stake, _reason, _epoch, block.timestamp);
     }
 
     /// @notice The function gives out penalties to stakers during commit. 
@@ -305,15 +304,15 @@ contract StakeManager is Utils, ACL, StakeStorage {
                                 thisStaker.epochLastRevealed :
                                 thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 penalizeEpochs = epoch.sub(epochLastActive);
+        uint256 penalizeEpochs = epoch-(epochLastActive);
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
         uint256 currentStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
         if (currentStake < previousStake) {
             _setStakerStake(thisStaker.id, currentStake, "Inactivity Penalty", epoch);
             uint256 prevRewardPool = rewardPool;
-            rewardPool = rewardPool.add(previousStake.sub(currentStake));
-            emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+            rewardPool = rewardPool+(previousStake-(currentStake));
+            emit RewardPoolChange(epoch, prevRewardPool, rewardPool, block.timestamp);
         }
     }
     function _givePenalties (uint256 stakerId, uint256 epoch) internal {
@@ -347,15 +346,15 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
             if (penalty > 0) {
                 penalty = (penalty > previousStake) ? previousStake : penalty;
-                _setStakerStake(thisStaker.id, (previousStake.sub(penalty)), "Voting Penalty", epoch);
+                _setStakerStake(thisStaker.id, (previousStake-(penalty)), "Voting Penalty", epoch);
                 uint256 prevRewardPool = rewardPool;
-                rewardPool = rewardPool.add(penalty);
-                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, now);
+                rewardPool = rewardPool+(penalty);
+                emit RewardPoolChange(epoch, prevRewardPool, rewardPool, block.timestamp);
             } else {
                 //no penalty. only reward
                 uint256 prevStakeGettingReward = stakeGettingReward;
-                stakeGettingReward = stakeGettingReward.add(previousStake);//*(1 - y);
-                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, now);
+                stakeGettingReward = stakeGettingReward+(previousStake);//*(1 - y);
+                emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, block.timestamp);
             }
         }
     }

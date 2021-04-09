@@ -1,8 +1,7 @@
-pragma solidity 0.6.11;
-pragma experimental ABIEncoderV2;
+pragma solidity ^0.8.0;
 import "./JobStorage.sol";
 import "./IStateManager.sol";
-import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+
 import "./ACL.sol";
 import "../lib/Constants.sol";
 
@@ -29,7 +28,7 @@ contract JobManager is ACL, JobStorage {
         uint256 epoch = stateManager.getEpoch();
         Structs.Job memory job = Structs.Job(numJobs, epoch, url, selector, name, repeat, msg.sender, msg.value, false, 0);
         jobs[numJobs] = job;
-        emit JobCreated(numJobs, epoch, url, selector, name, repeat, msg.sender, msg.value, now);
+        emit JobCreated(numJobs, epoch, url, selector, name, repeat, msg.sender, msg.value, block.timestamp);
         // jobs.push(job);
     }
 
@@ -43,7 +42,7 @@ contract JobManager is ACL, JobStorage {
             //job.repeat, job.creator, job.credit, job.fulfilled);
         }
         emit JobReported(job.id, value, epoch, job.url, job.selector, job.name, job.repeat,
-        job.creator, job.credit, job.fulfilled, now);
+        job.creator, job.credit, job.fulfilled, block.timestamp);
         job.result = value;
     }
 

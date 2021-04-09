@@ -25,13 +25,13 @@ const GWEI = 1000000000;
 // Ref - https://chainid.network/chains.json
 const ENV_CHAIN_IDS = {
   mainnet: 1,
-  goerli: 1337,
+  goerli: 5,
 };
 
 module.exports = {
   defaultNetwork: 'hardhat',
   solidity: {
-    version: '0.6.11',
+    version: '0.8.0',
     settings: {
       optimizer: {
         enabled: true,

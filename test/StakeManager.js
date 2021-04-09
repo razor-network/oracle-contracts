@@ -70,12 +70,27 @@ describe('StakeManager', function () {
     it('should be able to increase stake', async function () {
       const stake = BigNumber.from('3000').mul(ONE_ETHER);
       const stake2 = BigNumber.from('423000').mul(ONE_ETHER);
+      await mineToNextEpoch();
       await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
       const staker = await stakeManager.getStaker(1);
       assert(String(staker.stake) === String(stake2));
     });
+
+    it('should be able to reset the lock periods', async function (){
+          //let stakeManager = await StakeManager.deployed()
+          //let sch = await SchellingCoin.deployed()
+          const stake = BigNumber.from('20000').mul(ONE_ETHER);
+          const stake2 = BigNumber.from('443000').mul(ONE_ETHER);
+          await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
+          const epoch = await getEpoch();
+          await stakeManager.connect(signers[1]).stake(epoch, stake);
+          const staker = await stakeManager.getStaker(1);
+          assert(String(staker.stake) === String(stake2))
+          assert(Number(staker.unstakeAfter) === (epoch+1))
+          assert(String(staker.withdrawAfter) === String(0))
+        })
 
     it('should not be able to unstake before unstake lock period', async function () {
       const epoch = await getEpoch();
@@ -92,12 +107,13 @@ describe('StakeManager', function () {
       assert(Number(staker.withdrawAfter) === (epoch + 1), 'withdrawAfter does not match');
     });
 
+
     it('should not be able to withdraw before withdraw lock period', async function () {
       const epoch = await getEpoch();
       const tx = stakeManager.connect(signers[1]).withdraw(epoch);
       await assertRevert(tx, "Withdraw epoch not reached");
       const staker = await stakeManager.getStaker(1);
-      const stake = BigNumber.from('423000').mul(ONE_ETHER);
+      const stake = BigNumber.from('443000').mul(ONE_ETHER);
       assert(String(staker.stake) === String(stake), 'Stake should not change');
     });
 
@@ -112,6 +128,7 @@ describe('StakeManager', function () {
       assert(String(await schellingCoin.balanceOf(signers[1].address)) === String(stake)); // Balance
     });
 
+
     it('should not be able to withdraw after withdraw lock period if voted in withdraw lock period', async function () {
       // @notice: Checking for Staker 2
       const stake = BigNumber.from('19000').mul(ONE_ETHER);
@@ -119,6 +136,7 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[2]).unstake(epoch);
       let staker = await stakeManager.getStaker(2);
       assert(Number(staker.unstakeAfter) === 0, 'UnstakeAfter should be zero');
+
 
       // Next Epoch
       await mineToNextEpoch();
@@ -132,7 +150,6 @@ describe('StakeManager', function () {
       //Commit
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
-
       await mineToNextState();
 
       //Reveal
@@ -140,9 +157,7 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[2].address);
+      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,'0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', signers[2].address);
 
       // Next Epoch
       await mineToNextEpoch();
