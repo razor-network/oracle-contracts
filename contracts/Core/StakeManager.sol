@@ -97,7 +97,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
     event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    /// @notice staker must call unstake() and continue voting for Constants.WITHDRAW_LOCK_PERIOD
+    /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
     /// @param epoch The Epoch value for which staker is requesting to unstake
     function unstake (uint256 epoch) external checkEpoch(epoch)  checkState(Constants.commit()) {
@@ -119,11 +119,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker doesnt exist");
-        require(staker.epochLastRevealed == epoch-(1), "Didnt reveal in last epoch");
         require(staker.unstakeAfter == 0, "Did not unstake");
         require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
+        require((staker.withdrawAfter - Constants.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Withdraw lock period, Cant withdraw");
         require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
-        _givePenalties(staker.id, epoch);
         require(staker.stake > 0, "Nonpositive Stake");
         // SchellingCoin sch = SchellingCoin(schAddress);
         // totalStake = totalStake-(stakers[stakerId].stake);
@@ -293,9 +292,9 @@ contract StakeManager is Utils, ACL, StakeStorage {
         emit StakeChange(_id, previousStake, _stake, _reason, _epoch, block.timestamp);
     }
 
-    /// @notice The function gives out penalties to stakers during withdraw
-    /// and commit. The penalties are given for inactivity, failing to reveal
-    /// even though unstaked, deviation from the median value of particular asset
+    /// @notice The function gives out penalties to stakers during commit. 
+    /// The penalties are given for inactivity, failing to reveal
+    /// , deviation from the median value of particular asset
     /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
     function _giveInactivityPenalties(uint256 stakerId, uint256 epoch) internal {
