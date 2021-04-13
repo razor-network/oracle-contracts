@@ -2,19 +2,22 @@
   "extends": "solhint:recommended",
   "rules": {
     "avoid-suicide": "error",
-    "avoid-sha3": "warn",
     "compiler-version": "off",
-    "const-name-snakecase": "warn",
-    "contract-name-camelcase": "warn",
-    "event-name-camelcase": "warn",
-    "func-name-mixedcase": "warn",
-    "func-order": "warn",
+    "const-name-snakecase": "error",
+    "contract-name-camelcase": "error",
+    "event-name-camelcase": "error",
+    "func-name-mixedcase": "error",
+    "func-order": "error",
     "imports-on-top": "warn",
+    "mark-callable-contracts": "off",
+    "max-line-length": ["warn", 127],
     "no-unused-vars": "error", 
     "not-rely-on-time" : "off",
+    "ordering": "error",
+    "private-vars-leading-underscore": "error",
     "quotes": ["error","double"],
-    "reason-string": ["warn",{"maxLength":32}],
     "reentrancy": "error",
-    "visibility-modifier-order": "warn"
+    "var-name-mixedcase": "error",
+    "visibility-modifier-order": "error"
   }
 }

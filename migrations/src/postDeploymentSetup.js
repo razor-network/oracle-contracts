@@ -1,8 +1,7 @@
 const { getdeployedContractInstance, readDeploymentFile } = require('../migrationHelpers');
 
-const { SEED_AMOUNT, STAKER_ADDRESSES } = process.env
+const { SEED_AMOUNT, STAKER_ADDRESSES } = process.env;
 module.exports = async () => {
-
   const {
     Constants: constantsAddress,
     Random: randomAddress,
@@ -36,7 +35,6 @@ module.exports = async () => {
     pendingTransactions.push(tx);
   }
 
-
   pendingTransactions.push(await blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
   pendingTransactions.push(await voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
   pendingTransactions.push(await stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
@@ -52,10 +50,10 @@ module.exports = async () => {
   pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
   pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
 
-  console.log("Waiting for post-deployment setup transactions to get confirmed");
+  console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {
     pendingTransactions[i].wait();
   }
 
-  console.log("Contracts deployed successfully & initial setup is done");
+  console.log('Contracts deployed successfully & initial setup is done');
 };

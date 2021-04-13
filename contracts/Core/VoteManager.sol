@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "./Utils.sol";
 
-import "./IStakeManager.sol";
-import "./IStateManager.sol";
-import "./IBlockManager.sol";
-import "./VoteStorage.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "./interface/IStakeManager.sol";
+import "./interface/IStateManager.sol";
+import "./interface/IBlockManager.sol";
+import "./storage/VoteStorage.sol";
 import "../lib/Constants.sol";
 
 // import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 
-contract VoteManager is  Utils, VoteStorage {
+contract VoteManager is VoteStorage {
 
     IStakeManager public stakeManager;
     IStateManager public stateManager;
@@ -36,43 +35,13 @@ contract VoteManager is  Utils, VoteStorage {
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
 
-    function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
-        //epoch->stakerid->commitment
-        // mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
-        return(commitments[epoch][stakerId]);
-    }
-
-    function getVote(uint256 epoch, uint256 stakerId, uint256 assetId) public view returns(Structs.Vote memory vote) {
-        //epoch->stakerid->assetid->vote
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
-        return(votes[epoch][stakerId][assetId]);
-    }
-
-    function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
-    public view returns(uint256) {
-        //epoch->assetid->voteValue->weight
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
-        return(voteWeights[epoch][assetId][voteValue]);
-    }
-
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
-        // epoch -> asset -> stakeWeight
-        // mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
-        return(totalStakeRevealed[epoch][assetId]);
-    }
-
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
-        //epoch->assetid->voteValue->weight
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
-        return(voteWeights[epoch][assetId][voteValue]);
-    }
-
-    function commit (uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
-        // Switch to call confirm block only when block in previous epoch has not been confirmed and if previous epoch do have proposed blocks
+        // Switch to call confirm block only when block in previous epoch has not been confirmed 
+        // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
             blockManager.confirmBlock();
@@ -126,5 +95,36 @@ contract VoteManager is  Utils, VoteStorage {
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.slash(thisStakerId, msg.sender, epoch);
         }
+    }
+
+    function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
+        //epoch->stakerid->commitment
+        // mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
+        return(commitments[epoch][stakerId]);
+    }
+
+    function getVote(uint256 epoch, uint256 stakerId, uint256 assetId) public view returns(Structs.Vote memory vote) {
+        //epoch->stakerid->assetid->vote
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+        return(votes[epoch][stakerId][assetId]);
+    }
+
+    function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
+    public view returns(uint256) {
+        //epoch->assetid->voteValue->weight
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        return(voteWeights[epoch][assetId][voteValue]);
+    }
+
+    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+        // epoch -> asset -> stakeWeight
+        // mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
+        return(totalStakeRevealed[epoch][assetId]);
+    }
+
+    function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
+        //epoch->assetid->voteValue->weight
+        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        return(voteWeights[epoch][assetId][voteValue]);
     }
 }

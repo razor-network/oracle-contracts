@@ -1,26 +1,72 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+
+import "./interface/IStateManager.sol";
+import "./interface/IBlockManager.sol";
+import "./interface/IVoteManager.sol";
+import "./storage/StakeStorage.sol";
+import "../lib/Constants.sol";
+import "../lib/Constants.sol";
 import "../SchellingCoin.sol";
-import "./Utils.sol";
-import "./StakeStorage.sol";
-import "./IStateManager.sol";
-import "./IBlockManager.sol";
-import "./IVoteManager.sol";
-import "../lib/Constants.sol";
 import "./ACL.sol";
-import "../lib/Constants.sol";
 
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Utils, ACL, StakeStorage {
+contract StakeManager is ACL, StakeStorage {
 
     SchellingCoin public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
     IStateManager public stateManager;
+
+    event StakeChange(
+        uint256 indexed stakerId,
+        uint256 previousStake,
+        uint256 newStake,
+        string reason,
+        uint256 epoch,
+        uint256 timestamp
+    );
+
+    event RewardPoolChange(
+        uint256 epoch,
+        uint256 prevRewardPool,
+        uint256 rewardPool,
+        uint256 timestamp
+    );
+    event StakeGettingRewardChange(
+        uint256 epoch,
+        uint256 prevStakeGettingReward,
+        uint256 stakeGettingReward,
+        uint256 timestamp
+    );
+
+    event Staked(
+        uint256 epoch,
+        uint256 indexed stakerId,
+        uint256 previousStake,
+        uint256 newStake,
+        uint256 timestamp
+    );
+
+    event Unstaked(
+        uint256 epoch,
+        uint256 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
+
+    event Withdrew(
+        uint256 epoch,
+        uint256 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
@@ -41,45 +87,59 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// @param _blockManagerAddress The address of the BlockManager contract
     /// @param _stateManagerAddress The address of the StateManager contract
     /// todo disable after init
-    function init (address _schAddress, address _voteManagerAddress,
-        address _blockManagerAddress, address _stateManagerAddress) external {
+    function init (
+        address _schAddress,
+        address _voteManagerAddress,
+        address _blockManagerAddress,
+        address _stateManagerAddress
+    ) external 
+    {
         sch = SchellingCoin(_schAddress);
         voteManager = IVoteManager(_voteManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
     }
-    
-    event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake,
-                    string reason, uint256 epoch, uint256 timestamp);
-
-    event RewardPoolChange(uint256 epoch, uint256 prevRewardPool, uint256 rewardPool, uint256 timestamp);
-    event StakeGettingRewardChange(uint256 epoch, uint256 prevStakeGettingReward, uint256 stakeGettingReward, uint256 timestamp);
 
     /// @param _id The ID of the staker
     /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external onlyRole(Constants.getStakerActivityUpdaterHash()) {
+    function setStakerEpochLastRevealed(
+        uint256 _id,
+        uint256 _epochLastRevealed
+    ) external onlyRole(Constants.getStakerActivityUpdaterHash())
+    {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
 
     /// @param stakerId The ID of the staker
-    function updateCommitmentEpoch(uint256 stakerId) external onlyRole(Constants.getStakerActivityUpdaterHash()) {
+    function updateCommitmentEpoch(
+        uint256 stakerId
+    ) external onlyRole(Constants.getStakerActivityUpdaterHash())
+    {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
     function updateBlockReward(uint256 _blockReward) external onlyRole(Constants.getDefaultAdminHash())
     {
         blockReward = _blockReward;
-    }    
-    event Staked(uint256 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    }
 
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount of schelling tokens Staker stakes
-    function stake (uint256 epoch, uint256 amount) external checkEpoch(epoch) checkState(Constants.commit()) {
+    function stake(
+        uint256 epoch,
+        uint256 amount
+    ) 
+        external
+        checkEpoch(epoch) checkState(Constants.commit()) 
+    {
         // not allowed during reveal period
         require(stateManager.getState() != Constants.reveal(), "Incorrect state");
-        require(amount >= Constants.minStake(), "staked amount is less than minimum stake required");
+        require(
+            amount >= Constants.minStake(), 
+            "staked amount is less than minimum stake required"
+        );
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
         uint256 previousStake = stakers[stakerId].stake;
@@ -91,8 +151,9 @@ contract StakeManager is Utils, ACL, StakeStorage {
             stakerIds[msg.sender] = stakerId;
         } else {
             //WARNING: ALLOWING STAKE TO BE ADDEDD AFTER WITHDRAW/SLASH. consequences unknown
-            // require(stakers[stakerId].stake > 0,
-            //         "adding stake is not possible after withdrawal/slash. Please use a new address");
+            // require(
+            //  stakers[stakerId].stake > 0,
+            //  "adding stake is not possible after withdrawal/slash. Please use a new address");
             // previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake+(amount);
             stakers[stakerId].unstakeAfter = epoch+(Constants.unstakeLockPeriod());
@@ -101,8 +162,6 @@ contract StakeManager is Utils, ACL, StakeStorage {
         // totalStake = totalStake+(amount);
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
     }
-
-    event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
@@ -118,7 +177,6 @@ contract StakeManager is Utils, ACL, StakeStorage {
         emit Unstaked(epoch, stakerId, staker.stake, staker.stake, block.timestamp);
     }
 
-    event Withdrew(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
@@ -127,9 +185,18 @@ contract StakeManager is Utils, ACL, StakeStorage {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker doesnt exist");
         require(staker.unstakeAfter == 0, "Did not unstake");
-        require((staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0, "Withdraw epoch not reached");
-        require((staker.withdrawAfter - Constants.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Withdraw lock period, Cant withdraw");
-        require(voteManager.getCommitment(epoch, stakerId) == 0x0, "already commited this epoch. Cant withdraw");
+        require(
+            (staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0,
+            "Withdraw epoch not reached"
+        );
+        require(
+            (staker.withdrawAfter - Constants.withdrawLockPeriod()) >= staker.epochLastRevealed,
+            "Participated in Withdraw lock period, Cant withdraw"
+        );
+        require(
+            voteManager.getCommitment(epoch, stakerId) == 0x0,
+            "already commited this epoch. Cant withdraw"
+        );
         require(staker.stake > 0, "Nonpositive Stake");
         // SchellingCoin sch = SchellingCoin(schAddress);
         // totalStake = totalStake-(stakers[stakerId].stake);
@@ -144,7 +211,11 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties (uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
+    function givePenalties(
+        uint256 stakerId,
+        uint256 epoch
+    ) external onlyRole(Constants.getStakeModifierHash())
+    {
         _givePenalties(stakerId, epoch);
     }
 
@@ -152,7 +223,11 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// previous epoch by minting new tokens from the schelling token contract
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
-    function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
+    function giveBlockReward(
+        uint256 stakerId,
+        uint256 epoch
+    ) external onlyRole(Constants.getStakeModifierHash())
+    {
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
@@ -162,7 +237,13 @@ contract StakeManager is Utils, ACL, StakeStorage {
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
         stakeGettingReward = 0;
-        emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, block.timestamp);
+        
+        emit StakeGettingRewardChange(
+            epoch,
+            prevStakeGettingReward,
+            stakeGettingReward,
+            block.timestamp
+        );
     }
     
     /// @notice This function is called in VoteManager reveal function to give
@@ -170,7 +251,11 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// the Values of assets according to the razor protocol rules.
     /// @param stakerId The staker id
     /// @param epoch The epoch number for which reveal has been called
-    function giveRewards (uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
+    function giveRewards(
+        uint256 stakerId,
+        uint256 epoch
+    ) external onlyRole(Constants.getStakeModifierHash())
+    {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakers[stakerId];
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
@@ -190,7 +275,8 @@ contract StakeManager is Utils, ACL, StakeStorage {
             // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
             uint256 rewardable = 0;
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
-                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
+                uint256 voteLastEpoch = 
+                    voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 medianLastEpoch = mediansLastEpoch[i];
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
@@ -233,7 +319,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
             // totalStake = totalStake-(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
-    }
+    } 
 
     /// @param _address Address of the staker
     /// @return The staker ID
@@ -356,5 +442,4 @@ contract StakeManager is Utils, ACL, StakeStorage {
             }
         }
     }
-
 }
