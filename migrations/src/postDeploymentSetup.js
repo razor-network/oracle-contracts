@@ -50,10 +50,12 @@ module.exports = async () => {
   pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
   pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
 
+  // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {
     pendingTransactions[i].wait();
   }
 
+  // eslint-disable-next-line no-console
   console.log('Contracts deployed successfully & initial setup is done');
 };

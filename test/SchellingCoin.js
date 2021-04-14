@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 // /* global contract, it, artifacts, assert, web3 */
 // /* jshint esversion: 8 */
 
