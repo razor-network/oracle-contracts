@@ -150,16 +150,11 @@ contract StakeManager is ACL, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
-            //WARNING: ALLOWING STAKE TO BE ADDEDD AFTER WITHDRAW/SLASH. consequences unknown
-            // require(
-            //  stakers[stakerId].stake > 0,
-            //  "adding stake is not possible after withdrawal/slash. Please use a new address");
-            // previousStake = stakers[stakerId].stake;
             stakers[stakerId].stake = stakers[stakerId].stake+(amount);
             stakers[stakerId].unstakeAfter = epoch+(Constants.unstakeLockPeriod());
             stakers[stakerId].withdrawAfter = 0;
         }
-        // totalStake = totalStake+(amount);
+
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
     }
 
@@ -198,8 +193,7 @@ contract StakeManager is ACL, StakeStorage {
             "already commited this epoch. Cant withdraw"
         );
         require(staker.stake > 0, "Nonpositive Stake");
-        // SchellingCoin sch = SchellingCoin(schAddress);
-        // totalStake = totalStake-(stakers[stakerId].stake);
+
         uint256 toTransfer = stakers[stakerId].stake;
         stakers[stakerId].stake = 0;
         emit Withdrew(epoch, stakerId, stakers[stakerId].stake, 0, block.timestamp);
@@ -231,8 +225,6 @@ contract StakeManager is ACL, StakeStorage {
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
-            // stakers[proposerId].stake = stakers[proposerId].stake+(Constants.blockReward());
-            // totalStake = totalStake+(Constants.blockReward());
             require(sch.mint(address(this), blockReward));
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
@@ -260,19 +252,12 @@ contract StakeManager is ACL, StakeStorage {
         Structs.Staker memory thisStaker = stakers[stakerId];
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
 
-        //never revealed
-        // if (epochLastRevealed < 1) return;
-
-        // no rewards if you didn't reveal last epoch
         if ((epoch - epochLastRevealed) != 1) return;
         uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
 
-        // require(mediansLastEpoch.length > 0);
         if (lowerCutoffsLastEpoch.length > 0) {
-            //epoch->stakerid->assetid->vote
-            // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
             uint256 rewardable = 0;
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
                 uint256 voteLastEpoch = 
@@ -288,9 +273,7 @@ contract StakeManager is ACL, StakeStorage {
                     rewardable = rewardable + 1;
                 }
             }
-            // emit DebugUint256(rewardable);
-            // emit DebugUint256(rewardPool);
-            //reward = S*RP*n/SR*N
+
             uint256 reward = (thisStaker.stake*rewardPool*rewardable)/
             (stakeGettingReward*lowerCutoffsLastEpoch.length);
             if (reward > 0) {
@@ -312,11 +295,9 @@ contract StakeManager is ACL, StakeStorage {
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
-        // SchellingCoin sch = SchellingCoin(schAddress);
         uint256 halfStake = stakers[id].stake/(2);
         _setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {
-            // totalStake = totalStake-(halfStake);
             require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     } 
@@ -356,7 +337,7 @@ contract StakeManager is ACL, StakeStorage {
         if (epochs < 10) {
             return(stakeValue);
         }
-        // penalty =( epochs -1)*stakeValue*penNum/penDiv
+
         uint256 penalty = (epochs-(1))*((stakeValue*(Constants.penaltyNotRevealNum()))/(
         Constants.penaltyNotRevealDenom()));
         if (penalty < stakeValue) {
@@ -420,10 +401,7 @@ contract StakeManager is ACL, StakeStorage {
                 
 
                 if (((voteLastEpoch < lowerCutoffLastEpoch) ||
-                    (voteLastEpoch > higherCutoffLastEpoch))) {//} &&
-                    // (voteLastEpoch != medianLastEpoch)) {
-                    //WARNING: Potential security vulnerability. Could increase stake maliciously
-                    //WARNING: unchecked underflow
+                    (voteLastEpoch > higherCutoffLastEpoch))) {
                     penalty = penalty + (previousStake/Constants.exposureDenominator());
                 }
             }

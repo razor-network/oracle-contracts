@@ -44,16 +44,17 @@ const prng = async (seed, max, blockHashes) => {
 };
 
 const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, blockHashes) => {
-  // rand = 0 -> totalStake-1
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const seed = await web3.utils.soliditySha3(iteration);
-  // console.log('seed', seed)
+
   if (!((await prng(seed, numStakers, blockHashes)).add('1')).eq(stakerId)) return false;
+
   const seed2 = await web3.utils.soliditySha3(stakerId, iteration);
   const randHash = await prngHash(seed2, blockHashes);
   const rand = (toBigNumber(randHash).mod('2').pow('32'));
-  // let biggestStake = stakers[biggestStake].stake;
+  
   if ((rand.mul(biggestStake)).gt(stake.mul(toBigNumber('2').pow('32')))) return false;
+  
   return true;
 };
 

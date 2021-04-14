@@ -40,7 +40,6 @@ contract BlockManager is ACL, BlockStorage {
         _;
     }
 
-    //disable after init.
     function init(
         address _stakeManagerAddress,
         address _stateManagerAddress,
@@ -133,22 +132,6 @@ contract BlockManager is ACL, BlockStorage {
             "stake below minimum stake"
         );
 
-        // check if someone already proposed
-        // if (blocks[epoch].proposerId != 0) {
-        //     if (blocks[epoch].proposerId == proposerId) {
-        //         revert("Already Proposed");
-        //     }
-        //     // if (stakers[biggestStakerId].stake == blocks[epoch].biggestStake &&
-        //     //     proposedBlocks[epoch].length >= Constants.maxAltBlocks()) {
-        //     //
-        //     //     require(proposedBlocks[epoch][4].iteration > iteration,
-        //     //             "iteration not smaller than last elected staker");
-        //     // } else
-        //     if (stakers[biggestStakerId].stake < blocks[epoch].biggestStake) {
-        //         revert("biggest stakers stake not bigger than as proposed by existing elected staker ");
-        //     }
-        // }
-        // blocks[epoch]
         _insertAppropriately(epoch, Structs.Block(proposerId,
                             jobIds,
                             medians,
@@ -157,13 +140,7 @@ contract BlockManager is ACL, BlockStorage {
                             iteration,
                             stakeManager.getStaker(biggestStakerId).stake,
                             true));
-        // emit DebugUint256(pushAt);
-        // mint and give block reward
-        // if (Constants.blockReward() > 0) {
-        //     stakers[proposerId].stake = stakers[proposerId].stake+(Constants.blockReward());
-        //     totalStake = totalStake+(Constants.blockReward());
-        //     require(sch.mint(address(this), Constants.blockReward()));
-        // }
+
         emit Proposed(
             epoch,
             proposerId,
@@ -201,7 +178,7 @@ contract BlockManager is ACL, BlockStorage {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
             accWeight = accWeight + (voteManager.getVoteWeight(epoch, assetId, sorted[i]));
-            //set  median, if conditions meet
+
             if (disputes[epoch][msg.sender].lowerCutoff == 0 && accWeight >= lowerCutoffWeight) {
                 disputes[epoch][msg.sender].lowerCutoff = sorted[i];
             }
@@ -284,8 +261,6 @@ contract BlockManager is ACL, BlockStorage {
         view 
         returns(bool) 
     {
-       // rand = 0 -> totalStake-1
-       //add +1 since prng returns 0 to max-1 and staker start from 1
         if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)))+(1))
         != stakerId) {return(false);}
         bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
@@ -307,15 +282,11 @@ contract BlockManager is ACL, BlockStorage {
 
 
     function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal {
-       // uint256 iteration = _block.iteration;
         if (proposedBlocks[epoch].length == 0) {
             proposedBlocks[epoch].push(_block);
             return;
         }
-       // Structs.Block[] memory temp = proposedBlocks[epoch];
-       // delete (proposedBlocks[epoch]);
-       // bool pushed = false;
-       // bool empty = true;
+
         uint256 pushAt = proposedBlocks[epoch].length;
         for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
             if (proposedBlocks[epoch][i].biggestStake < _block.biggestStake) {
@@ -332,13 +303,9 @@ contract BlockManager is ACL, BlockStorage {
         for (uint256 j = proposedBlocks[epoch].length - 1; j > (pushAt); j--) {
             proposedBlocks[epoch][j] = proposedBlocks[epoch][j - 1];
         }
-        // if (pushAt < proposedBlocks[epoch].length) {
 
         proposedBlocks[epoch][pushAt] = _block;
-        // }
-        // if (pushed == false && temp.length < Constants.maxAltBlocks()) {
-        //     proposedBlocks[epoch].push(_block);
-        // }
+
         if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }

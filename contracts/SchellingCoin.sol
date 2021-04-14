@@ -12,10 +12,12 @@ import "./Core/ACL.sol";
  */
 
 contract SchellingCoin is ERC20, AccessControl {
-    uint8 public constant DECIMALS = 18;
-    //50 million supply. rest should be mineable
+
+    uint256 public constant DECIMALS = 18;
+    //50 million supply. rest should be mintable
     uint256 public constant INITIAL_SUPPLY = 1000000000 * (10 ** uint256(DECIMALS));
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */

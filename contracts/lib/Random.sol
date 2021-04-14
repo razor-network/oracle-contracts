@@ -22,7 +22,7 @@ library Random {
 
     function blockHashes(uint8 numBlocks) public view returns(bytes32) {
         bytes32 sum;
-        //lets start from the start of the epoch
+        // start from the start of the epoch
         uint256 blockNumberEpochStart = (block.number/(Constants.epochLength()))*(Constants.epochLength());
         for (uint8 i = 1; i <= numBlocks; i++) {
             sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart-i)));

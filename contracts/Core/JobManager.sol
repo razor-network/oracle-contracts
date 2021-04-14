@@ -22,8 +22,6 @@ contract JobManager is ACL, JobStorage {
         uint256 credit,
         uint256 timestamp
     );
-    // event JobFulfilled(uint256 id, uint256 epoch, string url, string selector, bool repeat,
-    //                     address creator, uint256 credit, bool fulfulled);
 
     event JobReported(
         uint256 id,
@@ -78,7 +76,6 @@ contract JobManager is ACL, JobStorage {
             msg.value,
             block.timestamp
         );
-        // jobs.push(job);
     }
 
     function fulfillJob(
@@ -93,8 +90,6 @@ contract JobManager is ACL, JobStorage {
 
         if (!job.repeat) {
             job.fulfilled = true;
-            // emit JobFulfilled(job.id, epoch, job.url, job.selector,
-            //job.repeat, job.creator, job.credit, job.fulfilled);
         }
 
         job.result = value;

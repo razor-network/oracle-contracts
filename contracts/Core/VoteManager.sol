@@ -8,8 +8,6 @@ import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
 import "../lib/Constants.sol";
 
-// import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-
 
 contract VoteManager is VoteStorage {
 
@@ -47,11 +45,10 @@ contract VoteManager is VoteStorage {
             blockManager.confirmBlock();
         }
         stakeManager.givePenalties(stakerId, epoch);
-        // emit DebugUint256(y);
+
         if (thisStaker.stake >= Constants.minStake()) {
             commitments[epoch][stakerId] = commitment;
             stakeManager.updateCommitmentEpoch(stakerId);
-            // thisStaker.epochLastCommitted = epoch;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
         }
     }
@@ -66,9 +63,9 @@ contract VoteManager is VoteStorage {
         require(thisStakerId > 0, "Structs.Staker does not exist");
         Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
-        // require(value > 0, "voted non positive value");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId],
                 "incorrect secret/value");
+        
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(stateManager.getState() == Constants.reveal(), "Not reveal state");
@@ -84,8 +81,6 @@ contract VoteManager is VoteStorage {
             stakeManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
-            // thisStaker.epochLastRevealed = epoch;
-            // stakeManager.setStakerStake(thisStakerId, thisStaker.stake);
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
             emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
@@ -98,33 +93,28 @@ contract VoteManager is VoteStorage {
     }
 
     function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
-        //epoch->stakerid->commitment
-        // mapping (uint256 => mapping (uint256 => bytes32)) public commitments;
+        //epoch -> stakerid -> commitment
         return(commitments[epoch][stakerId]);
     }
 
     function getVote(uint256 epoch, uint256 stakerId, uint256 assetId) public view returns(Structs.Vote memory vote) {
-        //epoch->stakerid->assetid->vote
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => Structs.Vote))) public votes;
+        //epoch -> stakerid -> assetid -> vote
         return(votes[epoch][stakerId][assetId]);
     }
 
     function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
     public view returns(uint256) {
-        //epoch->assetid->voteValue->weight
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        //epoch -> assetid -> voteValue -> weight
         return(voteWeights[epoch][assetId][voteValue]);
     }
 
     function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
         // epoch -> asset -> stakeWeight
-        // mapping (uint256 =>  mapping (uint256 => uint256)) public totalStakeRevealed;
         return(totalStakeRevealed[epoch][assetId]);
     }
 
     function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
-        //epoch->assetid->voteValue->weight
-        // mapping (uint256 => mapping (uint256 =>  mapping (uint256 => uint256))) public voteWeights;
+        //epoch -> assetid -> voteValue -> weight
         return(voteWeights[epoch][assetId][voteValue]);
     }
 }
