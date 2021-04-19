@@ -7,7 +7,7 @@ const EPOCH_LENGTH = BigNumber.from(40);
 const NUM_BLOCKS = 10;
 const NUM_STATES = BigNumber.from(4);
 const STATE_LENGTH = BigNumber.from(10);
-const BLOCK_REWARD = BigNumber.from(40).mul(ONE_ETHER);;
+const BLOCK_REWARD = BigNumber.from(40).mul(ONE_ETHER);
 
 module.exports = {
   DEFAULT_ADMIN_ROLE_HASH,
