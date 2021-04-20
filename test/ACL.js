@@ -1,3 +1,4 @@
+const { assert } = require('chai');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const { takeSnapshot, restoreSnapshot } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
@@ -243,6 +244,11 @@ describe('Access Control Test', async () => {
     await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
     await stakeManager.updateCommitmentEpoch(1);
     await stakeManager.revokeRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+  });
+
+  it('Only Default Admin should able to update Block Reward', async () => {
+    await assertRevert(stakeManager.connect(signers[1]).updateBlockReward(100), expectedRevertMessage);
+    assert(await stakeManager.updateBlockReward(100), "Admin not able to update BlockReward");
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {
