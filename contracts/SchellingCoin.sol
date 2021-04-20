@@ -18,7 +18,7 @@ contract SchellingCoin is ERC20, AccessControl {
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    constructor (address minter) public ERC20("SchellingCoin", "SCH") {
+    constructor (address minter) ERC20("SchellingCoin", "SCH") {
         _mint(msg.sender, INITIAL_SUPPLY);
         _setupRole(MINTER_ROLE, minter);
     }
