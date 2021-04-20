@@ -330,7 +330,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
-                uint256 medianLastEpoch = mediansLastEpoch[i];
+               
 
                 if (((voteLastEpoch < lowerCutoffLastEpoch) ||
                     (voteLastEpoch > higherCutoffLastEpoch))) {//} &&
