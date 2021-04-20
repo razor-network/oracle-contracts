@@ -1,3 +1,4 @@
+const { BLOCK_REWARD } = require('./constants');
 const setupContracts = async () => {
   const Constants = await ethers.getContractFactory('Constants');
   const constants = await Constants.deploy();
@@ -50,7 +51,7 @@ const setupContracts = async () => {
   const delegator = await Delegator.deploy();
   const faucet = await Faucet.deploy();
   const jobManager = await JobManager.deploy();
-  const stakeManager = await StakeManager.deploy();
+  const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const schellingCoin = await SchellingCoin.deploy(stakeManager.address);
   const stateManager = await StateManager.deploy();
   const voteManager = await VoteManager.deploy();

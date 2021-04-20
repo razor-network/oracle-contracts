@@ -31,6 +31,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
         _;
     }
 
+    constructor (uint256 _blockReward) {
+        blockReward = _blockReward;
+    }
+
     /// @param _schAddress The address of the Schelling token ERC20 contract
     /// @param _voteManagerAddress The address of the VoteManager contract
     /// @param _blockManagerAddress The address of the BlockManager contract
@@ -42,10 +46,8 @@ contract StakeManager is Utils, ACL, StakeStorage {
         voteManager = IVoteManager(_voteManagerAddress);
         blockManager = IBlockManager(_blockManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
-        genesisBlock = block.number;
-        lastBlockRewards = Constants.initialBlockReward();
     }
-
+    
     event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake,
                     string reason, uint256 epoch, uint256 timestamp);
 
@@ -63,6 +65,10 @@ contract StakeManager is Utils, ACL, StakeStorage {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
 
+    function updateBlockReward(uint256 _blockReward) external onlyRole(Constants.getDefaultAdminHash())
+    {
+        blockReward = _blockReward;
+    }    
     event Staked(uint256 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
     /// @notice stake during commit state only
@@ -146,7 +152,6 @@ contract StakeManager is Utils, ACL, StakeStorage {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
-        uint256 blockReward = _calculateBlockReward();
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
@@ -158,15 +163,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
         stakeGettingReward = 0;
         emit StakeGettingRewardChange(epoch, prevStakeGettingReward, stakeGettingReward, block.timestamp);
     }
-
-    function _calculateBlockReward() private returns(uint256) {
-        uint256 halvings = (block.number - genesisBlock) / Constants.halvingInterval();	
-        if(halvings > lastHalvings) {
-            lastBlockRewards = Constants.initialBlockReward() >>  halvings;
-            lastHalvings = halvings;
-        }
-        return lastBlockRewards;
-    }
+    
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed
     /// the Values of assets according to the razor protocol rules.
