@@ -3,7 +3,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../lib/Constants.sol";
 
 contract ACL is AccessControl {
-    constructor() public {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
     modifier onlyRole(bytes32 _hash) {
