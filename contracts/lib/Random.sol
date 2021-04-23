@@ -8,8 +8,8 @@ library Random {
 
     // pseudo random number generator based on block hashes. returns 0 -> max-1
     function prng(uint8 numBlocks, uint256 max, bytes32 seed) public view returns (uint256) {
-        bytes32 hashh = prngHash(numBlocks, seed);
-        uint256 sum = uint256(hashh);
+        bytes32 hash = prngHash(numBlocks, seed);
+        uint256 sum = uint256(hash);
         return(sum%max);
     }
 
@@ -25,7 +25,7 @@ library Random {
         // start from the start of the epoch
         uint256 blockNumberEpochStart = (block.number/(Constants.epochLength()))*(Constants.epochLength());
         for (uint8 i = 1; i <= numBlocks; i++) {
-            sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart-i)));
+            sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart - i)));
         }
         return(sum);
     }

@@ -18,7 +18,17 @@ contract BlockManager is ACL, BlockStorage {
     IVoteManager public voteManager;
     IJobManager public jobManager;
 
-    event Proposed(
+    event BlockConfirmed (
+        uint256 epoch,
+        uint256 stakerId,
+        uint256[] medians,
+        uint256[] lowerCutoffs,
+        uint256[] higherCutoffs,
+        uint256[] jobIds,
+        uint256 timestamp
+    );
+
+    event Proposed (
         uint256 epoch,
         uint256 stakerId,
         uint256[] jobIds,
@@ -28,7 +38,7 @@ contract BlockManager is ACL, BlockStorage {
         uint256 iteration,
         uint256 biggestStakerId,
         uint256 timestamp
-    );
+    );    
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
@@ -132,14 +142,19 @@ contract BlockManager is ACL, BlockStorage {
             "stake below minimum stake"
         );
 
-        _insertAppropriately(epoch, Structs.Block(proposerId,
-                            jobIds,
-                            medians,
-                            lowerCutoffs,
-                            higherCutoffs,
-                            iteration,
-                            stakeManager.getStaker(biggestStakerId).stake,
-                            true));
+        _insertAppropriately(
+            epoch, 
+            Structs.Block(
+                proposerId,
+                jobIds,
+                medians,
+                lowerCutoffs,
+                higherCutoffs,
+                iteration,
+                stakeManager.getStaker(biggestStakerId).stake,
+                true
+            )
+        );
 
         emit Proposed(
             epoch,
@@ -259,27 +274,19 @@ contract BlockManager is ACL, BlockStorage {
     )
         public
         view 
-        returns(bool) 
-    {
-        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)))+(1))
-        != stakerId) {return(false);}
+        returns (bool) 
+    {   
+        // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
+        // since prng returns 0 to max-1 and staker start from 1
+        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)))+(1)) != stakerId) {
+            return false;
+        }
         bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand = uint256(randHash)%(2**32);
         uint256 biggestStake = stakeManager.getStaker(biggestStakerId).stake;
         if (rand*(biggestStake) > stakeManager.getStaker(stakerId).stake*(2**32)) return(false);
-        return(true);
+        return true;
     }
-
-    event BlockConfirmed(
-        uint256 epoch,
-        uint256 stakerId,
-        uint256[] medians,
-        uint256[] lowerCutoffs,
-        uint256[] higherCutoffs,
-        uint256[] jobIds,
-        uint256 timestamp
-    );
-
 
     function _insertAppropriately(uint256 epoch, Structs.Block memory _block) internal {
         if (proposedBlocks[epoch].length == 0) {

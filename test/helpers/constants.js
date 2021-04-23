@@ -16,5 +16,5 @@ module.exports = {
   NUM_STATES,
   ONE_ETHER,
   STATE_LENGTH,
-  BLOCK_REWARD
+  BLOCK_REWARD,
 };

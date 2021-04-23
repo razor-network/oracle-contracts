@@ -6,7 +6,7 @@ import "../lib/Constants.sol";
 
 
 contract ACL is AccessControl {
-    constructor()  {
+    constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 

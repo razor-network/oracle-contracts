@@ -4,11 +4,11 @@ test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
-const { 
-  assertBNEqual, 
+const {
+  assertBNEqual,
   assertRevert,
   mineToNextEpoch,
-  mineToNextState
+  mineToNextState,
 } = require('./helpers/testHelpers');
 const { getEpoch, toBigNumber, tokenAmount } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
@@ -120,7 +120,7 @@ describe('StakeManager', function () {
     it('should not be able to withdraw before withdraw lock period', async function () {
       const epoch = await getEpoch();
       const tx = stakeManager.connect(signers[1]).withdraw(epoch);
-      await assertRevert(tx, "Withdraw epoch not reached");
+      await assertRevert(tx, 'Withdraw epoch not reached');
       const staker = await stakeManager.getStaker(1);
       const stake = tokenAmount('443000');
       assertBNEqual(staker.stake, stake, 'Stake should not change');
@@ -131,7 +131,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
       await (stakeManager.connect(signers[1]).withdraw(epoch));
-      let staker = await stakeManager.getStaker(1);
+      const staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, toBigNumber('0')); // Stake Should be zero
       assertBNEqual(await schellingCoin.balanceOf(signers[1].address), stake); // Balance
     });
@@ -144,7 +144,6 @@ describe('StakeManager', function () {
       let staker = await stakeManager.getStaker(2);
       assertBNEqual(staker.unstakeAfter, toBigNumber('0'), 'UnstakeAfter should be zero');
 
-
       // Next Epoch
       await mineToNextEpoch();
 
@@ -154,12 +153,12 @@ describe('StakeManager', function () {
       const root = tree.root();
       epoch = await getEpoch();
 
-      //Commit
+      // Commit
       const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
       await mineToNextState();
 
-      //Reveal
+      // Reveal
       const proof = [];
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
@@ -172,7 +171,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       const tx = stakeManager.connect(signers[2]).withdraw(epoch);
-      await assertRevert(tx, "Participated in Withdraw lock period, Cant withdraw");
+      await assertRevert(tx, 'Participated in Withdraw lock period, Cant withdraw');
       staker = await stakeManager.getStaker(2);
       assertBNEqual(staker.stake, stake, 'Stake should not change');
     });

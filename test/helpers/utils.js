@@ -52,9 +52,9 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
   const seed2 = await web3.utils.soliditySha3(stakerId, iteration);
   const randHash = await prngHash(seed2, blockHashes);
   const rand = (toBigNumber(randHash).mod('2').pow('32'));
-  
+
   if ((rand.mul(biggestStake)).gt(stake.mul(toBigNumber('2').pow('32')))) return false;
-  
+
   return true;
 };
 

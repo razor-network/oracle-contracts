@@ -38,7 +38,6 @@ describe('VoteManager', function () {
 
     describe('SchellingCoin', async function () {
       it('should be able to initialize', async function () {
-
         await mineToNextEpoch();
         await schellingCoin.transfer(signers[3].address, tokenAmount('423000'));
         await schellingCoin.transfer(signers[4].address, tokenAmount('19000'));
@@ -86,7 +85,7 @@ describe('VoteManager', function () {
         const tree = merkle('keccak256').sync(votes);
 
         await mineToNextState(); // reveal
-        
+
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
