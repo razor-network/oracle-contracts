@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "../lib/Constants.sol";
 
 contract ACL is AccessControl {
-    constructor() public {
+    constructor()  {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
     modifier onlyRole(bytes32 _hash) {
