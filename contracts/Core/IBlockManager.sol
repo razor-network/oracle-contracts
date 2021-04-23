@@ -7,7 +7,7 @@ interface IBlockManager {
 
     event Proposed(uint256 epoch,
                     uint256 stakerId,
-                    uint256[] medians,
+                    uint256[] aggregate,
                     uint256 iteration,
                     uint256 biggestStakerId);
 
@@ -20,8 +20,8 @@ interface IBlockManager {
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
     function propose (uint256 epoch,
-                    uint256[] calldata jobIds,
-                    uint256[] calldata medians,
+                    uint256[] calldata ids,
+                    uint256[] calldata aggregate,
                     uint256[] calldata lowerCutoffs,
                     uint256[] calldata higherCutoffs,
                     uint256 iteration,

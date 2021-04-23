@@ -322,7 +322,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
         uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
         uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
-        uint256[] memory mediansLastEpoch = _block.medians;
+        uint256[] memory mediansLastEpoch = _block.aggregate;
 
         if (lowerCutoffsLastEpoch.length > 0) {
             uint256 penalty = 0;
