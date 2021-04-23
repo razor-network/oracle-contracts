@@ -150,6 +150,8 @@ contract StakeManager is ACL, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
+            // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
+            // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake+(amount);
             stakers[stakerId].unstakeAfter = epoch+(Constants.unstakeLockPeriod());
             stakers[stakerId].withdrawAfter = 0;
@@ -252,6 +254,7 @@ contract StakeManager is ACL, StakeStorage {
         Structs.Staker memory thisStaker = stakers[stakerId];
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
 
+        // no rewards if last epoch didn't got revealed
         if ((epoch - epochLastRevealed) != 1) return;
         uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
@@ -338,8 +341,7 @@ contract StakeManager is ACL, StakeStorage {
             return(stakeValue);
         }
 
-        uint256 penalty = (epochs-(1))*((stakeValue*(Constants.penaltyNotRevealNum()))/(
-        Constants.penaltyNotRevealDenom()));
+        uint256 penalty = ((epochs- 1) * (stakeValue*(Constants.penaltyNotRevealNum()))) / Constants.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return(stakeValue-(penalty));
         } else {
@@ -400,8 +402,9 @@ contract StakeManager is ACL, StakeStorage {
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
                 
 
-                if (((voteLastEpoch < lowerCutoffLastEpoch) ||
-                    (voteLastEpoch > higherCutoffLastEpoch))) {
+                if ((voteLastEpoch < lowerCutoffLastEpoch) || (voteLastEpoch > higherCutoffLastEpoch)) {
+                    // WARNING: Potential security vulnerability. Could increase stake maliciously, need analysis
+                    // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
                     penalty = penalty + (previousStake/Constants.exposureDenominator());
                 }
             }
