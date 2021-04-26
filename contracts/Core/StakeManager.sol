@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "../SchellingCoin.sol";
 import "./Utils.sol";
@@ -322,7 +323,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
 
         uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
         uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
-        uint256[] memory mediansLastEpoch = _block.medians;
+        
 
         if (lowerCutoffsLastEpoch.length > 0) {
             uint256 penalty = 0;
@@ -330,7 +331,7 @@ contract StakeManager is Utils, ACL, StakeStorage {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
-                uint256 medianLastEpoch = mediansLastEpoch[i];
+                
 
                 if (((voteLastEpoch < lowerCutoffLastEpoch) ||
                     (voteLastEpoch > higherCutoffLastEpoch))) {//} &&
