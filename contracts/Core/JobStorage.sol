@@ -9,8 +9,8 @@ contract JobStorage {
 
     enum assetTypes { Job, Collection }
 
-    uint256 public numJobs;
-    uint256 public numCollections;
+    uint256[] public jobList;
+    uint256[] public collectionList;
 
     uint256 public numAssets;
 }

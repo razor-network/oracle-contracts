@@ -25,11 +25,11 @@ contract JobManager is ACL, JobStorage {
     }
 
     function createJob (string calldata url, string calldata selector, string calldata name, bool repeat) external payable {
-        numJobs = numJobs + 1;
         numAssets++;
         uint256 epoch = stateManager.getEpoch();
         Structs.Job memory job = Structs.Job(numAssets, epoch, url, selector, name, repeat, msg.sender, msg.value, false, 0,uint256(assetTypes.Job));
         jobs[numAssets] = job;
+        jobList.push(numAssets);
 
         emit JobCreated(numAssets, epoch, url, selector, name, repeat, msg.sender, msg.value, block.timestamp, uint256(assetTypes.Job));
         // jobs.push(job);
@@ -58,23 +58,9 @@ contract JobManager is ACL, JobStorage {
         }
     }
 
-    function getResult(uint256 id) external view returns(uint256) {
-        return jobs[id].result;
-    }
-
-    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result) {
-        Structs.Job memory job = jobs[id];
-        return(job.url, job.selector, job.name, job.repeat, job.result);
-    }
-
-    function getNumJobs() external view returns(uint256) {
-        return numJobs;
-    }
-
     function createCollection(string calldata name, uint256[] memory jobIDs,uint8 aggregationMethod) external payable {
-        require(aggregationMethod >= 0 && aggregationMethod < 3,"Aggregation range out of bounds");
+        require(aggregationMethod > 0 && aggregationMethod < 3,"Aggregation range out of bounds");
 
-        numCollections++;
         numAssets++;
         uint256 epoch = stateManager.getEpoch();
         collections[numAssets].id = numAssets; 
@@ -87,20 +73,45 @@ contract JobManager is ACL, JobStorage {
             if(collections[numAssets].jobID_exist[jobIDs[i]]){
                 continue;
             }
-            collections[numAssets].numJobs++;
-            collections[numAssets].jobIDs[collections[numAssets].numJobs] = jobIDs[i];
+            collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobID_exist[jobIDs[i]] = true;
         }
+        collectionList.push(numAssets);
     }
 
     function addJobToCollection(uint256 collectionID, uint256 jobID) external {
         require(collections[collectionID].assetType!=uint256(assetTypes.Collection),"Collection ID not present");
         //require(jobID<=numJobs,"Job ID not present");
         require(!collections[collectionID].jobID_exist[jobID],"Job already exists in this collection");
-
-        collections[collectionID].numJobs++;
-        collections[collectionID].jobIDs[collections[collectionID].numJobs] = jobID;
+        collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobID_exist[jobID] = true;
+        
+    }
 
+    function getResult(uint256 id) external view returns(uint256) {
+        return jobs[id].result;
+    }
+
+    function getJob(uint256 id) external view returns(string memory url, string memory selector, string memory name, bool repeat, uint256 result) {
+        require(jobs[id].assetType==uint256(assetTypes.Job),"ID is not a job");
+        Structs.Job memory job = jobs[id];
+        return(job.url, job.selector, job.name, job.repeat, job.result);
+    }
+
+    function getCollection(uint256 id) external view returns(string memory name, uint32 aggregationMethod, uint256[] memory jobIDs, uint256 result) {
+        require(jobs[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
+        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result);
+    }
+
+    function getJobList() external view returns(uint256[] memory) {
+        return jobList;
+    }
+
+    function getCollectionList() external view returns(uint256[] memory) {
+        return collectionList;
+    }
+
+    function getNumAssets() external view returns(uint256) {
+        return numAssets;
     }
 }
