@@ -11,7 +11,7 @@ const {
   mineToNextState,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
-const { ONE_ETHER, NUM_BLOCKS } = require('./helpers/constants');
+const { ONE_ETHER, NUM_BLOCKS, DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 
 const { BigNumber, utils } = ethers;
 
@@ -31,6 +31,11 @@ describe('BlockManager', function () {
   });
 
   describe('SchellingCoin', async () => {
+    it('Admin role should be granted',async () => {
+
+      assert(await blockManager.hasRole(DEFAULT_ADMIN_ROLE_HASH,signers[0].address)===true,"Role was not Granted")
+
+    });
     it('should be able to initialize', async () => {
       await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, BigNumber.from(423000).mul(ONE_ETHER));
