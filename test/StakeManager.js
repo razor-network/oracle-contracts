@@ -3,8 +3,8 @@ test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
-const { BigNumber } = require('ethers');
-const { ONE_ETHER } = require('./helpers/constants');
+const { BigNumber, utils } = require('ethers');
+const { ONE_ETHER , GRACE_PERIOD} = require('./helpers/constants');
 const { getEpoch, mineToNextEpoch, mineToNextState } = require('./helpers/testHelpers');
 const { assertRevert } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
@@ -26,6 +26,7 @@ describe('StakeManager', function () {
       const stake1 = BigNumber.from('443000').mul(ONE_ETHER);
       await schellingCoin.transfer(signers[1].address, stake1);
       await schellingCoin.transfer(signers[2].address, stake1);
+      await schellingCoin.transfer(signers[3].address , stake1);
     });
 
     it('should be able to stake', async function () {
@@ -166,6 +167,85 @@ describe('StakeManager', function () {
       await assertRevert(tx, "Participated in Withdraw lock period, Cant withdraw");
       staker = await stakeManager.getStaker(2);
       assert(String(staker.stake) === String(stake), 'Stake should not change');
+    });
+
+    it('should penalize staker if number of inactive epochs > grace_period' , async function(){
+      let epoch = await getEpoch();
+      const stake = BigNumber.from('443000').mul(ONE_ETHER);
+      await schellingCoin.connect(signers[3]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[3]).stake(epoch ,stake);
+      let staker = await stakeManager.getStaker(3);
+      // Staker 3 stakes in epoch 16
+
+      const epochsJumped = GRACE_PERIOD + 2;
+      for(let i = 0;i < epochsJumped ; i++){
+        await mineToNextEpoch();
+      }
+      // Current Epoch is 26 . Staker 3 was inactive for 26 - 16 - 1 = 9 epochs
+      // commit
+      epoch = await getEpoch();
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const tree = merkle('keccak256').sync(votes);
+      const root = tree.root();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment1);
+
+      //reveal
+      await mineToNextState();
+      const proof = [];
+      for (let i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[3].address);
+      // Staker 3 commits & reveals in epoch 16 .
+      // Staker 3 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
+      staker = await stakeManager.stakers(3);
+      assert(staker.stake.toString() != stake.toString() , 'Stake should have decreased due to penalty');
+
+    });
+    it('should not penalize staker if number of inactive epochs <= grace_period' , async function(){
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      let staker = await stakeManager.getStaker(3);
+      const stake = staker.stake;
+      // Current epoch is 27 .
+      // Staker 3 epochLastRevealed = 26 ( previous test )
+      const epochsJumped = GRACE_PERIOD ;
+      for(let i = 0;i < epochsJumped ; i++){
+        await mineToNextEpoch();
+      }
+      // Current epoch is 35
+      // Staker 3 was inactive for 35 - 26 - 1 = 8 epochs
+      // commit
+      epoch = await getEpoch();
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const tree = merkle('keccak256').sync(votes);
+      const root = tree.root();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment1);
+
+      //reveal
+      await mineToNextState();
+      const proof = [];
+      for (let i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[3].address);
+      // Staker 3 commits & reveals in epoch 35 .
+      // Staker is not penalised because no. of inactive epochs (8) <= max allowed inactive epochs i.e grace_period (8)
+      staker = await stakeManager.stakers(3);
+      assert(staker.stake.toString() == stake.toString() , 'Stake should have remained the same');
+
     });
   });
 });
