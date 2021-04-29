@@ -171,7 +171,7 @@ describe('StakeManager', function () {
 
     it('should penalize staker if number of inactive epochs > grace_period' , async function(){
       let epoch = await getEpoch();
-      const stake = BigNumber.from('443000').mul(ONE_ETHER);
+      const stake = BigNumber.from('420000').mul(ONE_ETHER);
       await schellingCoin.connect(signers[3]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[3]).stake(epoch ,stake);
       let staker = await stakeManager.getStaker(3);
