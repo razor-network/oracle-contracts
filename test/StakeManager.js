@@ -4,12 +4,13 @@ test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
 const { BigNumber } = require('ethers');
-const { ONE_ETHER } = require('./helpers/constants');
+const { ONE_ETHER,DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const { getEpoch, mineToNextEpoch, mineToNextState } = require('./helpers/testHelpers');
 const { assertRevert } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
 describe('StakeManager', function () {
+  
   describe('SchellingCoin', async function () {
     let signers;
     let schellingCoin;
@@ -19,6 +20,11 @@ describe('StakeManager', function () {
     before(async () => {
       ({ schellingCoin, stakeManager, voteManager } = await setupContracts());
       signers = await ethers.getSigners();
+    });
+    it('Admin role should be granted',async () => {
+
+      assert(await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH,signers[0].address)===true,"Role was not Granted")
+  
     });
 
     it('should be able to initialize', async function () {
