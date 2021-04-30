@@ -1,8 +1,85 @@
+const { assert } = require('chai');
 const { BigNumber } = require('ethers');
+const { EPOCH_LENGTH, STATE_LENGTH } = require('./constants');
+const { getEpoch, toBigNumber } = require('./utils');
 
-const epochLength = BigNumber.from(40);
-const numStates = BigNumber.from(4);
-const stateLength = BigNumber.from(10);
+/**
+ *  Function to assert that two BigNumber instances are equal.
+ *  @param actualBN BigNumber amount you received
+ *  @param expectedBN BigNumber amount you expected to receive
+ *  @param log Log reason if we fail the assertion
+ */
+const assertBNEqual = (actualBN, expectedBN, log) => {
+  assert.strictEqual(actualBN.toString(), expectedBN.toString(), log);
+};
+
+/**
+ *  Function to assert that the firstBN parameter  is less than secondBN parameter
+ *  @param lesserBN  smaller BigNumber amount
+ *  @param greaterBN greater BigNumber amount
+ */
+const assertBNLessThan = (lesserBN, greaterBN) => {
+  assert.ok(lesserBN.lt(greaterBN), `${lesserBN.toString()} is not less than ${greaterBN.toString()}`);
+};
+
+/**
+ *  Convenience method to assert that two BigNumber instances are NOT equal.
+ *  @param actualBN The BigNumber instance you received
+ *  @param expectedBN The BigNumber amount you expected NOT to receive
+ *  @param log Log reason if we fail the assertion
+ */
+const assertBNNotEqual = (actualBN, expectedBN, log) => {
+  assert.notStrictEqual(actualBN.toString(), expectedBN.toString(), log);
+};
+
+/**
+ *  Function to check if two arrays/objects which contain nested BigNumber are equal.
+ *  @param actual What you received
+ *  @param expected The shape you expected
+ */
+const assertDeepEqual = (actual, expected, context) => {
+  // Check if it's a value type we can assert on straight away.
+  if (BigNumber.isBigNumber(actual) || BigNumber.isBigNumber(expected)) {
+    assertBNEqual(actual, expected, context);
+  } else if (
+    typeof expected === 'string'
+    || typeof actual === 'string'
+    || typeof expected === 'number'
+    || typeof actual === 'number'
+    || typeof expected === 'boolean'
+    || typeof actual === 'boolean'
+  ) {
+    assert.strictEqual(actual, expected, context);
+  } else if (Array.isArray(expected)) {
+    // Otherwise dig through the deeper object and recurse
+    for (let i = 0; i < expected.length; i++) {
+      assertDeepEqual(actual[i], expected[i], `(array index: ${i}) `);
+    }
+  } else {
+    for (const key of Object.keys(expected)) {
+      assertDeepEqual(actual[key], expected[key], `(key: ${key}) `);
+    }
+  }
+};
+
+/**
+ *  Function to check whether transaction is getting reverted with reason as expected.
+ *  @param promise Transaction promise
+ *  @param reason Reason for revert
+ */
+const assertRevert = async (promise, reason) => {
+  let errorEncountered = false;
+  try {
+    await promise;
+  } catch (error) {
+    assert.include(error.message, 'revert');
+    if (reason) {
+      assert.include(error.message, reason);
+    }
+    errorEncountered = true;
+  }
+  assert.strictEqual(errorEncountered, true, 'Transaction did not revert as expected');
+};
 
 const send = (payload) => {
   if (!payload.jsonrpc) payload.jsonrpc = '2.0';
@@ -17,55 +94,6 @@ const send = (payload) => {
   });
 };
 
-const getBiggestStakeAndId = async (schelling) => {
-  const numStakers = await schelling.numStakers();
-  let biggestStake = 0;
-  let biggestStakerId = 0;
-  for (let i = 1; i <= numStakers; i++) {
-    const stake = Number((await schelling.stakers(i)).stake);
-    if (stake > biggestStake) {
-      biggestStake = stake;
-      biggestStakerId = i;
-    }
-  }
-  return ([biggestStake, biggestStakerId]);
-};
-
-// pseudo random hash generator based on block hashes.
-const prngHash = async (seed, blockHashes) => {
-  const sum = await web3.utils.soliditySha3(blockHashes, seed);
-  return (sum);
-};
-
-const prng = async (seed, max, blockHashes) => {
-  const hash = await prngHash(seed, blockHashes);
-  const sum = BigNumber.from(hash);
-  max = BigNumber.from(max);
-  return (sum.mod(max));
-};
-
-const isElectedProposer = async (random, iteration, biggestStake, stake, stakerId, numStakers, blockHashes) => {
-  // rand = 0 -> totalStake-1
-  // add +1 since prng returns 0 to max-1 and staker start from 1
-  const seed = await web3.utils.soliditySha3(iteration);
-  // console.log('seed', seed)
-  if ((Number(await prng(seed, numStakers, blockHashes)) + 1) !== stakerId) return (false);
-  const seed2 = await web3.utils.soliditySha3(stakerId, iteration);
-  const randHash = await prngHash(seed2, blockHashes);
-  const rand = Number((BigNumber.from(randHash)).mod(BigNumber.from(2).pow(BigNumber.from(32))));
-  // let biggestStake = stakers[biggestStake].stake;
-  if (rand * (biggestStake) > stake * (2 ** 32)) return (false);
-  return (true);
-};
-
-const getIteration = async (random, biggestStake, stake, stakerId, numStakers, blockHashes) => {
-  for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(random, i, biggestStake, stake, stakerId, numStakers, blockHashes);
-    if (isElected) return (i);
-  }
-  return 0;
-};
-
 const waitNBlocks = async (n) => {
   await Promise.all(
     [...Array(n).keys()].map((i) => send({
@@ -76,76 +104,61 @@ const waitNBlocks = async (n) => {
   );
 };
 
-const getEpoch = async () => {
-  const blockNumber = BigNumber.from(await web3.eth.getBlockNumber());
-  return blockNumber.div(epochLength).toNumber();
-};
-
-const getState = async () => {
-  const blockNumber = BigNumber.from(await web3.eth.getBlockNumber());
-  const state = blockNumber.div(epochLength.div(numStates));
-  return state.mod(numStates).toNumber();
-};
-
 const mineAdvance = async (n) => {
-  n = BigNumber.from(n);
-  const blockNumber = BigNumber.from(await web3.eth.getBlockNumber());
+  n = toBigNumber(n);
+  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
   if (n.gt(blockNumber)) {
     const diff = n.sub(blockNumber);
     await waitNBlocks(diff.toNumber());
   }
 };
 
+const mineBlock = () => send({ method: 'evm_mine' });
+
 // Mines to the next Epoch from which ever block it is in the current Epoch
 const mineToNextEpoch = async () => {
   const currentBlockNumber = await web3.eth.getBlockNumber();
   const currentEpoch = await getEpoch();
-  const nextEpochBlockNum = (currentEpoch + 1) * epochLength.toNumber();
+  const nextEpochBlockNum = (currentEpoch + 1) * EPOCH_LENGTH.toNumber();
   const diff = nextEpochBlockNum - currentBlockNumber;
   await waitNBlocks(diff);
 };
 
 // Mines to the next state in the current epoch
 const mineToNextState = async () => {
-  const currentBlockNumber = BigNumber.from(await web3.eth.getBlockNumber());
-  const temp = currentBlockNumber.div(stateLength).add(1);
-  const nextStateBlockNum = temp.mul(stateLength);
+  const currentBlockNumber = toBigNumber(await web3.eth.getBlockNumber());
+  const temp = currentBlockNumber.div(STATE_LENGTH).add('1');
+  const nextStateBlockNum = temp.mul(STATE_LENGTH);
   const diff = nextStateBlockNum.sub(currentBlockNumber);
   await waitNBlocks(diff.toNumber());
 };
 
+const restoreSnapshot = async (id) => {
+  await send({
+    method: 'evm_revert',
+    params: [id],
+  });
+  await mineBlock();
+};
+
 const takeSnapshot = async () => {
-  const id = await send({
+  const { result } = await send({
     jsonrpc: '2.0',
     method: 'evm_snapshot',
   });
 
-  await send({
-    jsonrpc: '2.0',
-    method: 'evm_mine',
-    id: 0,
-  });
+  await mineBlock();
 
-  return id;
-};
-
-const restoreSnapshot = async (id) => {
-  await send({
-    jsonrpc: '2.0',
-    method: 'evm_revert',
-    params: [id],
-  });
+  return result;
 };
 
 module.exports = {
-  getBiggestStakeAndId,
-  prng,
-  prngHash,
-  getIteration,
-  isElectedProposer,
+  assertRevert,
+  assertDeepEqual,
+  assertBNEqual,
+  assertBNLessThan,
+  assertBNNotEqual,
   waitNBlocks,
-  getEpoch,
-  getState,
   mineAdvance,
   mineToNextEpoch,
   mineToNextState,
