@@ -1,7 +1,7 @@
 # Seed phrase from which accounts are derived
 MNEMONIC=
 
-# Netowrk
+# Ethereum Network
 NETWORK=
 
 # Provider HOST & PORT for deployment
@@ -10,6 +10,9 @@ PROVIDER_PORT=
 
 # Provider URL for deployment
 PROVIDER_URL=
+
+# Schelling Coin Address (if want to reuse already deployed instance)
+SCHELLING_COIN_ADDRESS=
 
 # List of Stakers
 STAKER_ADDRESSES=

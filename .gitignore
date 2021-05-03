@@ -8,4 +8,4 @@ deployed/ganache
 .env.goerli
 node_modules/
 .DS_Store
-
+.previous-deployment-addresses

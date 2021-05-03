@@ -2,8 +2,11 @@
 const jsonfile = require('jsonfile');
 
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
+const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
 const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
+
+const readOldDeploymentFile = async () => jsonfile.readFile(OLD_DEPLOYMENT_FILE);
 
 const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
 
@@ -46,6 +49,8 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
 
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);
+
+  return contract;
 };
 
 const getdeployedContractInstance = async (contractName, contractAddress, linkDependecies = {}) => {
@@ -71,5 +76,6 @@ module.exports = {
   getdeployedContractInstance,
   appendDeploymentFile,
   readDeploymentFile,
+  readOldDeploymentFile,
   writeDeploymentFile,
 };
