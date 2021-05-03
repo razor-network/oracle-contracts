@@ -23,7 +23,15 @@ contract SchellingCoin is ERC20, ACL {
      */
     constructor (address minter) ERC20("SchellingCoin", "SCH") {
         _mint(msg.sender, INITIAL_SUPPLY);
-        _setupRole(MINTER_ROLE, minter);
+        grantRole(MINTER_ROLE, minter);
+    }
+    
+    function addMinter(address account) external {
+        grantRole(MINTER_ROLE, account);
+    }
+
+    function removeMinter(address account) external {
+        revokeRole(MINTER_ROLE, account);
     }
 
     function mint(address account, uint256 amount) external returns (bool) {
