@@ -1,4 +1,5 @@
 const { BLOCK_REWARD } = require('./constants');
+
 const setupContracts = async () => {
   const Constants = await ethers.getContractFactory('Constants');
   const constants = await Constants.deploy();

@@ -59,7 +59,6 @@ library Structs {
         uint32 aggregationMethod;
         uint256[] jobIDs; 
         mapping(uint256=>bool) jobID_exist;
-        uint256 numJobs;
         uint256 epoch;
         address creator;
         uint256 credit;
