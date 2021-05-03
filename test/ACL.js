@@ -29,6 +29,11 @@ describe('Access Control Test', async () => {
     await restoreSnapshot(snapShotId);
   });
 
+  it('admin role should be granted', async () => {
+    const isAdminRoleGranted = await blockManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+    assert(isAdminRoleGranted === true, "Admin role was not Granted");
+  });
+
   it('fulFillJob() should not be accessable by anyone besides JobConfirmer', async () => {
     // Checking if Anyone can access it
     await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);

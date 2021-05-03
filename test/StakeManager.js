@@ -25,10 +25,10 @@ describe('StakeManager', function () {
       ({ schellingCoin, stakeManager, voteManager } = await setupContracts());
       signers = await ethers.getSigners();
     });
-    it('Admin role should be granted',async () => {
-
-      assert(await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH,signers[0].address)===true,"Role was not Granted")
-  
+    
+    it('admin role should be granted', async () => {
+      const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+      assert(isAdminRoleGranted === true, "Admin role was not Granted");
     });
 
     it('should be able to initialize', async function () {
