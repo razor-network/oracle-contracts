@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "./Core/ACL.sol";
 
 /**
  * @title SchellingCoin
@@ -11,15 +11,17 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
  * `ERC20` functions.
  */
 
-contract SchellingCoin is ERC20, AccessControl {
-    uint8 public constant DECIMALS = 18;
-    //50 million supply. rest should be mineable
+contract SchellingCoin is ERC20, ACL {
+
+    uint256 public constant DECIMALS = 18;
+    //50 million supply. rest should be mintable
     uint256 public constant INITIAL_SUPPLY = 1000000000 * (10 ** uint256(DECIMALS));
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    constructor (address minter)  ERC20("SchellingCoin", "SCH") {
+    constructor (address minter) ERC20("SchellingCoin", "SCH") {
         _mint(msg.sender, INITIAL_SUPPLY);
         _setupRole(MINTER_ROLE, minter);
     }

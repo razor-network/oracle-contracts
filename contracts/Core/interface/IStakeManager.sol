@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "../lib/Structs.sol";
 
+import "../../lib/Structs.sol";
 
 interface IStakeManager {
     function init (address _schAddress, address _voteManagerAddress,
@@ -16,7 +16,6 @@ interface IStakeManager {
     function giveBlockReward(uint256 stakerId, uint256 epoch) external;
     function giveRewards (uint256 stakerId, uint256 epoch) external;
     function slash (uint256 id, address bountyHunter, uint256 epoch) external;
-    // function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256);
     function getStakerId(address _address) external view returns(uint256);
     function getStaker(uint256 _id) external view returns(Structs.Staker memory staker);
     function getNumStakers() external view returns(uint256);

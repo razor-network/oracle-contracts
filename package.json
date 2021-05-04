@@ -9,6 +9,7 @@
   "scripts": {
     "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
+    "compile": "npx hardhat compile",
     "coverage": "hardhat coverage --network coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 97 --branches 85 --functions 97 --lines 97",
     "deploy:ganache": "./scripts/deploy.sh ganache",

@@ -10,11 +10,7 @@ library Constants {
     // penalty not reveal = 0.01% per epch
     function penaltyNotRevealNum() public pure returns(uint256) { return (1);}
     function penaltyNotRevealDenom() public pure returns(uint256) { return (10000); }
-    // uint256 constant PENALTY_NOT_IN_ZONE_NUM = 99;
-    // uint256 constant PENALTY_NOT_IN_ZONE_DENOM = 100;
     function minStake() public pure returns(uint256) { return(100*(10**uint256(18))); }
-    // uint256 constant REVEAL_REWARD = 5;
-    // function safetyMarginLower() public pure returns(uint256) { return(99); }
     function unstakeLockPeriod() public pure returns(uint256) { return(1); }
     function withdrawLockPeriod() public pure returns(uint256) { return(1); }
     function maxAltBlocks() public pure returns(uint256) { return(5); }
