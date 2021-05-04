@@ -11,7 +11,7 @@ import "./Core/ACL.sol";
  * `ERC20` functions.
  */
 
-contract SchellingCoin is ERC20, AccessControl {
+contract SchellingCoin is ERC20, ACL {
 
     uint256 public constant DECIMALS = 18;
     //50 million supply. rest should be mintable
