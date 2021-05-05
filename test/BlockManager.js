@@ -38,10 +38,9 @@ describe('BlockManager', function () {
   });
 
   describe('SchellingCoin', async () => {
-
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await blockManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
-      assert(isAdminRoleGranted === true, "Admin role was not Granted");
+      assert(isAdminRoleGranted === true, 'Admin role was not Granted');
     });
 
     it('should be able to initialize', async () => {
