@@ -18,5 +18,5 @@ module.exports = {
   ONE_ETHER,
   STATE_LENGTH,
   BLOCK_REWARD,
-  GRACE_PERIOD
+  GRACE_PERIOD,
 };
