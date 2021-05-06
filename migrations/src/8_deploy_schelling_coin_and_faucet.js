@@ -1,14 +1,13 @@
 const { NETWORK, SCHELLING_COIN_ADDRESS } = process.env;
-const { 
+const {
   deployContract,
   appendDeploymentFile,
   readDeploymentFile,
-  readOldDeploymentFile
+  readOldDeploymentFile,
 } = require('../migrationHelpers');
 
 const deploySchellingCoinAndFaucet = async () => {
-
-  if (NETWORK !== 'mainnet' && SCHELLING_COIN_ADDRESS === "" ) {
+  if (NETWORK !== 'mainnet' && SCHELLING_COIN_ADDRESS === '') {
     const { StateManager } = await readDeploymentFile();
     const schellingCoin = await deployContract('SchellingCoin', [], [StateManager]);
     await deployContract('Faucet', [], [schellingCoin.address]);
@@ -16,17 +15,18 @@ const deploySchellingCoinAndFaucet = async () => {
     const { Faucet, SchellingCoin } = await readOldDeploymentFile();
 
     if (SchellingCoin !== SCHELLING_COIN_ADDRESS) {
-      throw Error("Schelling Coin instance address is different than that is deployed previously");
+      throw Error('Schelling Coin instance address is different than that is deployed previously');
     }
 
-    console.log("Re-using Schelling Coin instance deployed at", SchellingCoin)
-    console.log("Re-using Faucet instance deployed at", Faucet)
-    
-    await appendDeploymentFile({ "SchellingCoin": SchellingCoin });
-    await appendDeploymentFile({ "Faucet": Faucet });
+    // eslint-disable-next-line no-console
+    console.log('Re-using Schelling Coin instance deployed at', SchellingCoin);
+    // eslint-disable-next-line no-console
+    console.log('Re-using Faucet instance deployed at', Faucet);
+
+    await appendDeploymentFile({ SchellingCoin });
+    await appendDeploymentFile({ Faucet });
   }
 };
-
 
 module.exports = async () => {
   await deploySchellingCoinAndFaucet();
