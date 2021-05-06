@@ -8,6 +8,7 @@ const NUM_BLOCKS = 10;
 const NUM_STATES = BigNumber.from(4);
 const STATE_LENGTH = BigNumber.from(10);
 const BLOCK_REWARD = BigNumber.from(40).mul(ONE_ETHER);
+const GRACE_PERIOD = 8;
 
 module.exports = {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -17,4 +18,5 @@ module.exports = {
   ONE_ETHER,
   STATE_LENGTH,
   BLOCK_REWARD,
+  GRACE_PERIOD,
 };

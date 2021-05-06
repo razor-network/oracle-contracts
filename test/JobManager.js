@@ -17,11 +17,11 @@ describe('JobManager', function () {
   });
 
   describe('Delegator', function () {
-    it('Admin role should be granted',async () => {
-
-      assert(await jobManager.hasRole(DEFAULT_ADMIN_ROLE_HASH,signers[0].address)===true,"Role was not Granted")
-
+    it('admin role should be granted', async () => {
+      const isAdminRoleGranted = await jobManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+      assert(isAdminRoleGranted === true, 'Admin role was not Granted');
     });
+
     it('should be able to create Job', async function () {
       const url = 'http://testurl.com';
       const selector = 'selector';
