@@ -38,6 +38,38 @@ contract JobManager is ACL, JobStorage {
         uint256 timestamp
     );
 
+    event CollectionCreated(
+        uint256 id,
+        uint256 epoch,
+        string name,
+        uint32 aggregationMethod,
+        uint256[] jobIDs,
+        address creator,
+        uint256 credit,
+        uint256 timestamp,
+        uint256 assetType
+    );
+
+    event CollectionReported(
+        uint256 id,
+        uint256 value,
+        uint256 epoch,
+        string name,
+        uint32 aggregationMethod,
+        uint256[] jobIDs,
+        address creator,
+        uint256 credit,
+        uint256 timestamp
+    );
+
+    event CollectionUpdated(
+        uint256 id,
+        uint256 epoch,
+        string name,
+        uint256[] updatedJobIDs,
+        uint256 timestamp
+    );
+
     //disable after init.
     function init(address _stateManagerAddress) external {
         stateManager = IStateManager(_stateManagerAddress);
@@ -89,10 +121,10 @@ contract JobManager is ACL, JobStorage {
         external 
         onlyRole(Constants.getJobConfirmerHash())
     {
+        uint256 epoch = stateManager.getEpoch();
         if(jobs[id].assetType==uint256(assetTypes.Job)){
 
             Structs.Job storage job = jobs[id];
-            uint256 epoch = stateManager.getEpoch();
 
             if (!job.repeat) {
                 job.fulfilled = true;
@@ -119,6 +151,17 @@ contract JobManager is ACL, JobStorage {
 
             collection.result = value;
 
+            emit CollectionReported(
+                collection.id,
+                value,
+                epoch,
+                collection.name,
+                collection.aggregationMethod,
+                collection.jobIDs,
+                collection.creator,
+                collection.credit,
+                block.timestamp
+            );
         }
     }
 
@@ -145,18 +188,40 @@ contract JobManager is ACL, JobStorage {
             collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobID_exist[jobIDs[i]] = true;
         }
+        collections[numAssets].assetType = uint256(assetTypes.Collection);
         collectionList.push(numAssets);
+
+        emit CollectionCreated(
+            numAssets, 
+            epoch,
+            name, 
+            aggregationMethod,
+            jobIDs,
+            msg.sender, 
+            msg.value, 
+            block.timestamp, 
+            uint256(assetTypes.Collection)
+        );
     }
 
     function addJobToCollection(
         uint256 collectionID, 
         uint256 jobID
         ) external {
-        require(collections[collectionID].assetType!=uint256(assetTypes.Collection),"Collection ID not present");
+        require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
         //require(jobID<=numJobs,"Job ID not present");
-        require(!collections[collectionID].jobID_exist[jobID],"Job already exists in this collection");
+        require(!collections[collectionID].jobID_exist[jobID],"Job exists in this collection");
+        uint256 epoch = stateManager.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobID_exist[jobID] = true;
+
+        emit CollectionUpdated(
+        collectionID,
+        epoch,
+        collections[collectionID].name,
+        collections[collectionID].jobIDs,
+        block.timestamp
+        );
     }
 
     function getResult(
@@ -206,7 +271,7 @@ contract JobManager is ACL, JobStorage {
             uint256 result
         ) 
     {
-        require(jobs[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
+        require(collections[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
         return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result);
     }
 
