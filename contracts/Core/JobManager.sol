@@ -209,8 +209,7 @@ contract JobManager is ACL, JobStorage {
         uint256 jobID
         ) external {
         require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
-        require(jobs[jobID].assetType!=uint256(assetTypes.NONE),"Job ID not present");
-        require(jobs[jobID].assetType==uint256(assetTypes.Job),"ID is not a job");
+        require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
         require(!collections[collectionID].jobID_exist[jobID],"Job exists in this collection");
         
         uint256 epoch = stateManager.getEpoch();
