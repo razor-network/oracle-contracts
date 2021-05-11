@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 interface IJobManager {
 
     function createJob (string calldata url, string calldata selector, bool repeat) external;
-    function fulfillJob(uint256 id, uint256 value) external;
+    function fulfillAsset(uint256 id, uint256 value) external;
     function getResult(uint256 id) external view returns(uint256);
     function getJob(
         uint256 id

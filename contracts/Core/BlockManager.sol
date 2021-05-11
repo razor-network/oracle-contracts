@@ -257,7 +257,7 @@ contract BlockManager is ACL, BlockStorage {
                                     proposedBlocks[epoch - 1][i].ids,
                                     block.timestamp);
                 for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
-                    jobManager.fulfillJob(proposedBlocks[epoch - 1][i].ids[j],
+                    jobManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
                                         proposedBlocks[epoch - 1][i].aggregate[j]);
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);

@@ -10,23 +10,23 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   const totalStakeRevealed = await voteManager['getTotalStakeRevealed(uint256,uint256)'](epoch, 1);
-  const medianWeight = totalStakeRevealed.div(2);
+  const aggregateWeight = totalStakeRevealed.div(2);
   const lowerCutoffWeight = totalStakeRevealed.div(4);
   const higherCutoffWeight = totalStakeRevealed.mul(3).div(4);
-  let median = toBigNumber('0');
+  let aggregate = toBigNumber('0');
   let lowerCutoff = toBigNumber('0');
   let higherCutoff = toBigNumber('0');
   let weight = toBigNumber('0');
 
   for (let i = 0; i < sortedVotes.length; i++) {
     weight = weight.add(weights[i]);
-    if (weight.gt(medianWeight) && median.eq('0')) median = sortedVotes[i];
+    if (weight.gt(aggregateWeight) && aggregate.eq('0')) aggregate = sortedVotes[i];
     if (weight.gt(lowerCutoffWeight) && lowerCutoff.eq('0')) lowerCutoff = sortedVotes[i];
     if (weight.gt(higherCutoffWeight) && higherCutoff.eq('0')) higherCutoff = sortedVotes[i];
   }
 
   return {
-    median, totalStakeRevealed, lowerCutoff, higherCutoff,
+    aggregate, totalStakeRevealed, lowerCutoff, higherCutoff,
   };
 };
 

@@ -36,27 +36,27 @@ describe('Access Control Test', async () => {
 
   it('fulFillJob() should not be accessable by anyone besides JobConfirmer', async () => {
     // Checking if Anyone can access it
-    await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);
+    await assertRevert(jobManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await jobManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);
+    await assertRevert(jobManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await jobManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
-    await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);
+    await assertRevert(jobManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await jobManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);
+    await assertRevert(jobManager.fulfillAsset(2, 222), expectedRevertMessage);
   });
 
   it('fulFillJob() should be accessable by only JobConfirmer', async () => {
     const jobConfirmerHash = await constants.getJobConfirmerHash();
     await jobManager.grantRole(jobConfirmerHash, signers[0].address);
-    await jobManager.fulfillJob(2, 222);
+    await jobManager.fulfillAsset(2, 222);
     await jobManager.revokeRole(jobConfirmerHash, signers[0].address);
-    await assertRevert(jobManager.fulfillJob(2, 222), expectedRevertMessage);
+    await assertRevert(jobManager.fulfillAsset(2, 222), expectedRevertMessage);
   });
 
   it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {

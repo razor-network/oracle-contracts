@@ -114,7 +114,7 @@ contract JobManager is ACL, JobStorage {
         // jobs.push(job);
     }
 
-    function fulfillJob(
+    function fulfillAsset(
         uint256 id, 
         uint256 value   
     ) 
@@ -168,10 +168,10 @@ contract JobManager is ACL, JobStorage {
     function createCollection(
         string calldata name, 
         uint256[] memory jobIDs,
-        uint8 aggregationMethod
+        uint32 aggregationMethod
     ) external payable 
     {
-        require(aggregationMethod > 0 && aggregationMethod < 3,"Aggregation range out of bounds");
+        require(aggregationMethod < 3,"Aggregation range out of bounds");
 
         numAssets++;
         uint256 epoch = stateManager.getEpoch();
@@ -182,6 +182,7 @@ contract JobManager is ACL, JobStorage {
         collections[numAssets].creator = msg.sender;
         collections[numAssets].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
+            require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
             if(collections[numAssets].jobID_exist[jobIDs[i]]){
                 continue;
             }

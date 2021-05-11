@@ -8,7 +8,6 @@ if (dotenvResult.error) {
 }
 
 require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-solhint');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');

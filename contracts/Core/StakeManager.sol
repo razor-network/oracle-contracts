@@ -341,7 +341,7 @@ contract StakeManager is ACL, StakeStorage {
             return(stakeValue);
         }
 
-        uint256 penalty = ((epochs- 1) * (stakeValue*(Constants.penaltyNotRevealNum()))) / Constants.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs - 1) * (stakeValue*(Constants.penaltyNotRevealNum()))) / Constants.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return(stakeValue-(penalty));
         } else {
