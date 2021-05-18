@@ -10,7 +10,8 @@ if (dotenvResult.error) {
 require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
-require('solidity-coverage');
+require('solidity-coverage'); 
+require('hardhat-abi-exporter');
 
 const {
   PROVIDER_HOST,
@@ -63,5 +64,11 @@ module.exports = {
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
+  },
+  abiExporter: {
+    path: './abi',
+    clear: true,
+    flat: true,
+    spacing: 2,
   },
 };
