@@ -1,10 +1,13 @@
 {
   "name": "@razor-network/contracts",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "These are the contracts for Razor network testnet",
-  "directories": {
-    "test": "test"
-  },
+  "author": "Razor Network",
+  "private": false,
+  "files": [
+    "abi/**/*",
+    "contracts/**/*"
+  ],
   "scripts": {
     "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
@@ -19,13 +22,12 @@
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint \"contracts/*.sol\"",
     "test": "hardhat compile && hardhat test",
-    "prepublish": "hardhat compile && hardhat test"
+    "prepublish": "npm run test"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/razor-network/contracts.git"
   },
-  "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/razor-network/contracts/issues"
