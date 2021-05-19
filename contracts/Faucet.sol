@@ -7,10 +7,11 @@ contract Faucet {
 
     ERC20 public token;
     mapping(address => bool) public requested;
+    
     event Donate(address _address, uint256 value);
 
-    function init(address _address) external {
-        token = ERC20(_address);
+    constructor(address tokenAddress) {
+        token =  ERC20(tokenAddress);
     }
 
     //WARNING FOR TESTNET ONLY DISABLE FOR PROD.

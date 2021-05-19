@@ -1,7 +1,19 @@
-const { getdeployedContractInstance, readDeploymentFile } = require('../migrationHelpers');
+const {
+  getdeployedContractInstance,
+  readDeploymentFile,
+  readOldDeploymentFile,
+} = require('../migrationHelpers');
 
-const { SEED_AMOUNT, STAKER_ADDRESSES } = process.env;
+const {
+  NETWORK,
+  SCHELLING_COIN_ADDRESS,
+  SEED_AMOUNT,
+  STAKER_ADDRESSES,
+} = process.env;
+
 module.exports = async () => {
+  const signers = await ethers.getSigners();
+
   const {
     Constants: constantsAddress,
     Random: randomAddress,
@@ -24,22 +36,42 @@ module.exports = async () => {
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress, constantsDependency);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress, constantsDependency);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
-  const { contractInstance: faucet } = await getdeployedContractInstance('Faucet', faucetAddress);
   const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
 
   const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
 
-  for (let i = 0; i < stakerAddressList.length; i++) {
-    const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
-    pendingTransactions.push(tx);
+  // Only transfer tokens in testnets
+  if (NETWORK !== 'mainnet') {
+    if (SCHELLING_COIN_ADDRESS !== '') {
+      const { StakeManager: oldStakeManagerAddress } = await readOldDeploymentFile();
+
+      // Add new instance of StakeManager contract & Deployer address as Minter
+      await schellingCoin.addMinter(stakeManagerAddress);
+      await schellingCoin.addMinter(signers[0].address);
+
+      // if previous instances of Schelling Coin is reused again and again,
+      // then initial balance will get depleted, thus intial tokens minting is needed,
+      // each time Schelling Coin instance is reused
+      const initialSupply = await schellingCoin.INITIAL_SUPPLY();
+      await schellingCoin.mint(signers[0].address, initialSupply);
+
+      // Remove previous instance of StakeManager contract & Deployer address from Minter
+      await schellingCoin.removeMinter(oldStakeManagerAddress);
+      await schellingCoin.removeMinter(signers[0].address);
+    }
+
+    for (let i = 0; i < stakerAddressList.length; i++) {
+      const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
+      pendingTransactions.push(tx);
+    }
+    pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
   }
 
   pendingTransactions.push(await blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
   pendingTransactions.push(await voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
   pendingTransactions.push(await stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
   pendingTransactions.push(await jobManager.init(stateManagerAddress));
-  pendingTransactions.push(await faucet.init(schellingCoinAddress));
 
   pendingTransactions.push(await jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
@@ -48,7 +80,6 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress));
 
   pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
-  pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
 
   // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');

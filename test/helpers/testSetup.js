@@ -50,12 +50,12 @@ const setupContracts = async () => {
   const blockManager = await BlockManager.deploy();
 
   const delegator = await Delegator.deploy();
-  const faucet = await Faucet.deploy();
   const jobManager = await JobManager.deploy();
   const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
-  const schellingCoin = await SchellingCoin.deploy(stakeManager.address);
   const stateManager = await StateManager.deploy();
   const voteManager = await VoteManager.deploy();
+  const schellingCoin = await SchellingCoin.deploy(stakeManager.address);
+  const faucet = await Faucet.deploy(schellingCoin.address);
 
   await blockManager.deployed();
 
@@ -72,7 +72,6 @@ const setupContracts = async () => {
     voteManager.init(stakeManager.address, stateManager.address, blockManager.address),
     stakeManager.init(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
     jobManager.init(stateManager.address),
-    faucet.init(schellingCoin.address),
 
     jobManager.grantRole(await constants.getJobConfirmerHash(), blockManager.address),
     blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManager.address),
