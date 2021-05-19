@@ -44,8 +44,10 @@ module.exports = async () => {
   // Only transfer tokens in testnets
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
-    await schellingCoin.addMinter(stakeManagerAddress);
+    const initialSupply = await schellingCoin.INITIAL_SUPPLY();
+      
     await schellingCoin.addMinter(signers[0].address);
+    await schellingCoin.mint(stakeManagerAddress, initialSupply);
 
     if (SCHELLING_COIN_ADDRESS !== '') {
       const { StakeManager: oldStakeManagerAddress } = await readOldDeploymentFile();
@@ -55,10 +57,11 @@ module.exports = async () => {
       // each time Schelling Coin instance is reused
       const initialSupply = await schellingCoin.INITIAL_SUPPLY();
       await schellingCoin.mint(signers[0].address, initialSupply);
+      await schellingCoin.mint(stakeManagerAddress, initialSupply);
 
       // Remove previous instance of StakeManager contract & Deployer address from Minter
-      await schellingCoin.removeMinter(oldStakeManagerAddress);
-      await schellingCoin.removeMinter(signers[0].address);
+      //await schellingCoin.removeMinter(oldStakeManagerAddress);
+      //await schellingCoin.removeMinter(signers[0].address);
     }
 
     for (let i = 0; i < stakerAddressList.length; i++) {
