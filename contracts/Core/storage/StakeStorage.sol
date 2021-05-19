@@ -12,4 +12,5 @@ contract StakeStorage {
 
     mapping (address => uint256) public stakerIds;
     mapping (uint256 => Structs.Staker) public stakers;
+    mapping (address=> mapping(address=>Structs.Lock)) public locks;
 }

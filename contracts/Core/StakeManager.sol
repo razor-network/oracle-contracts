@@ -8,7 +8,7 @@ import "./storage/StakeStorage.sol";
 import "../Initializable.sol";
 import "../SchellingCoin.sol";
 import "./ACL.sol";
-
+import "../StakedToken.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
@@ -144,63 +144,156 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers+(1);
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
-            epoch+(parameters.unstakeLockPeriod()), 0);
+            StakedToken sToken =  new StakedToken(address(this));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+            // Minting
+            sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR 
+
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake+(amount);
-            stakers[stakerId].unstakeAfter = epoch+(parameters.unstakeLockPeriod());
-            stakers[stakerId].withdrawAfter = 0;
+            // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+            StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+            uint256 totalSupply = sToken.totalSupply();
+            uint256 toMint = amount * _convertParentToChild(previousStake, totalSupply); // RZRs to sRZRs 
+            sToken.mint(msg.sender, toMint);
         }
 
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
     }
 
-    /// @notice staker must call unstake() and should wait for parameters.WITHDRAW_LOCK_PERIOD
+    event Delegated (uint256 epoch, uint256 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
+
+    function delegate(uint256 epoch, uint256 amount, uint256 stakerId) external checkEpoch(epoch) checkState(parameters.commit()) {
+      
+        require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+        require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
+        require(parameters.getState() != parameters.reveal(), "Incorrect state");
+       
+        // Step 1:  Razor Token Transfer : Amount
+        require(sch.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
+
+        // Step 2: Increase given stakers stake by : Amount
+        uint256 previousStake = stakers[stakerId].stake;
+        stakers[stakerId].stake = stakers[stakerId].stake+(amount);
+
+        // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+        StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+        uint256 totalSupply = sToken.totalSupply();
+        uint256 toMint = amount * _convertParentToChild(previousStake, totalSupply);
+        sToken.mint(msg.sender, toMint);
+
+        emit Delegated(epoch, stakerId, msg.sender, previousStake, stakers[stakerId].stake, block.timestamp);
+    }
+    
+    /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
     /// @param epoch The Epoch value for which staker is requesting to unstake
-    function unstake (uint256 epoch) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
-        uint256 stakerId = stakerIds[msg.sender];
+    //we can have funciton overloading for being specific staker
+    function unstake (uint256 epoch, uint256 stakerId, uint256 sAmount) external checkEpoch(epoch)  checkState(parameters.commit()) {
+        
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
-        require(staker.stake > 0, "Nonpositive stake");
-        require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0, "locked");
-        staker.unstakeAfter = 0;
-        staker.withdrawAfter = epoch+(parameters.withdrawLockPeriod());
-        emit Unstaked(epoch, stakerId, staker.stake, staker.stake, block.timestamp);
+        require(staker.stake > 0, "Nonpositive stake"); 
+        require(locks[msg.sender][staker.tokenAddress].amount ==0, "Existing Lock");
+        require(sAmount>0, "Non-Positive Amount");
+        StakedToken sToken =  StakedToken(staker.tokenAddress);
+        require(sToken.balanceOf(msg.sender)>= sAmount, "Invalid Amount");
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch+(parameters.withdrawLockPeriod()));
+        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        //emit event here
     }
 
-
+ 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
-    function withdraw (uint256 epoch) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
-        uint256 stakerId = stakerIds[msg.sender];
+    function withdraw (uint256 epoch, uint256 stakerId) external checkEpoch(epoch) checkState(parameters.commit()) {
+      
         Structs.Staker storage staker = stakers[stakerId];
-        require(staker.id != 0, "staker doesnt exist");
-        require(staker.unstakeAfter == 0, "Did not unstake");
-        require(
-            (staker.withdrawAfter <= epoch) && staker.withdrawAfter != 0,
-            "Withdraw epoch not reached"
-        );
-        require(
-            (staker.withdrawAfter - parameters.withdrawLockPeriod()) >= staker.epochLastRevealed,
-            "Participated in Withdraw lock period, Cant withdraw"
-        );
-        require(
-            voteManager.getCommitment(epoch, stakerId) == 0x0,
-            "already commited this epoch. Cant withdraw"
-        );
-        require(staker.stake > 0, "Nonpositive Stake");
+        Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
-        uint256 toTransfer = stakers[stakerId].stake;
-        stakers[stakerId].stake = 0;
-        emit Withdrew(epoch, stakerId, stakers[stakerId].stake, 0, block.timestamp);
-        require(sch.transfer(msg.sender, toTransfer), "couldnt transfer");
+        require(staker.id != 0, "staker doesnt exist");
+        require(lock.withdrawAfter != 0, "Did not unstake");
+        require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
+        require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
+        require(staker.stake > 0, "Nonpositive Stake");
+        if(stakerIds[msg.sender]== stakerId)    // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
+        {
+            require((lock.withdrawAfter - parameters.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Lock Period");
+            require(voteManager.getCommitment(epoch, stakerId) == 0x0, "Already commited");
+        }
+
+
+        StakedToken sToken =  StakedToken(staker.tokenAddress);
+        require(sToken.balanceOf(msg.sender)>= lock.amount, "locked amount lost"); // Can Use ResetLock
+
+      
+        uint256 rAmount = lock.amount*_convertChildToParent(staker.stake, sToken.totalSupply());
+        require(sToken.burn(lock.amount), "Token burn Failed");
+        staker.stake = staker.stake - rAmount;
+        
+        // Function to Reset the lock
+        resetLock(stakerId);
+
+        // Transfer commission
+        // Check commission rate >0
+        if(staker.commission > 0) {
+        uint256 commission = (rAmount*staker.commission)/100;
+        require(sch.transfer(staker._address, commission), "couldnt transfer");
+        rAmount = rAmount - commission;
+        }
+
+        //Transfer stake
+        require(sch.transfer(msg.sender, rAmount), "couldnt transfer");
+
+        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
+    function _convertParentToChild(uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
+    {
+        // currentStake can be zero when staker has withdrawn his stake
+        // can totalSupply be ever be zero ?
+        if(_currentStake ==0 || _totalSupply==0) return 1;
+        return (_totalSupply/_currentStake);
+    }
+
+    function _convertChildToParent(uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
+    {
+        // currentStake can be zero when staker has withdrawn his stake
+        // can totalSupply be ever be zero ?
+        if(_currentStake ==0 || _totalSupply==0) return 1;
+        return (_currentStake/_totalSupply);
+    }
+
+    function setDelegationAcceptance(bool status) external 
+    {
+        uint256 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker id = 0");
+        stakers[stakerId].acceptDelegation = status;
+    }
+
+    function setCommission (uint256 commission) external
+    {
+        uint256 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker id = 0");
+        require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+        // As of now we are only supporting decreasing commission update
+        // For incres one, we cant allow direct assignment becasue of unfair advantage to stakers,
+        // We will need lock system for increas update 
+        require(stakers[stakerId].commission > commission, "Invalid Commission Update");
+
+        stakers[stakerId].commission = commission;
+    }
+
+    function resetLock(uint256 stakerId) public 
+    {
+        Structs.Staker memory staker = stakers[stakerId];
+        require(staker.id != 0, "staker.id = 0");
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
+    }   
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
     /// @param stakerId The id of staker currently in consideration
