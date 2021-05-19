@@ -183,11 +183,11 @@ contract JobManager is ACL, JobStorage {
         collections[numAssets].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
-            if(collections[numAssets].jobID_exist[jobIDs[i]]){
+            if(collections[numAssets].jobIDExist[jobIDs[i]]){
                 continue;
             }
             collections[numAssets].jobIDs.push(jobIDs[i]);
-            collections[numAssets].jobID_exist[jobIDs[i]] = true;
+            collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
         collections[numAssets].assetType = uint256(assetTypes.Collection);
         collectionList.push(numAssets);
@@ -211,11 +211,11 @@ contract JobManager is ACL, JobStorage {
         ) external {
         require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
         require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
-        require(!collections[collectionID].jobID_exist[jobID],"Job exists in this collection");
+        require(!collections[collectionID].jobIDExist[jobID],"Job exists in this collection");
         
         uint256 epoch = stateManager.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
-        collections[collectionID].jobID_exist[jobID] = true;
+        collections[collectionID].jobIDExist[jobID] = true;
 
         emit CollectionUpdated(
         collectionID,
