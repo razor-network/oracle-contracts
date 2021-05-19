@@ -25,7 +25,7 @@ const GWEI = 1000000000;
 const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
-  matic : 80001,
+  matic: 80001,
 };
 
 module.exports = {
@@ -70,7 +70,6 @@ module.exports = {
       gasPrice: 1 * GWEI,
     },
 
-    
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
