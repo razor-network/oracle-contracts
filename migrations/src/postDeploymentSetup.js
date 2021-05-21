@@ -53,7 +53,6 @@ module.exports = async () => {
       // each time Schelling Coin instance is reused
       const initialSupply = await schellingCoin.INITIAL_SUPPLY();
       await schellingCoin.mint(signers[0].address, initialSupply);
-      
 
       // Remove previous instance of StakeManager contract & Deployer address from Minter
     }
