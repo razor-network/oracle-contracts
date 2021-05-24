@@ -6,8 +6,6 @@ import "../../lib/Structs.sol";
 
 interface IVoteManager {
 
-    function init(address _stakeManagerAddress, address _blockManagerAddress) external;
-
     function commit(uint256 epoch, bytes32 commitment) external;
 
     function reveal(

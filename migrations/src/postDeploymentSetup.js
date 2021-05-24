@@ -68,10 +68,9 @@ module.exports = async () => {
     pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
   }
 
-  pendingTransactions.push(await blockManager.init(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
-  pendingTransactions.push(await voteManager.init(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
-  pendingTransactions.push(await stakeManager.init(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
-  pendingTransactions.push(await jobManager.init(stateManagerAddress));
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
 
   pendingTransactions.push(await jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
