@@ -11,6 +11,7 @@ require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
+require('hardhat-contract-sizer');
 
 const {
   PROVIDER_HOST,

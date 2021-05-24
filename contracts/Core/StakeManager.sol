@@ -144,7 +144,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers+(1);
-            StakedToken sToken =  new StakedToken(address(this));
+            StakedToken sToken =  new StakedToken();
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR 
@@ -158,7 +158,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
-            uint256 toMint = amount * _convertParentToChild(previousStake, totalSupply); // RZRs to sRZRs 
+            uint256 toMint = _convertParentToChild(amount, previousStake, totalSupply); // RZRs to sRZRs 
             sToken.mint(msg.sender, toMint);
         }
 
@@ -183,7 +183,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
-        uint256 toMint = amount * _convertParentToChild(previousStake, totalSupply);
+        uint256 toMint =  _convertParentToChild(amount, previousStake, totalSupply);
         sToken.mint(msg.sender, toMint);
 
         emit Delegated(epoch, stakerId, msg.sender, previousStake, stakers[stakerId].stake, block.timestamp);
@@ -231,8 +231,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         require(sToken.balanceOf(msg.sender)>= lock.amount, "locked amount lost"); // Can Use ResetLock
 
       
-        uint256 rAmount = lock.amount*_convertChildToParent(staker.stake, sToken.totalSupply());
-        require(sToken.burn(lock.amount), "Token burn Failed");
+        uint256 rAmount = _convertChildToParent(lock.amount, staker.stake, sToken.totalSupply());
+        require(sToken.burn(msg.sender,lock.amount), "Token burn Failed");
         staker.stake = staker.stake - rAmount;
         
         // Function to Reset the lock
@@ -243,6 +243,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if(staker.commission > 0) {
         uint256 commission = (rAmount*staker.commission)/100;
         require(sch.transfer(staker._address, commission), "couldnt transfer");
+        // uint256 newStake = stakers[stakerId].stake+(blockReward);
+        // _setStakerStake(stakerId, newStake, "Block Reward", epoch);
         rAmount = rAmount - commission;
         }
 
@@ -252,20 +254,22 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
-    function _convertParentToChild(uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
+    function _convertParentToChild(uint256 _amount, uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
     {
-        // currentStake can be zero when staker has withdrawn his stake
-        // can totalSupply be ever be zero ?
-        if(_currentStake ==0 || _totalSupply==0) return 1;
-        return (_totalSupply/_currentStake);
+        // TODO : Check Follwoing if condition once if it can be exploited
+        // Its Included to cover
+        // Where currentStake and totalSupply becasue zero as staker/delegators has withdrawn their complete stake, to restart node, 1RZR=1sRZR
+        if(_currentStake ==0 && _totalSupply==0) return _amount;
+
+        // TODO : Do we want this condition to be covered : CurrentStake Becomes zero beacues of penalties but Total Supply is there 
+        // We return amount as it is to start from 1RZR=1sRZR again
+       
+        return ((_amount*_totalSupply)/_currentStake);
     }
 
-    function _convertChildToParent(uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
+    function _convertChildToParent(uint256 _amount, uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
     {
-        // currentStake can be zero when staker has withdrawn his stake
-        // can totalSupply be ever be zero ?
-        if(_currentStake ==0 || _totalSupply==0) return 1;
-        return (_currentStake/_totalSupply);
+        return ((_amount*_currentStake)/_totalSupply);
     }
 
     function setDelegationAcceptance(bool status) external 
@@ -292,6 +296,30 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     {
         Structs.Staker memory staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
+        
+        if(msg.sender != address(this)) 
+        {
+             StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+             
+             uint256 penalty = 1111; // this would be in RZR
+             // 1.Constant
+             // 2.Propotonal to Stake and Epoch passed ?
+            
+             // Converting Penalty into sAmount
+             uint256 sAmount = _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
+
+             //Burning sAmount from msg.sender
+             require(sToken.burn(msg.sender,sAmount), "Token burn Failed");
+
+             //Updating Staker Stake
+             staker.stake = staker.stake - penalty;
+
+             //Adding it in reward pool
+             uint256 prevRewardPool = rewardPool;
+             rewardPool = rewardPool+(penalty);
+             emit RewardPoolChange(stateManager.getEpoch(), prevRewardPool, rewardPool, block.timestamp);
+        
+        }
         locks[msg.sender][staker.tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
     }   
     /// @notice gives penalty to stakers for failing to reveal or

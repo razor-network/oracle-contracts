@@ -35,6 +35,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
     "@razor-network/merkle": "^0.6.0",
+    "hardhat-contract-sizer": "^2.0.3",
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {
