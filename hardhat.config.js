@@ -40,7 +40,6 @@ module.exports = {
   },
   networks: {
     hardhat: {
-      blockGasLimit: 0x1fffffffffffff,
       chainId: 31337,
     },
     coverage: {

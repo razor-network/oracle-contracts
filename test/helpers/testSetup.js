@@ -67,18 +67,18 @@ const setupContracts = async () => {
   await voteManager.deployed();
 
   const initializeContracts = async () => [
-      blockManager.initialize(stakeManager.address, stateManager.address, voteManager.address, jobManager.address),
-      voteManager.initialize(stakeManager.address, stateManager.address, blockManager.address),
-      stakeManager.initialize(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
+    blockManager.initialize(stakeManager.address, stateManager.address, voteManager.address, jobManager.address),
+    voteManager.initialize(stakeManager.address, stateManager.address, blockManager.address),
+    stakeManager.initialize(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
 
-      jobManager.grantRole(await constants.getJobConfirmerHash(), blockManager.address),
-      blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManager.address),
-      stakeManager.grantRole(await constants.getStakeModifierHash(), blockManager.address),
-      stakeManager.grantRole(await constants.getStakeModifierHash(), voteManager.address),
-      stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManager.address),
+    jobManager.grantRole(await constants.getJobConfirmerHash(), blockManager.address),
+    blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManager.address),
+    stakeManager.grantRole(await constants.getStakeModifierHash(), blockManager.address),
+    stakeManager.grantRole(await constants.getStakeModifierHash(), voteManager.address),
+    stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManager.address),
 
-      delegator.upgradeDelegate(jobManager.address),
-    ];
+    delegator.upgradeDelegate(jobManager.address),
+  ];
 
   return {
     blockManager,
