@@ -49,7 +49,6 @@ describe('BlockManager', function () {
   });
 
   describe('SchellingCoin', async () => {
-
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await blockManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
@@ -57,10 +56,9 @@ describe('BlockManager', function () {
 
     it('should not be able to stake, commit without initialization', async () => {
       const epoch = await getEpoch();
-      
+
       const tx1 = stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
       await assertRevert(tx1, 'Contract should be initialized');
-
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
@@ -70,17 +68,17 @@ describe('BlockManager', function () {
         ['uint256', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
-      const tx2 =  voteManager.connect(signers[5]).commit(epoch, commitment1);
+      const tx2 = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
       await assertRevert(tx2, 'Contract should be initialized');
     });
 
-    it('should not be able to initiliaze BlockManager contract without admin role', async () => {    
+    it('should not be able to initiliaze BlockManager contract without admin role', async () => {
       const tx = blockManager.connect(signers[1]).initialize(
         stakeManager.address,
         stateManager.address,
         voteManager.address,
-        jobManager.address,
+        jobManager.address
       );
       await assertRevert(tx, 'ACL: sender not authorized');
     });
