@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IStakeManager {
-    function init (address _schAddress, address _voteManagerAddress,
-    address _blockManagerAddress, address _stateManagerAddress) external;
 
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
     function updateCommitmentEpoch(uint256 stakerId) external;
@@ -21,5 +19,4 @@ interface IStakeManager {
     function getNumStakers() external view returns(uint256);
     function getRewardPool() external view returns(uint256);
     function getStakeGettingReward() external view returns(uint256);
-
 }

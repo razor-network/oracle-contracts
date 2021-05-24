@@ -1,7 +1,8 @@
-const { deployContract } = require('../migrationHelpers');
+const { deployContract, readDeploymentFile } = require('../migrationHelpers');
 
 const deployJobManager = async () => {
-  await deployContract('JobManager', ['Constants']);
+  const { StateManager } = await readDeploymentFile();
+  await deployContract('JobManager', ['Constants'], [StateManager]);
 };
 
 module.exports = async () => {

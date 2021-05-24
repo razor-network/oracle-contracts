@@ -7,13 +7,18 @@ import "./interface/IStateManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
 import "../lib/Constants.sol";
+import "../Initializable.sol";
+import "./ACL.sol";
 
 
-contract VoteManager is VoteStorage {
+contract VoteManager is Initializable, ACL, VoteStorage {
 
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IBlockManager public blockManager;
+
+    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == stateManager.getEpoch(), "incorrect epoch");
@@ -25,15 +30,19 @@ contract VoteManager is VoteStorage {
         _;
     }
 
-    function init (address _stakeManagerAddress, address _stateManagerAddress, address _blockManagerAddress) public {
-        stakeManager = IStakeManager(_stakeManagerAddress);
-        stateManager = IStateManager(_stateManagerAddress);
-        blockManager = IBlockManager(_blockManagerAddress);
+    function initialize (
+        address stakeManagerAddress,
+        address stateManagerAddress,
+        address blockManagerAddress
+    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        stakeManager = IStakeManager(stakeManagerAddress);
+        stateManager = IStateManager(stateManagerAddress);
+        blockManager = IBlockManager(blockManagerAddress);
     }
+    
 
-    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
-
-    function commit(uint256 epoch, bytes32 commitment) public checkEpoch(epoch) checkState(Constants.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -53,12 +62,18 @@ contract VoteManager is VoteStorage {
         }
     }
 
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
 
-    function reveal (uint256 epoch, bytes32 root, uint256[] memory values,
-                    bytes32[][] memory proofs, bytes32 secret, address stakerAddress)
-    public
-    checkEpoch(epoch) {
+    function reveal (
+        uint256 epoch,
+        bytes32 root,
+        uint256[] memory values,
+        bytes32[][] memory proofs, bytes32 secret,
+        address stakerAddress
+    )
+        public
+        initialized
+        checkEpoch(epoch) 
+    {
         uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
         Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
