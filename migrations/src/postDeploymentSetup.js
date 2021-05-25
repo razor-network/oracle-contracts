@@ -45,7 +45,7 @@ module.exports = async () => {
     // Add new instance of StakeManager contract & Deployer address as Minter
     const initialSupply = await schellingCoin.INITIAL_SUPPLY();
     await schellingCoin.addMinter(signers[0].address);
-    
+
     if (SCHELLING_COIN_ADDRESS !== '') {
       // if previous instances of Schelling Coin is reused again and again,
       // then initial balance will get depleted, thus intial tokens minting is needed,
