@@ -64,6 +64,8 @@ describe('StakeManager', function () {
       await schellingCoin.transfer(signers[1].address, stake1);
       await schellingCoin.transfer(signers[2].address, stake1);
       await schellingCoin.transfer(signers[3].address, stake1);
+      await schellingCoin.transfer(signers[4].address, stake1);  // Chosen Staker by the Delegator
+      await schellingCoin.transfer(signers[5].address, stake1);  // Delegator
     });
 
     it('should be able to stake', async function () {
@@ -313,6 +315,50 @@ describe('StakeManager', function () {
       // Total no of inactive epochs = 42 - 32 - 1 = 9
       // Staker 3 is penalised because total inactive epochs(9) > max allowed inactive epochs i.e grace_period (8)
       assertBNNotEqual(staker.stake, newStake, 'Stake should have decreased due to inactivity penalty');
+    });
+
+    it('should be able to delegate stake to chosen one', async function () {
+      const stake1 = tokenAmount('420000');
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      await schellingCoin.connect(signers[4]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[4]).stake(epoch, stake1);
+      await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const delegatedStake = tokenAmount('3000');
+      const stake2 = tokenAmount('423000');
+      await schellingCoin.connect(signers[5]).approve(stakeManager.address, delegatedStake);
+      await stakeManager.connect(signers[5]).delegate(epoch, delegatedStake, stakerId);
+      const staker = await stakeManager.getStaker(4);
+      assertBNEqual(staker.stake, stake2);
+    });
+
+    it('chosen staker should accept delegation', async function () {
+      const staker = await stakeManager.getStaker(4);
+      const acceptDelegation = staker.acceptDelegation;
+      assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
+    });
+
+    it('chosen staker should stake atleast once' , async function () {
+      const staker = await stakeManager.getStaker(4);
+      const notAStakerId = toBigNumber('0');
+      assertBNNotEqual(staker.id , notAStakerId);
+    });
+
+    it('chosen staker should get commision', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      const staker = await stakeManager.getStaker(4);
+      const sAmount = tokenAmount('3000');
+      await stakeManager.connect(signers[5]).unstake(epoch, staker.id, sAmount);
+
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      const stake = staker.stake; // tokenAmount('420000')
+      const commision = tokenAmount('1000');
+      const amountAfterComission = tokenAmount('421000');
+      await stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
+      assertBNEqual(staker.stake, amountAfterComission);
     });
   });
 });
