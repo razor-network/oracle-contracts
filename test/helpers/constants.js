@@ -9,6 +9,7 @@ const NUM_STATES = BigNumber.from(4);
 const STATE_LENGTH = BigNumber.from(75);
 const BLOCK_REWARD = BigNumber.from(40).mul(ONE_ETHER);
 const GRACE_PERIOD = 8;
+const WITHDRAW_LOCK_PERIOD = 1;
 
 module.exports = {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -19,4 +20,5 @@ module.exports = {
   STATE_LENGTH,
   BLOCK_REWARD,
   GRACE_PERIOD,
+  WITHDRAW_LOCK_PERIOD
 };
