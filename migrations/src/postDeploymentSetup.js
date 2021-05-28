@@ -2,7 +2,7 @@ const {
   getdeployedContractInstance,
   readDeploymentFile,
 } = require('../migrationHelpers');
-
+const { BigNumber } = ethers;
 const {
   NETWORK,
   SCHELLING_COIN_ADDRESS,
@@ -44,18 +44,21 @@ module.exports = async () => {
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
     const initialSupply = await schellingCoin.INITIAL_SUPPLY();
-    await schellingCoin.addMinter(signers[0].address);
+    const stakeManagerSupply = (BigNumber.from(6).pow(BigNumber.from(8))).pow(BigNumber.from(18))
+    const stakeManagerSupply
 
     if (SCHELLING_COIN_ADDRESS !== '') {
       // if previous instances of Schelling Coin is reused again and again,
       // then initial balance will get depleted, thus intial tokens minting is needed,
       // each time Schelling Coin instance is reused
-      const initialSupply = await schellingCoin.INITIAL_SUPPLY();
-      await schellingCoin.mint(signers[0].address, initialSupply);
+      await schellingCoin.addMinter(signers[0].address);
+      await schellingCoin.mint(signers[0].address, initialSupply-stakeManagerSupply);
+      
 
-      // Remove previous instance of StakeManager contract & Deployer address from Minter
+      // Remove previous instance of  Deployer address from Minter
+      await schellingCoin.removeMinter(signers[0].address);
     }
-    await schellingCoin.mint(stakeManagerAddress, initialSupply);
+    await schellingCoin.mint(stakeManagerAddress, stakeManagerSupply);
 
     for (let i = 0; i < stakerAddressList.length; i++) {
       const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
