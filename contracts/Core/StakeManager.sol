@@ -284,24 +284,31 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        // As of now we are only supporting decreasing commission update
-        // For incres one, we cant allow direct assignment becasue of unfair advantage to stakers,
-        // We will need lock system for increas update 
+        require(stakers[stakerId].commission==0, "Commission already intilised");
+
+        stakers[stakerId].commission = commission;
+    }
+
+    function decreaseCommission(uint256 commission) external
+    {
+        uint256 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker id = 0");
+        require(commission!=0,"Invalid Commission Update");
         require(stakers[stakerId].commission > commission, "Invalid Commission Update");
 
         stakers[stakerId].commission = commission;
     }
 
-    function resetLock(uint256 stakerId) public 
+  function resetLock(uint256 stakerId) public 
     {
-        Structs.Staker memory staker = stakers[stakerId];
-        require(staker.id != 0, "staker.id = 0");
+        require(stakers[stakerId].id != 0, "staker.id = 0");
         
-        if(msg.sender != address(this)) 
+        if(false) //Update it to make if Its getting called from outside, deduct penalty
         {
+             Structs.Staker storage staker = stakers[stakerId];
              StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
              
-             uint256 penalty = 1111; // this would be in RZR
+             uint256 penalty = 1000; // this would be in RZR, Define it in constants 
              // 1.Constant
              // 2.Propotonal to Stake and Epoch passed ?
             
@@ -320,7 +327,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
              emit RewardPoolChange(stateManager.getEpoch(), prevRewardPool, rewardPool, block.timestamp);
         
         }
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
+        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
     }   
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
