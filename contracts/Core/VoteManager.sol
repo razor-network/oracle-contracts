@@ -2,47 +2,46 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
+import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
-import "./interface/IStateManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
-import "../lib/Constants.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
 
 contract VoteManager is Initializable, ACL, VoteStorage {
 
+    IParameters public parameters;
     IStakeManager public stakeManager;
-    IStateManager public stateManager;
     IBlockManager public blockManager;
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
 
     modifier checkEpoch (uint256 epoch) {
-        require(epoch == stateManager.getEpoch(), "incorrect epoch");
+        require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
     modifier checkState (uint256 state) {
-        require(state == stateManager.getState(), "incorrect state");
+        require(state == parameters.getState(), "incorrect state");
         _;
     }
 
     function initialize (
         address stakeManagerAddress,
-        address stateManagerAddress,
-        address blockManagerAddress
+        address blockManagerAddress,
+        address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         stakeManager = IStakeManager(stakeManagerAddress);
-        stateManager = IStateManager(stateManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
+       parameters = IParameters(parametersAddress);
     }
     
 
-    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(Constants.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -55,7 +54,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
         stakeManager.givePenalties(stakerId, epoch);
 
-        if (thisStaker.stake >= Constants.minStake()) {
+        if (thisStaker.stake >= parameters.minStake()) {
             commitments[epoch][stakerId] = commitment;
             stakeManager.updateCommitmentEpoch(stakerId);
             emit Committed(epoch, stakerId, commitment, block.timestamp);
@@ -83,7 +82,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         
         //if revealing self
         if (msg.sender == stakerAddress) {
-            require(stateManager.getState() == Constants.reveal(), "Not reveal state");
+            require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
@@ -101,7 +100,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
         } else {
             //bounty hunter revealing someone else's secret in commit state
-            require(stateManager.getState() == Constants.commit(), "Not commit state");
+            require(parameters.getState() == parameters.commit(), "Not commit state");
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.slash(thisStakerId, msg.sender, epoch);
         }
