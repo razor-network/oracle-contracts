@@ -19,7 +19,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override epochLength = 300;
     uint256 public override numStates = 4;
     uint256 public override exposureDenominator = 1000;
-
+    uint256 public override gracePeriod = 8;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -72,6 +72,10 @@ contract Parameters is IParameters, ACL {
 
     function setMinStake(uint256 _minStake) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         minStake = _minStake;
+    }
+
+    function setGracePeriod(uint256 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) { 
+        gracePeriod = _gracePeriod;
     }
 
     function getEpoch() external view override returns (uint256) {

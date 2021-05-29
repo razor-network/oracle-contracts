@@ -334,13 +334,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @notice Calculates the inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
-        //not really inactive. do nothing. give 10 epoch grace
-        if (epochs < 10) {
+    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
+        //If no of inactive epochs falls under grace period, do not penalise.
+        if (epochs <= parameters.gracePeriod()) {
             return(stakeValue);
         }
 
-        uint256 penalty = ((epochs - 1) * (stakeValue*(parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue*(parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return(stakeValue-(penalty));
         } else {
@@ -370,10 +370,10 @@ contract StakeManager is Initializable, ACL, StakeStorage {
                                 thisStaker.epochLastRevealed :
                                 thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 penalizeEpochs = epoch-(epochLastActive);
+        uint256 inactiveEpochs = epoch-(epochLastActive)-1;
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
-        uint256 currentStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+        uint256 currentStake = calculateInactivityPenalties(inactiveEpochs, previousStake);
         if (currentStake < previousStake) {
             _setStakerStake(thisStaker.id, currentStake, "Inactivity Penalty", epoch);
             uint256 prevRewardPool = rewardPool;
