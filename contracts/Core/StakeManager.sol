@@ -315,7 +315,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         staker.stake = staker.stake - rAmount;
 
         // Function to Reset the lock
-        resetLock(stakerId);
+        _resetLock(stakerId);
 
         // Transfer commission
         // Check commission rate >0
@@ -391,47 +391,40 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function resetLock(uint256 stakerId) public {
         require(stakers[stakerId].id != 0, "staker.id = 0");
 
-        if (
-            false
-        ) //Update it to make if Its getting called from outside, deduct penalty
-        {
-            Structs.Staker storage staker = stakers[stakerId];
-            StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
+        Structs.Staker storage staker = stakers[stakerId];
+        StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
 
-            uint256 penalty = 1000; // this would be in RZR, Define it in constants
-            // 1.Constant
-            // 2.Propotonal to Stake and Epoch passed ?
+        uint256 penalty = 5*(10**uint256(18)); // this would be in RZR, Define it in constants
+        // 1.Constant
+        // 2.Propotonal to Stake and Epoch passed ?
 
-            // Converting Penalty into sAmount
-            uint256 sAmount =
-                _convertParentToChild(
-                    penalty,
-                    staker.stake,
-                    sToken.totalSupply()
-                );
+        // Converting Penalty into sAmount
+        uint256 sAmount = _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
 
-            //Burning sAmount from msg.sender
-            require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
+        //Burning sAmount from msg.sender
+        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
 
-            //Updating Staker Stake
-            staker.stake = staker.stake - penalty;
+        //Updating Staker Stake
+        staker.stake = staker.stake - penalty;
 
-            //Adding it in reward pool
-            uint256 prevRewardPool = rewardPool;
-            rewardPool = rewardPool + (penalty);
-            emit RewardPoolChange(
-                stateManager.getEpoch(),
-                prevRewardPool,
-                rewardPool,
-                block.timestamp
-            );
-        }
-        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({
-            amount: 0,
-            withdrawAfter: 0
-        });
+        //Adding it in reward pool
+        uint256 prevRewardPool = rewardPool;
+        rewardPool = rewardPool + (penalty);
+        emit RewardPoolChange(
+            parameters.getEpoch(),
+            prevRewardPool,
+            rewardPool,
+            block.timestamp
+        );
+
+        _resetLock(stakerId);
+        
+    }  
+
+    function _resetLock(uint256 stakerId) private 
+    {
+        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
     }
-
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
     /// @param stakerId The id of staker currently in consideration
