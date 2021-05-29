@@ -370,7 +370,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
                                 thisStaker.epochLastRevealed :
                                 thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 inactiveEpochs = epoch-(epochLastActive)-1;
+        uint256 inactiveEpochs = (epoch-epochLastActive==0)?0:epoch-epochLastActive-1;
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
         uint256 currentStake = calculateInactivityPenalties(inactiveEpochs, previousStake);
