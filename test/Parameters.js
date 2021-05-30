@@ -1,10 +1,12 @@
 const { assert } = require('chai');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
-    assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
+  assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
-const { getEpoch, getState, toBigNumber, tokenAmount } = require('./helpers/utils');
+const {
+  getEpoch, getState, toBigNumber, tokenAmount,
+} = require('./helpers/utils');
 
 const { utils } = ethers;
 
@@ -38,7 +40,7 @@ describe('Parameters contract Tests', async () => {
   const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
 
   before(async () => {
-    ({parameters } = await setupContracts());
+    ({ parameters } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
@@ -70,37 +72,35 @@ describe('Parameters contract Tests', async () => {
   });
 
   it('parameters should not be modified without admin role access', async () => {
-
-    let tx =  parameters.connect(signers[1]).setPenaltyNotRevealNum(toBigNumber('1'));
+    let tx = parameters.connect(signers[1]).setPenaltyNotRevealNum(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setPenaltyNotRevealDeom(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setPenaltyNotRevealDeom(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setUnstakeLockPeriod(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setUnstakeLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setWithdrawLockPeriod(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setWithdrawLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setEpochLength(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setEpochLength(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setNumStates(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setNumStates(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setExposureDenominator(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setExposureDenominator(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx =  parameters.connect(signers[1]).setMinStake(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setMinStake(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
   });
 
-  it('parameters should be able to modify with admin role access',  async () => {
-
+  it('parameters should be able to modify with admin role access', async () => {
     await parameters.setPenaltyNotRevealNum(toBigNumber('5'));
     const penaltyNotRevealNum = await parameters.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNum, toBigNumber('5'));
@@ -138,8 +138,7 @@ describe('Parameters contract Tests', async () => {
     assertBNEqual(exposureDenominator, toBigNumber('13'));
   });
 
-  it('parameters values should be initialized correctly',  async () => {
-    
+  it('parameters values should be initialized correctly', async () => {
     const commitValue = await parameters.commit();
     assertBNEqual(commit, commitValue);
 
@@ -193,6 +192,5 @@ describe('Parameters contract Tests', async () => {
 
     const stakeModifierHashValue = await parameters.getStakeModifierHash();
     assertBNEqual(stakeModifierHash, stakeModifierHashValue);
-  });  
-
+  });
 });

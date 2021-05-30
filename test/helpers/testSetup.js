@@ -1,7 +1,6 @@
 const { BLOCK_REWARD } = require('./constants');
 
 const setupContracts = async () => {
-  
   const Structs = await ethers.getContractFactory('Structs');
   const structs = await Structs.deploy();
   await structs.deployed();

@@ -19,7 +19,7 @@ describe('StakeManager', function () {
     let signers;
     let schellingCoin;
     let blockManager;
-    let parameters;    
+    let parameters;
     let stakeManager;
     let voteManager;
     let initializeContracts;
