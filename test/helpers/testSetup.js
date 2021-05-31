@@ -54,7 +54,7 @@ const setupContracts = async () => {
   const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const stateManager = await StateManager.deploy();
   const voteManager = await VoteManager.deploy();
-  const schellingCoin = await SchellingCoin.deploy(stakeManager.address);
+  const schellingCoin = await SchellingCoin.deploy();
   const faucet = await Faucet.deploy(schellingCoin.address);
 
   await blockManager.deployed();

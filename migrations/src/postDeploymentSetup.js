@@ -47,7 +47,7 @@ module.exports = async () => {
 
     const initialSupply = await schellingCoin.INITIAL_SUPPLY();
 
-    const stakeManagerSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
+    const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
     const deployerBalance = BigNumber.from(await schellingCoin.balanceOf(signers[0].address));
     const deployerSupply = BigNumber.from(initialSupply).sub(BigNumber.from(deployerBalance));
 
@@ -62,7 +62,7 @@ module.exports = async () => {
       // Remove previous instance of  Deployer address from Minter
       await schellingCoin.removeMinter(signers[0].address);
     }
-    await schellingCoin.transfer(stakeManagerAddress, stakeManagerSupply);
+    await schellingCoin.transfer(stakeManagerAddress, mintableSupply);
 
     for (let i = 0; i < stakerAddressList.length; i++) {
       const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
