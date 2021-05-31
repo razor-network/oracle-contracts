@@ -2,14 +2,12 @@ const { NETWORK, SCHELLING_COIN_ADDRESS } = process.env;
 const {
   deployContract,
   appendDeploymentFile,
-  readDeploymentFile,
   readOldDeploymentFile,
 } = require('../migrationHelpers');
 
 const deploySchellingCoinAndFaucet = async () => {
   if (NETWORK !== 'mainnet' && SCHELLING_COIN_ADDRESS === '') {
-    const { StateManager } = await readDeploymentFile();
-    const schellingCoin = await deployContract('SchellingCoin', [], [StateManager]);
+    const schellingCoin = await deployContract('SchellingCoin', [], []);
     await deployContract('Faucet', [], [schellingCoin.address]);
   } else {
     const { Faucet, SchellingCoin } = await readOldDeploymentFile();
