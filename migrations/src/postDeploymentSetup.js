@@ -46,24 +46,22 @@ module.exports = async () => {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
     const initialSupply = await schellingCoin.INITIAL_SUPPLY();
+
     const stakeManagerSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
+    const deployerBalance = BigNumber.from(await schellingCoin.balanceOf(signers[0].address));
+    const deployerSupply = BigNumber.from(initialSupply).sub(BigNumber.from(deployerBalance));
 
     if (SCHELLING_COIN_ADDRESS !== '') {
       // if previous instances of Schelling Coin is reused again and again,
       // then initial balance will get depleted, thus intial tokens minting is needed,
       // each time Schelling Coin instance is reused
       await schellingCoin.addMinter(signers[0].address);
-      if (schellingCoin.balanceOf(signers[0].address) === 0) {
-        await schellingCoin.mint(signers[0].address, initialSupply - stakeManagerSupply);
-      } else {
-        await schellingCoin.mint(signers[0].address, initialSupply - schellingCoin.balanceOf(signers[0].address));
-      }
+
+      await schellingCoin.mint(signers[0].address, (deployerSupply));
 
       // Remove previous instance of  Deployer address from Minter
       await schellingCoin.removeMinter(signers[0].address);
     }
-
-    // Remove previous instance of StakeManager contract & Deployer address from Minter
     await schellingCoin.transfer(stakeManagerAddress, stakeManagerSupply);
 
     for (let i = 0; i < stakerAddressList.length; i++) {
