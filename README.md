@@ -20,11 +20,11 @@ For Mac, use `brew install jq` or for the most recent version use `brew install 
 3. Run command `deploy:ganache`
 
 ##### Goerli Deployment using ganache cli/gui
-1. Create `.env.goerli` file (Refs - `.env.tpl`), provide `mnemonic` & `provider` for deployment.
-2. Run command `deploy:goerli`
+1. Create `.env.matic` file (Refs - `.env.tpl`), provide `mnemonic` & `provider` for deployment.
+2. Run command `deploy:matic`
 
 # Migration guide
-1. Run `npm run deploy:goerli`
+1. Run `npm run deploy:matic`
 2. `cd ../cli && git add . && git commit -m 'redeploy' && git push`
 3. `cd ../synthetic-assets`
 4. Change the delegator address in `synthetic-assets/migrations/2_deploy.js`
@@ -45,4 +45,4 @@ Run `npm run test`
 Run `npm run coverage`
 
 # Addresses
-Deployed contract addresses can be found [here](deployed/goerli/addresses.json)
+Deployed contract addresses can be found [here](deployed/matic/addresses.json)
