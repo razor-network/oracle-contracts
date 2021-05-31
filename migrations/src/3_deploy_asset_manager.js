@@ -1,6 +1,6 @@
 const { deployContract } = require('../migrationHelpers');
 
-const deployJobManager = async () => {
+const deployAssetManager = async () => {
   await deployContract('AssetManager', ['Constants']);
 };
 
