@@ -21,7 +21,7 @@ contract JobManager is ACL, JobStorage {
         address creator,
         uint256 credit,
         uint256 timestamp,
-        uint256 assetType
+        assetTypes assetType
     );
 
     event JobReported(
@@ -47,7 +47,7 @@ contract JobManager is ACL, JobStorage {
         address creator,
         uint256 credit,
         uint256 timestamp,
-        uint256 assetType
+        assetTypes assetType
     );
 
     event CollectionReported(
@@ -81,7 +81,7 @@ contract JobManager is ACL, JobStorage {
         string calldata name, 
         bool repeat
     ) external payable {
-        numAssets++;
+        numAssets = numAssets + 1;
         uint256 epoch = stateManager.getEpoch();
         Structs.Job memory job = Structs.Job(
             numAssets, 
@@ -97,7 +97,6 @@ contract JobManager is ACL, JobStorage {
             uint256(assetTypes.Job)
         );
         jobs[numAssets] = job;
-        jobList.push(numAssets);
 
         emit JobCreated(
             numAssets, 
@@ -109,9 +108,8 @@ contract JobManager is ACL, JobStorage {
             msg.sender, 
             msg.value, 
             block.timestamp, 
-            uint256(assetTypes.Job)
+            assetTypes.Job
         );
-        // jobs.push(job);
     }
 
     function fulfillAsset(
@@ -122,7 +120,7 @@ contract JobManager is ACL, JobStorage {
         onlyRole(Constants.getJobConfirmerHash())
     {
         uint256 epoch = stateManager.getEpoch();
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
 
             Structs.Job storage job = jobs[id];
 
@@ -171,9 +169,10 @@ contract JobManager is ACL, JobStorage {
         uint32 aggregationMethod
     ) external payable 
     {
-        require(aggregationMethod < 3,"Aggregation range out of bounds");
+        require(aggregationMethod > 0 && aggregationMethod < Constants.getAggregationRange(),"Aggregation range out of bounds");
+        require(jobIDs.length > 1,"Number of jobIDs low to create collection");
 
-        numAssets++;
+        numAssets = numAssets + 1;
         uint256 epoch = stateManager.getEpoch();
         collections[numAssets].id = numAssets; 
         collections[numAssets].name = name; 
@@ -183,14 +182,11 @@ contract JobManager is ACL, JobStorage {
         collections[numAssets].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
-            if(collections[numAssets].jobIDExist[jobIDs[i]]){
-                continue;
-            }
+            require(!collections[numAssets].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
             collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
         collections[numAssets].assetType = uint256(assetTypes.Collection);
-        collectionList.push(numAssets);
 
         emit CollectionCreated(
             numAssets, 
@@ -201,7 +197,7 @@ contract JobManager is ACL, JobStorage {
             msg.sender, 
             msg.value, 
             block.timestamp, 
-            uint256(assetTypes.Collection)
+            assetTypes.Collection
         );
     }
 
@@ -235,10 +231,13 @@ contract JobManager is ACL, JobStorage {
             uint256 result
         ) 
     {
+        require(id != 0, "ID cannot be 0");
+        require(id<=numAssets,"ID does not exist");
+        
         if(jobs[id].assetType==uint256(assetTypes.Job)){
             return jobs[id].result;
         }
-        else if(collections[id].assetType==uint256(assetTypes.Collection)){
+        else{
             return collections[id].result;
         }
     }
@@ -277,12 +276,24 @@ contract JobManager is ACL, JobStorage {
         return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result);
     }
 
-    function getJobList() external view returns(uint256[] memory) {
-        return jobList;
-    }
+    function getAssetType(
+        uint256 id
+    )
+        external
+        view
+        returns(
+            uint256
+        )
+    {
+        require(id != 0, "ID cannot be 0");
+        require(id <= numAssets,"ID does not exist");
 
-    function getCollectionList() external view returns(uint256[] memory) {
-        return collectionList;
+        if(jobs[id].assetType==uint256(assetTypes.Job)){
+            return uint256(assetTypes.Job);
+        } 
+        else{
+            return uint256(assetTypes.Collection);
+        }
     }
 
     function getNumAssets() external view returns(uint256) {

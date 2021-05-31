@@ -22,7 +22,7 @@ library Structs {
     struct Block {
         uint256 proposerId;
         uint256[] ids;
-        uint256[] aggregate;
+        uint256[] aggregates;
         uint256[] lowerCutoffs;
         uint256[] higherCutoffs;
         uint256 iteration;

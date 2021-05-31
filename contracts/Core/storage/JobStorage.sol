@@ -8,10 +8,7 @@ contract JobStorage {
     mapping (uint256 => Structs.Job) public jobs;
     mapping (uint256 => Structs.Collection) public collections;
 
-    enum assetTypes { NONE, Job, Collection }
-
-    uint256[] public jobList;
-    uint256[] public collectionList;
+    enum assetTypes { None, Job, Collection }
 
     uint256 public numAssets;
 }

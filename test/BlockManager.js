@@ -369,7 +369,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[19]).commit(epoch, commitment1);
 
       assertBNEqual((await blockManager.getBlock(epoch - 1)).proposerId, toBigNumber('0'));
-      assertBNEqual(((await blockManager.getBlock(epoch - 1)).aggregate).length, toBigNumber('0'));
+      assertBNEqual(((await blockManager.getBlock(epoch - 1)).aggregates).length, toBigNumber('0'));
       assert((await blockManager.getBlock(epoch - 1)).valid === false);
 
       await mineToNextState();

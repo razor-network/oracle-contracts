@@ -23,4 +23,5 @@ library Constants {
     function getStakeModifierHash() public pure returns(bytes32) { return(0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804);/*keccak256("STAKE_MODIFIER_ROLE"))*/}
     function getStakerActivityUpdaterHash() public pure returns(bytes32) { return(0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece); /*keccak256("STAKER_ACTIVITY_UPDATER_ROLE"))*/}
     function getDefaultAdminHash() public pure returns(bytes32) { return(0x0000000000000000000000000000000000000000000000000000000000000000);}
+    function getAggregationRange() public pure returns(uint32) { return(3);}
 }
