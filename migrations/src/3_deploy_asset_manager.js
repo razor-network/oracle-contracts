@@ -1,9 +1,9 @@
 const { deployContract } = require('../migrationHelpers');
 
 const deployJobManager = async () => {
-  await deployContract('JobManager', ['Constants']);
+  await deployContract('AssetManager', ['Constants']);
 };
 
 module.exports = async () => {
-  await deployJobManager();
+  await deployAssetManager();
 };

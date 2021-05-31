@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/IStakeManager.sol";
 import "./interface/IStateManager.sol";
 import "./interface/IVoteManager.sol";
-import "./interface/IJobManager.sol";
+import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
 import "../lib/Constants.sol";
 import "../lib/Random.sol";
@@ -16,7 +16,7 @@ contract BlockManager is ACL, BlockStorage {
     IStakeManager public stakeManager;
     IStateManager public stateManager;
     IVoteManager public voteManager;
-    IJobManager public jobManager;
+    IAssetManager public assetManager;
 
     event BlockConfirmed (
         uint256 epoch,
@@ -54,13 +54,13 @@ contract BlockManager is ACL, BlockStorage {
         address _stakeManagerAddress,
         address _stateManagerAddress,
         address _voteManagerAddress,
-        address _jobManagerAddress
+        address _assetManagerAddress
     ) external 
     {
         stakeManager = IStakeManager(_stakeManagerAddress);
         stateManager = IStateManager(_stateManagerAddress);
         voteManager = IVoteManager(_voteManagerAddress);
-        jobManager = IJobManager(_jobManagerAddress);
+        assetManager = IAssetManager(_assetManagerAddress);
     }
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
@@ -257,7 +257,7 @@ contract BlockManager is ACL, BlockStorage {
                                     proposedBlocks[epoch - 1][i].ids,
                                     block.timestamp);
                 for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
-                    jobManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
+                    assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
                                         proposedBlocks[epoch - 1][i].aggregates[j]);
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);

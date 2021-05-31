@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 
 
-import "./Core/interface/IJobManager.sol";
+import "./Core/interface/IAssetManager.sol";
 
 
 contract Delegator {
 
     address public delegate;
     address public owner = msg.sender;
-    IJobManager public jobManager;
+    IAssetManager public assetManager;
 
     function getJob(
         uint256 id
@@ -24,16 +24,16 @@ contract Delegator {
             uint256 result
         )
     {
-        return jobManager.getJob(id);
+        return assetManager.getJob(id);
     }
 
     function upgradeDelegate(address newDelegateAddress) public {
         require(msg.sender == owner, "caller is not the owner");
         delegate = newDelegateAddress;
-        jobManager = IJobManager(newDelegateAddress);
+        assetManager = IAssetManager(newDelegateAddress);
     }
 
     function getResult(uint256 id) public view returns(uint256) {
-        return jobManager.getResult(id);
+        return assetManager.getResult(id);
     }
 }

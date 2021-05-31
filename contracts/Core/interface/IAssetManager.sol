@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IJobManager {
+interface IAssetManager {
 
     function createJob (string calldata url, string calldata selector, bool repeat) external;
     function fulfillAsset(uint256 id, uint256 value) external;

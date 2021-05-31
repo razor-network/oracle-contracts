@@ -2,12 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IStateManager.sol";
-import "./storage/JobStorage.sol";
+import "./storage/AssetStorage.sol";
 import "../lib/Constants.sol";
 import "./ACL.sol";
 
 
-contract JobManager is ACL, JobStorage {
+contract AssetManager is ACL, AssetStorage {
 
     IStateManager public stateManager;
 
@@ -117,7 +117,7 @@ contract JobManager is ACL, JobStorage {
         uint256 value   
     ) 
         external 
-        onlyRole(Constants.getJobConfirmerHash())
+        onlyRole(Constants.getAssetConfirmerHash())
     {
         uint256 epoch = stateManager.getEpoch();
         if(jobs[id].assetType == uint256(assetTypes.Job)){
