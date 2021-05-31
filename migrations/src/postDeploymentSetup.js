@@ -43,12 +43,12 @@ module.exports = async () => {
 
   // Only transfer tokens in testnets
   if (NETWORK !== 'mainnet') {
+    // Add new instance of StakeManager contract & Deployer address as Minter
+    await schellingCoin.addMinter(stakeManagerAddress);
+    await schellingCoin.addMinter(signers[0].address);
+
     if (SCHELLING_COIN_ADDRESS !== '') {
       const { StakeManager: oldStakeManagerAddress } = await readOldDeploymentFile();
-
-      // Add new instance of StakeManager contract & Deployer address as Minter
-      await schellingCoin.addMinter(stakeManagerAddress);
-      await schellingCoin.addMinter(signers[0].address);
 
       // if previous instances of Schelling Coin is reused again and again,
       // then initial balance will get depleted, thus intial tokens minting is needed,
