@@ -78,7 +78,7 @@ describe('Access Control Test', async () => {
 
   it('confirmBlock() should be accessable by BlockConfirmer', async () => {
     // Wait for 40 blocks, as epoch should be greated 40, for confirmBlock method to work.
-    await waitNBlocks(40);
+    await waitNBlocks(300);
     const blockConfirmerHash = await constants.getBlockConfirmerHash();
     await blockManager.grantRole(blockConfirmerHash, signers[0].address);
     await blockManager.confirmBlock();
