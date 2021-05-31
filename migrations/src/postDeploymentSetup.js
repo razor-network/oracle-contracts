@@ -56,15 +56,12 @@ module.exports = async () => {
       await schellingCoin.addMinter(signers[0].address);
       await schellingCoin.mint(signers[0].address, initialSupply - stakeManagerSupply);
 
-
       // Remove previous instance of  Deployer address from Minter
       await schellingCoin.removeMinter(signers[0].address);
     }
 
-      // Remove previous instance of StakeManager contract & Deployer address from Minter
-    }
+    // Remove previous instance of StakeManager contract & Deployer address from Minter
     await schellingCoin.mint(stakeManagerAddress, initialSupply);
-
 
     for (let i = 0; i < stakerAddressList.length; i++) {
       const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
