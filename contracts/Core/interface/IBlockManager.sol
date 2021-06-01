@@ -27,7 +27,7 @@ interface IBlockManager {
     function propose(
         uint256 epoch,
         uint256[] memory ids,
-        uint256[] memory aggregates,
+        uint256[] memory medians,
         uint256[] memory lowerCutoffs,
         uint256[] memory higherCutoffs,
         uint256 iteration,
@@ -48,7 +48,7 @@ interface IBlockManager {
     function confirmBlock() external;
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block);
-    function getBlockAggregates(uint256 epoch) external view returns(uint256[] memory _blockAggregates);
+    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians);
 
     function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs);
 
@@ -56,10 +56,10 @@ interface IBlockManager {
         uint256 epoch
     ) external view returns(uint256[] memory _higherCutoffs);
 
-    function getProposedBlockAggregates(
+    function getProposedBlockMedians(
         uint256 epoch,
         uint256 proposedBlock
-    ) external view returns(uint256[] memory _blockAggregates);
+    ) external view returns(uint256[] memory _blockMedians);
 
     function getNumProposedBlocks(uint256 epoch) external view returns(uint256);
 }

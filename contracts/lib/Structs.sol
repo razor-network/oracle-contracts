@@ -22,7 +22,7 @@ library Structs {
     struct Block {
         uint256 proposerId;
         uint256[] ids;
-        uint256[] aggregates;
+        uint256[] medians;
         uint256[] lowerCutoffs;
         uint256[] higherCutoffs;
         uint256 iteration;
@@ -32,7 +32,7 @@ library Structs {
 
     struct Dispute {
         uint256 accWeight;
-        uint256 aggregate;
+        uint256 median;
         uint256 lowerCutoff;
         uint256 higherCutoff;
         uint256 lastVisited;

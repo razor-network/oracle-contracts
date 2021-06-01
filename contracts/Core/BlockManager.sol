@@ -21,7 +21,7 @@ contract BlockManager is ACL, BlockStorage {
     event BlockConfirmed (
         uint256 epoch,
         uint256 stakerId,
-        uint256[] aggregates,
+        uint256[] medians,
         uint256[] lowerCutoffs,
         uint256[] higherCutoffs,
         uint256[] ids,
@@ -32,7 +32,7 @@ contract BlockManager is ACL, BlockStorage {
         uint256 epoch,
         uint256 stakerId,
         uint256[] ids,
-        uint256[] aggregates,
+        uint256[] medians,
         uint256[] lowerCutoffs,
         uint256[] higherCutoffs,
         uint256 iteration,
@@ -67,9 +67,9 @@ contract BlockManager is ACL, BlockStorage {
         return(blocks[epoch]);
     }
 
-    function getBlockAggregates(uint256 epoch) external view returns(uint256[] memory _blockAggregates) {
-        _blockAggregates = blocks[epoch].aggregates;
-        return(_blockAggregates);
+    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = blocks[epoch].medians;
+        return(_blockMedians);
     }
 
     function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs) {
@@ -93,19 +93,19 @@ contract BlockManager is ACL, BlockStorage {
         view 
         returns(
             Structs.Block memory _block,
-            uint256[] memory _blockAggregates,
+            uint256[] memory _blockMedians,
             uint256[] memory _lowerCutoffs,
             uint256[] memory _higherCutoffs
         ) 
     {
         _block = proposedBlocks[epoch][proposedBlock];
-        return(_block, _block.aggregates, _block.lowerCutoffs, _block.higherCutoffs);
+        return(_block, _block.medians, _block.lowerCutoffs, _block.higherCutoffs);
     }
 
-    function getProposedBlockAggregates(uint256 epoch, uint256 proposedBlock)
-    external view returns(uint256[] memory _blockAggregates) {
-        _blockAggregates = proposedBlocks[epoch][proposedBlock].aggregates;
-        return(_blockAggregates);
+    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
+    external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
+        return(_blockMedians);
     }
 
     function getNumProposedBlocks(uint256 epoch)
@@ -127,7 +127,7 @@ contract BlockManager is ACL, BlockStorage {
     function propose(
         uint256 epoch,
         uint256[] memory ids,
-        uint256[] memory aggregates,
+        uint256[] memory medians,
         uint256[] memory lowerCutoffs,
         uint256[] memory higherCutoffs,
         uint256 iteration,
@@ -147,7 +147,7 @@ contract BlockManager is ACL, BlockStorage {
             Structs.Block(
                 proposerId,
                 ids,
-                aggregates,
+                medians,
                 lowerCutoffs,
                 higherCutoffs,
                 iteration,
@@ -160,7 +160,7 @@ contract BlockManager is ACL, BlockStorage {
             epoch,
             proposerId,
             ids,
-            aggregates,
+            medians,
             lowerCutoffs,
             higherCutoffs,
             iteration,
@@ -179,7 +179,7 @@ contract BlockManager is ACL, BlockStorage {
         checkEpoch(epoch)
         checkState(Constants.dispute()) 
     {
-        uint256 aggregateWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
+        uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
         uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(4);
         uint256 higherCutoffWeight = (voteManager.getTotalStakeRevealed(epoch, assetId)*(3))/(4);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
@@ -197,8 +197,8 @@ contract BlockManager is ACL, BlockStorage {
             if (disputes[epoch][msg.sender].lowerCutoff == 0 && accWeight >= lowerCutoffWeight) {
                 disputes[epoch][msg.sender].lowerCutoff = sorted[i];
             }
-            if (disputes[epoch][msg.sender].aggregate == 0 && accWeight > aggregateWeight) {
-                disputes[epoch][msg.sender].aggregate = sorted[i];
+            if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
+                disputes[epoch][msg.sender].median = sorted[i];
             }
             if (disputes[epoch][msg.sender].higherCutoff == 0 && accWeight > higherCutoffWeight) {
                 disputes[epoch][msg.sender].higherCutoff = sorted[i];
@@ -226,13 +226,13 @@ contract BlockManager is ACL, BlockStorage {
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
             "Total stake revealed doesnt match"
         );
-        uint256 aggregate = disputes[epoch][msg.sender].aggregate;
+        uint256 median = disputes[epoch][msg.sender].median;
         uint256 lowerCutoff = disputes[epoch][msg.sender].lowerCutoff;
         uint256 higherCutoff = disputes[epoch][msg.sender].higherCutoff;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
         //
-        require(aggregate > 0, "Aggregate can't be zero");
-        if (proposedBlocks[epoch][blockId].aggregates[assetId] != aggregate ||
+        require(median > 0, "median can't be zero");
+        if (proposedBlocks[epoch][blockId].medians[assetId] != median ||
             proposedBlocks[epoch][blockId].lowerCutoffs[assetId] != lowerCutoff ||
             proposedBlocks[epoch][blockId].higherCutoffs[assetId] != higherCutoff) {
             proposedBlocks[epoch][blockId].valid = false;
@@ -251,14 +251,14 @@ contract BlockManager is ACL, BlockStorage {
                 uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
                 emit BlockConfirmed(epoch - 1,
                                     proposerId,
-                                    proposedBlocks[epoch - 1][i].aggregates,
+                                    proposedBlocks[epoch - 1][i].medians,
                                     proposedBlocks[epoch - 1][i].lowerCutoffs,
                                     proposedBlocks[epoch - 1][i].higherCutoffs,
                                     proposedBlocks[epoch - 1][i].ids,
                                     block.timestamp);
                 for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
                     assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
-                                        proposedBlocks[epoch - 1][i].aggregates[j]);
+                                        proposedBlocks[epoch - 1][i].medians[j]);
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);
                 return;

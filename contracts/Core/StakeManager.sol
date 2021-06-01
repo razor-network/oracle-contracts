@@ -256,7 +256,7 @@ contract StakeManager is ACL, StakeStorage {
 
         // no rewards if last epoch didn't got revealed
         if ((epoch - epochLastRevealed) != 1) return;
-        uint256[] memory aggregatesLastEpoch = blockManager.getBlockAggregates(epochLastRevealed);
+        uint256[] memory mediansLastEpoch = blockManager.getBlockMedians(epochLastRevealed);
         uint256[] memory lowerCutoffsLastEpoch = blockManager.getLowerCutoffs(epochLastRevealed);
         uint256[] memory higherCutoffsLastEpoch = blockManager.getHigherCutoffs(epochLastRevealed);
 
@@ -265,12 +265,12 @@ contract StakeManager is ACL, StakeStorage {
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
                 uint256 voteLastEpoch = 
                     voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
-                uint256 aggregateLastEpoch = aggregatesLastEpoch[i];
+                uint256 medianLastEpoch = mediansLastEpoch[i];
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
 
                 //give rewards if voted in zone
-                if ((voteLastEpoch == aggregateLastEpoch) ||
+                if ((voteLastEpoch == medianLastEpoch) ||
                 ((voteLastEpoch > lowerCutoffLastEpoch) ||
                     (voteLastEpoch < higherCutoffLastEpoch))) {
                     rewardable = rewardable + 1;
