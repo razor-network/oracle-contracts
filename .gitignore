@@ -9,3 +9,4 @@ deployed/ganache
 node_modules/
 .DS_Store
 .previous-deployment-addresses
+.contract-deployment.tmp.json

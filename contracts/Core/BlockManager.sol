@@ -8,10 +8,11 @@ import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
 import "../lib/Constants.sol";
 import "../lib/Random.sol";
+import "../Initializable.sol";
 import "./ACL.sol";
 
 
-contract BlockManager is ACL, BlockStorage {
+contract BlockManager is Initializable, ACL, BlockStorage {
   
     IStakeManager public stakeManager;
     IStateManager public stateManager;
@@ -50,17 +51,17 @@ contract BlockManager is ACL, BlockStorage {
         _;
     }
 
-    function init(
-        address _stakeManagerAddress,
-        address _stateManagerAddress,
-        address _voteManagerAddress,
-        address _assetManagerAddress
-    ) external 
+    function initialize (
+        address stakeManagerAddress,
+        address stateManagerAddress,
+        address voteManagerAddress,
+        address assetManagerAddress
+    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        stakeManager = IStakeManager(_stakeManagerAddress);
-        stateManager = IStateManager(_stateManagerAddress);
-        voteManager = IVoteManager(_voteManagerAddress);
-        assetManager = IAssetManager(_assetManagerAddress);
+        stakeManager = IStakeManager(stakeManagerAddress);
+        stateManager = IStateManager(stateManagerAddress);
+        voteManager = IVoteManager(voteManagerAddress);
+        assetManager = IAssetManager(assetManagerAddress);
     }
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
@@ -132,10 +133,9 @@ contract BlockManager is ACL, BlockStorage {
         uint256[] memory higherCutoffs,
         uint256 iteration,
         uint256 biggestStakerId
-    ) public checkEpoch(epoch) checkState(Constants.propose()) 
+    ) public initialized checkEpoch(epoch) checkState(Constants.propose()) 
     {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
-        // SchellingCoin sch = SchellingCoin(schAddress);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(
             stakeManager.getStaker(proposerId).stake >= Constants.minStake(),
@@ -176,6 +176,7 @@ contract BlockManager is ACL, BlockStorage {
         uint256[] memory sorted
     ) 
         public
+        initialized
         checkEpoch(epoch)
         checkState(Constants.dispute()) 
     {
@@ -214,13 +215,13 @@ contract BlockManager is ACL, BlockStorage {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(
         uint256 epoch
-    ) public checkEpoch(epoch) checkState(Constants.dispute())
+    ) public initialized checkEpoch(epoch) checkState(Constants.dispute())
     {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
-    public checkEpoch(epoch) checkState(Constants.dispute()) {
+    public initialized checkEpoch(epoch) checkState(Constants.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
@@ -242,7 +243,7 @@ contract BlockManager is ACL, BlockStorage {
         }
     }
 
-    function confirmBlock() public onlyRole(Constants.getBlockConfirmerHash()) {
+    function confirmBlock() public initialized onlyRole(Constants.getBlockConfirmerHash()) {
         uint256 epoch = stateManager.getEpoch();
         
         for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
@@ -273,7 +274,8 @@ contract BlockManager is ACL, BlockStorage {
         uint256 stakerId
     )
         public
-        view 
+        view
+        initialized
         returns (bool) 
     {   
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,

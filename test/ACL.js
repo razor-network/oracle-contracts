@@ -12,17 +12,19 @@ describe('Access Control Test', async () => {
   let constants;
   let assetManager;
   let stakeManager;
+  let initializeContracts;
   const expectedRevertMessage = 'ACL: sender not authorized';
 
   before(async () => {
     ({
-      blockManager, constants, assetManager, stakeManager,
+      blockManager, constants, assetManager, stakeManager, initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
   beforeEach(async () => {
     snapShotId = await takeSnapshot();
+    await Promise.all(await initializeContracts());
   });
 
   afterEach(async () => {

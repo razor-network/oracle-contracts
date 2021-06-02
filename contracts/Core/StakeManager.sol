@@ -7,6 +7,7 @@ import "./interface/IVoteManager.sol";
 import "./storage/StakeStorage.sol";
 import "../lib/Constants.sol";
 import "../lib/Constants.sol";
+import "../Initializable.sol";
 import "../SchellingCoin.sol";
 import "./ACL.sol";
 
@@ -15,7 +16,7 @@ import "./ACL.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is ACL, StakeStorage {
+contract StakeManager is Initializable, ACL, StakeStorage {
 
     SchellingCoin public sch;
     IVoteManager public voteManager;
@@ -82,22 +83,21 @@ contract StakeManager is ACL, StakeStorage {
         blockReward = _blockReward;
     }
 
-    /// @param _schAddress The address of the Schelling token ERC20 contract
-    /// @param _voteManagerAddress The address of the VoteManager contract
-    /// @param _blockManagerAddress The address of the BlockManager contract
-    /// @param _stateManagerAddress The address of the StateManager contract
-    /// todo disable after init
-    function init (
-        address _schAddress,
-        address _voteManagerAddress,
-        address _blockManagerAddress,
-        address _stateManagerAddress
-    ) external 
+    /// @param schAddress The address of the Schelling token ERC20 contract
+    /// @param voteManagersAddress The address of the VoteManager contract
+    /// @param blockManagerAddress The address of the BlockManager contract
+    /// @param stateManagerAddress The address of the StateManager contract
+    function initialize (
+        address schAddress,
+        address voteManagersAddress,
+        address blockManagerAddress,
+        address stateManagerAddress
+    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        sch = SchellingCoin(_schAddress);
-        voteManager = IVoteManager(_voteManagerAddress);
-        blockManager = IBlockManager(_blockManagerAddress);
-        stateManager = IStateManager(_stateManagerAddress);
+        sch = SchellingCoin(schAddress);
+        voteManager = IVoteManager(voteManagersAddress);
+        blockManager = IBlockManager(blockManagerAddress);
+        stateManager = IStateManager(stateManagerAddress);
     }
 
     /// @param _id The ID of the staker
@@ -105,7 +105,7 @@ contract StakeManager is ACL, StakeStorage {
     function setStakerEpochLastRevealed(
         uint256 _id,
         uint256 _epochLastRevealed
-    ) external onlyRole(Constants.getStakerActivityUpdaterHash())
+    ) external initialized onlyRole(Constants.getStakerActivityUpdaterHash())
     {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
@@ -113,7 +113,7 @@ contract StakeManager is ACL, StakeStorage {
     /// @param stakerId The ID of the staker
     function updateCommitmentEpoch(
         uint256 stakerId
-    ) external onlyRole(Constants.getStakerActivityUpdaterHash())
+    ) external initialized onlyRole(Constants.getStakerActivityUpdaterHash())
     {
         stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
     }
@@ -132,6 +132,7 @@ contract StakeManager is ACL, StakeStorage {
         uint256 amount
     ) 
         external
+        initialized
         checkEpoch(epoch) checkState(Constants.commit()) 
     {
         // not allowed during reveal period
@@ -163,7 +164,7 @@ contract StakeManager is ACL, StakeStorage {
     /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
     /// @param epoch The Epoch value for which staker is requesting to unstake
-    function unstake (uint256 epoch) external checkEpoch(epoch)  checkState(Constants.commit()) {
+    function unstake (uint256 epoch) external initialized checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
@@ -177,7 +178,7 @@ contract StakeManager is ACL, StakeStorage {
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
-    function withdraw (uint256 epoch) external checkEpoch(epoch) checkState(Constants.commit()) {
+    function withdraw (uint256 epoch) external initialized checkEpoch(epoch) checkState(Constants.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker doesnt exist");
@@ -210,7 +211,7 @@ contract StakeManager is ACL, StakeStorage {
     function givePenalties(
         uint256 stakerId,
         uint256 epoch
-    ) external onlyRole(Constants.getStakeModifierHash())
+    ) external initialized onlyRole(Constants.getStakeModifierHash())
     {
         _givePenalties(stakerId, epoch);
     }
@@ -248,7 +249,7 @@ contract StakeManager is ACL, StakeStorage {
     function giveRewards(
         uint256 stakerId,
         uint256 epoch
-    ) external onlyRole(Constants.getStakeModifierHash())
+    ) external initialized onlyRole(Constants.getStakeModifierHash())
     {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakers[stakerId];

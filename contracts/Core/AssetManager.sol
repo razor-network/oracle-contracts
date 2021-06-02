@@ -70,9 +70,8 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    //disable after init.
-    function init(address _stateManagerAddress) external {
-        stateManager = IStateManager(_stateManagerAddress);
+    constructor(address stateManagerAddress) {
+        stateManager = IStateManager(stateManagerAddress);
     }
 
     function createJob (

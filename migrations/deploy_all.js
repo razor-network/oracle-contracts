@@ -3,7 +3,7 @@ const librariesMigration = require('./src/1_deploy_libraries');
 const blockManagerMigration = require('./src/2_deploy_block_manager');
 const assetManagerMigration = require('./src/3_deploy_asset_manager');
 const stakeManagerMigration = require('./src/4_deploy_stake_manager');
-const stateManagerMigration = require('./src/5_deploy_state_manager');
+const blockManagerMigration = require('./src/5_deploy_block_manager');
 const voteManagerMigration = require('./src/6_deploy_vote_manager');
 const delegatorMigration = require('./src/7_deploy_delegator');
 const schellingCoinAndFacuetMigration = require('./src/8_deploy_schelling_coin_and_faucet');
@@ -15,7 +15,7 @@ async function main() {
   await blockManagerMigration();
   await assetManagerMigration();
   await stakeManagerMigration();
-  await stateManagerMigration();
+  await blockManagerMigration();
   await voteManagerMigration();
   await delegatorMigration();
   await schellingCoinAndFacuetMigration();
