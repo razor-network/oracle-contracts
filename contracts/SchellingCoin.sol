@@ -21,9 +21,9 @@ contract SchellingCoin is ERC20, ACL {
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    constructor (address minter) ERC20("SchellingCoin", "SCH") {
+    constructor () ERC20("SchellingCoin", "SCH") {
         _mint(msg.sender, INITIAL_SUPPLY);
-        grantRole(MINTER_ROLE, minter);
+        
     }
     
     function addMinter(address account) external {
