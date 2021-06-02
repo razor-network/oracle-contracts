@@ -228,7 +228,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
-            require(sch.mint(address(this), blockReward));
+            
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
         stakeGettingReward = 0;
