@@ -1,6 +1,6 @@
 /* eslint-disable no-console */
 const librariesMigration = require('./src/1_deploy_libraries');
-const blockManagerMigration = require('./src/2_deploy_block_manager');
+const stateManagerMigration = require('./src/2_deploy_state_manager');
 const assetManagerMigration = require('./src/3_deploy_asset_manager');
 const stakeManagerMigration = require('./src/4_deploy_stake_manager');
 const blockManagerMigration = require('./src/5_deploy_block_manager');
@@ -12,7 +12,7 @@ const postDeploymentSetup = require('./src/postDeploymentSetup');
 async function main() {
   // Deploy smart contracts
   await librariesMigration();
-  await blockManagerMigration();
+  await stateManagerMigration();
   await assetManagerMigration();
   await stakeManagerMigration();
   await blockManagerMigration();
