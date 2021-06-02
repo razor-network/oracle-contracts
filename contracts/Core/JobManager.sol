@@ -37,11 +37,10 @@ contract JobManager is ACL, JobStorage {
         uint256 timestamp
     );
 
-    //disable after init.
-    function init(address _stateManagerAddress) external {
-        stateManager = IStateManager(_stateManagerAddress);
+    constructor(address stateManagerAddress) {
+        stateManager = IStateManager(stateManagerAddress);
     }
-
+    
     function createJob(
         string calldata url,
         string calldata selector,

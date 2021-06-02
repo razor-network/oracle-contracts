@@ -48,11 +48,10 @@ const setupContracts = async () => {
   });
 
   const blockManager = await BlockManager.deploy();
-
-  const delegator = await Delegator.deploy();
-  const jobManager = await JobManager.deploy();
-  const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const stateManager = await StateManager.deploy();
+  const delegator = await Delegator.deploy();
+  const jobManager = await JobManager.deploy(stateManager.address);
+  const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const voteManager = await VoteManager.deploy();
   const schellingCoin = await SchellingCoin.deploy();
   const faucet = await Faucet.deploy(schellingCoin.address);
@@ -67,11 +66,10 @@ const setupContracts = async () => {
   await stateManager.deployed();
   await voteManager.deployed();
 
-  await Promise.all([
-    blockManager.init(stakeManager.address, stateManager.address, voteManager.address, jobManager.address),
-    voteManager.init(stakeManager.address, stateManager.address, blockManager.address),
-    stakeManager.init(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
-    jobManager.init(stateManager.address),
+  const initializeContracts = async () => [
+    blockManager.initialize(stakeManager.address, stateManager.address, voteManager.address, jobManager.address),
+    voteManager.initialize(stakeManager.address, stateManager.address, blockManager.address),
+    stakeManager.initialize(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
 
     jobManager.grantRole(await constants.getJobConfirmerHash(), blockManager.address),
     blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManager.address),
@@ -80,7 +78,7 @@ const setupContracts = async () => {
     stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManager.address),
 
     delegator.upgradeDelegate(jobManager.address),
-  ]);
+  ];
 
   return {
     blockManager,
@@ -94,6 +92,7 @@ const setupContracts = async () => {
     stateManager,
     structs,
     voteManager,
+    initializeContracts,
   };
 };
 

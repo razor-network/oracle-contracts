@@ -8,6 +8,7 @@ const {
   assertBNNotEqual,
   mineToNextEpoch,
   mineToNextState,
+  assertRevert,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
@@ -25,14 +26,24 @@ const { utils } = ethers;
 describe('BlockManager', function () {
   let signers;
   let blockManager;
+  let jobManager;
   let random;
   let schellingCoin;
   let stakeManager;
+  let stateManager;
   let voteManager;
+  let initializeContracts;
 
   before(async () => {
     ({
-      blockManager, random, schellingCoin, stakeManager, voteManager,
+      blockManager,
+      jobManager,
+      random,
+      schellingCoin,
+      stakeManager,
+      stateManager,
+      voteManager,
+      initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -43,7 +54,38 @@ describe('BlockManager', function () {
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
     });
 
+    it('should not be able to stake, commit without initialization', async () => {
+      const epoch = await getEpoch();
+
+      const tx1 = stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
+      await assertRevert(tx1, 'Contract should be initialized');
+
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const tree = merkle('keccak256').sync(votes);
+
+      const root = tree.root();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      const tx2 = voteManager.connect(signers[5]).commit(epoch, commitment1);
+
+      await assertRevert(tx2, 'Contract should be initialized');
+    });
+
+    it('should not be able to initiliaze BlockManager contract without admin role', async () => {
+      const tx = blockManager.connect(signers[1]).initialize(
+        stakeManager.address,
+        stateManager.address,
+        voteManager.address,
+        jobManager.address
+      );
+      await assertRevert(tx, 'ACL: sender not authorized');
+    });
+
     it('should be able to initialize', async () => {
+      await Promise.all(await initializeContracts());
+
       await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
       await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));

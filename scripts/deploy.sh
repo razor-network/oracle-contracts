@@ -22,7 +22,7 @@ cp -r artifacts deployed/$ENV/abi
 cat .contract-deployment.tmp.json | jq '.' > deployed/$ENV/addresses.json
 rm -rf .contract-deployment.tmp.json
 
-if [[ -f "deployed/$ENV/addresses.json" ]]
+if [[ -f "./.previous-deployment-addresses" ]]
 then
     rm -rf .previous-deployment-addresses
 fi
