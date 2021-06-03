@@ -25,7 +25,7 @@ const GWEI = 1000000000;
 const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
-  matic: 80001,
+  matic_testnet: 80001,
 };
 
 module.exports = {
@@ -61,7 +61,7 @@ module.exports = {
       gas: 7700000,
       gasPrice: 1 * GWEI,
     },
-    matic: {
+    matic_testnet: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
