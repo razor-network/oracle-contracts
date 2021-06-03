@@ -6,7 +6,7 @@ cache/
 deployed/ganache
 .env
 .env.goerli
-.env.matic
+.env.matic_testnet
 node_modules/
 .DS_Store
 .previous-deployment-addresses
