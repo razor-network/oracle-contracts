@@ -14,7 +14,7 @@ library Constants {
     function unstakeLockPeriod() public pure returns(uint256) { return(1); }
     function withdrawLockPeriod() public pure returns(uint256) { return(1); }
     function maxAltBlocks() public pure returns(uint256) { return(5); }
-    function epochLength() public pure returns(uint256) { return(40); }
+    function epochLength() public pure returns(uint256) { return(300); }
     function numStates() public pure returns(uint256) { return(4); }
     function exposureDenominator() public pure returns(uint256) { return(1000); }
 
