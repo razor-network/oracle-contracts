@@ -7,12 +7,12 @@ const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 
 describe('JobManager', function () {
   let signers;
-  let constants;
+  let parameters;
   let delegator;
   let jobManager;
 
   before(async () => {
-    ({ constants, delegator, jobManager } = await setupContracts());
+    ({ parameters, delegator, jobManager } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
@@ -43,7 +43,7 @@ describe('JobManager', function () {
       const name = 'test2';
       const repeat = true;
       await jobManager.createJob(url, selector, name, repeat);
-      await jobManager.grantRole(await constants.getJobConfirmerHash(), signers[0].address);
+      await jobManager.grantRole(await parameters.getJobConfirmerHash(), signers[0].address);
       await jobManager.fulfillJob(2, 222);
     });
   });
