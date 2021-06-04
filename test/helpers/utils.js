@@ -84,7 +84,7 @@ const getIteration = async (stakeManager, random, staker) => {
   const { stake } = staker;
   const stakerId = staker.id;
   const { biggestStake } = await getBiggestStakeAndId(stakeManager);
-  const blockHashes = await random.blockHashes(NUM_BLOCKS);
+  const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
 
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, blockHashes);

@@ -30,18 +30,18 @@ describe('BlockManager', function () {
   let random;
   let schellingCoin;
   let stakeManager;
-  let stateManager;
+  let parameters;
   let voteManager;
   let initializeContracts;
 
   before(async () => {
     ({
       blockManager,
+      parameters,
       jobManager,
       random,
       schellingCoin,
       stakeManager,
-      stateManager,
       voteManager,
       initializeContracts,
     } = await setupContracts());
@@ -76,7 +76,7 @@ describe('BlockManager', function () {
     it('should not be able to initiliaze BlockManager contract without admin role', async () => {
       const tx = blockManager.connect(signers[1]).initialize(
         stakeManager.address,
-        stateManager.address,
+        parameters.address,
         voteManager.address,
         jobManager.address
       );

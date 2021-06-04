@@ -15,26 +15,24 @@ module.exports = async () => {
   const signers = await ethers.getSigners();
 
   const {
-    Constants: constantsAddress,
     Random: randomAddress,
+    Parameters: parametersAddress,
     BlockManager: blockManagerAddress,
     JobManager: jobManagerAddress,
     StakeManager: stakeManagerAddress,
-    StateManager: stateManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
     SchellingCoin: schellingCoinAddress,
     Faucet: faucetAddress,
   } = await readDeploymentFile();
 
-  const constantsDependency = { Constants: constantsAddress };
-  const constantsAndRandomDependency = { Constants: constantsAddress, Random: randomAddress };
+  const randomLibraryDependency = { Random: randomAddress };
 
-  const { contractInstance: constants } = await getdeployedContractInstance('Constants', constantsAddress);
-  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, constantsAndRandomDependency);
-  const { contractInstance: jobManager } = await getdeployedContractInstance('JobManager', jobManagerAddress, constantsDependency);
-  const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress, constantsDependency);
-  const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress, constantsDependency);
+  const { contractInstance: parameters } = await getdeployedContractInstance('Parameters', parametersAddress);
+  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
+  const { contractInstance: jobManager } = await getdeployedContractInstance('JobManager', jobManagerAddress);
+  const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
+  const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
 
@@ -71,15 +69,15 @@ module.exports = async () => {
     pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
   }
 
-  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, stateManagerAddress, voteManagerAddress, jobManagerAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, stateManagerAddress, blockManagerAddress));
-  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, voteManagerAddress, blockManagerAddress, stateManagerAddress));
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, voteManagerAddress, jobManagerAddress, parametersAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
-  pendingTransactions.push(await jobManager.grantRole(await constants.getJobConfirmerHash(), blockManagerAddress));
-  pendingTransactions.push(await blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakeModifierHash(), blockManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakeModifierHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManagerAddress));
+  pendingTransactions.push(await jobManager.grantRole(await parameters.getJobConfirmerHash(), blockManagerAddress));
+  pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
 
   pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
 

@@ -19,8 +19,8 @@ describe('StakeManager', function () {
     let signers;
     let schellingCoin;
     let blockManager;
+    let parameters;
     let stakeManager;
-    let stateManager;
     let voteManager;
     let initializeContracts;
 
@@ -29,7 +29,7 @@ describe('StakeManager', function () {
         schellingCoin,
         blockManager,
         stakeManager,
-        stateManager,
+        parameters,
         voteManager,
         initializeContracts,
       } = await setupContracts());
@@ -51,7 +51,7 @@ describe('StakeManager', function () {
         schellingCoin.address,
         voteManager.address,
         blockManager.address,
-        stateManager.address
+        parameters.address
       );
       await assertRevert(tx, 'ACL: sender not authorized');
     });
