@@ -14,6 +14,7 @@
     "coverage:check": "istanbul check-coverage --statements 97 --branches 85 --functions 97 --lines 97",
     "deploy:ganache": "./scripts/deploy.sh ganache",
     "deploy:goerli": "./scripts/deploy.sh goerli",
+    "deploy:matic_mumbai_testnet": "./scripts/deploy.sh matic_mumbai_testnet",
     "lint": "npm run cp-ganache-env && npm run lint:sol && npm run lint:js",
     "lint:fix": "npm run lint:js:fix",
     "lint:js": "eslint \"**/*.js\"",
