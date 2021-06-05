@@ -11,9 +11,11 @@ interface IParameters {
     // penalty not reveal = 0.01% per epch
     function penaltyNotRevealNum() external view returns(uint256);
     function penaltyNotRevealDenom() external view returns(uint256);
+    function resetLockPenalty() external view returns(uint256);
     function minStake() external view returns(uint256);
     function unstakeLockPeriod() external view returns(uint256);
     function withdrawLockPeriod() external view returns(uint256);
+    function withdrawReleasePeriod() external view returns(uint256);
     function maxAltBlocks() external view returns(uint256);
     function epochLength() external view returns(uint256);
     function numStates() external view returns(uint256);

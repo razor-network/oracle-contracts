@@ -33,7 +33,6 @@ describe('StakeManager', function () {
     let voteManager;
     let initializeContracts;
     let stakedToken;
-    let blockManager;
     let random;
 
     before(async () => {
