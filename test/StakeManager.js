@@ -4,6 +4,7 @@ test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
 const { utils } = require('ethers');
+const { assert } = require('chai');
 const { DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -13,15 +14,14 @@ const {
   mineToNextEpoch,
   mineToNextState,
 } = require('./helpers/testHelpers');
-const { 
-  getEpoch, 
-  toBigNumber, 
+const {
+  getEpoch,
+  toBigNumber,
   tokenAmount,
   getBiggestStakeAndId,
-  getIteration
+  getIteration,
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
-const { assert } = require('chai');
 
 describe('StakeManager', function () {
   describe('SchellingCoin', async function () {
@@ -44,7 +44,7 @@ describe('StakeManager', function () {
         voteManager,
         initializeContracts,
         stakedToken,
-        random
+        random,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -77,8 +77,8 @@ describe('StakeManager', function () {
       await schellingCoin.transfer(signers[1].address, stake1);
       await schellingCoin.transfer(signers[2].address, stake1);
       await schellingCoin.transfer(signers[3].address, stake1);
-      await schellingCoin.transfer(signers[4].address, stake1);  // Chosen Staker by the Delegator
-      await schellingCoin.transfer(signers[5].address, stake1);  // Delegator
+      await schellingCoin.transfer(signers[4].address, stake1); // Chosen Staker by the Delegator
+      await schellingCoin.transfer(signers[5].address, stake1); // Delegator
     });
 
     it('should be able to stake', async function () {
@@ -147,28 +147,28 @@ describe('StakeManager', function () {
       assertBNEqual(staker.stake, stake2, 'Change in stake is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), prevBalance.add(sAmount), 'Amount of minted sRzR is not correct');
     });
-    it('Staker should be able to set toggle delegation acceptance', async function(){
+    it('Staker should be able to set toggle delegation acceptance', async function () {
       let staker = await stakeManager.getStaker(1);
       const status = staker.acceptDelegation;
       await stakeManager.connect(signers[1]).setDelegationAcceptance(!status);
       staker = await stakeManager.getStaker(1);
-      assertBNEqual(staker.acceptDelegation , !status);
+      assertBNEqual(staker.acceptDelegation, !status);
     });
 
-    it('Staker should be set commission' , async function(){
+    it('Staker should be set commission', async function () {
       let staker = await stakeManager.getStaker(1);
       const comm_rate = 5;
       await stakeManager.connect(signers[1]).setCommission(comm_rate);
       staker = await stakeManager.getStaker(1);
-      assertBNEqual(staker.commission  , comm_rate);
+      assertBNEqual(staker.commission, comm_rate);
     });
 
-    it('Staker should be able decrease commission' ,async function(){
+    it('Staker should be able decrease commission', async function () {
       let staker = await stakeManager.getStaker(1);
       const prev_comm_rate = staker.commission;
-      await stakeManager.connect(signers[1]).decreaseCommission(prev_comm_rate-1);
+      await stakeManager.connect(signers[1]).decreaseCommission(prev_comm_rate - 1);
       staker = await stakeManager.getStaker(1);
-      assertBNLessThan(staker.commission ,prev_comm_rate);
+      assertBNLessThan(staker.commission, prev_comm_rate);
     });
 
     it('Staker should be able to unstake when there is no existing lock', async function () {
@@ -214,7 +214,7 @@ describe('StakeManager', function () {
       const total_supply = await sToken.totalSupply();
       const rAmount = ((lock.amount).mul(staker.stake)).div(total_supply);
 
-      //commission deduction , although the change is evident when withdraw is done by the delegator .
+      // commission deduction , although the change is evident when withdraw is done by the delegator .
       const commission = ((rAmount).mul(staker.commission)).div(100);
 
       await mineToNextEpoch();
@@ -388,15 +388,14 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       await stakeManager.connect(signers[4]).setCommission(commission);
       const staker = await stakeManager.getStaker(4);
-      const acceptDelegation = staker.acceptDelegation;
+      const { acceptDelegation } = staker;
       assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
     });
 
-    it('chosen staker should stake atleast once' , async function () {
-      
+    it('chosen staker should stake atleast once', async function () {
       const staker = await stakeManager.getStaker(4);
       const notAStakerId = toBigNumber('0');
-      assertBNNotEqual(staker.id , notAStakerId);
+      assertBNNotEqual(staker.id, notAStakerId);
     });
 
     it('should be able to delegate stake to chosen one', async function () {
@@ -411,21 +410,21 @@ describe('StakeManager', function () {
       assertBNEqual(staker.stake, stake2);
     });
 
-    it('chosen staker should only be able to decrease the commission' , async function() {
-      //const staker = await stakeManager.getStaker(4);
-      const earlierCommission = 6; //Current Commission : 6% for staker 4
+    it('chosen staker should only be able to decrease the commission', async function () {
+      // const staker = await stakeManager.getStaker(4);
+      const earlierCommission = 6; // Current Commission : 6% for staker 4
       const updatedCommission1 = earlierCommission + 1; // 7%
       const updatedCommission2 = earlierCommission - 1; // 5%
       const tx = stakeManager.connect(signers[4]).decreaseCommission(updatedCommission1);
       await assertRevert(tx, 'Invalid Commission Update');
       await stakeManager.connect(signers[4]).decreaseCommission(updatedCommission2);
-      assert.isAbove(earlierCommission, updatedCommission2, 'Commission is decreased'); 
-    }); 
+      assert.isAbove(earlierCommission, updatedCommission2, 'Commission is decreased');
+    });
 
     it('Delegator should be able to unstake when there is no existing lock', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      const amount = tokenAmount('10000'); //unstaking partial amount
+      const amount = tokenAmount('10000'); // unstaking partial amount
       const staker = await stakeManager.getStaker(4);
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
@@ -433,7 +432,6 @@ describe('StakeManager', function () {
       assertBNEqual(lock.amount, amount);
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD);
     });
-
 
     it('Delegator should not be able to unstake when there is an existing lock', async function () {
       const epoch = await getEpoch();
@@ -458,29 +456,29 @@ describe('StakeManager', function () {
 
     it('Delegator should be able to withdraw after withdraw lock period', async function () {
       let staker = await stakeManager.getStaker(4);
-      const prevStake = (staker.stake); //520000
+      const prevStake = (staker.stake); // 520000
       const prevBalance = await schellingCoin.balanceOf(signers[5].address);
       const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const total_supply = await sToken.totalSupply();
-      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); //10000
-     
-      const newStake = prevStake.sub(rAmount); //510000
-      const commission = (rAmount.mul(staker.commission)).div(100); //5000
+      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); // 10000
+
+      const newStake = prevStake.sub(rAmount); // 510000
+      const commission = (rAmount.mul(staker.commission)).div(100); // 5000
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
       await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
       staker = await stakeManager.getStaker(4);
       assertBNEqual(Number(staker.stake), Number(newStake), 'Stakers stake should have decreased');
-      
+
       rAmount = rAmount.sub(commission);
       const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(rAmount);
-      assertBNEqual(Number(DelegatorBalance), Number(newBalance) , 'Delegators balance should be equal');
+      assertBNEqual(Number(DelegatorBalance), Number(newBalance), 'Delegators balance should be equal');
     });
 
-    it('Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded' , async function () {
+    it('Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded', async function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       let staker = await stakeManager.getStaker(4);
@@ -495,7 +493,7 @@ describe('StakeManager', function () {
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       await voteManager.connect(signers[4]).commit(epoch, commitment);
- 
+
       // reveal
       await mineToNextState();
       const proof = [];
@@ -505,7 +503,7 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[4].address);
-      
+
       // propose
       await mineToNextState();
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
@@ -519,8 +517,8 @@ describe('StakeManager', function () {
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID');  //4th staker proposed
-      
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
+
       staker = await stakeManager.getStaker(4);
       const stakeBefore = staker.stake;
       await mineToNextState(); // dispute
@@ -535,13 +533,13 @@ describe('StakeManager', function () {
       );
 
       await voteManager.connect(signers[4]).commit(epoch, commitment1);
-      staker = await stakeManager.getStaker(4);  
+      staker = await stakeManager.getStaker(4);
       const stakeAfter = staker.stake;
       assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded'); // Staker 4 gets Block Reward results in increase of valuation of sRZR
-      
+
       // Delagator unstakes
       epoch = await getEpoch();
-      const amount = tokenAmount('10000'); //unstaking partial amount
+      const amount = tokenAmount('10000'); // unstaking partial amount
       staker = await stakeManager.getStaker(4);
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
@@ -555,35 +553,35 @@ describe('StakeManager', function () {
 
       // Delegator withdraws
       epoch = await getEpoch();
-      const prevStake = (staker.stake); 
+      const prevStake = (staker.stake);
       const prevBalance = await schellingCoin.balanceOf(signers[5].address);
       lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const total_supply = await sToken.totalSupply();
-      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); //10000
-      let rAmountUnchanged = lock.amount // Amount to be tranferred to delegator if 1RZR = 1sRZR
+      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); // 10000
+      let rAmountUnchanged = lock.amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR
 
-      // As staker 2 takes in Block Rewards ,so there is increase in valuation of sRZR 
+      // As staker 2 takes in Block Rewards ,so there is increase in valuation of sRZR
       // due to which rAmount > rAmountUnchanged
 
-      const newStake = prevStake.sub(rAmount); 
+      const newStake = prevStake.sub(rAmount);
       const commission = (rAmount.mul(staker.commission)).div(100); // commission in accordance to rAmount
-      const commissionUnchanged = (rAmountUnchanged.mul(staker.commission)).div(100);// commisson in accordance to rAmountUnchanged where 1RZR= 1sRZR  
+      const commissionUnchanged = (rAmountUnchanged.mul(staker.commission)).div(100);// commisson in accordance to rAmountUnchanged where 1RZR= 1sRZR
       await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
       staker = await stakeManager.getStaker(4);
       assertBNEqual(Number(staker.stake), Number(newStake), 'Stakers stake should have decreased'); // checking withdraw is working
-      
+
       rAmount = rAmount.sub(commission);
       rAmountUnchanged = rAmountUnchanged.sub(commissionUnchanged);
       const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(rAmount);
       const newBalanaceUnchanged = prevBalance.add(rAmountUnchanged); // New balance of delegator after withdraw if 1RZR = 1sRZR
-      
+
       assertBNLessThan(newBalanaceUnchanged, DelegatorBalance, 'Delegators should receive more amount than expected due to increase in valuation of sRZR');
-      assertBNEqual(Number(DelegatorBalance), Number(newBalance) , 'Delegators balance should be equal');
+      assertBNEqual(Number(DelegatorBalance), Number(newBalance), 'Delegators balance should be equal');
     });
 
-    it('Delegators should receive less amount than expected after withdraw due to decrease in valuation of sRZR when chosen staker is penalized' , async function () {
+    it('Delegators should receive less amount than expected after withdraw due to decrease in valuation of sRZR when chosen staker is penalized', async function () {
       let staker = await stakeManager.getStaker(4);
       // triggering the inactivity penalty for chosen staker
       const epochsJumped = GRACE_PERIOD + 2;
@@ -597,7 +595,7 @@ describe('StakeManager', function () {
       const root = tree.root();
       const commitment = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await voteManager.connect(signers[4]).commit(epoch, commitment);
- 
+
       // reveal
       await mineToNextState();
       const proof = [];
@@ -609,11 +607,11 @@ describe('StakeManager', function () {
         signers[4].address);
 
       // Staker 4 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
-     
+
       // Delagator unstakes
       await mineToNextEpoch();
       epoch = await getEpoch();
-      const amount = tokenAmount('10000'); //unstaking partial amount
+      const amount = tokenAmount('10000'); // unstaking partial amount
       staker = await stakeManager.getStaker(4);
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
@@ -627,38 +625,33 @@ describe('StakeManager', function () {
 
       epoch = await getEpoch();
       staker = await stakeManager.getStaker(4);
-      const prevStake = (staker.stake); 
+      const prevStake = (staker.stake);
       const prevBalance = await schellingCoin.balanceOf(signers[5].address);
       lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const total_supply = await sToken.totalSupply();
-      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); //10000
-      let rAmountUnchanged = lock.amount // Amount to be tranferred to delegator if 1RZR = 1sRZR
+      let rAmount = (lock.amount.mul(staker.stake)).div(total_supply); // 10000
+      let rAmountUnchanged = lock.amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR
 
-      // As staker 4 takes in inactivity penalty ,so there is decrease in valuation of sRZR 
+      // As staker 4 takes in inactivity penalty ,so there is decrease in valuation of sRZR
       // due to which rAmount < rAmountUnchanged
 
-      const newStake = prevStake.sub(rAmount); 
+      const newStake = prevStake.sub(rAmount);
       const commission = (rAmount.mul(staker.commission)).div(100); // commission in accordance to rAmount
       const commissionUnchanged = (rAmountUnchanged.mul(staker.commission)).div(100);// commisson in accordance to rAmountUnchanged where 1RZR= 1sRZR
 
       await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
       staker = await stakeManager.getStaker(4);
       assertBNEqual(Number(staker.stake), Number(newStake), 'Stakers stake should have decreased'); // checking withdraw is working
-      
+
       rAmount = rAmount.sub(commission);
       rAmountUnchanged = rAmountUnchanged.sub(commissionUnchanged);
       const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(rAmount);
       const newBalanaceUnchanged = prevBalance.add(rAmountUnchanged); // New balance of delegator after withdraw if 1RZR = 1sRZR
-      
-      assertBNLessThan(DelegatorBalance, newBalanaceUnchanged, 'Delegators should receive less amount than expected due to decrease in valuation of sRZR');
-      assertBNEqual(Number(DelegatorBalance), Number(newBalance) , 'Delegators balance should be equal');
-    });
 
-    
+      assertBNLessThan(DelegatorBalance, newBalanaceUnchanged, 'Delegators should receive less amount than expected due to decrease in valuation of sRZR');
+      assertBNEqual(Number(DelegatorBalance), Number(newBalance), 'Delegators balance should be equal');
+    });
   });
 });
-
-
-

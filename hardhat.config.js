@@ -43,7 +43,7 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
-      allowUnlimitedContractSize : true
+      allowUnlimitedContractSize: true,
     },
     coverage: {
       url: 'http://localhost:8555',

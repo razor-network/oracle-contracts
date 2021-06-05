@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "cp-ganache-env": "copy .env.ganache .env",
+    "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
     "compile": "npx hardhat compile",
     "coverage": "hardhat coverage --network coverage && npm run coverage:check",

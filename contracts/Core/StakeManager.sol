@@ -9,6 +9,7 @@ import "../Initializable.sol";
 import "../SchellingCoin.sol";
 import "./ACL.sol";
 import "../StakedToken.sol";
+
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
@@ -161,9 +162,14 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
-            StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+            StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
-            uint256 toMint = _convertParentToChild(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs 
+            uint256 toMint =
+                _convertParentToChild(
+                    amount,
+                    stakers[stakerId].stake,
+                    totalSupply
+                ); // RZRs to sRZRs
 
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
@@ -190,14 +196,17 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 timestamp
     );
 
-     function resetStaker(uint256 epoch, uint256 amount)
+    function resetStaker(uint256 epoch, uint256 amount)
         external
         checkEpoch(epoch)
         checkState(parameters.commit())
     {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker.id = 0");
-        require(stakers[stakerId].stake == 0, "Reset : Stake is not equal to 0");
+        require(
+            stakers[stakerId].stake == 0,
+            "Reset : Stake is not equal to 0"
+        );
         require(
             amount >= parameters.minStake(),
             "Staked amount is less than minimum stake required"
@@ -207,16 +216,39 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "sch transfer failed"
         );
         StakedToken sToken = new StakedToken();
-        stakers[stakerId] = Structs.Staker(stakerId, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+        stakers[stakerId] = Structs.Staker(
+            stakerId,
+            msg.sender,
+            amount,
+            epoch,
+            0,
+            0,
+            false,
+            0,
+            address(sToken)
+        );
         sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
 
-        emit Staked(epoch, stakerId, 0, stakers[stakerId].stake, block.timestamp);
+        emit Staked(
+            epoch,
+            stakerId,
+            0,
+            stakers[stakerId].stake,
+            block.timestamp
+        );
     }
 
-    function delegate(uint256 epoch, uint256 amount, uint256 stakerId) external checkEpoch(epoch) checkState(parameters.commit()) {
-      
+    function delegate(
+        uint256 epoch,
+        uint256 amount,
+        uint256 stakerId
+    ) external checkEpoch(epoch) checkState(parameters.commit()) {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
+        require(
+            stakers[stakerId].tokenAddress !=
+                address(0x0000000000000000000000000000000000000000),
+            "Staker has not staked yet"
+        );
         // Step 1:  Razor Token Transfer : Amount
         require(
             sch.transferFrom(msg.sender, address(this), amount),
@@ -224,9 +256,10 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
 
         // Step 2 : Calculate Mintable amount
-        StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+        StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
-        uint256 toMint =  _convertParentToChild(amount, stakers[stakerId].stake, totalSupply);
+        uint256 toMint =
+            _convertParentToChild(amount, stakers[stakerId].stake, totalSupply);
 
         // Step 3: Increase given stakers stake by : Amount
         uint256 previousStake = stakers[stakerId].stake;
@@ -325,9 +358,12 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         // Transfer commission in case of delegators
         // Check commission rate >0
-        if(stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (rAmount*staker.commission)/100;
-            require(sch.transfer(staker._address, commission), "couldnt transfer");
+        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+            uint256 commission = (rAmount * staker.commission) / 100;
+            require(
+                sch.transfer(staker._address, commission),
+                "couldnt transfer"
+            );
             rAmount = rAmount - commission;
         }
 
@@ -337,15 +373,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
-    function _convertParentToChild(uint256 _amount, uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
-    {
+    function _convertParentToChild(
+        uint256 _amount,
+        uint256 _currentStake,
+        uint256 _totalSupply
+    ) internal pure returns (uint256) {
         // Follwoing require is included to cover case where
         // CurrentStake Becomes zero beacues of penalties, this is likely scenario when staker stakes is slashed to 0 for invalid block.
         // After this Staker is supposed to call resetStaker() to reset their token.
         // this will deploy new token so Staker can start again.
         // value of old token remain 0 indifinetly
-        require(_currentStake!=0, "Stakers Stake is 0");
-        return ((_amount*_totalSupply)/_currentStake);
+        require(_currentStake != 0, "Stakers Stake is 0");
+        return ((_amount * _totalSupply) / _currentStake);
     }
 
     function _convertChildToParent(
@@ -383,20 +422,23 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
         stakers[stakerId].commission = commission;
     }
-    function resetLock(uint256 stakerId) public 
-    {
 
+    function resetLock(uint256 stakerId) public {
         // Lock should be expired if you want to reset
-        require(locks[msg.sender][stakers[stakerId].tokenAddress].amount !=0, "Existing Lock doesnt exist");
+        require(
+            locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0,
+            "Existing Lock doesnt exist"
+        );
         require(stakers[stakerId].id != 0, "staker.id = 0");
 
         Structs.Staker storage staker = stakers[stakerId];
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
 
-        uint256 penalty = (staker.stake* parameters.resetLockPenalty())/100; 
+        uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
 
         // Converting Penalty into sAmount
-        uint256 sAmount = _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
+        uint256 sAmount =
+            _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
 
         //Burning sAmount from msg.sender
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
@@ -415,13 +457,15 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
 
         _resetLock(stakerId);
-        
-    }  
-
-    function _resetLock(uint256 stakerId) private 
-    {
-        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount:0, withdrawAfter:0});
     }
+
+    function _resetLock(uint256 stakerId) private {
+        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({
+            amount: 0,
+            withdrawAfter: 0
+        });
+    }
+
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
     /// @param stakerId The id of staker currently in consideration

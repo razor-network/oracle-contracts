@@ -8,7 +8,7 @@ const {
   assertBNNotEqual,
   mineToNextEpoch,
   mineToNextState,
-  assertRevert
+  assertRevert,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
@@ -19,7 +19,7 @@ const {
   getIteration,
   toBigNumber,
   tokenAmount,
-  getState
+  getState,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -482,7 +482,7 @@ describe('BlockManager', function () {
       let epoch = await getEpoch();
       // Here as in previous testcase "should be able to finalize Dispute" > Signer[5] stake was slashed to 0, he has to use resetStaker()
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[5]).resetStaker(epoch, tokenAmount('420000'))
+      await stakeManager.connect(signers[5]).resetStaker(epoch, tokenAmount('420000'));
 
       // Here as in previous testcase "all blocks being disputed" > Signer[6] stake was slashed to 0, he has to use resetStaker()
       await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
@@ -508,7 +508,7 @@ describe('BlockManager', function () {
       );
 
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
-      
+
       // Reveal
       await mineToNextState();
       const proof = [];

@@ -68,7 +68,7 @@ const setupContracts = async () => {
     structs,
     voteManager,
     initializeContracts,
-    stakedToken
+    stakedToken,
   };
 };
 
