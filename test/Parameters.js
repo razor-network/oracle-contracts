@@ -143,7 +143,6 @@ describe('Parameters contract Tests', async () => {
     await parameters.setGracePeriod(toBigNumber('14'));
     const gracePeriod = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, toBigNumber('14'));
-
   });
 
   it('parameters values should be initialized correctly', async () => {
