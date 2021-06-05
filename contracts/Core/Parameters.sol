@@ -129,4 +129,5 @@ contract Parameters is IParameters, ACL {
         return _STAKE_MODIFIER_HASH;
     }
     function withdrawReleasePeriod() public pure returns(uint256) { return(5);}
+    function resetLockPenalty() public pure returns(uint256) {return (1);}
 }

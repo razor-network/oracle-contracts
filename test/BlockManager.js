@@ -8,7 +8,7 @@ const {
   assertBNNotEqual,
   mineToNextEpoch,
   mineToNextState,
-  assertRevert,
+  assertRevert
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
@@ -19,6 +19,7 @@ const {
   getIteration,
   toBigNumber,
   tokenAmount,
+  getState
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -479,13 +480,13 @@ describe('BlockManager', function () {
       await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
       await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));
       let epoch = await getEpoch();
+      // Here as in previous testcase "should be able to finalize Dispute" > Signer[5] stake was slashed to 0, he has to use resetStaker()
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[5]).resetStaker(epoch, tokenAmount('420000'))
 
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
-
+      // Here as in previous testcase "all blocks being disputed" > Signer[6] stake was slashed to 0, he has to use resetStaker()
       await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
-
+      await stakeManager.connect(signers[6]).resetStaker(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
 
@@ -507,7 +508,7 @@ describe('BlockManager', function () {
       );
 
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
-
+      
       // Reveal
       await mineToNextState();
       const proof = [];

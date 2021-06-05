@@ -9,7 +9,6 @@ import "../Initializable.sol";
 import "../SchellingCoin.sol";
 import "./ACL.sol";
 import "../StakedToken.sol";
-
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
@@ -132,11 +131,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         checkEpoch(epoch)
         checkState(parameters.commit())
     {
-        // not allowed during reveal period
-        require(
-            parameters.getState() != parameters.reveal(),
-            "Incorrect state"
-        );
         require(
             amount >= parameters.minStake(),
             "staked amount is less than minimum stake required"
@@ -167,14 +161,14 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
+            StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+            uint256 totalSupply = sToken.totalSupply();
+            uint256 toMint = _convertParentToChild(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs 
+
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
-            uint256 totalSupply = sToken.totalSupply();
-            uint256 toMint =
-                _convertParentToChild(amount, previousStake, totalSupply); // RZRs to sRZRs
             sToken.mint(msg.sender, toMint);
         }
 
@@ -196,37 +190,49 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 timestamp
     );
 
-    function delegate(
-        uint256 epoch,
-        uint256 amount,
-        uint256 stakerId
-    ) external checkEpoch(epoch) checkState(parameters.commit()) {
-        require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+     function resetStaker(uint256 epoch, uint256 amount)
+        external
+        checkEpoch(epoch)
+        checkState(parameters.commit())
+    {
+        uint256 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker.id = 0");
+        require(stakers[stakerId].stake == 0, "Reset : Stake is not equal to 0");
         require(
-            stakers[stakerId].tokenAddress !=
-                address(0x0000000000000000000000000000000000000000),
-            "Staker has not staked yet"
+            amount >= parameters.minStake(),
+            "Staked amount is less than minimum stake required"
         );
         require(
-            parameters.getState() != parameters.reveal(),
-            "Incorrect state"
+            sch.transferFrom(msg.sender, address(this), amount),
+            "sch transfer failed"
         );
+        StakedToken sToken = new StakedToken();
+        stakers[stakerId] = Structs.Staker(stakerId, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+        sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
 
+        emit Staked(epoch, stakerId, 0, stakers[stakerId].stake, block.timestamp);
+    }
+
+    function delegate(uint256 epoch, uint256 amount, uint256 stakerId) external checkEpoch(epoch) checkState(parameters.commit()) {
+      
+        require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+        require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
         require(
             sch.transferFrom(msg.sender, address(this), amount),
             "RZR token transfer failed"
         );
 
-        // Step 2: Increase given stakers stake by : Amount
+        // Step 2 : Calculate Mintable amount
+        StakedToken sToken =  StakedToken(stakers[stakerId].tokenAddress);
+        uint256 totalSupply = sToken.totalSupply();
+        uint256 toMint =  _convertParentToChild(amount, stakers[stakerId].stake, totalSupply);
+
+        // Step 3: Increase given stakers stake by : Amount
         uint256 previousStake = stakers[stakerId].stake;
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
-        // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
-        uint256 totalSupply = sToken.totalSupply();
-        uint256 toMint =
-            _convertParentToChild(amount, previousStake, totalSupply);
+        // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
 
         emit Delegated(
@@ -317,16 +323,11 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         // Function to Reset the lock
         _resetLock(stakerId);
 
-        // Transfer commission
+        // Transfer commission in case of delegators
         // Check commission rate >0
-        if (staker.commission > 0) {
-            uint256 commission = (rAmount * staker.commission) / 100;
-            require(
-                sch.transfer(staker._address, commission),
-                "couldnt transfer"
-            );
-            // uint256 newStake = stakers[stakerId].stake+(blockReward);
-            // _setStakerStake(stakerId, newStake, "Block Reward", epoch);
+        if(stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+            uint256 commission = (rAmount*staker.commission)/100;
+            require(sch.transfer(staker._address, commission), "couldnt transfer");
             rAmount = rAmount - commission;
         }
 
@@ -336,20 +337,15 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
-    function _convertParentToChild(
-        uint256 _amount,
-        uint256 _currentStake,
-        uint256 _totalSupply
-    ) internal pure returns (uint256) {
-        // TODO : Check Follwoing if condition once if it can be exploited
-        // Its Included to cover
-        // Where currentStake and totalSupply becasue zero as staker/delegators has withdrawn their complete stake, to restart node, 1RZR=1sRZR
-        if (_currentStake == 0 && _totalSupply == 0) return _amount;
-
-        // TODO : Do we want this condition to be covered : CurrentStake Becomes zero beacues of penalties but Total Supply is there
-        // We return amount as it is to start from 1RZR=1sRZR again
-
-        return ((_amount * _totalSupply) / _currentStake);
+    function _convertParentToChild(uint256 _amount, uint256 _currentStake, uint256 _totalSupply) internal pure returns(uint256)
+    {
+        // Follwoing require is included to cover case where
+        // CurrentStake Becomes zero beacues of penalties, this is likely scenario when staker stakes is slashed to 0 for invalid block.
+        // After this Staker is supposed to call resetStaker() to reset their token.
+        // this will deploy new token so Staker can start again.
+        // value of old token remain 0 indifinetly
+        require(_currentStake!=0, "Stakers Stake is 0");
+        return ((_amount*_totalSupply)/_currentStake);
     }
 
     function _convertChildToParent(
@@ -387,16 +383,17 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
         stakers[stakerId].commission = commission;
     }
+    function resetLock(uint256 stakerId) public 
+    {
 
-    function resetLock(uint256 stakerId) public {
+        // Lock should be expired if you want to reset
+        require(locks[msg.sender][stakers[stakerId].tokenAddress].amount !=0, "Existing Lock doesnt exist");
         require(stakers[stakerId].id != 0, "staker.id = 0");
 
         Structs.Staker storage staker = stakers[stakerId];
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
 
-        uint256 penalty = 5*(10**uint256(18)); // this would be in RZR, Define it in constants
-        // 1.Constant
-        // 2.Propotonal to Stake and Epoch passed ?
+        uint256 penalty = (staker.stake* parameters.resetLockPenalty())/100; 
 
         // Converting Penalty into sAmount
         uint256 sAmount = _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
