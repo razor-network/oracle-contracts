@@ -31,7 +31,7 @@ describe('Parameters contract Tests', async () => {
   const epochLength = toBigNumber('300');
   const totalStates = toBigNumber('4');
   const exposureDenominator = toBigNumber('1000');
-
+  const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('100');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
@@ -98,6 +98,9 @@ describe('Parameters contract Tests', async () => {
 
     tx = parameters.connect(signers[1]).setMinStake(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setGracePeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
   });
 
   it('parameters should be able to modify with admin role access', async () => {
@@ -136,6 +139,11 @@ describe('Parameters contract Tests', async () => {
     await parameters.setExposureDenominator(toBigNumber('13'));
     const exposureDenominator = await parameters.exposureDenominator();
     assertBNEqual(exposureDenominator, toBigNumber('13'));
+
+    await parameters.setGracePeriod(toBigNumber('14'));
+    const gracePeriod = await parameters.gracePeriod();
+    assertBNEqual(gracePeriod, toBigNumber('14'));
+
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -192,5 +200,8 @@ describe('Parameters contract Tests', async () => {
 
     const stakeModifierHashValue = await parameters.getStakeModifierHash();
     assertBNEqual(stakeModifierHash, stakeModifierHashValue);
+
+    const gracePeriodValue = await parameters.gracePeriod();
+    assertBNEqual(gracePeriod, gracePeriodValue);
   });
 });

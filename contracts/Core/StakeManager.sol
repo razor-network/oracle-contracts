@@ -334,7 +334,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @notice Calculates the inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
+    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
         //If no of inactive epochs falls under grace period, do not penalise.
         if (epochs <= parameters.gracePeriod()) {
             return(stakeValue);
