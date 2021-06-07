@@ -1,0 +1,281 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "IBlockManager",
+  "sourceName": "contracts/Core/interface/IBlockManager.sol",
+  "abi": [
+    {
+      "inputs": [],
+      "name": "confirmBlock",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBlock",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "proposerId",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "jobIds",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "medians",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "lowerCutoffs",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256[]",
+              "name": "higherCutoffs",
+              "type": "uint256[]"
+            },
+            {
+              "internalType": "uint256",
+              "name": "iteration",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "biggestStake",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bool",
+              "name": "valid",
+              "type": "bool"
+            }
+          ],
+          "internalType": "struct Structs.Block",
+          "name": "_block",
+          "type": "tuple"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getBlockMedians",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_blockMedians",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getHigherCutoffs",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_higherCutoffs",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getLowerCutoffs",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_lowerCutoffs",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "getNumProposedBlocks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "proposedBlock",
+          "type": "uint256"
+        }
+      ],
+      "name": "getProposedBlockMedians",
+      "outputs": [
+        {
+          "internalType": "uint256[]",
+          "name": "_blockMedians",
+          "type": "uint256[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "sorted",
+          "type": "uint256[]"
+        }
+      ],
+      "name": "giveSorted",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "biggestStakerId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "stakerId",
+          "type": "uint256"
+        }
+      ],
+      "name": "isElectedProposer",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "jobIds",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "medians",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "lowerCutoffs",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256[]",
+          "name": "higherCutoffs",
+          "type": "uint256[]"
+        },
+        {
+          "internalType": "uint256",
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "biggestStakerId",
+          "type": "uint256"
+        }
+      ],
+      "name": "propose",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "epoch",
+          "type": "uint256"
+        }
+      ],
+      "name": "resetDispute",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x",
+  "deployedBytecode": "0x",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

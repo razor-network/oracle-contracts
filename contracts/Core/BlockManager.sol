@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
-import "./interface/IStateManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
-import "../lib/Constants.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
 
 contract BlockManager is Initializable, ACL, BlockStorage {
-  
+    
+    IParameters public parameters;
     IStakeManager public stakeManager;
-    IStateManager public stateManager;
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
@@ -42,26 +41,26 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     );    
 
     modifier checkEpoch (uint256 epoch) {
-        require(epoch == stateManager.getEpoch(), "incorrect epoch");
+        require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
     modifier checkState (uint256 state) {
-        require(state == stateManager.getState(), "incorrect state");
+        require(state == parameters.getState(), "incorrect state");
         _;
     }
 
     function initialize (
         address stakeManagerAddress,
-        address stateManagerAddress,
         address voteManagerAddress,
-        address assetManagerAddress
+        address assetManagerAddress,
+        address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         stakeManager = IStakeManager(stakeManagerAddress);
-        stateManager = IStateManager(stateManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
+        parameters = IParameters(parametersAddress);
     }
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
@@ -133,12 +132,12 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256[] memory higherCutoffs,
         uint256 iteration,
         uint256 biggestStakerId
-    ) public initialized checkEpoch(epoch) checkState(Constants.propose()) 
+    ) public initialized checkEpoch(epoch) checkState(parameters.propose()) 
     {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
         require(
-            stakeManager.getStaker(proposerId).stake >= Constants.minStake(),
+            stakeManager.getStaker(proposerId).stake >= parameters.minStake(),
             "stake below minimum stake"
         );
 
@@ -178,7 +177,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         public
         initialized
         checkEpoch(epoch)
-        checkState(Constants.dispute()) 
+        checkState(parameters.dispute()) 
     {
         uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
         uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(4);
@@ -215,13 +214,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(
         uint256 epoch
-    ) public initialized checkEpoch(epoch) checkState(Constants.dispute())
+    ) public initialized checkEpoch(epoch) checkState(parameters.dispute())
     {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
-    public initialized checkEpoch(epoch) checkState(Constants.dispute()) {
+    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
@@ -243,8 +242,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function confirmBlock() public initialized onlyRole(Constants.getBlockConfirmerHash()) {
-        uint256 epoch = stateManager.getEpoch();
+    function confirmBlock() public initialized onlyRole(parameters.getBlockConfirmerHash()) {
+        uint256 epoch = parameters.getEpoch();
         
         for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
@@ -280,10 +279,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     {   
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
-        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)))+(1)) != stakerId) {
+        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)), parameters.epochLength())+(1)) != stakerId) {
             return false;
         }
-        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)));
+        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)), parameters.epochLength());
         uint256 rand = uint256(randHash)%(2**32);
         uint256 biggestStake = stakeManager.getStaker(biggestStakerId).stake;
         if (rand*(biggestStake) > stakeManager.getStaker(stakerId).stake*(2**32)) return(false);
@@ -315,7 +314,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
         proposedBlocks[epoch][pushAt] = _block;
 
-        if (proposedBlocks[epoch].length > Constants.maxAltBlocks()) {
+        if (proposedBlocks[epoch].length > parameters.maxAltBlocks()) {
             delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
         }
     }

@@ -9,7 +9,7 @@ describe('Access Control Test', async () => {
   let signers;
   let snapShotId;
   let blockManager;
-  let constants;
+  let parameters;
   let assetManager;
   let stakeManager;
   let initializeContracts;
@@ -17,7 +17,7 @@ describe('Access Control Test', async () => {
 
   before(async () => {
     ({
-      blockManager, constants, assetManager, stakeManager, initializeContracts,
+      blockManager, parameters, assetManager, stakeManager, initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -41,20 +41,20 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await assetManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
-    await assetManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await assetManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
   });
 
   it('fulFillAsset() should be accessable by only AssetConfirmer', async () => {
-    const assetConfirmerHash = await constants.getAssetConfirmerHash();
+    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
     await assetManager.grantRole(assetConfirmerHash, signers[0].address);
     await assetManager.fulfillAsset(2, 222);
     await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
@@ -66,22 +66,22 @@ describe('Access Control Test', async () => {
     await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await blockManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await blockManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
-    await blockManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await blockManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await blockManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await blockManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
   });
 
   it('confirmBlock() should be accessable by BlockConfirmer', async () => {
-    // Wait for 40 blocks, as epoch should be greated 40, for confirmBlock method to work.
-    await waitNBlocks(40);
-    const blockConfirmerHash = await constants.getBlockConfirmerHash();
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+    await waitNBlocks(300);
+    const blockConfirmerHash = await parameters.getBlockConfirmerHash();
     await blockManager.grantRole(blockConfirmerHash, signers[0].address);
     await blockManager.confirmBlock();
     await blockManager.revokeRole(blockConfirmerHash, signers[0].address);
@@ -93,22 +93,22 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
   });
 
   it('slash() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await stakeManager.slash(1, signers[2].address, 1);
-    await stakeManager.revokeRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
   });
 
@@ -117,22 +117,22 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
   it('giveBlockReward() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await stakeManager.giveBlockReward(1, 1);
-    await stakeManager.revokeRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
@@ -141,22 +141,22 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
   });
 
   it('giveRewards() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await stakeManager.giveRewards(1, 1);
-    await stakeManager.revokeRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
   });
 
@@ -165,47 +165,47 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
   });
 
   it('givePenalties() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await stakeManager.givePenalties(1, 1);
-    await stakeManager.revokeRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
   });
 
   it('setStakerEpochLastRevealed() should not be accessable by anyone besides StakerActivityUpdater', async () => {
     // Checking if Anyone can access it\
-    // await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    // await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.setStakerEpochLastRevealed(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.setStakerEpochLastRevealed(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.setStakerEpochLastRevealed(1, 1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.setStakerEpochLastRevealed(1, 1), expectedRevertMessage);
   });
 
   it('setStakerEpochLastRevealed() should be accessable by StakerActivityUpdater', async () => {
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await stakeManager.setStakerEpochLastRevealed(1, 1);
-    await stakeManager.revokeRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.setStakerEpochLastRevealed(1, 1), expectedRevertMessage);
   });
 
@@ -214,22 +214,22 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await constants.getBlockConfirmerHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
-    await stakeManager.grantRole(await constants.getStakeModifierHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
   });
 
   it('updateCommitmentEpoch() should be accessable by StakerActivityUpdater', async () => {
-    await stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await stakeManager.updateCommitmentEpoch(1);
-    await stakeManager.revokeRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.revokeRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
   });
 
@@ -247,9 +247,9 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[1]).revokeRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
 
     // Old admin should not able to assign roles anymore
-    await assertRevert(stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address), expectedRevertMessage);
+    await assertRevert(stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address), expectedRevertMessage);
 
     // New admin should be able to assign roles
-    await stakeManager.connect(signers[1]).grantRole(await constants.getStakerActivityUpdaterHash(), signers[0].address);
+    await stakeManager.connect(signers[1]).grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
   });
 });

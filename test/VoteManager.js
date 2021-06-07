@@ -25,16 +25,16 @@ describe('VoteManager', function () {
   describe('BlockManager', function () {
     let signers;
     let blockManager;
+    let parameters;
     let random;
     let schellingCoin;
     let stakeManager;
-    let stateManager;
     let voteManager;
     let initializeContracts;
 
     before(async () => {
       ({
-        blockManager, random, schellingCoin, stakeManager, stateManager, voteManager, initializeContracts,
+        blockManager, parameters, random, schellingCoin, stakeManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -61,7 +61,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, stateManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, blockManager.address, parameters.address);
         await assertRevert(tx, 'ACL: sender not authorized');
       });
 
@@ -164,7 +164,7 @@ describe('VoteManager', function () {
         const stakeBefore2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
-        epoch = await stateManager.getEpoch();
+        epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
@@ -197,7 +197,7 @@ describe('VoteManager', function () {
       });
 
       it('should be able to reveal again but with no rewards for now', async function () {
-        const epoch = await stateManager.getEpoch();
+        const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
 
@@ -262,7 +262,7 @@ describe('VoteManager', function () {
         const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
-        epoch = await stateManager.getEpoch();
+        epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();

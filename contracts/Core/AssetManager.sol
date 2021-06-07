@@ -1,15 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IStateManager.sol";
+import "./interface/IParameters.sol";
 import "./storage/AssetStorage.sol";
-import "../lib/Constants.sol";
 import "./ACL.sol";
 
 
 contract AssetManager is ACL, AssetStorage {
 
-    IStateManager public stateManager;
+    IParameters public parameters;
 
     event JobCreated(
         uint256 id,
@@ -70,8 +69,8 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    constructor(address stateManagerAddress) {
-        stateManager = IStateManager(stateManagerAddress);
+    constructor(address parametersAddress) {
+       parameters = IParameters(parametersAddress);
     }
 
     function createJob (
@@ -81,7 +80,7 @@ contract AssetManager is ACL, AssetStorage {
         bool repeat
     ) external payable {
         numAssets = numAssets + 1;
-        uint256 epoch = stateManager.getEpoch();
+        uint256 epoch = parameters.getEpoch();
         Structs.Job memory job = Structs.Job(
             numAssets, 
             epoch, 
@@ -116,9 +115,9 @@ contract AssetManager is ACL, AssetStorage {
         uint256 value   
     ) 
         external 
-        onlyRole(Constants.getAssetConfirmerHash())
+        onlyRole(parameters.getAssetConfirmerHash())
     {
-        uint256 epoch = stateManager.getEpoch();
+        uint256 epoch = parameters.getEpoch();
         if(jobs[id].assetType == uint256(assetTypes.Job)){
 
             Structs.Job storage job = jobs[id];
@@ -168,11 +167,11 @@ contract AssetManager is ACL, AssetStorage {
         uint32 aggregationMethod
     ) external payable 
     {
-        require(aggregationMethod > 0 && aggregationMethod < Constants.getAggregationRange(),"Aggregation range out of bounds");
+        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
         require(jobIDs.length > 1,"Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        uint256 epoch = stateManager.getEpoch();
+        uint256 epoch = parameters.getEpoch();
         collections[numAssets].id = numAssets; 
         collections[numAssets].name = name; 
         collections[numAssets].aggregationMethod = aggregationMethod; 
@@ -208,7 +207,7 @@ contract AssetManager is ACL, AssetStorage {
         require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
         require(!collections[collectionID].jobIDExist[jobID],"Job exists in this collection");
         
-        uint256 epoch = stateManager.getEpoch();
+        uint256 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobIDExist[jobID] = true;
 

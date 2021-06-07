@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IStateManager.sol";
+import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IVoteManager.sol";
 import "./storage/StakeStorage.sol";
-import "../lib/Constants.sol";
-import "../lib/Constants.sol";
 import "../Initializable.sol";
 import "../SchellingCoin.sol";
 import "./ACL.sol";
@@ -18,10 +16,10 @@ import "./ACL.sol";
 
 contract StakeManager is Initializable, ACL, StakeStorage {
 
+    IParameters public parameters;
     SchellingCoin public sch;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
-    IStateManager public stateManager;
 
     event StakeChange(
         uint256 indexed stakerId,
@@ -70,12 +68,12 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     );
 
     modifier checkEpoch (uint256 epoch) {
-        require(epoch == stateManager.getEpoch(), "incorrect epoch");
+        require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
     modifier checkState (uint256 state) {
-        require(state == stateManager.getState(), "incorrect state");
+        require(state == parameters.getState(), "incorrect state");
         _;
     }
 
@@ -86,18 +84,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param schAddress The address of the Schelling token ERC20 contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
-    /// @param stateManagerAddress The address of the StateManager contract
+    /// @param parametersAddress The address of the StateManager contract
     function initialize (
         address schAddress,
         address voteManagersAddress,
         address blockManagerAddress,
-        address stateManagerAddress
+        address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         sch = SchellingCoin(schAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        stateManager = IStateManager(stateManagerAddress);
+       parameters = IParameters(parametersAddress);
     }
 
     /// @param _id The ID of the staker
@@ -105,7 +103,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function setStakerEpochLastRevealed(
         uint256 _id,
         uint256 _epochLastRevealed
-    ) external initialized onlyRole(Constants.getStakerActivityUpdaterHash())
+    ) external initialized onlyRole(parameters.getStakerActivityUpdaterHash())
     {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
@@ -113,12 +111,12 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param stakerId The ID of the staker
     function updateCommitmentEpoch(
         uint256 stakerId
-    ) external initialized onlyRole(Constants.getStakerActivityUpdaterHash())
+    ) external initialized onlyRole(parameters.getStakerActivityUpdaterHash())
     {
-        stakers[stakerId].epochLastCommitted = stateManager.getEpoch();
+        stakers[stakerId].epochLastCommitted = parameters.getEpoch();
     }
 
-    function updateBlockReward(uint256 _blockReward) external onlyRole(Constants.getDefaultAdminHash())
+    function updateBlockReward(uint256 _blockReward) external onlyRole(parameters.getDefaultAdminHash())
     {
         blockReward = _blockReward;
     }
@@ -133,12 +131,12 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     ) 
         external
         initialized
-        checkEpoch(epoch) checkState(Constants.commit()) 
+        checkEpoch(epoch) checkState(parameters.commit()) 
     {
         // not allowed during reveal period
-        require(stateManager.getState() != Constants.reveal(), "Incorrect state");
+        require(parameters.getState() != parameters.reveal(), "Incorrect state");
         require(
-            amount >= Constants.minStake(), 
+            amount >= parameters.minStake(), 
             "staked amount is less than minimum stake required"
         );
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
@@ -147,38 +145,38 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (stakerId == 0) {
             numStakers = numStakers+(1);
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0,
-            epoch+(Constants.unstakeLockPeriod()), 0);
+            epoch+(parameters.unstakeLockPeriod()), 0);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake+(amount);
-            stakers[stakerId].unstakeAfter = epoch+(Constants.unstakeLockPeriod());
+            stakers[stakerId].unstakeAfter = epoch+(parameters.unstakeLockPeriod());
             stakers[stakerId].withdrawAfter = 0;
         }
 
         emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
     }
 
-    /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
+    /// @notice staker must call unstake() and should wait for parameters.WITHDRAW_LOCK_PERIOD
     /// after which she can call withdraw() to finally Withdraw
     /// @param epoch The Epoch value for which staker is requesting to unstake
-    function unstake (uint256 epoch) external initialized checkEpoch(epoch) checkState(Constants.commit()) {
+    function unstake (uint256 epoch) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
         require(staker.unstakeAfter <= epoch && staker.unstakeAfter != 0, "locked");
         staker.unstakeAfter = 0;
-        staker.withdrawAfter = epoch+(Constants.withdrawLockPeriod());
+        staker.withdrawAfter = epoch+(parameters.withdrawLockPeriod());
         emit Unstaked(epoch, stakerId, staker.stake, staker.stake, block.timestamp);
     }
 
 
     /// @notice Helps stakers withdraw their stake if previously unstaked
     /// @param epoch The Epoch value for which staker is requesting a withdraw
-    function withdraw (uint256 epoch) external initialized checkEpoch(epoch) checkState(Constants.commit()) {
+    function withdraw (uint256 epoch) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakerIds[msg.sender];
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker doesnt exist");
@@ -188,7 +186,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "Withdraw epoch not reached"
         );
         require(
-            (staker.withdrawAfter - Constants.withdrawLockPeriod()) >= staker.epochLastRevealed,
+            (staker.withdrawAfter - parameters.withdrawLockPeriod()) >= staker.epochLastRevealed,
             "Participated in Withdraw lock period, Cant withdraw"
         );
         require(
@@ -211,7 +209,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function givePenalties(
         uint256 stakerId,
         uint256 epoch
-    ) external initialized onlyRole(Constants.getStakeModifierHash())
+    ) external initialized onlyRole(parameters.getStakeModifierHash())
     {
         _givePenalties(stakerId, epoch);
     }
@@ -223,7 +221,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function giveBlockReward(
         uint256 stakerId,
         uint256 epoch
-    ) external onlyRole(Constants.getStakeModifierHash())
+    ) external onlyRole(parameters.getStakeModifierHash())
     {
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
@@ -249,7 +247,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function giveRewards(
         uint256 stakerId,
         uint256 epoch
-    ) external initialized onlyRole(Constants.getStakeModifierHash())
+    ) external initialized onlyRole(parameters.getStakeModifierHash())
     {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakers[stakerId];
@@ -298,7 +296,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// transfer to bounty hunter half the schelling tokens of the stakers stake
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
-    function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(Constants.getStakeModifierHash()) {
+    function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(parameters.getStakeModifierHash()) {
         uint256 halfStake = stakers[id].stake/(2);
         _setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {
@@ -336,13 +334,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @notice Calculates the inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public pure returns(uint256) {
-        //not really inactive. do nothing. give 10 epoch grace
-        if (epochs < 10) {
+    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue) public view returns(uint256) {
+        //If no of inactive epochs falls under grace period, do not penalise.
+        if (epochs <= parameters.gracePeriod()) {
             return(stakeValue);
         }
 
-        uint256 penalty = ((epochs - 1) * (stakeValue*(Constants.penaltyNotRevealNum()))) / Constants.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue*(parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return(stakeValue-(penalty));
         } else {
@@ -372,10 +370,10 @@ contract StakeManager is Initializable, ACL, StakeStorage {
                                 thisStaker.epochLastRevealed :
                                 thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 penalizeEpochs = epoch-(epochLastActive);
+        uint256 inactiveEpochs = (epoch-epochLastActive==0)?0:epoch-epochLastActive-1;
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
-        uint256 currentStake = calculateInactivityPenalties(penalizeEpochs, previousStake);
+        uint256 currentStake = calculateInactivityPenalties(inactiveEpochs, previousStake);
         if (currentStake < previousStake) {
             _setStakerStake(thisStaker.id, currentStake, "Inactivity Penalty", epoch);
             uint256 prevRewardPool = rewardPool;
@@ -406,7 +404,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
                 if ((voteLastEpoch < lowerCutoffLastEpoch) || (voteLastEpoch > higherCutoffLastEpoch)) {
                     // WARNING: Potential security vulnerability. Could increase stake maliciously, need analysis
                     // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
-                    penalty = penalty + (previousStake/Constants.exposureDenominator());
+                    penalty = penalty + (previousStake/parameters.exposureDenominator());
                 }
             }
 

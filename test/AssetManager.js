@@ -15,11 +15,11 @@ const { toBigNumber } = require('./helpers/utils');
 
 describe('AssetManager', function () {
   let signers;
-  let constants;
+  let parameters;
   let assetManager;
 
   before(async () => {
-    ({ constants, assetManager } = await setupContracts());
+    ({ parameters, assetManager } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
@@ -83,7 +83,7 @@ describe('AssetManager', function () {
     });
 
     it('should fulfill result to the correct asset', async function () {
-      await assetManager.grantRole(await constants.getAssetConfirmerHash(), signers[0].address);
+      await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
       await assetManager.fulfillAsset(1, 111);
       await assetManager.fulfillAsset(2, 222);
       await assetManager.fulfillAsset(3, 333);
@@ -160,7 +160,7 @@ describe('AssetManager', function () {
     //  const name = 'test2';
     //  const repeat = true;
     //  await assetManager.createJob(url, selector, name, repeat);
-    //  //await assetManager.grantRole(await constants.getJobConfirmerHash(), signers[0].address);
+    //  //await assetManager.grantRole(await parameters.getJobConfirmerHash(), signers[0].address);
     //  await assetManager.fulfillJob(2, 222);
     // });
   });
