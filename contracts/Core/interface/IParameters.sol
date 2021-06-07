@@ -17,6 +17,7 @@ interface IParameters {
     function maxAltBlocks() external view returns(uint256);
     function epochLength() external view returns(uint256);
     function numStates() external view returns(uint256);
+    function gracePeriod() external view returns(uint256);
     function exposureDenominator() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
