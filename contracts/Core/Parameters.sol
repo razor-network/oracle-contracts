@@ -20,6 +20,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override numStates = 4;
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
+    uint256 public override aggregationRange = 3;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -29,8 +30,8 @@ contract Parameters is IParameters, ACL {
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 constant private _BLOCK_CONFIRMER_HASH = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f; 
     
-    // keccak256("JOB_CONFIRMER_ROLE")
-    bytes32 constant private _JOB_CONFIRMER_HASH = 0xbe7b58e17bf6adaa0f209cd0db8b128282fc68a42f2dd649b4d8ea579f1b078f;
+    // keccak256("ASSET_CONFIRMER_ROLE")
+    bytes32 constant private _ASSET_CONFIRMER_HASH = 0xed202a1bc048f9b31cb3937bc52e7c8fe76413f0674b9146ff4bcc15612ccbc2;
     
     // keccak256("STAKER_ACTIVITY_UPDATER_ROLE")
     bytes32 constant private _STAKER_ACTIVITY_UPDATER_HASH = 0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece;
@@ -78,6 +79,10 @@ contract Parameters is IParameters, ACL {
         gracePeriod = _gracePeriod;
     }
 
+    function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        aggregationRange = _aggregationRange;
+    }
+
     function getEpoch() external view override returns (uint256) {
         return(block.number/(epochLength));
     }
@@ -112,8 +117,8 @@ contract Parameters is IParameters, ACL {
         return DEFAULT_ADMIN_ROLE;
     }
 
-    function getJobConfirmerHash() external pure override returns (bytes32) {
-        return _JOB_CONFIRMER_HASH;
+    function getAssetConfirmerHash() external pure override returns (bytes32) {
+        return _ASSET_CONFIRMER_HASH;
     }
 
     function getStakerActivityUpdaterHash() external pure override returns (bytes32) {

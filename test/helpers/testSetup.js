@@ -18,7 +18,7 @@ const setupContracts = async () => {
   const Parameters = await ethers.getContractFactory('Parameters');
   const Delegator = await ethers.getContractFactory('Delegator');
   const Faucet = await ethers.getContractFactory('Faucet');
-  const JobManager = await ethers.getContractFactory('JobManager');
+  const AssetManager = await ethers.getContractFactory('AssetManager');
   const SchellingCoin = await ethers.getContractFactory('SchellingCoin');
   const StakeManager = await ethers.getContractFactory('StakeManager');
   const VoteManager = await ethers.getContractFactory('VoteManager');
@@ -26,7 +26,7 @@ const setupContracts = async () => {
   const parameters = await Parameters.deploy();
   const blockManager = await BlockManager.deploy();
   const delegator = await Delegator.deploy();
-  const jobManager = await JobManager.deploy(parameters.address);
+  const assetManager = await AssetManager.deploy(parameters.address);
   const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const voteManager = await VoteManager.deploy();
   const schellingCoin = await SchellingCoin.deploy();
@@ -36,23 +36,23 @@ const setupContracts = async () => {
   await blockManager.deployed();
   await delegator.deployed();
   await faucet.deployed();
-  await jobManager.deployed();
+  await assetManager.deployed();
   await schellingCoin.deployed();
   await stakeManager.deployed();
   await voteManager.deployed();
 
   const initializeContracts = async () => [
-    blockManager.initialize(stakeManager.address, voteManager.address, jobManager.address, parameters.address),
+    blockManager.initialize(stakeManager.address, voteManager.address, assetManager.address, parameters.address),
     voteManager.initialize(stakeManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(schellingCoin.address, voteManager.address, blockManager.address, parameters.address),
 
-    jobManager.grantRole(await parameters.getJobConfirmerHash(), blockManager.address),
+    assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
     blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManager.address),
     stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManager.address),
     stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManager.address),
     stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManager.address),
 
-    delegator.upgradeDelegate(jobManager.address),
+    delegator.upgradeDelegate(assetManager.address),
   ];
 
   return {
@@ -60,7 +60,7 @@ const setupContracts = async () => {
     parameters,
     delegator,
     faucet,
-    jobManager,
+    assetManager,
     random,
     schellingCoin,
     stakeManager,

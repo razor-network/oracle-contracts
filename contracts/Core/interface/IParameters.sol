@@ -18,11 +18,12 @@ interface IParameters {
     function epochLength() external view returns(uint256);
     function numStates() external view returns(uint256);
     function gracePeriod() external view returns(uint256);
+    function aggregationRange() external view returns(uint256);
     function exposureDenominator() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
 
-    function getJobConfirmerHash() external view returns(bytes32);
+    function getAssetConfirmerHash() external view returns(bytes32);
     function getBlockConfirmerHash() external view returns(bytes32);
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);

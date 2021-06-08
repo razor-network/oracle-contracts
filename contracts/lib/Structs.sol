@@ -21,7 +21,7 @@ library Structs {
 
     struct Block {
         uint256 proposerId;
-        uint256[] jobIds;
+        uint256[] ids;
         uint256[] medians;
         uint256[] lowerCutoffs;
         uint256[] higherCutoffs;
@@ -50,6 +50,20 @@ library Structs {
         uint256 credit;
         bool fulfilled;
         uint256 result;
+        uint256 assetType;
+    }
+
+    struct Collection{
+        uint256 id;
+        string name;
+        uint32 aggregationMethod;
+        uint256[] jobIDs; 
+        mapping(uint256=>bool) jobIDExist;
+        uint256 epoch;
+        address creator;
+        uint256 credit;
+        uint256 result;
+        uint256 assetType;
     }
 
 }

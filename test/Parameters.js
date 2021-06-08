@@ -33,9 +33,10 @@ describe('Parameters contract Tests', async () => {
   const exposureDenominator = toBigNumber('1000');
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('100');
+  const aggregationRange = toBigNumber('3');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
-  const jobConfirmerHash = utils.solidityKeccak256(['string'], ['JOB_CONFIRMER_ROLE']);
+  const assetConfirmerHash = utils.solidityKeccak256(['string'], ['ASSET_CONFIRMER_ROLE']);
   const stakerActivityUpdaterHash = utils.solidityKeccak256(['string'], ['STAKER_ACTIVITY_UPDATER_ROLE']);
   const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
 
@@ -101,6 +102,9 @@ describe('Parameters contract Tests', async () => {
 
     tx = parameters.connect(signers[1]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
   });
 
   it('parameters should be able to modify with admin role access', async () => {
@@ -143,6 +147,10 @@ describe('Parameters contract Tests', async () => {
     await parameters.setGracePeriod(toBigNumber('14'));
     const gracePeriod = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, toBigNumber('14'));
+
+    await parameters.setAggregationRange(toBigNumber('15'));
+    const aggregationRange = await parameters.aggregationRange();
+    assertBNEqual(aggregationRange, toBigNumber('15'));
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -191,8 +199,8 @@ describe('Parameters contract Tests', async () => {
     const defaultAdminHashValue = await parameters.getDefaultAdminHash();
     assertBNEqual(DEFAULT_ADMIN_ROLE_HASH, defaultAdminHashValue);
 
-    const jobConfirmerHashValue = await parameters.getJobConfirmerHash();
-    assertBNEqual(jobConfirmerHash, jobConfirmerHashValue);
+    const assetConfirmerHashValue = await parameters.getAssetConfirmerHash();
+    assertBNEqual(assetConfirmerHash, assetConfirmerHashValue);
 
     const stakerActivityUpdaterHashValue = await parameters.getStakerActivityUpdaterHash();
     assertBNEqual(stakerActivityUpdaterHash, stakerActivityUpdaterHashValue);
@@ -202,5 +210,8 @@ describe('Parameters contract Tests', async () => {
 
     const gracePeriodValue = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, gracePeriodValue);
+
+    const aggregationRangeValue = await parameters.aggregationRange();
+    assertBNEqual(aggregationRange, aggregationRangeValue);
   });
 });

@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
-import "./interface/IJobManager.sol";
+import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
@@ -16,7 +16,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
-    IJobManager public jobManager;
+    IAssetManager public assetManager;
 
     event BlockConfirmed (
         uint256 epoch,
@@ -24,14 +24,14 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256[] medians,
         uint256[] lowerCutoffs,
         uint256[] higherCutoffs,
-        uint256[] jobIds,
+        uint256[] ids,
         uint256 timestamp
     );
 
     event Proposed (
         uint256 epoch,
         uint256 stakerId,
-        uint256[] jobIds,
+        uint256[] ids,
         uint256[] medians,
         uint256[] lowerCutoffs,
         uint256[] higherCutoffs,
@@ -53,14 +53,14 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     function initialize (
         address stakeManagerAddress,
         address voteManagerAddress,
-        address jobManagerAddress,
+        address assetManagerAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
-        jobManager = IJobManager(jobManagerAddress);
-       parameters = IParameters(parametersAddress);
+        assetManager = IAssetManager(assetManagerAddress);
+        parameters = IParameters(parametersAddress);
     }
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
@@ -126,7 +126,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint256 epoch,
-        uint256[] memory jobIds,
+        uint256[] memory ids,
         uint256[] memory medians,
         uint256[] memory lowerCutoffs,
         uint256[] memory higherCutoffs,
@@ -145,7 +145,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             epoch, 
             Structs.Block(
                 proposerId,
-                jobIds,
+                ids,
                 medians,
                 lowerCutoffs,
                 higherCutoffs,
@@ -158,7 +158,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         emit Proposed(
             epoch,
             proposerId,
-            jobIds,
+            ids,
             medians,
             lowerCutoffs,
             higherCutoffs,
@@ -231,7 +231,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 higherCutoff = disputes[epoch][msg.sender].higherCutoff;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
         //
-        require(median > 0, "Median can't be zero");
+        require(median > 0, "median can't be zero");
         if (proposedBlocks[epoch][blockId].medians[assetId] != median ||
             proposedBlocks[epoch][blockId].lowerCutoffs[assetId] != lowerCutoff ||
             proposedBlocks[epoch][blockId].higherCutoffs[assetId] != higherCutoff) {
@@ -254,10 +254,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
                                     proposedBlocks[epoch - 1][i].medians,
                                     proposedBlocks[epoch - 1][i].lowerCutoffs,
                                     proposedBlocks[epoch - 1][i].higherCutoffs,
-                                    proposedBlocks[epoch - 1][i].jobIds,
+                                    proposedBlocks[epoch - 1][i].ids,
                                     block.timestamp);
-                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].jobIds.length; j++) {
-                    jobManager.fulfillJob(proposedBlocks[epoch - 1][i].jobIds[j],
+                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
+                    assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
                                         proposedBlocks[epoch - 1][i].medians[j]);
                 }
                 stakeManager.giveBlockReward(proposerId, epoch);

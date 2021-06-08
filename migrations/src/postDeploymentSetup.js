@@ -18,7 +18,7 @@ module.exports = async () => {
     Random: randomAddress,
     Parameters: parametersAddress,
     BlockManager: blockManagerAddress,
-    JobManager: jobManagerAddress,
+    AssetManager: assetManagerAddress,
     StakeManager: stakeManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
@@ -30,7 +30,7 @@ module.exports = async () => {
 
   const { contractInstance: parameters } = await getdeployedContractInstance('Parameters', parametersAddress);
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
-  const { contractInstance: jobManager } = await getdeployedContractInstance('JobManager', jobManagerAddress);
+  const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
@@ -69,17 +69,17 @@ module.exports = async () => {
     pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
   }
 
-  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, voteManagerAddress, jobManagerAddress, parametersAddress));
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, voteManagerAddress, assetManagerAddress, parametersAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, blockManagerAddress, parametersAddress));
   pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
-  pendingTransactions.push(await jobManager.grantRole(await parameters.getJobConfirmerHash(), blockManagerAddress));
+  pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
 
-  pendingTransactions.push(await delegator.upgradeDelegate(jobManagerAddress));
+  pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 
   // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');
