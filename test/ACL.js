@@ -12,12 +12,13 @@ describe('Access Control Test', async () => {
   let parameters;
   let assetManager;
   let stakeManager;
+  let stakeRegulator;
   let initializeContracts;
   const expectedRevertMessage = 'ACL: sender not authorized';
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, initializeContracts,
+      blockManager, parameters, assetManager, stakeManager, stakeRegulator, initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -90,98 +91,98 @@ describe('Access Control Test', async () => {
 
   it('slash() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
+    await assertRevert(stakeRegulator.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.slash(1, signers[2].address, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(stakeRegulator.slash(1, signers[2].address, 1), expectedRevertMessage);
   });
 
   it('slash() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await stakeManager.slash(1, signers[2].address, 1);
-    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(stakeManager.slash(1, signers[2].address, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await stakeRegulator.slash(1, signers[2].address, 1);
+    await stakeRegulator.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(stakeRegulator.slash(1, signers[2].address, 1), expectedRevertMessage);
   });
 
   it('giveBlockReward() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
+    await assertRevert(stakeRegulator.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveBlockReward(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
   it('giveBlockReward() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await stakeManager.giveBlockReward(1, 1);
-    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(stakeManager.giveBlockReward(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await stakeRegulator.giveBlockReward(1, 1);
+    await stakeRegulator.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
   it('giveRewards() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
+    await assertRevert(stakeRegulator.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveRewards(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveRewards(1, 1), expectedRevertMessage);
   });
 
   it('giveRewards() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await stakeManager.giveRewards(1, 1);
-    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(stakeManager.giveRewards(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await stakeRegulator.giveRewards(1, 1);
+    await stakeRegulator.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(stakeRegulator.giveRewards(1, 1), expectedRevertMessage);
   });
 
   it('givePenalties() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
+    await assertRevert(stakeRegulator.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
-    await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(stakeRegulator.givePenalties(1, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(stakeRegulator.givePenalties(1, 1), expectedRevertMessage);
   });
 
   it('givePenalties() should be accessable by StakeModifier', async () => {
-    await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await stakeManager.givePenalties(1, 1);
-    await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(stakeManager.givePenalties(1, 1), expectedRevertMessage);
+    await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await stakeRegulator.givePenalties(1, 1);
+    await stakeRegulator.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(stakeRegulator.givePenalties(1, 1), expectedRevertMessage);
   });
 
   it('setStakerEpochLastRevealed() should not be accessable by anyone besides StakerActivityUpdater', async () => {
@@ -234,8 +235,8 @@ describe('Access Control Test', async () => {
   });
 
   it('Only Default Admin should able to update Block Reward', async () => {
-    await assertRevert(stakeManager.connect(signers[1]).updateBlockReward(100), expectedRevertMessage);
-    assert(await stakeManager.updateBlockReward(100), 'Admin not able to update BlockReward');
+    await assertRevert(stakeRegulator.connect(signers[1]).updateBlockReward(100), expectedRevertMessage);
+    assert(await stakeRegulator.updateBlockReward(100), 'Admin not able to update BlockReward');
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {

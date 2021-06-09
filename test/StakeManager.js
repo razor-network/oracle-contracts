@@ -30,6 +30,7 @@ describe('StakeManager', function () {
     let blockManager;
     let parameters;
     let stakeManager;
+    let stakeRegulator;
     let voteManager;
     let initializeContracts;
     let stakedToken;
@@ -40,6 +41,7 @@ describe('StakeManager', function () {
         schellingCoin,
         blockManager,
         stakeManager,
+        stakeRegulator,
         parameters,
         voteManager,
         initializeContracts,
@@ -62,8 +64,8 @@ describe('StakeManager', function () {
     it('should not be able to initiliaze StakeManager contract without admin role', async () => {
       const tx = stakeManager.connect(signers[1]).initialize(
         schellingCoin.address,
+        stakeRegulator.address,
         voteManager.address,
-        blockManager.address,
         parameters.address
       );
       await assertRevert(tx, 'ACL: sender not authorized');
@@ -678,7 +680,7 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       const tx = stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
       await assertRevert(tx, 'Release Period Passed');
-    });
+    }).timeout(30000);
 
     it('Delegetor/Staker should be penalized when calling reset lock', async function () {
       let staker = await stakeManager.getStaker(4);

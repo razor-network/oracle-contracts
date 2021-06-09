@@ -13,7 +13,6 @@ interface IParameters {
     function penaltyNotRevealDenom() external view returns(uint256);
     function resetLockPenalty() external view returns(uint256);
     function minStake() external view returns(uint256);
-    function unstakeLockPeriod() external view returns(uint256);
     function withdrawLockPeriod() external view returns(uint256);
     function withdrawReleasePeriod() external view returns(uint256);
     function maxAltBlocks() external view returns(uint256);
@@ -29,5 +28,7 @@ interface IParameters {
     function getBlockConfirmerHash() external view returns(bytes32);
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
+    function getStakeRegulatorHash() external view returns(bytes32);
+    function getRewardPoolModifierHash() external view returns(bytes32);
     function getDefaultAdminHash() external view returns(bytes32);
 }
