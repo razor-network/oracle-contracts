@@ -15,6 +15,7 @@ import "../StakedToken.sol";
 /// for stakers
 
 contract StakeManager is Initializable, ACL, StakeStorage {
+
     IParameters public parameters;
     IStakeRegulator public stakeRegulator;
     SchellingCoin public sch;
@@ -62,12 +63,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 timestamp
     );
 
-    modifier checkEpoch(uint256 epoch) {
+
+    modifier checkEpoch (uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
-    modifier checkState(uint256 state) {
+    modifier checkState (uint256 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }
@@ -75,12 +77,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param schAddress The address of the Schelling token ERC20 contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param parametersAddress The address of the StateManager contract
-    function initialize(
+    function initialize (
         address schAddress,
         address stakeRegulatorAddress,
         address voteManagersAddress,
         address parametersAddress
-    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         sch = SchellingCoin(schAddress);
         stakeRegulator = IStakeRegulator(stakeRegulatorAddress);
         voteManager = IVoteManager(voteManagersAddress);
@@ -89,19 +92,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @param _id The ID of the staker
     /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed)
-        external
-        initialized
-        onlyRole(parameters.getStakerActivityUpdaterHash())
+    function setStakerEpochLastRevealed(
+        uint256 _id,
+        uint256 _epochLastRevealed
+    ) external initialized onlyRole(parameters.getStakerActivityUpdaterHash())
     {
         stakers[_id].epochLastRevealed = _epochLastRevealed;
     }
 
     /// @param stakerId The ID of the staker
-    function updateCommitmentEpoch(uint256 stakerId)
-        external
-        initialized
-        onlyRole(parameters.getStakerActivityUpdaterHash())
+    function updateCommitmentEpoch(
+        uint256 stakerId
+    ) external initialized onlyRole(parameters.getStakerActivityUpdaterHash())
     {
         stakers[stakerId].epochLastCommitted = parameters.getEpoch();
     }
@@ -110,39 +112,27 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount of schelling tokens Staker stakes
-    function stake(uint256 epoch, uint256 amount)
+    function stake(
+        uint256 epoch,
+        uint256 amount
+    ) 
         external
         initialized
-        checkEpoch(epoch)
-        checkState(parameters.commit())
+        checkEpoch(epoch) checkState(parameters.commit()) 
     {
         require(
-            amount >= parameters.minStake(),
+            amount >= parameters.minStake(), 
             "staked amount is less than minimum stake required"
         );
-        require(
-            sch.transferFrom(msg.sender, address(this), amount),
-            "sch transfer failed"
-        );
+        require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(
-                numStakers,
-                msg.sender,
-                amount,
-                epoch,
-                0,
-                0,
-                false,
-                0,
-                address(sToken)
-            );
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
-
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
@@ -317,10 +307,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        require(
-            stakers[stakerId].commission == 0,
-            "Commission already intilised"
-        );
+        require(stakers[stakerId].commission == 0, "Commission already intilised");
         stakers[stakerId].commission = commission;
     }
 
@@ -328,10 +315,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");
-        require(
-            stakers[stakerId].commission > commission,
-            "Invalid Commission Update"
-        );
+        require(stakers[stakerId].commission > commission, "Invalid Commission Update");
         stakers[stakerId].commission = commission;
     }
 
@@ -399,22 +383,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param _address Address of the staker
     /// @return The staker ID
     function getStakerId(address _address) external view returns (uint256) {
-        return (stakerIds[_address]);
+        return(stakerIds[_address]);
     }
 
     /// @param _id The staker ID
     /// @return staker The Struct of staker information
-    function getStaker(uint256 _id)
-        external
-        view
-        returns (Structs.Staker memory staker)
-    {
-        return (stakers[_id]);
+    function getStaker(uint256 _id) external view returns(Structs.Staker memory staker) {
+        return(stakers[_id]);
     }
 
     /// @return The number of stakers in the razor network
-    function getNumStakers() external view returns (uint256) {
-        return (numStakers);
+    function getNumStakers() external view returns(uint256) {
+        return(numStakers);
     }
 
     function _convertChildToParent(
