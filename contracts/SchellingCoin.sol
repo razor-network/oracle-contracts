@@ -27,7 +27,7 @@ contract SchellingCoin is ERC20, ACL {
    }
     
     function addMinter(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
-                grantRole(MINTER_ROLE, account);
+        grantRole(MINTER_ROLE, account);
     }
 
     function removeMinter(address account) external  onlyRole(DEFAULT_ADMIN_ROLE)  {        
