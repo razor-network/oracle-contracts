@@ -7,7 +7,6 @@ import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "./storage/StakeRegulatorStorage.sol";
 import "../Initializable.sol";
-import "../SchellingCoin.sol";
 import "./ACL.sol";
 
 /// @title StakeManager
@@ -16,7 +15,6 @@ import "./ACL.sol";
 
 contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     IParameters public parameters;
-    SchellingCoin public sch;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
@@ -48,18 +46,16 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
         blockReward = _blockReward;
     }
 
-    /// @param schAddress The address of the Schelling token ERC20 contract
+    /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
     /// @param parametersAddress The address of the StateManager contract
     function initialize(
-        address schAddress,
         address stakeManagerAddress,
         address voteManagersAddress,
         address blockManagerAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        sch = SchellingCoin(schAddress);
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
@@ -72,11 +68,6 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     {
         blockReward = _blockReward;
     }
-
-    /// @notice stake during commit state only
-    /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
-    /// @param epoch The Epoch value for which staker is requesting to stake
-    /// @param amount The amount of schelling tokens Staker stakes
 
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
@@ -92,7 +83,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     }
 
     /// @notice The function gives block reward for one valid proposer in the
-    /// previous epoch by minting new tokens from the schelling token contract
+    /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId, uint256 epoch)
@@ -214,6 +205,8 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
         }
     }
 
+    /// @notice This function is used by StakeManager to increment reward pool,
+    // in case of resetLock() penalty
     function incrementRewardPool(uint256 penalty)
         external
         onlyRole(parameters.getRewardPoolModifierHash())

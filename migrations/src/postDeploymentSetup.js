@@ -75,8 +75,7 @@ module.exports = async () => {
     .push(await blockManager.initialize(stakeManagerAddress, stakeRegulatorAddress, voteManagerAddress, assetManagerAddress, parametersAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, stakeRegulatorAddress, blockManagerAddress, parametersAddress));
   pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, stakeRegulatorAddress, voteManagerAddress, parametersAddress));
-  pendingTransactions
-    .push(await stakeRegulator.initialize(schellingCoinAddress, stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await stakeRegulator.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
   pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));

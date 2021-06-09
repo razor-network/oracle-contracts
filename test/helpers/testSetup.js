@@ -49,7 +49,7 @@ const setupContracts = async () => {
     blockManager.initialize(stakeManager.address, stakeRegulator.address, voteManager.address, assetManager.address, parameters.address),
     voteManager.initialize(stakeManager.address, stakeRegulator.address, blockManager.address, parameters.address),
     stakeManager.initialize(schellingCoin.address, stakeRegulator.address, voteManager.address, parameters.address),
-    stakeRegulator.initialize(schellingCoin.address, stakeManager.address, voteManager.address, blockManager.address, parameters.address),
+    stakeRegulator.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 
     assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
     blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManager.address),

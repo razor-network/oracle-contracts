@@ -75,6 +75,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @param schAddress The address of the Schelling token ERC20 contract
+    /// @param stakeRegulatorAddress The address of the StakeRegulator contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param parametersAddress The address of the StateManager contract
     function initialize (
@@ -111,7 +112,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
-    /// @param amount The amount of schelling tokens Staker stakes
+    /// @param amount The amount in RZR
     function stake(
         uint256 epoch,
         uint256 amount
@@ -139,7 +140,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint =
-                _convertParentToChild(
+                _convertRZRtoSRZR(
                     amount,
                     stakers[stakerId].stake,
                     totalSupply
@@ -161,6 +162,10 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
     }
 
+    /// @notice Delegation
+    /// @param epoch The Epoch value for which staker is requesting to stake
+    /// @param amount The amount in RZR
+    /// @param stakerId The Id of staker whom you want to delegate
     function delegate(
         uint256 epoch,
         uint256 amount,
@@ -182,7 +187,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint =
-            _convertParentToChild(amount, stakers[stakerId].stake, totalSupply);
+            _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
         // Step 3: Increase given stakers stake by : Amount
         uint256 previousStake = stakers[stakerId].stake;
@@ -201,10 +206,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
     }
 
-    /// @notice staker must call unstake() and should wait for Constants.WITHDRAW_LOCK_PERIOD
-    /// after which she can call withdraw() to finally Withdraw
+    /// @notice staker/delegator must call unstake() to lock their sRZRs
+    // and should wait for params.withdraw_after period
+    // after which she can call withdraw() in withdrawReleasePeriod. 
+    // If this period pass, lock expires and she will have to resetLock() to able to withdraw again
     /// @param epoch The Epoch value for which staker is requesting to unstake
-    //we can have funciton overloading for being specific staker
+    /// @param stakerId The Id of staker associated with sRZR which user want to unstake
+    /// @param sAmount The Amount in sRZR
     function unstake(
         uint256 epoch,
         uint256 stakerId,
@@ -228,8 +236,14 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         //emit event here
     }
 
-    /// @notice Helps stakers withdraw their stake if previously unstaked
-    /// @param epoch The Epoch value for which staker is requesting a withdraw
+    /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
+    // To be eligible for withdraw it must be called with in withDrawReleasePeriod(), this is added to avoid front-run unstake/withdraw.
+    // For Staker, To be eligible for withdraw she must not participate in lock duration, this is added to avoid hit and run dispute attack.
+    // For Delegator, there is no such restriction
+    // Both Staker and Delegator should have their locked funds(sRZR) present in their wallet at time of if not withdraw reverts
+    // And they have to use resetLock()
+    /// @param epoch The Epoch value for which staker is requesting to unstake
+    /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
     function withdraw(uint256 epoch, uint256 stakerId)
         external
         initialized
@@ -269,7 +283,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         ); // Can Use ResetLock
 
         uint256 rAmount =
-            _convertChildToParent(
+            _convertSRZRToRZR(
                 lock.amount,
                 staker.stake,
                 sToken.totalSupply()
@@ -297,12 +311,14 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
+    /// @notice Used by staker to set delegation acceptance, its set as False by default
     function setDelegationAcceptance(bool status) external {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
     }
 
+    /// @notice Used by staker to set commision for delegation
     function setCommission(uint256 commission) external {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
@@ -311,6 +327,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         stakers[stakerId].commission = commission;
     }
 
+    /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
     function decreaseCommission(uint256 commission) external {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
@@ -319,6 +336,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         stakers[stakerId].commission = commission;
     }
 
+    /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
+    // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function resetLock(uint256 stakerId) external initialized {
         // Lock should be expired if you want to reset
         require(
@@ -334,7 +353,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         // Converting Penalty into sAmount
         uint256 sAmount =
-            _convertParentToChild(penalty, staker.stake, sToken.totalSupply());
+            _convertRZRtoSRZR(penalty, staker.stake, sToken.totalSupply());
 
         //Burning sAmount from msg.sender
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
@@ -348,8 +367,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         _resetLock(stakerId);
     }
 
-    /// @notice internal function for setting stake of the staker
-    /// called in the giveRewards function
+    /// @notice External function for setting stake of the staker
+    /// Used by StakeRegulator 
     /// @param _id of the staker
     /// @param _stake the amount of schelling tokens staked
     function setStakerStake(
@@ -370,12 +389,16 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
     }
 
-    function transferBounty(address bountyHunter, uint256 halfStake)
+    /// @notice External function for trasnfering bounty to bountyHunter
+    /// Used by StakeRegulator in slash()
+    /// @param bountyHunter The address of bountyHunter
+    /// @param bounty The bounty to be rewarded
+    function transferBounty(address bountyHunter, uint256 bounty)
         external
         onlyRole(parameters.getStakeRegulatorHash())
     {
         require(
-            sch.transfer(bountyHunter, halfStake),
+            sch.transfer(bountyHunter, bounty),
             "failed to transfer bounty"
         );
     }
@@ -397,24 +420,30 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         return(numStakers);
     }
 
-    function _convertChildToParent(
-        uint256 _amount,
+    /// @notice 1 sRZR = ? RZR
+    // Used to calcualte sRZR into RZR value
+    /// @param _sAmount The Amount in sRZR
+    /// @param _currentStake The cuurent stake of associated staker
+    function _convertSRZRToRZR(
+        uint256 _sAmount,
         uint256 _currentStake,
         uint256 _totalSupply
     ) internal pure returns (uint256) {
-        return ((_amount * _currentStake) / _totalSupply);
+        return ((_sAmount * _currentStake) / _totalSupply);
     }
 
-    function _convertParentToChild(
+    /// @notice 1 RZR = ? sRZR
+    // Used to calcualte RZR into sRZR value
+    /// @param _amount The Amount in RZR
+    /// @param _currentStake The cuurent stake of associated staker
+    /// @param _totalSupply The totalSupply of sRZR
+    function _convertRZRtoSRZR(
         uint256 _amount,
         uint256 _currentStake,
         uint256 _totalSupply
     ) internal pure returns (uint256) {
         // Follwoing require is included to cover case where
         // CurrentStake Becomes zero beacues of penalties, this is likely scenario when staker stakes is slashed to 0 for invalid block.
-        // After this Staker is supposed to call resetStaker() to reset their token.
-        // this will deploy new token so Staker can start again.
-        // value of old token remain 0 indifinetly
         require(_currentStake != 0, "Stakers Stake is 0");
         return ((_amount * _totalSupply) / _currentStake);
     }
