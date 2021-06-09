@@ -1,4 +1,3 @@
-const { BigNumber } = require('ethers');
 const { deployContract } = require('../migrationHelpers');
 
 const deployStakeManager = async () => {

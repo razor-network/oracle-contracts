@@ -19,7 +19,6 @@ const {
   getIteration,
   toBigNumber,
   tokenAmount,
-  getState,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -487,7 +486,6 @@ describe('BlockManager', function () {
       await schellingCoin.connect(signers[2]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('420000'));
 
-
       await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -546,7 +544,6 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      console.log(Number(proposedBlock.proposerId));
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
       // Calculate Dispute data

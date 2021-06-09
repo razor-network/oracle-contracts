@@ -98,7 +98,7 @@ describe('StakeManager', function () {
       const numStakers = await stakeManager.numStakers();
       assertBNEqual(numStakers, toBigNumber('1'));
       assertBNEqual(staker.id, toBigNumber('1'));
-      assertBNEqual(staker.stake, stake1), 'Change in stake is incorrect';
+      assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
 
@@ -140,11 +140,11 @@ describe('StakeManager', function () {
       const epoch = await getEpoch();
       let staker = await stakeManager.getStaker(1);
       const sToken = await stakedToken.attach(staker.tokenAddress);
-      const total_supply = await sToken.totalSupply();
+      const totalSupply = await sToken.totalSupply();
       const prevBalance = await sToken.balanceOf(staker._address);
 
       await stakeManager.connect(signers[1]).stake(epoch, stake);
-      const sAmount = ((stake).mul(total_supply)).div(staker.stake);
+      const sAmount = ((stake).mul(totalSupply)).div(staker.stake);
 
       staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, stake2, 'Change in stake is incorrect');
@@ -214,11 +214,8 @@ describe('StakeManager', function () {
       const prevBalance = await schellingCoin.balanceOf(staker._address);
       const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
-      const total_supply = await sToken.totalSupply();
-      const rAmount = ((lock.amount).mul(staker.stake)).div(total_supply);
-
-      // commission deduction , although the change is evident when withdraw is done by the delegator .
-      const commission = ((rAmount).mul(staker.commission)).div(100);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = ((lock.amount).mul(staker.stake)).div(totalSupply);
 
       await mineToNextEpoch();
       epoch = await getEpoch();
