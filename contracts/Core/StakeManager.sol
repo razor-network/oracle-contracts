@@ -66,6 +66,15 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 timestamp
     );
 
+    event Delegated(
+        uint256 epoch,
+        uint256 indexed stakerId,
+        address delegator,
+        uint256 previousStake,
+        uint256 newStake,
+        uint256 timestamp
+    );
+
     modifier checkEpoch(uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
@@ -187,62 +196,11 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
     }
 
-    event Delegated(
-        uint256 epoch,
-        uint256 indexed stakerId,
-        address delegator,
-        uint256 previousStake,
-        uint256 newStake,
-        uint256 timestamp
-    );
-
-    function resetStaker(uint256 epoch, uint256 amount)
-        external
-        checkEpoch(epoch)
-        checkState(parameters.commit())
-    {
-        uint256 stakerId = stakerIds[msg.sender];
-        require(stakerId != 0, "staker.id = 0");
-        require(
-            stakers[stakerId].stake == 0,
-            "Reset : Stake is not equal to 0"
-        );
-        require(
-            amount >= parameters.minStake(),
-            "Staked amount is less than minimum stake required"
-        );
-        require(
-            sch.transferFrom(msg.sender, address(this), amount),
-            "sch transfer failed"
-        );
-        StakedToken sToken = new StakedToken();
-        stakers[stakerId] = Structs.Staker(
-            stakerId,
-            msg.sender,
-            amount,
-            epoch,
-            0,
-            0,
-            false,
-            0,
-            address(sToken)
-        );
-        sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
-
-        emit Staked(
-            epoch,
-            stakerId,
-            0,
-            stakers[stakerId].stake,
-            block.timestamp
-        );
-    }
-
     function delegate(
         uint256 epoch,
         uint256 amount,
         uint256 stakerId
-    ) external checkEpoch(epoch) checkState(parameters.commit()) {
+    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(
             stakers[stakerId].tokenAddress !=
@@ -286,7 +244,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 epoch,
         uint256 stakerId,
         uint256 sAmount
-    ) external checkEpoch(epoch) checkState(parameters.commit()) {
+    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -309,6 +267,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param epoch The Epoch value for which staker is requesting a withdraw
     function withdraw(uint256 epoch, uint256 stakerId)
         external
+        initialized
         checkEpoch(epoch)
         checkState(parameters.commit())
     {
@@ -423,7 +382,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         stakers[stakerId].commission = commission;
     }
 
-    function resetLock(uint256 stakerId) public {
+    function resetLock(uint256 stakerId) public initialized {
         // Lock should be expired if you want to reset
         require(
             locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0,
