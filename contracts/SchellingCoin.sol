@@ -18,19 +18,19 @@ contract SchellingCoin is ERC20, ACL {
     uint256 public constant INITIAL_SUPPLY = 1000000000 * (10 ** uint256(DECIMALS));
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     
+    
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
     constructor () ERC20("SchellingCoin", "SCH") {
         _mint(msg.sender, INITIAL_SUPPLY);
-        
-    }
+   }
     
-    function addMinter(address account) external {
+    function addMinter(address account) external onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(MINTER_ROLE, account);
     }
 
-    function removeMinter(address account) external {
+    function removeMinter(address account) external  onlyRole(DEFAULT_ADMIN_ROLE)  {        
         revokeRole(MINTER_ROLE, account);
     }
 
