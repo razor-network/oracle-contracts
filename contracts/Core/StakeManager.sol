@@ -128,15 +128,15 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function stake(
         uint256 epoch,
         uint256 amount
-    ) 
+    )
         external
         initialized
-        checkEpoch(epoch) checkState(parameters.commit()) 
+        checkEpoch(epoch) checkState(parameters.commit())
     {
         // not allowed during reveal period
         require(parameters.getState() != parameters.reveal(), "Incorrect state");
         require(
-            amount >= parameters.minStake(), 
+            amount >= parameters.minStake(),
             "staked amount is less than minimum stake required"
         );
         require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
@@ -226,11 +226,11 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (blockReward > 0) {
             uint256 newStake = stakers[stakerId].stake+(blockReward);
             _setStakerStake(stakerId, newStake, "Block Reward", epoch);
-            
+
         }
         uint256 prevStakeGettingReward = stakeGettingReward;
         stakeGettingReward = 0;
-        
+
         emit StakeGettingRewardChange(
             epoch,
             prevStakeGettingReward,
@@ -238,7 +238,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             block.timestamp
         );
     }
-    
+
     /// @notice This function is called in VoteManager reveal function to give
     /// rewards to all the stakers who have correctly staked, committed, revealed
     /// the Values of assets according to the razor protocol rules.
@@ -262,7 +262,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (lowerCutoffsLastEpoch.length > 0) {
             uint256 rewardable = 0;
             for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
-                uint256 voteLastEpoch = 
+                uint256 voteLastEpoch =
                     voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 medianLastEpoch = mediansLastEpoch[i];
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
@@ -297,12 +297,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 halfStake = stakers[id].stake/(2);
-        _setStakerStake(id, 0, "Slashed", epoch);
-        if (halfStake > 1) {
-            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
+      uint256 halfStake = ((stakers[id].stake)*(parameters.percentSlash()))/(2*100);
+      uint256 Stake =  stakers[id].stake - ((stakers[id].stake*parameters.percentSlash())/100);
+      _setStakerStake(id, Stake , "Slashed", epoch);
+      if (halfStake > 1) {
+        require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
-    } 
+    }
 
     /// @param _address Address of the staker
     /// @return The staker ID
@@ -358,7 +359,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit StakeChange(_id, previousStake, _stake, _reason, _epoch, block.timestamp);
     }
 
-    /// @notice The function gives out penalties to stakers during commit. 
+    /// @notice The function gives out penalties to stakers during commit.
     /// The penalties are given for inactivity, failing to reveal
     /// , deviation from the median value of particular asset
     /// @param stakerId The staker id
@@ -391,7 +392,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
         uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
-        
+
 
         if (lowerCutoffsLastEpoch.length > 0) {
             uint256 penalty = 0;
@@ -399,7 +400,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
                 uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
                 uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
-                
+
 
                 if ((voteLastEpoch < lowerCutoffLastEpoch) || (voteLastEpoch > higherCutoffLastEpoch)) {
                     // WARNING: Potential security vulnerability. Could increase stake maliciously, need analysis
