@@ -301,7 +301,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 Stake =  stakers[id].stake - ((stakers[id].stake*parameters.percentSlashPenalty())/100);
         _setStakerStake(id, Stake , "Slashed", epoch);
         if (halfStake > 1) {
-        require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
+            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     } 
 
