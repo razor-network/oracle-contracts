@@ -405,7 +405,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @param _address Address of the staker
     /// @return The staker ID
-    function getStakerId(address _address) external view returns (uint256) {
+    function getStakerId(address _address) external view returns(uint256) {
         return(stakerIds[_address]);
     }
 
