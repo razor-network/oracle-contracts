@@ -11,4 +11,10 @@ contract AssetStorage {
     enum assetTypes { None, Job, Collection }
 
     uint256 public numAssets;
+
+    mapping (uint256 => Structs.Collection) public pendingCollections;
+    mapping (uint256 => Structs.Job) public pendingJobs;
+    uint256 public numPendingCollections;
+    uint256 public numPendingJobs;
+    uint256 public numActiveAssets;
 }

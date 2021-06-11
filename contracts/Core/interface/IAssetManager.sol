@@ -9,9 +9,9 @@ interface IAssetManager {
     function getAssetType(uint256 id) external view returns(uint256);
     function getJob(
         uint256 id
-    ) 
-        external 
-        view 
+    )
+        external
+        view
         returns(
             string memory url,
             string memory selector,
@@ -21,13 +21,19 @@ interface IAssetManager {
         );
     function getCollection(
         uint256 id
-    ) 
-        external 
-        view 
+    )
+        external
+        view
         returns(
-            string memory name, 
-            uint32 aggregationMethod, 
-            uint256[] memory jobIDs, 
+            string memory name,
+            uint32 aggregationMethod,
+            uint256[] memory jobIDs,
             uint256 result
         );
+
+    function getPendingJobs() external view returns(uint256);
+    function getPendingCollections() external view returns(uint256);
+    function getActiveAssets() external view returns(uint256);
+    function addPendingJobs() external;
+    function addPendingCollections() external;
 }
