@@ -21,6 +21,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
     uint256 public override aggregationRange = 3;
+    uint256 public override percentSlashPenalty = 100;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -81,6 +82,10 @@ contract Parameters is IParameters, ACL {
 
     function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
         aggregationRange = _aggregationRange;
+    }
+    
+    function setpercentSlashPenalty(uint256 _percentSlashPenalty) external onlyRole(DEFAULT_ADMIN_ROLE){
+        percentSlashPenalty = _percentSlashPenalty;
     }
 
     function getEpoch() external view override returns (uint256) {
