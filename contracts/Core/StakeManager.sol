@@ -297,10 +297,11 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 halfStake = stakers[id].stake/(2);
-        _setStakerStake(id, 0, "Slashed", epoch);
+        uint256 halfStake = ((stakers[id].stake)*(parameters.percentSlashPenalty()))/(2*100);
+        uint256 Stake =  stakers[id].stake - ((stakers[id].stake*parameters.percentSlashPenalty())/100);
+        _setStakerStake(id, Stake , "Slashed", epoch);
         if (halfStake > 1) {
-            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
+        require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
         }
     } 
 
