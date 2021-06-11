@@ -20,6 +20,7 @@ interface IParameters {
     function gracePeriod() external view returns(uint256);
     function aggregationRange() external view returns(uint256);
     function exposureDenominator() external view returns(uint256);
+    function percentSlashPenalty() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
 
