@@ -11,7 +11,6 @@ require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
-require('hardhat-contract-sizer');
 
 const {
   PROVIDER_HOST,
@@ -43,7 +42,6 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
-      allowUnlimitedContractSize: true,
     },
     coverage: {
       url: 'http://localhost:8555',
