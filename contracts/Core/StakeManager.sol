@@ -292,17 +292,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @notice The function is used by the Votemanager reveal function
-    /// to penalise the staker who lost his secret and make his stake zero and
-    /// transfer to bounty hunter half the schelling tokens of the stakers stake
+    /// to penalise the staker who lost his secret and make his stake less to 'Stake' and
+    /// transfer to bounty hunter "bountyReward" number of schelling tokens 
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash (uint256 id, address bountyHunter, uint256 epoch) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 halfStake = stakers[id].stake/(2);
-        _setStakerStake(id, 0, "Slashed", epoch);
-        if (halfStake > 1) {
-            require(sch.transfer(bountyHunter, halfStake), "failed to transfer bounty");
-        }
-    } 
+      uint256 bountyReward = ((stakers[id].stake)*(parameters.percentSlashPenalty()))/(2*100);
+      uint256 Stake =  stakers[id].stake - ((stakers[id].stake*parameters.percentSlashPenalty())/100);
+      _setStakerStake(id, Stake , "Slashed", epoch);
+      if (bountyReward > 1) {
+          require(sch.transfer(bountyHunter, bountyReward), "failed to transfer bounty");
+      }
+    }
 
     /// @param _address Address of the staker
     /// @return The staker ID
