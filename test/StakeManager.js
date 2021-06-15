@@ -15,9 +15,9 @@ const { getEpoch, toBigNumber, tokenAmount } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
 describe('StakeManager', function () {
-  describe('SchellingCoin', async function () {
+  describe('RAZOR', async function () {
     let signers;
-    let schellingCoin;
+    let Razor;
     let blockManager;
     let parameters;
     let stakeManager;
@@ -26,7 +26,7 @@ describe('StakeManager', function () {
 
     before(async () => {
       ({
-        schellingCoin,
+        Razor,
         blockManager,
         stakeManager,
         parameters,
@@ -48,7 +48,7 @@ describe('StakeManager', function () {
 
     it('should not be able to initiliaze StakeManager contract without admin role', async () => {
       const tx = stakeManager.connect(signers[1]).initialize(
-        schellingCoin.address,
+        Razor.address,
         voteManager.address,
         blockManager.address,
         parameters.address
@@ -61,15 +61,15 @@ describe('StakeManager', function () {
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');
-      await schellingCoin.transfer(signers[1].address, stake1);
-      await schellingCoin.transfer(signers[2].address, stake1);
-      await schellingCoin.transfer(signers[3].address, stake1);
+      await Razor.transfer(signers[1].address, stake1);
+      await Razor.transfer(signers[2].address, stake1);
+      await Razor.transfer(signers[3].address, stake1);
     });
 
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
-      await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake1);
+      await Razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       assertBNEqual(stakerId, toBigNumber('1'));
@@ -83,7 +83,7 @@ describe('StakeManager', function () {
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('19000');
-      await schellingCoin.connect(signers[2]).approve(stakeManager.address, stake);
+      await Razor.connect(signers[2]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[2]).stake(epoch, stake);
       const stakerId = await stakeManager.stakerIds(signers[2].address);
       assertBNEqual(stakerId, toBigNumber('2'));
@@ -109,7 +109,7 @@ describe('StakeManager', function () {
       const stake = tokenAmount('3000');
       const stake2 = tokenAmount('423000');
       await mineToNextEpoch();
-      await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
+      await Razor.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
       const staker = await stakeManager.getStaker(1);
@@ -118,10 +118,10 @@ describe('StakeManager', function () {
 
     it('should be able to reset the lock periods', async function () {
       // let stakeManager = await StakeManager.deployed()
-      // let sch = await SchellingCoin.deployed()
+      // let razor = await Razor.deployed()
       const stake = tokenAmount('20000');
       const stake2 = tokenAmount('443000');
-      await schellingCoin.connect(signers[1]).approve(stakeManager.address, stake);
+      await Razor.connect(signers[1]).approve(stakeManager.address, stake);
       const epoch = await getEpoch();
       await stakeManager.connect(signers[1]).stake(epoch, stake);
       const staker = await stakeManager.getStaker(1);
@@ -161,7 +161,7 @@ describe('StakeManager', function () {
       await (stakeManager.connect(signers[1]).withdraw(epoch));
       const staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, toBigNumber('0')); // Stake Should be zero
-      assertBNEqual(await schellingCoin.balanceOf(signers[1].address), stake); // Balance
+      assertBNEqual(await Razor.balanceOf(signers[1].address), stake); // Balance
     });
 
     it('should not be able to withdraw after withdraw lock period if voted in withdraw lock period', async function () {
@@ -206,7 +206,7 @@ describe('StakeManager', function () {
     it('should penalize staker if number of inactive epochs is greater than grace_period', async function () {
       let epoch = await getEpoch();
       const stake = tokenAmount('420000');
-      await schellingCoin.connect(signers[3]).approve(stakeManager.address, stake);
+      await Razor.connect(signers[3]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[3]).stake(epoch, stake);
       let staker = await stakeManager.getStaker(3);
       // Staker 3 stakes in epoch 13
@@ -290,7 +290,7 @@ describe('StakeManager', function () {
       // epochLastRevealed for staker 3  = 32 ( last test)
       // Staker 3 was inactive for 41- 32 - 1 = 8 epochs.
       const stake2 = tokenAmount('23000');
-      await schellingCoin.connect(signers[3]).approve(stakeManager.address, stake2);
+      await Razor.connect(signers[3]).approve(stakeManager.address, stake2);
       await stakeManager.connect(signers[3]).stake(epoch, stake2);
       // Staker 3 restakes during grace_period
       // But epochStaked is not updated , this epoch would still remain be considered as an inactive epoch for staker 3 .
