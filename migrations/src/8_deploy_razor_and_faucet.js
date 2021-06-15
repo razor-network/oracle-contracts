@@ -4,6 +4,7 @@ const {
   appendDeploymentFile,
   readOldDeploymentFile,
 } = require('../migrationHelpers');
+
 const { BigNumber } = ethers;
 const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const deployRAZORAndFaucet = async () => {
