@@ -1,5 +1,8 @@
 const { BLOCK_REWARD } = require('./constants');
 
+const { BigNumber } = ethers;
+const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
+
 const setupContracts = async () => {
   const Structs = await ethers.getContractFactory('Structs');
   const structs = await Structs.deploy();
@@ -29,7 +32,7 @@ const setupContracts = async () => {
   const assetManager = await AssetManager.deploy(parameters.address);
   const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
   const voteManager = await VoteManager.deploy();
-  const Razor = await RAZOR.deploy();
+  const Razor = await RAZOR.deploy(mintableSupply);
   const faucet = await Faucet.deploy(Razor.address);
 
   await parameters.deployed();

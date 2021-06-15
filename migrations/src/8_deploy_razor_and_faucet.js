@@ -4,10 +4,11 @@ const {
   appendDeploymentFile,
   readOldDeploymentFile,
 } = require('../migrationHelpers');
-
+const { BigNumber } = ethers;
+const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const deployRAZORAndFaucet = async () => {
   if (NETWORK !== 'mainnet' && SCHELLING_COIN_ADDRESS === '') {
-    const RAZOR = await deployContract('RAZOR', [], []);
+    const RAZOR = await deployContract('RAZOR', [], [mintableSupply]);
     await deployContract('Faucet', [], [RAZOR.address]);
   } else {
     const { Faucet, RAZOR } = await readOldDeploymentFile();
