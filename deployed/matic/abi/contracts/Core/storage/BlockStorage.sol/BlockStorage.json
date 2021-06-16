@@ -1,0 +1,133 @@
+{
+  "_format": "hh-sol-artifact-1",
+  "contractName": "BlockStorage",
+  "sourceName": "contracts/Core/storage/BlockStorage.sol",
+  "abi": [
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "blocks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposerId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "biggestStake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "valid",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "disputes",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "accWeight",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "median",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lowerCutoff",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "higherCutoff",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "lastVisited",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "assetId",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "proposedBlocks",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "proposerId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "iteration",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "biggestStake",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bool",
+          "name": "valid",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405234801561001057600080fd5b50610255806100206000396000f3fe608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b610059610054366004610172565b6100aa565b60405161006b969594939291906101f7565b60405180910390f35b6100876100823660046101b9565b6100e7565b60405161006b94939291906101da565b6100876100a536600461015a565b610130565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010357600080fd5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b60006020828403121561016b578081fd5b5035919050565b60008060408385031215610184578081fd5b82359150602083013573ffffffffffffffffffffffffffffffffffffffff811681146101ae578182fd5b809150509250929050565b600080604083850312156101cb578182fd5b50508035926020909101359150565b938452602084019290925260408301521515606082015260800190565b958652602086019490945260408501929092526060840152608083015260a082015260c0019056fea2646970667358221220f5b8cd1e09410e6c4da2dbd27b1920804e740c9ed1c6489fd074234b0d2258cd64736f6c63430008000033",
+  "deployedBytecode": "0x608060405234801561001057600080fd5b50600436106100415760003560e01c8063828496d61461004657806392b4841114610074578063f25b3f9914610097575b600080fd5b610059610054366004610172565b6100aa565b60405161006b969594939291906101f7565b60405180910390f35b6100876100823660046101b9565b6100e7565b60405161006b94939291906101da565b6100876100a536600461015a565b610130565b6000602081815292815260408082209093529081522080546001820154600283015460038401546004850154600590950154939492939192909186565b6001602052816000526040600020818154811061010357600080fd5b60009182526020909120600890910201805460058201546006830154600790930154919450925060ff1684565b60026020526000908152604090208054600582015460068301546007909301549192909160ff1684565b60006020828403121561016b578081fd5b5035919050565b60008060408385031215610184578081fd5b82359150602083013573ffffffffffffffffffffffffffffffffffffffff811681146101ae578182fd5b809150509250929050565b600080604083850312156101cb578182fd5b50508035926020909101359150565b938452602084019290925260408301521515606082015260800190565b958652602086019490945260408501929092526060840152608083015260a082015260c0019056fea2646970667358221220f5b8cd1e09410e6c4da2dbd27b1920804e740c9ed1c6489fd074234b0d2258cd64736f6c63430008000033",
+  "linkReferences": {},
+  "deployedLinkReferences": {}
+}

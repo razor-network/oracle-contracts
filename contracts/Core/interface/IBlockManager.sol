@@ -19,7 +19,7 @@ interface IBlockManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint256 epoch,
-        uint256[] memory jobIds,
+        uint256[] memory ids,
         uint256[] memory medians,
         uint256[] memory lowerCutoffs,
         uint256[] memory higherCutoffs,

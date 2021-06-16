@@ -26,22 +26,22 @@ const { utils } = ethers;
 describe('BlockManager', function () {
   let signers;
   let blockManager;
-  let jobManager;
+  let assetManager;
   let random;
   let schellingCoin;
   let stakeManager;
-  let stateManager;
+  let parameters;
   let voteManager;
   let initializeContracts;
 
   before(async () => {
     ({
       blockManager,
-      jobManager,
+      parameters,
+      assetManager,
       random,
       schellingCoin,
       stakeManager,
-      stateManager,
       voteManager,
       initializeContracts,
     } = await setupContracts());
@@ -76,9 +76,9 @@ describe('BlockManager', function () {
     it('should not be able to initiliaze BlockManager contract without admin role', async () => {
       const tx = blockManager.connect(signers[1]).initialize(
         stakeManager.address,
-        stateManager.address,
+        parameters.address,
         voteManager.address,
-        jobManager.address
+        assetManager.address
       );
       await assertRevert(tx, 'ACL: sender not authorized');
     });
@@ -569,8 +569,8 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.assetId, toBigNumber('1'), 'assetId should match');
       assertBNEqual(dispute.accWeight, totalStakeRevealed, 'totalStakeRevealed should match');
       assertBNEqual(dispute.median, median, 'median should match');
-      assertBNEqual(dispute.median, lowerCutoff, 'lowerCutoff should match');
-      assertBNEqual(dispute.median, higherCutoff, 'higherCutoff should match');
+      assertBNEqual(dispute.lowerCutoff, lowerCutoff, 'lowerCutoff should match');
+      assertBNEqual(dispute.higherCutoff, higherCutoff, 'higherCutoff should match');
       assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
     });
   });
