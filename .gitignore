@@ -4,6 +4,9 @@ coverage/
 coverage.json
 cache/
 deployed/ganache
+deployed/goerli/abi
+deployed/matic/abi
+abi
 .env
 .env.goerli
 node_modules/
