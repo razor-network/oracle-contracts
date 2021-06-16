@@ -5,7 +5,7 @@ import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
-import "./storage/StakeRegulatorStorage.sol";
+import "./storage/RewardStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
@@ -13,7 +13,7 @@ import "./ACL.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
+contract RewardManager is Initializable, ACL, RewardStorage {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
@@ -77,7 +77,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     function givePenalties(uint256 stakerId, uint256 epoch)
         external
         initialized
-        onlyRole(parameters.getStakeModifierHash())
+        onlyRole(parameters.getRewardModifierHash())
     {
         _givePenalties(stakerId, epoch);
     }
@@ -88,7 +88,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId, uint256 epoch)
         external
-        onlyRole(parameters.getStakeModifierHash())
+        onlyRole(parameters.getRewardModifierHash())
     {
         if (blockReward > 0) {
             uint256 newStake =
@@ -119,7 +119,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     function giveRewards(uint256 stakerId, uint256 epoch)
         external
         initialized
-        onlyRole(parameters.getStakeModifierHash())
+        onlyRole(parameters.getRewardModifierHash())
     {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -197,7 +197,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
         uint256 id,
         address bountyHunter,
         uint256 epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) {
+    ) external onlyRole(parameters.getRewardModifierHash()) {
         uint256 halfStake = stakeManager.getStaker(id).stake / (2);
         stakeManager.setStakerStake(id, 0, "Slashed", epoch);
         if (halfStake > 1) {
@@ -209,7 +209,7 @@ contract StakeRegulator is Initializable, ACL, StakeRegulatorStorage {
     // in case of resetLock() penalty
     function incrementRewardPool(uint256 penalty)
         external
-        onlyRole(parameters.getRewardPoolModifierHash())
+        onlyRole(parameters.getRewardModifierHash())
     {
         uint256 prevRewardPool = rewardPool;
         rewardPool = rewardPool + (penalty);

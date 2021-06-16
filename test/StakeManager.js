@@ -30,7 +30,7 @@ describe('StakeManager', function () {
     let blockManager;
     let parameters;
     let stakeManager;
-    let stakeRegulator;
+    let rewardManager;
     let voteManager;
     let initializeContracts;
     let stakedToken;
@@ -41,7 +41,7 @@ describe('StakeManager', function () {
         schellingCoin,
         blockManager,
         stakeManager,
-        stakeRegulator,
+        rewardManager,
         parameters,
         voteManager,
         initializeContracts,
@@ -64,7 +64,7 @@ describe('StakeManager', function () {
     it('should not be able to initiliaze StakeManager contract without admin role', async () => {
       const tx = stakeManager.connect(signers[1]).initialize(
         schellingCoin.address,
-        stakeRegulator.address,
+        rewardManager.address,
         voteManager.address,
         parameters.address
       );

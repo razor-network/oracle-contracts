@@ -29,13 +29,13 @@ describe('VoteManager', function () {
     let random;
     let schellingCoin;
     let stakeManager;
-    let stakeRegulator;
+    let rewardManager;
     let voteManager;
     let initializeContracts;
 
     before(async () => {
       ({
-        blockManager, parameters, random, schellingCoin, stakeManager, stakeRegulator, voteManager, initializeContracts,
+        blockManager, parameters, random, schellingCoin, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -62,7 +62,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, stakeRegulator.address, blockManager.address, parameters.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
         await assertRevert(tx, 'ACL: sender not authorized');
       });
 
@@ -193,7 +193,7 @@ describe('VoteManager', function () {
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded');
         assertBNEqual(stakeBefore2, stakeAfter2, 'Penalty should not be applied');
-        const stakeGettingReward = await stakeRegulator.stakeGettingReward();
+        const stakeGettingReward = await rewardManager.stakeGettingReward();
         assertBNEqual(stakeGettingReward, (stakeAfter2.add(stakeAfter)), 'Error 3');
       });
 
@@ -233,7 +233,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const rewardPool = await stakeRegulator.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         assertBNEqual(rewardPool, toBigNumber('0'));
@@ -289,9 +289,9 @@ describe('VoteManager', function () {
 
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded');
         assertBNEqual(stakeBefore2.sub(penalty), stakeAfter2, 'Penalty should be applied');
-        const stakeGettingReward = await stakeRegulator.stakeGettingReward();
+        const stakeGettingReward = await rewardManager.stakeGettingReward();
         assertBNEqual(stakeGettingReward, stakeAfter, 'Error 3');
-        const rewardPool = await stakeRegulator.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
         assertBNEqual(rewardPool, penalty, 'reward pool should not be zero as penalties have been applied');
       });
 
@@ -332,7 +332,7 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
         await mineToNextState(); // reveal
-        const rewardPool = await stakeRegulator.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',

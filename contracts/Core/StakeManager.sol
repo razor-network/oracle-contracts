@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
-import "./interface/IStakeRegulator.sol";
+import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./storage/StakeStorage.sol";
 import "../Initializable.sol";
@@ -17,7 +17,7 @@ import "../StakedToken.sol";
 contract StakeManager is Initializable, ACL, StakeStorage {
 
     IParameters public parameters;
-    IStakeRegulator public stakeRegulator;
+    IRewardManager public rewardManager;
     SchellingCoin public sch;
     IVoteManager public voteManager;
 
@@ -75,18 +75,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @param schAddress The address of the Schelling token ERC20 contract
-    /// @param stakeRegulatorAddress The address of the StakeRegulator contract
+    /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param parametersAddress The address of the StateManager contract
     function initialize (
         address schAddress,
-        address stakeRegulatorAddress,
+        address rewardManagerAddress,
         address voteManagersAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         sch = SchellingCoin(schAddress);
-        stakeRegulator = IStakeRegulator(stakeRegulatorAddress);
+        rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         parameters = IParameters(parametersAddress);
     }
@@ -362,13 +362,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         staker.stake = staker.stake - penalty;
 
         //Adding it in reward pool
-        stakeRegulator.incrementRewardPool(penalty);
+        rewardManager.incrementRewardPool(penalty);
 
         _resetLock(stakerId);
     }
 
     /// @notice External function for setting stake of the staker
-    /// Used by StakeRegulator 
+    /// Used by RewardManager 
     /// @param _id of the staker
     /// @param _stake the amount of schelling tokens staked
     function setStakerStake(
@@ -376,7 +376,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 _stake,
         string memory _reason,
         uint256 _epoch
-    ) external onlyRole(parameters.getStakeRegulatorHash()) {
+    ) external onlyRole(parameters.getStakeModifierHash()) {
         uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
         emit StakeChange(
@@ -390,12 +390,12 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @notice External function for trasnfering bounty to bountyHunter
-    /// Used by StakeRegulator in slash()
+    /// Used by RewardManager in slash()
     /// @param bountyHunter The address of bountyHunter
     /// @param bounty The bounty to be rewarded
     function transferBounty(address bountyHunter, uint256 bounty)
         external
-        onlyRole(parameters.getStakeRegulatorHash())
+        onlyRole(parameters.getStakeModifierHash())
     {
         require(
             sch.transfer(bountyHunter, bounty),

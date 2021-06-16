@@ -20,7 +20,7 @@ module.exports = async () => {
     BlockManager: blockManagerAddress,
     AssetManager: assetManagerAddress,
     StakeManager: stakeManagerAddress,
-    StakeRegulator: stakeRegulatorAddress,
+    RewardManager: rewardManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
     SchellingCoin: schellingCoinAddress,
@@ -33,7 +33,7 @@ module.exports = async () => {
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
-  const { contractInstance: stakeRegulator } = await getdeployedContractInstance('StakeRegulator', stakeRegulatorAddress);
+  const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
@@ -71,19 +71,19 @@ module.exports = async () => {
     pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
   }
 
-  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, stakeRegulatorAddress, voteManagerAddress,
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, parametersAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, stakeRegulatorAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, stakeRegulatorAddress, voteManagerAddress, parametersAddress));
-  pendingTransactions.push(await stakeRegulator.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
   pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
-  pendingTransactions.push(await stakeRegulator.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeRegulator.grantRole(await parameters.getRewardPoolModifierHash(), stakeManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), blockManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), voteManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeRegulatorHash(), stakeRegulatorAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManagerAddress));
 
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 

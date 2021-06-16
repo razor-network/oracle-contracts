@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
-import "./interface/IStakeRegulator.sol";
+import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
 import "../Initializable.sol";
@@ -15,7 +15,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     IParameters public parameters;
     IStakeManager public stakeManager;
-    IStakeRegulator public stakeRegulator;
+    IRewardManager public rewardManager;
     IBlockManager public blockManager;
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
@@ -33,13 +33,13 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     function initialize (
         address stakeManagerAddress,
-        address stakeRegulatorAddress,
+        address rewardManagerAddress,
         address blockManagerAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         stakeManager = IStakeManager(stakeManagerAddress);
-        stakeRegulator = IStakeRegulator(stakeRegulatorAddress);
+        rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
         parameters = IParameters(parametersAddress);
     }
@@ -56,7 +56,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
             blockManager.confirmBlock();
         }
-        stakeRegulator.givePenalties(stakerId, epoch);
+        rewardManager.givePenalties(stakerId, epoch);
 
         if (thisStaker.stake >= parameters.minStake()) {
             commitments[epoch][stakerId] = commitment;
@@ -96,7 +96,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
             }
 
-            stakeRegulator.giveRewards(thisStakerId, epoch);
+            rewardManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
@@ -106,7 +106,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             //bounty hunter revealing someone else's secret in commit state
             require(parameters.getState() == parameters.commit(), "Not commit state");
             commitments[epoch][thisStakerId] = 0x0;
-            stakeRegulator.slash(thisStakerId, msg.sender, epoch);
+            rewardManager.slash(thisStakerId, msg.sender, epoch);
         }
     }
 

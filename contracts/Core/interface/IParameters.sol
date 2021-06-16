@@ -28,7 +28,6 @@ interface IParameters {
     function getBlockConfirmerHash() external view returns(bytes32);
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
-    function getStakeRegulatorHash() external view returns(bytes32);
-    function getRewardPoolModifierHash() external view returns(bytes32);
+    function getRewardModifierHash() external view returns(bytes32);
     function getDefaultAdminHash() external view returns(bytes32);
 }

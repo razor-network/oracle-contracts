@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
-import "./interface/IStakeRegulator.sol";
+import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
@@ -16,7 +16,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     
     IParameters public parameters;
     IStakeManager public stakeManager;
-    IStakeRegulator public stakeRegulator;
+    IRewardManager public rewardManager;
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
@@ -54,14 +54,14 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     function initialize (
         address stakeManagerAddress,
-        address stakeRegulatorAddress,
+        address rewardManagerAddress,
         address voteManagerAddress,
         address assetManagerAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
         stakeManager = IStakeManager(stakeManagerAddress);
-        stakeRegulator = IStakeRegulator(stakeRegulatorAddress);
+        rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
         parameters = IParameters(parametersAddress);
@@ -240,7 +240,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             proposedBlocks[epoch][blockId].lowerCutoffs[assetId] != lowerCutoff ||
             proposedBlocks[epoch][blockId].higherCutoffs[assetId] != higherCutoff) {
             proposedBlocks[epoch][blockId].valid = false;
-            stakeRegulator.slash(proposerId, msg.sender, epoch);
+            rewardManager.slash(proposerId, msg.sender, epoch);
         } else {
             revert("Proposed Alternate block is identical to proposed block");
         }
@@ -264,7 +264,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
                     assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
                                         proposedBlocks[epoch - 1][i].medians[j]);
                 }
-                stakeRegulator.giveBlockReward(proposerId, epoch);
+                rewardManager.giveBlockReward(proposerId, epoch);
                 return;
             }
         }

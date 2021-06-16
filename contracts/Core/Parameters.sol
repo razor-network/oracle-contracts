@@ -40,11 +40,8 @@ contract Parameters is IParameters, ACL {
     // keccak256("STAKE_MODIFIER_ROLE")
     bytes32 constant private _STAKE_MODIFIER_HASH = 0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804;
 
-    // keccak256("_STAKE_REGULATOR_ROLE")
-    bytes32 constant private _STAKE_REGULATOR_HASH = 0x0b461f6a1fd925fba31e2267b0b60398d8705f548554549b976b070d52b7c129;
-
-    // keccak256("_REWARD_POOL_MODIFER_ROLE")
-    bytes32 constant private _REWARD_POOL_MODIFER_HASH = 0x097c16f60a86e6bc183c508189b0dfddc876d460acd25d2d474a2d87d186cc17;
+    // keccak256("REWARD_MODIFIER_ROLE")
+    bytes32 constant private _REWARD_MODIFIER_HASH = 0xcabcaf259dd9a27f23bd8a92bacd65983c2ebf027c853f89f941715905271a8d;
 
     function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
@@ -140,11 +137,7 @@ contract Parameters is IParameters, ACL {
         return _STAKE_MODIFIER_HASH;
     }
 
-    function getStakeRegulatorHash() external pure override returns (bytes32) {
-        return _STAKE_REGULATOR_HASH;
-    }
-
-    function getRewardPoolModifierHash() external pure override returns (bytes32) {
-        return _REWARD_POOL_MODIFER_HASH;
+    function getRewardModifierHash() external pure override returns (bytes32) {
+        return _REWARD_MODIFIER_HASH;
     }
 }
