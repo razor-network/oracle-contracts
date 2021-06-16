@@ -201,9 +201,9 @@ describe('Access Control Test', async () => {
     await rewardManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
 
-     // Checking if StakeModifier can access it
-     await rewardManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-     await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
+    // Checking if StakeModifier can access it
+    await rewardManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
   });
 
   it('incrementRewardPool() should be accessable by RewardModifier', async () => {
@@ -215,30 +215,30 @@ describe('Access Control Test', async () => {
 
   it('setStakerStake() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await stakeManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await stakeManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
 
-     // Checking if RewardModifier can access it
-     await stakeManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
-     await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    // Checking if RewardModifier can access it
+    await stakeManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
   });
 
   it('setStakerStake() should be accessable by StakeModifier', async () => {
     await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    stakeManager.setStakerStake(1, 10, "test", 1);
+    stakeManager.setStakerStake(1, 10, 'test', 1);
     await stakeManager.revokeRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 10, "test", 1), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);
   });
 
   it('transferBounty() should not be accessable by anyone besides StakeModifier', async () => {
@@ -257,9 +257,9 @@ describe('Access Control Test', async () => {
     await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
     await assertRevert(stakeManager.transferBounty(signers[0].address, 0), expectedRevertMessage);
 
-     // Checking if RewardModifier can access it
-     await stakeManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
-     await assertRevert(stakeManager.transferBounty(signers[0].address, 0), expectedRevertMessage);
+    // Checking if RewardModifier can access it
+    await stakeManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
+    await assertRevert(stakeManager.transferBounty(signers[0].address, 0), expectedRevertMessage);
   });
 
   it('transferBounty() should be accessable by StakeModifier', async () => {
