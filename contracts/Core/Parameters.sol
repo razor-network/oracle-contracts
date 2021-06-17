@@ -21,7 +21,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
     uint256 public override aggregationRange = 3;
-    uint256 public override percentSlashPenalty = 100;
+    uint256 public override percentSlashPenalty = 50;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;

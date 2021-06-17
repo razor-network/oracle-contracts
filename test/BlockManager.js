@@ -233,16 +233,20 @@ describe('BlockManager', function () {
 
       const firstProposedBlockIndex = (firstProposedBlock.proposerId.gt(secondProposedBlock.proposerId))
         ? 1 : 0;
+      
+      const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
+      const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
 
       assert((await proposedBlock.valid) === false);
 
-      const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
+      const percentSlashPenalty = await parameters.percentSlashPenalty();
+      const slashPenalty = ((stakeBeforeAcc5.mul(percentSlashPenalty)).div('100'));
 
-      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, toBigNumber('0'));
-      assertBNEqual(await schellingCoin.balanceOf(signers[19].address), tokenAmount('210000'));
+      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenalty));
+      assertBNEqual(await schellingCoin.balanceOf(signers[19].address), slashPenalty.div('2'));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
@@ -544,7 +548,7 @@ describe('BlockManager', function () {
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
 
       assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
-
+            
       // Calculate Dispute data
       await mineToNextState();
       epoch = await getEpoch();

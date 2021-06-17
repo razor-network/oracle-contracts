@@ -299,7 +299,6 @@ describe('VoteManager', function () {
 
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc4)).stake;
-
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const proof = [];
@@ -313,8 +312,10 @@ describe('VoteManager', function () {
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc4)).stake;
         const stakeAcc10 = await schellingCoin.connect(signers[10]).balanceOf(signers[10].address);
-        assertBNEqual(stakeAfter, toBigNumber('0'), 'stake should be zero');
-        assertBNEqual(stakeAcc10, stakeBefore.div('2'), 'the bounty hunter should receive half of the stake of account 4');
+        const percentSlashPenalty = await parameters.percentSlashPenalty();
+        const slashPenalty = ((stakeBefore.mul(percentSlashPenalty)).div('100'));
+        assertBNEqual(stakeAfter, stakeBefore.sub(slashPenalty), 'stake should be zero');
+        assertBNEqual(stakeAcc10, slashPenalty.div('2'), 'the bounty hunter should receive half of the penalty of account 4');
       });
 
       it('Account 3 should be able to reveal again with correct rewards', async function () {
