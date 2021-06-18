@@ -89,6 +89,7 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
       await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));
+      await schellingCoin.transfer(signers[8].address, tokenAmount('18000'));
 
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
@@ -96,6 +97,9 @@ describe('BlockManager', function () {
 
       await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
+
+      await schellingCoin.connect(signers[8]).approve(stakeManager.address, tokenAmount('18000'));
+      await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
@@ -119,6 +123,17 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
 
+      const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const tree3 = merkle('keccak256').sync(votes3);
+
+      const root3 = tree3.root();
+      const commitment3 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[8]).commit(epoch, commitment3);
+
       await mineToNextState();
 
       const proof = [];
@@ -136,6 +151,14 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[6]).reveal(epoch, tree2.root(), votes2, proof2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[6].address);
+
+      const proof3 = [];
+      for (let i = 0; i < votes3.length; i++) {
+        proof3.push(tree3.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[8]).reveal(epoch, tree3.root(), votes3, proof3,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[8].address);
     });
 
     it('should be able to propose', async function () {
@@ -210,7 +233,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [tokenAmount('420000'), tokenAmount('18000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes);
@@ -344,7 +367,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes1,
-        [tokenAmount('18000'), tokenAmount('19000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes1[0]), await voteManager.getVoteWeight(epoch, 1, sortedVotes1[1])] // initial weights
       );
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes1);
@@ -373,7 +396,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes2,
-        [tokenAmount('18000'), tokenAmount('19000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 2, sortedVotes2[0]), await voteManager.getVoteWeight(epoch, 2, sortedVotes2[1])] // initial weights
       );
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 2, sortedVotes2);
@@ -392,12 +415,15 @@ describe('BlockManager', function () {
       assert((await proposedBlock.valid) === false);
     });
 
-    it('no block should be confirmed in the previous epoch', async function () {
+    it('no block should be confirmed in the previous epoch  and no peanalization for one block which is invalid', async function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
       await schellingCoin.connect(signers[19]).approve(stakeManager.address, tokenAmount('19000'));
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
+
+      const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc8);
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
       const tree = merkle('keccak256').sync(votes);
@@ -409,6 +435,17 @@ describe('BlockManager', function () {
       );
 
       await voteManager.connect(signers[19]).commit(epoch, commitment1);
+
+      const votes2 = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
+      const tree2 = merkle('keccak256').sync(votes2);
+
+      const root2 = tree2.root();
+      const commitment2 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[8]).commit(epoch, commitment2);
 
       assertBNEqual((await blockManager.getBlock(epoch - 1)).proposerId, toBigNumber('0'));
       assertBNEqual(((await blockManager.getBlock(epoch - 1)).medians).length, toBigNumber('0'));
@@ -423,6 +460,16 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[19]).reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[19].address);
+
+      const proof2 = [];
+      for (let i = 0; i < votes2.length; i++) {
+        proof2.push(tree2.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[8]).reveal(epoch, tree2.root(), votes2, proof2,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[8].address);
+
+      assertBNEqual(staker.stake, tokenAmount('18000'), 'Stake should have remained the same');
     });
 
     it('should be able to reset dispute incase of wrong values being entered', async function () {
@@ -443,7 +490,7 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID');
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
       await mineToNextState();
 
@@ -454,7 +501,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [tokenAmount('19000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 1, sortedVotes);
@@ -465,12 +512,12 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[15]).resetDispute(epoch);
       const afterDisputeReset = await blockManager.disputes(epoch, signers[15].address);
 
-      assertBNNotEqual(afterDisputeReset.assetId, toBigNumber('1'), 'assetId should not match');
-      assertBNNotEqual(afterDisputeReset.median, median, 'median should not match');
-      assertBNNotEqual(afterDisputeReset.accWeight, totalStakeRevealed, 'totalStakeRevealed should not match');
-      assertBNNotEqual(afterDisputeReset.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should not match');
-      assertBNNotEqual(afterDisputeReset.lowerCutoff, lowerCutoff, 'lowerCutoff should not match');
-      assertBNNotEqual(afterDisputeReset.higherCutoff, higherCutoff, 'higherCutoff should not match');
+      assertBNEqual(afterDisputeReset.assetId, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.median, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.lastVisited, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.lowerCutoff, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.higherCutoff, toBigNumber('0'));
     });
 
     it('should be able to dispute in batches', async function () {
@@ -555,7 +602,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [tokenAmount('420000'), tokenAmount('18000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       // Dispute in batches
