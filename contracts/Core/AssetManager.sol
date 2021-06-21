@@ -17,8 +17,6 @@ contract AssetManager is ACL, AssetStorage {
         string selector,
         string name,
         bool repeat,
-        address creator,
-        uint256 credit,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -31,9 +29,22 @@ contract AssetManager is ACL, AssetStorage {
         string selector,
         string name,
         bool repeat,
-        address creator,
-        uint256 credit,
-        bool fulfilled,
+        bool active,
+        uint256 timestamp
+    );
+
+    event JobUpdated(
+        uint256 id,
+        uint256 epoch,
+        string url,
+        string selector,
+        uint256 timestamp
+    );
+
+    event JobActivityStatus(
+        uint256 id,
+        uint256 epoch,
+        bool active,
         uint256 timestamp
     );
 
@@ -43,8 +54,7 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
-        address creator,
-        uint256 credit,
+        bool active,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -56,8 +66,6 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
-        address creator,
-        uint256 credit,
         uint256 timestamp
     );
 
@@ -66,6 +74,13 @@ contract AssetManager is ACL, AssetStorage {
         uint256 epoch,
         string name,
         uint256[] updatedJobIDs,
+        uint256 timestamp
+    );
+
+    event CollectionActivityStatus(
+        uint256 id,
+        uint256 epoch,
+        bool active,
         uint256 timestamp
     );
 
@@ -78,7 +93,10 @@ contract AssetManager is ACL, AssetStorage {
         string calldata selector, 
         string calldata name, 
         bool repeat
-    ) external payable {
+    ) 
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
+    {
         numAssets = numAssets + 1;
         uint256 epoch = parameters.getEpoch();
         Structs.Job memory job = Structs.Job(
@@ -88,9 +106,7 @@ contract AssetManager is ACL, AssetStorage {
             selector, 
             name, 
             repeat, 
-            msg.sender, 
-            msg.value, 
-            false, 
+            true, 
             0,
             uint256(assetTypes.Job)
         );
@@ -102,12 +118,85 @@ contract AssetManager is ACL, AssetStorage {
             url, 
             selector, 
             name, 
-            repeat, 
-            msg.sender, 
-            msg.value, 
+            repeat,  
             block.timestamp, 
             assetTypes.Job
         );
+    }
+
+    function updateJob(
+        uint256 jobID,
+        string calldata url,
+        string calldata selector
+    ) 
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
+    {
+        require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
+        require(jobs[jobID].active, "Job has been inactivated");
+
+        uint256 epoch = parameters.getEpoch();
+
+        jobs[jobID].url = url;
+        jobs[jobID].selector = selector;
+
+        emit JobUpdated(
+        jobID,
+        epoch,
+        url,
+        selector,
+        block.timestamp
+        );
+
+    }
+
+    function updateAssetStatus(
+        uint256 id,
+        uint256 activationMethod
+    ) 
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
+    {
+        require(id != 0, "ID cannot be 0");
+        require(id<=numAssets,"ID does not exist");
+        require(activationMethod<=1,"Range out of bounds");
+
+        uint256 epoch = parameters.getEpoch();
+
+        if(jobs[id].assetType==uint256(assetTypes.Job)){
+            if(activationMethod == 0){
+                jobs[id].active = false;
+            }
+            else{
+                jobs[id].active = true;
+            }
+
+            emit JobActivityStatus(
+            id,
+            epoch,
+            jobs[id].active,
+            block.timestamp
+            );
+        }
+        else{
+            if(activationMethod == 0){
+                collections[id].active = false;
+            }
+            else{
+                collections[id].active = true;
+            }
+
+            emit CollectionActivityStatus(
+            id,
+            epoch,
+            collections[id].active,
+            block.timestamp
+            );
+            
+        }
+
+        
+
     }
 
     function fulfillAsset(
@@ -123,7 +212,7 @@ contract AssetManager is ACL, AssetStorage {
             Structs.Job storage job = jobs[id];
 
             if (!job.repeat) {
-                job.fulfilled = true;
+                job.active = false;
             }
 
             job.result = value;
@@ -135,9 +224,7 @@ contract AssetManager is ACL, AssetStorage {
                 job.selector,
                 job.name,
                 job.repeat,
-                job.creator,
-                job.credit,
-                job.fulfilled,
+                job.active,
                 block.timestamp
             );
         }
@@ -154,8 +241,6 @@ contract AssetManager is ACL, AssetStorage {
                 collection.name,
                 collection.aggregationMethod,
                 collection.jobIDs,
-                collection.creator,
-                collection.credit,
                 block.timestamp
             );
         }
@@ -165,7 +250,9 @@ contract AssetManager is ACL, AssetStorage {
         string calldata name, 
         uint256[] memory jobIDs,
         uint32 aggregationMethod
-    ) external payable 
+    ) 
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
     {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
         require(jobIDs.length > 1,"Number of jobIDs low to create collection");
@@ -176,15 +263,15 @@ contract AssetManager is ACL, AssetStorage {
         collections[numAssets].name = name; 
         collections[numAssets].aggregationMethod = aggregationMethod; 
         collections[numAssets].epoch = epoch;
-        collections[numAssets].creator = msg.sender;
-        collections[numAssets].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
+            require(jobs[jobIDs[i]].active,"Job ID not active");
             require(!collections[numAssets].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
             collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
         collections[numAssets].assetType = uint256(assetTypes.Collection);
+        collections[numAssets].active = true;
 
         emit CollectionCreated(
             numAssets, 
@@ -192,8 +279,7 @@ contract AssetManager is ACL, AssetStorage {
             name, 
             aggregationMethod,
             jobIDs,
-            msg.sender, 
-            msg.value, 
+            true,
             block.timestamp, 
             assetTypes.Collection
         );
@@ -202,14 +288,47 @@ contract AssetManager is ACL, AssetStorage {
     function addJobToCollection(
         uint256 collectionID, 
         uint256 jobID
-        ) external {
+    )  
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
+    {
         require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
+        require(collections[collectionID].active,"Collection is inactive");
         require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
+        require(jobs[jobID].active,"Job ID not active");
         require(!collections[collectionID].jobIDExist[jobID],"Job exists in this collection");
         
         uint256 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobIDExist[jobID] = true;
+
+        emit CollectionUpdated(
+        collectionID,
+        epoch,
+        collections[collectionID].name,
+        collections[collectionID].jobIDs,
+        block.timestamp
+        );
+    }
+
+    function removeJobFromCollection(
+        uint256 collectionID, 
+        uint256 jobIDIndex
+    )  
+        external 
+        onlyRole(parameters.getAssetCreatorHash()) 
+    {
+        require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
+        require(collections[collectionID].active,"Collection is inactive");
+        require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
+        
+        uint256 epoch = parameters.getEpoch();
+
+        for (uint256 i = jobIDIndex; i < collections[collectionID].jobIDs.length-1; i++){
+            collections[collectionID].jobIDs[i] = collections[collectionID].jobIDs[i+1];
+        }
+        collections[collectionID].jobIDs.pop();
+    
 
         emit CollectionUpdated(
         collectionID,
@@ -250,12 +369,13 @@ contract AssetManager is ACL, AssetStorage {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result
+            uint256 result,
+            bool active
         ) 
     {
         require(jobs[id].assetType==uint256(assetTypes.Job),"ID is not a job");
         Structs.Job memory job = jobs[id];
-        return(job.url, job.selector, job.name, job.repeat, job.result);
+        return(job.url, job.selector, job.name, job.repeat, job.result, job.active);
     }
 
     function getCollection(
@@ -267,11 +387,12 @@ contract AssetManager is ACL, AssetStorage {
             string memory name, 
             uint32 aggregationMethod, 
             uint256[] memory jobIDs, 
-            uint256 result
+            uint256 result,
+            bool active
         ) 
     {
         require(collections[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
-        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result);
+        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result, collections[id].active);
     }
 
     function getAssetType(
@@ -291,6 +412,26 @@ contract AssetManager is ACL, AssetStorage {
         } 
         else{
             return uint256(assetTypes.Collection);
+        }
+    }
+
+    function getActiveStatus(
+        uint256 id
+    )
+        external
+        view
+        returns(
+            bool
+        )
+    {
+        require(id != 0, "ID cannot be 0");
+        require(id <= numAssets,"ID does not exist");
+
+        if(jobs[id].assetType==uint256(assetTypes.Job)){
+            return jobs[id].active;
+        } 
+        else{
+            return collections[id].active;
         }
     }
 

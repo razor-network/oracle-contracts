@@ -27,5 +27,6 @@ interface IParameters {
     function getBlockConfirmerHash() external view returns(bytes32);
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
+    function getAssetCreatorHash() external view returns (bytes32); 
     function getDefaultAdminHash() external view returns(bytes32);
 }

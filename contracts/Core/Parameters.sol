@@ -39,6 +39,9 @@ contract Parameters is IParameters, ACL {
     // keccak256("STAKE_MODIFIER_ROLE")
     bytes32 constant private _STAKE_MODIFIER_HASH = 0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804;
 
+    // keccak256("ASSET_CREATOR_ROLE")
+    bytes32 constant private _ASSET_CREATOR_HASH = 0x7201c79996f510dbb65eef70dde0aac85aa4b343b48143fea16b7d6a96cfb3c8;
+
     function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
@@ -127,5 +130,9 @@ contract Parameters is IParameters, ACL {
 
     function getStakeModifierHash() external pure override returns (bytes32) {
         return _STAKE_MODIFIER_HASH;
+    }
+
+    function getAssetCreatorHash() external pure override returns (bytes32) {
+        return _ASSET_CREATOR_HASH;
     }
 }

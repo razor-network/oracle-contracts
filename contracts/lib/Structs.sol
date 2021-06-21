@@ -46,9 +46,7 @@ library Structs {
         string selector;
         string name;
         bool repeat;
-        address creator;
-        uint256 credit;
-        bool fulfilled;
+        bool active;
         uint256 result;
         uint256 assetType;
     }
@@ -60,8 +58,7 @@ library Structs {
         uint256[] jobIDs; 
         mapping(uint256=>bool) jobIDExist;
         uint256 epoch;
-        address creator;
-        uint256 credit;
+        bool active;
         uint256 result;
         uint256 assetType;
     }
