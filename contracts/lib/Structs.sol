@@ -15,7 +15,13 @@ library Structs {
         uint256 epochStaked;
         uint256 epochLastCommitted;
         uint256 epochLastRevealed;
-        uint256 unstakeAfter;
+        bool acceptDelegation;
+        uint256 commission;
+        address tokenAddress;
+    }
+
+    struct Lock {
+        uint256 amount; //amount in sTokens
         uint256 withdrawAfter;
     }
 

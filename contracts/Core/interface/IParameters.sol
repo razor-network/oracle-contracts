@@ -11,9 +11,10 @@ interface IParameters {
     // penalty not reveal = 0.01% per epch
     function penaltyNotRevealNum() external view returns(uint256);
     function penaltyNotRevealDenom() external view returns(uint256);
+    function resetLockPenalty() external view returns(uint256);
     function minStake() external view returns(uint256);
-    function unstakeLockPeriod() external view returns(uint256);
     function withdrawLockPeriod() external view returns(uint256);
+    function withdrawReleasePeriod() external view returns(uint256);
     function maxAltBlocks() external view returns(uint256);
     function epochLength() external view returns(uint256);
     function numStates() external view returns(uint256);
@@ -27,6 +28,7 @@ interface IParameters {
     function getBlockConfirmerHash() external view returns(bytes32);
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
-    function getAssetCreatorHash() external view returns (bytes32); 
+    function getRewardModifierHash() external view returns(bytes32);
+    function getAssetCreatorHash() external view returns (bytes32);
     function getDefaultAdminHash() external view returns(bytes32);
 }
