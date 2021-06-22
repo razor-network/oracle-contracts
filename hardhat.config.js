@@ -10,7 +10,7 @@ if (dotenvResult.error) {
 require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
-require('solidity-coverage'); 
+require('solidity-coverage');
 require('hardhat-abi-exporter');
 
 const {
