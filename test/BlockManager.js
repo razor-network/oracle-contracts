@@ -210,7 +210,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [tokenAmount('420000'), tokenAmount('18000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes);
@@ -348,7 +348,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes1,
-        [tokenAmount('18000'), tokenAmount('19000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes1[0]), await voteManager.getVoteWeight(epoch, 1, sortedVotes1[1])]   //initial weights
       );
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes1);
@@ -377,7 +377,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes2,
-        [tokenAmount('18000'), tokenAmount('19000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 2, sortedVotes2[0]), await voteManager.getVoteWeight(epoch, 2, sortedVotes2[1])] // initial weights
       );
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 2, sortedVotes2);
@@ -452,14 +452,6 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       const sortedVotes = [toBigNumber('20000')];
-      const {
-        median, totalStakeRevealed, lowerCutoff, higherCutoff,
-      } = await calculateDisputesData(
-        voteManager,
-        epoch,
-        sortedVotes,
-        [tokenAmount('19000')] // initial weights
-      );
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 1, sortedVotes);
 
@@ -469,12 +461,12 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[15]).resetDispute(epoch);
       const afterDisputeReset = await blockManager.disputes(epoch, signers[15].address);
 
-      assertBNNotEqual(afterDisputeReset.assetId, toBigNumber('1'), 'assetId should not match');
-      assertBNNotEqual(afterDisputeReset.median, median, 'median should not match');
-      assertBNNotEqual(afterDisputeReset.accWeight, totalStakeRevealed, 'totalStakeRevealed should not match');
-      assertBNNotEqual(afterDisputeReset.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should not match');
-      assertBNNotEqual(afterDisputeReset.lowerCutoff, lowerCutoff, 'lowerCutoff should not match');
-      assertBNNotEqual(afterDisputeReset.higherCutoff, higherCutoff, 'higherCutoff should not match');
+      assertBNEqual(afterDisputeReset.assetId, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.median, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.lastVisited, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.lowerCutoff, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.higherCutoff, toBigNumber('0'));
     });
 
     it('should be able to dispute in batches', async function () {
@@ -548,7 +540,7 @@ describe('BlockManager', function () {
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
 
       assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
-            
+
       // Calculate Dispute data
       await mineToNextState();
       epoch = await getEpoch();
@@ -559,7 +551,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [tokenAmount('420000'), tokenAmount('18000')] // initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] //initial weights
       );
 
       // Dispute in batches
