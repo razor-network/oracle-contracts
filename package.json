@@ -1,11 +1,13 @@
 {
-  "name": "contracts",
-  "version": "1.0.0",
-  "description": "These are the contracts for Razor network testnet. #Deployment",
-  "main": "truffle-config.js",
-  "directories": {
-    "test": "test"
-  },
+  "name": "@razor-network/contracts",
+  "version": "0.0.4",
+  "description": "These are the contracts for Razor network testnet",
+  "author": "Razor Network",
+  "private": false,
+  "files": [
+    "abi/**/*",
+    "contracts/**/*"
+  ],
   "scripts": {
     "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
@@ -20,13 +22,13 @@
     "lint:js": "eslint \"**/*.js\"",
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint \"contracts/*.sol\"",
-    "test": "hardhat compile && hardhat test"
+    "test": "hardhat compile && hardhat test",
+    "prepublish": "npm run test"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/razor-network/contracts.git"
   },
-  "author": "",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/razor-network/contracts/issues"
@@ -35,6 +37,7 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.0.0",
     "@razor-network/merkle": "^0.6.0",
+    "hardhat-abi-exporter": "^2.2.1",
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {

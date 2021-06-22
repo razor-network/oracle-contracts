@@ -4,9 +4,12 @@ const parametersMigration = require('./src/2_deploy_parameters');
 const blockManagerMigration = require('./src/3_deploy_block_manager');
 const assetManagerMigration = require('./src/4_deploy_asset_manager');
 const stakeManagerMigration = require('./src/5_deploy_stake_manager');
-const voteManagerMigration = require('./src/6_deploy_vote_manager');
-const delegatorMigration = require('./src/7_deploy_delegator');
+
+const rewardManagerMigration = require('./src/6_deploy_reward_manager');
+const voteManagerMigration = require('./src/7_deploy_vote_manager');
+const delegatorMigration = require('./src/8_deploy_delegator');
 const RAZORAndFacuetMigration = require('./src/8_deploy_razor_and_faucet');
+
 const postDeploymentSetup = require('./src/postDeploymentSetup');
 
 async function main() {
@@ -16,6 +19,7 @@ async function main() {
   await blockManagerMigration();
   await assetManagerMigration();
   await stakeManagerMigration();
+  await rewardManagerMigration();
   await voteManagerMigration();
   await delegatorMigration();
   await RAZORAndFacuetMigration();
