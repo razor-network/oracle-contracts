@@ -6,7 +6,7 @@ import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./storage/StakeStorage.sol";
 import "../Initializable.sol";
-import "../SchellingCoin.sol";
+import "../RAZOR.sol";
 import "./ACL.sol";
 import "../StakedToken.sol";
 
@@ -17,8 +17,10 @@ import "../StakedToken.sol";
 contract StakeManager is Initializable, ACL, StakeStorage {
 
     IParameters public parameters;
+
     IRewardManager public rewardManager;
-    SchellingCoin public sch;
+    RAZOR public razor;
+
     IVoteManager public voteManager;
 
     event StakeChange(
@@ -74,19 +76,27 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         _;
     }
 
-    /// @param schAddress The address of the Schelling token ERC20 contract
+
+    /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
+
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param parametersAddress The address of the StateManager contract
     function initialize (
-        address schAddress,
+
+        address razorAddress,
         address rewardManagerAddress,
+
         address voteManagersAddress,
         address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
-        sch = SchellingCoin(schAddress);
+
+        razor = RAZOR(razorAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
+
+        
+
         voteManager = IVoteManager(voteManagersAddress);
         parameters = IParameters(parametersAddress);
     }
@@ -125,7 +135,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             amount >= parameters.minStake(), 
             "staked amount is less than minimum stake required"
         );
-        require(sch.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
+        require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
@@ -346,8 +356,10 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
         require(stakers[stakerId].id != 0, "staker.id = 0");
 
+
         Structs.Staker storage staker = stakers[stakerId];
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
+
 
         uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
 
@@ -402,6 +414,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "failed to transfer bounty"
         );
     }
+
 
     /// @param _address Address of the staker
     /// @return The staker ID

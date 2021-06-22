@@ -27,7 +27,7 @@ describe('VoteManager', function () {
     let blockManager;
     let parameters;
     let random;
-    let schellingCoin;
+    let Razor;
     let stakeManager;
     let rewardManager;
     let voteManager;
@@ -35,12 +35,14 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, random, schellingCoin, stakeManager, rewardManager, voteManager, initializeContracts,
+
+        blockManager, parameters, random, Razor, stakeManager, rewardManager, voteManager, initializeContracts,
+
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
 
-    describe('SchellingCoin', async function () {
+    describe('Razor', async function () {
       it('admin role should be granted', async () => {
         const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
         assert(isAdminRoleGranted === true, 'Admin role was not Granted');
@@ -70,10 +72,10 @@ describe('VoteManager', function () {
         await Promise.all(await initializeContracts());
 
         await mineToNextEpoch();
-        await schellingCoin.transfer(signers[3].address, tokenAmount('423000'));
-        await schellingCoin.transfer(signers[4].address, tokenAmount('19000'));
-        await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
-        await schellingCoin.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
+        await Razor.transfer(signers[3].address, tokenAmount('423000'));
+        await Razor.transfer(signers[4].address, tokenAmount('19000'));
+        await Razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
+        await Razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
@@ -313,7 +315,7 @@ describe('VoteManager', function () {
           signers[4].address);
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        const stakeAcc10 = await schellingCoin.connect(signers[10]).balanceOf(signers[10].address);
+        const stakeAcc10 = await Razor.connect(signers[10]).balanceOf(signers[10].address);
         assertBNEqual(stakeAfter, toBigNumber('0'), 'stake should be zero');
         assertBNEqual(stakeAcc10, stakeBefore.div('2'), 'the bounty hunter should receive half of the stake of account 4');
       });

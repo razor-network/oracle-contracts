@@ -6,14 +6,12 @@ const {
 const { BigNumber } = ethers;
 const {
   NETWORK,
-  SCHELLING_COIN_ADDRESS,
+
   SEED_AMOUNT,
   STAKER_ADDRESSES,
 } = process.env;
 
 module.exports = async () => {
-  const signers = await ethers.getSigners();
-
   const {
     Random: randomAddress,
     Parameters: parametersAddress,
@@ -23,7 +21,7 @@ module.exports = async () => {
     RewardManager: rewardManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
-    SchellingCoin: schellingCoinAddress,
+    RAZOR: RAZORAddress,
     Faucet: faucetAddress,
   } = await readDeploymentFile();
 
@@ -36,7 +34,7 @@ module.exports = async () => {
   const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
-  const { contractInstance: schellingCoin } = await getdeployedContractInstance('SchellingCoin', schellingCoinAddress);
+  const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
 
   const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
@@ -45,37 +43,24 @@ module.exports = async () => {
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
-    const initialSupply = await schellingCoin.INITIAL_SUPPLY();
-
     const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
-    const deployerBalance = BigNumber.from(await schellingCoin.balanceOf(signers[0].address));
-    const deployerSupply = BigNumber.from(initialSupply).sub(BigNumber.from(deployerBalance));
 
-    if (SCHELLING_COIN_ADDRESS !== '') {
-      // if previous instances of Schelling Coin is reused again and again,
-      // then initial balance will get depleted, thus intial tokens minting is needed,
-      // each time Schelling Coin instance is reused
-      await schellingCoin.addMinter(signers[0].address);
-
-      await schellingCoin.mint(signers[0].address, (deployerSupply));
-
-      // Remove previous instance of  Deployer address from Minter
-      await schellingCoin.removeMinter(signers[0].address);
-    }
-    await schellingCoin.transfer(stakeManagerAddress, mintableSupply);
+    await RAZOR.transfer(stakeManagerAddress, mintableSupply);
 
     for (let i = 0; i < stakerAddressList.length; i++) {
-      const tx = await schellingCoin.transfer(stakerAddressList[i], SEED_AMOUNT);
+      const tx = await RAZOR.transfer(stakerAddressList[i], SEED_AMOUNT);
       pendingTransactions.push(tx);
     }
-    pendingTransactions.push(await schellingCoin.transfer(faucetAddress, SEED_AMOUNT));
+    pendingTransactions.push(await RAZOR.transfer(faucetAddress, SEED_AMOUNT));
   }
+
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, parametersAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await stakeManager.initialize(schellingCoinAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
+
 
   pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));
