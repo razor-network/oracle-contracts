@@ -488,7 +488,7 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('420000'));
 
 
-      await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
+      await Razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);

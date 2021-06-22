@@ -199,7 +199,7 @@ describe('StakeManager', function () {
       let epoch = await getEpoch();
 
       const prevStake = staker.stake;
-      const prevBalance = await schellingCoin.balanceOf(staker._address);
+      const prevBalance = await Razor.balanceOf(staker._address);
       const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
@@ -373,7 +373,7 @@ describe('StakeManager', function () {
       const stake1 = tokenAmount('420000');
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      await schellingCoin.connect(signers[4]).approve(stakeManager.address, stake1);
+      await Razor.connect(signers[4]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[4]).stake(epoch, stake1);
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       const staker = await stakeManager.getStaker(4);
@@ -403,7 +403,7 @@ describe('StakeManager', function () {
       const stake2 = tokenAmount('520000');
       let staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
-      await schellingCoin.connect(signers[5]).approve(stakeManager.address, delegatedStake);
+      await Razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
       await stakeManager.connect(signers[5]).delegate(epoch, delegatedStake, stakerId);
       staker = await stakeManager.stakers(4);
       assertBNEqual(staker.stake, stake2, 'Change in stake is incorrect');
@@ -456,7 +456,7 @@ describe('StakeManager', function () {
     it('Delegator should be able to withdraw after withdraw lock period', async function () {
       let staker = await stakeManager.getStaker(4);
       const prevStake = (staker.stake); // 520000
-      const prevBalance = await schellingCoin.balanceOf(signers[5].address);
+      const prevBalance = await Razor.balanceOf(signers[5].address);
       const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
@@ -465,7 +465,7 @@ describe('StakeManager', function () {
       const newStake = prevStake.sub(rAmount); // 510000
       const commission = (rAmount.mul(staker.commission)).div(100); // 5000
 
-      const stakerPrevBalance = await schellingCoin.balanceOf(staker._address);
+      const stakerPrevBalance = await Razor.balanceOf(staker._address);
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -474,10 +474,10 @@ describe('StakeManager', function () {
       assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
 
       rAmount = rAmount.sub(commission);
-      const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
+      const DelegatorBalance = await Razor.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(rAmount);
       assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
-      assertBNEqual(await schellingCoin.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Commission to staker is not transfered');
+      assertBNEqual(await Razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Commission to staker is not transfered');
     });
 
     it('Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded',
@@ -556,7 +556,7 @@ describe('StakeManager', function () {
         // Delegator withdraws
         epoch = await getEpoch();
         const prevStake = (staker.stake);
-        const prevBalance = await schellingCoin.balanceOf(signers[5].address);
+        const prevBalance = await Razor.balanceOf(signers[5].address);
         lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
         const sToken = await stakedToken.attach(staker.tokenAddress);
         const totalSupply = await sToken.totalSupply();
@@ -569,7 +569,7 @@ describe('StakeManager', function () {
         staker = await stakeManager.getStaker(4);
         assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake'); // checking withdraw is working
         rAmount = rAmount.sub(commission);
-        const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
+        const DelegatorBalance = await Razor.balanceOf(signers[5].address);
         const newBalance = prevBalance.add(rAmount);
         assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
 
@@ -628,7 +628,7 @@ describe('StakeManager', function () {
         epoch = await getEpoch();
         staker = await stakeManager.getStaker(4);
         const prevStake = (staker.stake);
-        const prevBalance = await schellingCoin.balanceOf(signers[5].address);
+        const prevBalance = await Razor.balanceOf(signers[5].address);
         lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
         const sToken = await stakedToken.attach(staker.tokenAddress);
         const totalSupply = await sToken.totalSupply();
@@ -641,7 +641,7 @@ describe('StakeManager', function () {
         staker = await stakeManager.getStaker(4);
         assertBNEqual(staker.stake, newStake, 'Updated stake is not equal to calculated stake'); // checking withdraw is working
         rAmount = rAmount.sub(commission);
-        const DelegatorBalance = await schellingCoin.balanceOf(signers[5].address);
+        const DelegatorBalance = await Razor.balanceOf(signers[5].address);
         const newBalance = prevBalance.add(rAmount);
         assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
 
@@ -721,7 +721,7 @@ describe('StakeManager', function () {
 
       // new delegator should be able to withdraw
       const prevStake = (staker.stake);
-      const prevBalance = await schellingCoin.balanceOf(signers[6].address);
+      const prevBalance = await Razor.balanceOf(signers[6].address);
       const lock1 = await stakeManager.locks(signers[6].address, staker.tokenAddress);
       const sToken1 = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken1.totalSupply();
@@ -736,7 +736,7 @@ describe('StakeManager', function () {
       assertBNEqual(staker.stake, newStake, 'Updated stake is not equal to calculated stake');
 
       rAmount = rAmount.sub(commission);
-      const DelegatorBalance = await schellingCoin.balanceOf(signers[6].address);
+      const DelegatorBalance = await Razor.balanceOf(signers[6].address);
       const newBalance = prevBalance.add(rAmount);
       assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
     });
