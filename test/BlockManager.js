@@ -236,7 +236,7 @@ describe('BlockManager', function () {
 
       const firstProposedBlockIndex = (firstProposedBlock.proposerId.gt(secondProposedBlock.proposerId))
         ? 1 : 0;
-      
+
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
 
@@ -351,7 +351,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes1,
-        [await voteManager.getVoteWeight(epoch, 1, sortedVotes1[0]), await voteManager.getVoteWeight(epoch, 1, sortedVotes1[1])]   //initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes1[0]), await voteManager.getVoteWeight(epoch, 1, sortedVotes1[1])] // initial weights
       );
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes1);
@@ -552,7 +552,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] //initial weights
+        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       // Dispute in batches
