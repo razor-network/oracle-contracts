@@ -300,7 +300,7 @@ describe('VoteManager', function () {
 
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        
+
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const proof = [];
