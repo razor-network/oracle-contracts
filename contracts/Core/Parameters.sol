@@ -13,7 +13,6 @@ contract Parameters is IParameters, ACL {
     uint256 public override penaltyNotRevealDenom = 10000;
 
     uint256 public override minStake = 100 * (10 ** 18);
-    uint256 public override unstakeLockPeriod = 1;
     uint256 public override withdrawLockPeriod = 1;
     uint256 public override maxAltBlocks = 5;
     uint256 public override epochLength = 300;
@@ -21,7 +20,9 @@ contract Parameters is IParameters, ACL {
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
     uint256 public override aggregationRange = 3;
-    uint256 public override percentSlashPenalty = 100;   
+    uint256 public override percentSlashPenalty = 100;
+    uint256 public override withdrawReleasePeriod = 5;
+    uint256 public override resetLockPenalty = 1;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -40,6 +41,9 @@ contract Parameters is IParameters, ACL {
     // keccak256("STAKE_MODIFIER_ROLE")
     bytes32 constant private _STAKE_MODIFIER_HASH = 0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804;
 
+    // keccak256("REWARD_MODIFIER_ROLE")
+    bytes32 constant private _REWARD_MODIFIER_HASH = 0xcabcaf259dd9a27f23bd8a92bacd65983c2ebf027c853f89f941715905271a8d;
+
     function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
@@ -48,14 +52,18 @@ contract Parameters is IParameters, ACL {
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
     }
 
-    function setUnstakeLockPeriod(uint256 _unstakeLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) { 
-        unstakeLockPeriod = _unstakeLockPeriod;
-    }
-
     function setWithdrawLockPeriod(uint256 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
+    function setWithdrawReleasePeriod(uint256 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+         withdrawReleasePeriod = _withdrawReleasePeriod;
+    }
+
+    function setResetLockPenalty(uint256 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        resetLockPenalty = _resetLockPenalty;
+    }
+    
     function setMaxAltBlocks(uint256 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         maxAltBlocks = _maxAltBlocks;
     }
@@ -132,5 +140,9 @@ contract Parameters is IParameters, ACL {
 
     function getStakeModifierHash() external pure override returns (bytes32) {
         return _STAKE_MODIFIER_HASH;
+    }
+
+    function getRewardModifierHash() external pure override returns (bytes32) {
+        return _REWARD_MODIFIER_HASH;
     }
 }
