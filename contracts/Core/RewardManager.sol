@@ -198,8 +198,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         address bountyHunter,
         uint256 epoch
     ) external onlyRole(parameters.getRewardModifierHash()) {
-        uint256 slashPenaltyAmount = ((stakers[id].stake*parameters.percentSlashPenalty())/100);
-        uint256 Stake =  stakers[id].stake - slashPenaltyAmount;
+        uint256 slashPenaltyAmount = (((stakeManager.getStaker(id).stake)*parameters.percentSlashPenalty())/100);
+        uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
         uint256 bountyReward = slashPenaltyAmount/2;
         if(bountyReward > 0){
             stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
