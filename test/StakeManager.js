@@ -85,13 +85,11 @@ describe('StakeManager', function () {
       await Razor.transfer(signers[4].address, stake1); // Chosen Staker by the Delegator
       await Razor.transfer(signers[5].address, stake1); // Delegator
       await Razor.transfer(signers[6].address, stake1); // new Delegator
-
     });
 
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
-
 
       await Razor.connect(signers[1]).approve(stakeManager.address, stake1);
 
@@ -111,7 +109,6 @@ describe('StakeManager', function () {
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('19000');
-
 
       await Razor.connect(signers[2]).approve(stakeManager.address, stake);
 
@@ -146,7 +143,6 @@ describe('StakeManager', function () {
 
       await Razor.connect(signers[1]).approve(stakeManager.address, stake);
 
-
       const epoch = await getEpoch();
       let staker = await stakeManager.getStaker(1);
       const sToken = await stakedToken.attach(staker.tokenAddress);
@@ -160,7 +156,6 @@ describe('StakeManager', function () {
       assertBNEqual(staker.stake, stake2, 'Change in stake is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), prevBalance.add(sAmount), 'Amount of minted sRzR is not correct');
     });
-
 
     it('Staker should be able to unstake when there is no existing lock', async function () {
       await mineToNextEpoch();
@@ -212,7 +207,6 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, prevStake.sub(rAmount), 'Updated stake is not equal to calculated stake');
       assertBNEqual(await Razor.balanceOf(staker._address), prevBalance.add(rAmount), 'Balance should be equal');
-
     });
 
     it('Staker should not be able to withdraw after withdraw lock period if voted in withdraw lock period', async function () {

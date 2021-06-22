@@ -487,7 +487,6 @@ describe('BlockManager', function () {
       await Razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('420000'));
 
-
       await Razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];

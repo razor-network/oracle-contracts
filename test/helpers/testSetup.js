@@ -55,7 +55,6 @@ const setupContracts = async () => {
     stakeManager.initialize(Razor.address, rewardManager.address, voteManager.address, parameters.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 
-
     assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
     blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManager.address),
     rewardManager.grantRole(await parameters.getRewardModifierHash(), blockManager.address),
