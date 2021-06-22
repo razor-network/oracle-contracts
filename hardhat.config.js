@@ -11,6 +11,7 @@ require('@nomiclabs/hardhat-ethers');
 require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
+require('hardhat-abi-exporter');
 
 const {
   PROVIDER_HOST,
@@ -31,7 +32,7 @@ const ENV_CHAIN_IDS = {
 module.exports = {
   defaultNetwork: 'hardhat',
   solidity: {
-    version: '0.8.0',
+    version: '0.8.4',
     settings: {
       optimizer: {
         enabled: true,
@@ -71,5 +72,11 @@ module.exports = {
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
+  },
+  abiExporter: {
+    path: './abi',
+    clear: true,
+    flat: true,
+    spacing: 2,
   },
 };

@@ -25,7 +25,6 @@ describe('Parameters contract Tests', async () => {
   const penaltyNotRevealNumerator = toBigNumber('1');
   const penaltyNotRevealDenominator = toBigNumber('10000');
 
-  const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
@@ -79,9 +78,6 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setPenaltyNotRevealDeom(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setUnstakeLockPeriod(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
     tx = parameters.connect(signers[1]).setWithdrawLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -115,10 +111,6 @@ describe('Parameters contract Tests', async () => {
     await parameters.setPenaltyNotRevealDeom(toBigNumber('6'));
     const penaltyNotRevealDenom = await parameters.penaltyNotRevealDenom();
     assertBNEqual(penaltyNotRevealDenom, toBigNumber('6'));
-
-    await parameters.setUnstakeLockPeriod(toBigNumber('7'));
-    const unstakeLockPeriod = await parameters.unstakeLockPeriod();
-    assertBNEqual(unstakeLockPeriod, toBigNumber('7'));
 
     await parameters.setMinStake(toBigNumber('8'));
     const minStake = await parameters.minStake();
@@ -171,9 +163,6 @@ describe('Parameters contract Tests', async () => {
 
     const penaltyNotRevealDenomValue = await parameters.penaltyNotRevealDenom();
     assertBNEqual(penaltyNotRevealDenominator, penaltyNotRevealDenomValue);
-
-    const unstakeLockPeriodValue = await parameters.unstakeLockPeriod();
-    assertBNEqual(unstakeLockPeriod, unstakeLockPeriodValue);
 
     const minStakeValue = await parameters.minStake();
     assertBNEqual(minimumStake, minStakeValue);
