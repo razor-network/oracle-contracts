@@ -10,7 +10,6 @@ import "./storage/BlockStorage.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "hardhat/console.sol";
 
 
 contract BlockManager is Initializable, ACL, BlockStorage {
