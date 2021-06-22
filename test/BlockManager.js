@@ -5,7 +5,6 @@ test penalizeEpochs */
 const merkle = require('@razor-network/merkle');
 const {
   assertBNEqual,
-  assertBNNotEqual,
   mineToNextEpoch,
   mineToNextState,
   assertRevert,
