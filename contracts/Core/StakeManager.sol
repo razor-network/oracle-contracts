@@ -189,7 +189,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         );
         // Step 1:  Razor Token Transfer : Amount
         require(
-            sch.transferFrom(msg.sender, address(this), amount),
+            razor.transferFrom(msg.sender, address(this), amount),
             "RZR token transfer failed"
         );
 
@@ -309,14 +309,14 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             uint256 commission = (rAmount * staker.commission) / 100;
             require(
-                sch.transfer(staker._address, commission),
+                razor.transfer(staker._address, commission),
                 "couldnt transfer"
             );
             rAmount = rAmount - commission;
         }
 
         //Transfer stake
-        require(sch.transfer(msg.sender, rAmount), "couldnt transfer");
+        require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
@@ -382,7 +382,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @notice External function for setting stake of the staker
     /// Used by RewardManager 
     /// @param _id of the staker
-    /// @param _stake the amount of schelling tokens staked
+    /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
         uint256 _id,
         uint256 _stake,
@@ -410,7 +410,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         onlyRole(parameters.getStakeModifierHash())
     {
         require(
-            sch.transfer(bountyHunter, bounty),
+            razor.transfer(bountyHunter, bounty),
             "failed to transfer bounty"
         );
     }
