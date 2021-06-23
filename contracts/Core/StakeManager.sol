@@ -90,9 +90,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         razor = RAZOR(razorAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
-
-        
-
         voteManager = IVoteManager(voteManagersAddress);
         parameters = IParameters(parametersAddress);
     }

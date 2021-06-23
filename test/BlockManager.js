@@ -28,7 +28,7 @@ describe('BlockManager', function () {
   let blockManager;
   let assetManager;
   let random;
-  let Razor;
+  let razor;
   let stakeManager;
   let rewardManager;
   let parameters;
@@ -41,7 +41,7 @@ describe('BlockManager', function () {
       parameters,
       assetManager,
       random,
-      Razor,
+      razor,
       stakeManager,
       rewardManager,
       voteManager,
@@ -50,7 +50,7 @@ describe('BlockManager', function () {
     signers = await ethers.getSigners();
   });
 
-  describe('Razor', async () => {
+  describe('razor', async () => {
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await blockManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
@@ -90,14 +90,14 @@ describe('BlockManager', function () {
       await Promise.all(await initializeContracts());
 
       await mineToNextEpoch();
-      await Razor.transfer(signers[5].address, tokenAmount('423000'));
-      await Razor.transfer(signers[6].address, tokenAmount('19000'));
+      await razor.transfer(signers[5].address, tokenAmount('423000'));
+      await razor.transfer(signers[6].address, tokenAmount('19000'));
 
-      await Razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
+      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
 
-      await Razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
+      await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -245,16 +245,16 @@ describe('BlockManager', function () {
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, toBigNumber('0'));
-      assertBNEqual(await Razor.balanceOf(signers[19].address), tokenAmount('210000'));
+      assertBNEqual(await razor.balanceOf(signers[19].address), tokenAmount('210000'));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
       await mineToNextState();
-      await Razor.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
+      await razor.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
 
       const epoch = await getEpoch();
 
-      await Razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('19000'));
+      await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('19000'));
       await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
@@ -399,7 +399,7 @@ describe('BlockManager', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-      await Razor.connect(signers[19]).approve(stakeManager.address, tokenAmount('19000'));
+      await razor.connect(signers[19]).approve(stakeManager.address, tokenAmount('19000'));
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
@@ -480,14 +480,14 @@ describe('BlockManager', function () {
       // Commit
       await mineToNextEpoch();
 
-      await Razor.transfer(signers[2].address, tokenAmount('423000'));
-      await Razor.transfer(signers[3].address, tokenAmount('19000'));
+      await razor.transfer(signers[2].address, tokenAmount('423000'));
+      await razor.transfer(signers[3].address, tokenAmount('19000'));
       let epoch = await getEpoch();
 
-      await Razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('420000'));
+      await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('420000'));
 
-      await Razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
+      await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);

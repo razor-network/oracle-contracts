@@ -35,15 +35,15 @@ const setupContracts = async () => {
   const stakeManager = await StakeManager.deploy();
   const rewardManager = await RewardManager.deploy(BLOCK_REWARD.toHexString());
   const voteManager = await VoteManager.deploy();
-  const Razor = await RAZOR.deploy(initialSupply);
-  const faucet = await Faucet.deploy(Razor.address);
+  const razor = await RAZOR.deploy(initialSupply);
+  const faucet = await Faucet.deploy(razor.address);
 
   await parameters.deployed();
   await blockManager.deployed();
   await delegator.deployed();
   await faucet.deployed();
   await assetManager.deployed();
-  await Razor.deployed();
+  await razor.deployed();
   await stakeManager.deployed();
   await rewardManager.deployed();
   await voteManager.deployed();
@@ -52,7 +52,7 @@ const setupContracts = async () => {
 
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
-    stakeManager.initialize(Razor.address, rewardManager.address, voteManager.address, parameters.address),
+    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 
     assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
@@ -73,7 +73,7 @@ const setupContracts = async () => {
     faucet,
     assetManager,
     random,
-    Razor,
+    razor,
     stakeManager,
     rewardManager,
     structs,
