@@ -17,10 +17,8 @@ import "../StakedToken.sol";
 contract StakeManager is Initializable, ACL, StakeStorage {
 
     IParameters public parameters;
-
     IRewardManager public rewardManager;
     RAZOR public razor;
-
     IVoteManager public voteManager;
 
     event StakeChange(
@@ -76,19 +74,17 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         _;
     }
 
-
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
-
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param parametersAddress The address of the StateManager contract
     function initialize (
 
         address razorAddress,
         address rewardManagerAddress,
-
         address voteManagersAddress,
         address parametersAddress
+
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
     {
 
@@ -193,7 +189,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "RZR token transfer failed"
         );
 
-        // Step 2 : Calculate Mintable amount
+        // Step 2 : Calculate  amount
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint =

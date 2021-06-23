@@ -43,9 +43,9 @@ module.exports = async () => {
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
-    const mintableSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
+    const initialSupply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
 
-    await RAZOR.transfer(stakeManagerAddress, mintableSupply);
+    await RAZOR.transfer(stakeManagerAddress, initialSupply);
 
     for (let i = 0; i < stakerAddressList.length; i++) {
       const tx = await RAZOR.transfer(stakerAddressList[i], SEED_AMOUNT);
