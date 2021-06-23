@@ -584,7 +584,7 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('6'), 'incorrect proposalID');
 
       // Calculate Dispute data
       await mineToNextState();
