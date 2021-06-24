@@ -2,7 +2,6 @@ const { BLOCK_REWARD } = require('./constants');
 
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
-
 const setupContracts = async () => {
   const Structs = await ethers.getContractFactory('Structs');
   const structs = await Structs.deploy();
