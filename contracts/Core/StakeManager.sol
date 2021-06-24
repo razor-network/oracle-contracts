@@ -349,6 +349,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         Structs.Staker storage staker = stakers[stakerId];
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
+        
         uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
 
         // Converting Penalty into sAmount

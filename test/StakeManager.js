@@ -105,8 +105,8 @@ describe('StakeManager', function () {
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('19000');
-      await razor.connect(signers[2]).approve(stakeManager.address, stake);
 
+      await razor.connect(signers[2]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[2]).stake(epoch, stake);
       const stakerId = await stakeManager.stakerIds(signers[2].address);
       const staker = await stakeManager.stakers(stakerId);
