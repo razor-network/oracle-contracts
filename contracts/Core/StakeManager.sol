@@ -15,7 +15,7 @@ import "../StakedToken.sol";
 /// for stakers
 
 contract StakeManager is Initializable, ACL, StakeStorage {
- 
+
     IParameters public parameters;
     IRewardManager public rewardManager;
     RAZOR public razor;
@@ -349,7 +349,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
         Structs.Staker storage staker = stakers[stakerId];
         StakedToken sToken = StakedToken(stakers[stakerId].tokenAddress);
-        
+
         uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
 
         // Converting Penalty into sAmount
