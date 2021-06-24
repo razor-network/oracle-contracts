@@ -1,4 +1,4 @@
-const { NETWORK, SCHELLING_COIN_ADDRESS } = process.env;
+const { NETWORK, RAZOR_ADDRESS } = process.env;
 const {
   deployContract,
   appendDeploymentFile,
@@ -8,13 +8,13 @@ const {
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const deployRAZORAndFaucet = async () => {
-  if (NETWORK !== 'mainnet' && SCHELLING_COIN_ADDRESS === '') {
+  if (NETWORK !== 'mainnet' && RAZOR_ADDRESS === '') {
     const RAZOR = await deployContract('RAZOR', [], [initialSupply]);
     await deployContract('Faucet', [], [RAZOR.address]);
   } else {
     const { Faucet, RAZOR } = await readOldDeploymentFile();
 
-    if (RAZOR !== SCHELLING_COIN_ADDRESS) {
+    if (RAZOR !== RAZOR_ADDRESS) {
       throw Error('Razor instance address is different than that is deployed previously');
     }
 
