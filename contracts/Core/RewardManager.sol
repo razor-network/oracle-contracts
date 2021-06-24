@@ -189,8 +189,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     }
 
     /// @notice The function is used by the Votemanager reveal function
-    /// to penalise the staker who lost his secret and make his stake zero and
-    /// transfer to bounty hunter half the schelling tokens of the stakers stake
+    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
+    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash(
