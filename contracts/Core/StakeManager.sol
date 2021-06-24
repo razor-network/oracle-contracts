@@ -15,7 +15,7 @@ import "../StakedToken.sol";
 /// for stakers
 
 contract StakeManager is Initializable, ACL, StakeStorage {
-    
+ 
     IParameters public parameters;
     IRewardManager public rewardManager;
     RAZOR public razor;
@@ -402,7 +402,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "failed to transfer bounty"
         );
     }
-
 
     /// @param _address Address of the staker
     /// @return The staker ID

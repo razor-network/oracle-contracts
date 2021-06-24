@@ -76,7 +76,6 @@ describe('StakeManager', function () {
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');
-
       await razor.transfer(signers[1].address, stake1);
       await razor.transfer(signers[2].address, stake1);
       await razor.transfer(signers[3].address, stake1);
@@ -195,7 +194,6 @@ describe('StakeManager', function () {
       const totalSupply = await sToken.totalSupply();
       const rAmount = ((lock.amount).mul(staker.stake)).div(totalSupply);
       await mineToNextEpoch();
-
       epoch = await getEpoch();
       await (stakeManager.connect(signers[1]).withdraw(epoch, 1));
       staker = await stakeManager.getStaker(1);

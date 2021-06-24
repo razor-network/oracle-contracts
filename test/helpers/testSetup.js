@@ -48,7 +48,6 @@ const setupContracts = async () => {
   await voteManager.deployed();
 
   const initializeContracts = async () => [
-
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
