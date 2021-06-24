@@ -6,7 +6,6 @@ const {
 const { BigNumber } = ethers;
 const {
   NETWORK,
-
   SEED_AMOUNT,
   STAKER_ADDRESSES,
 } = process.env;

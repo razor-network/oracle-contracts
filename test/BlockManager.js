@@ -479,7 +479,6 @@ describe('BlockManager', function () {
     it('should be able to dispute in batches', async function () {
       // Commit
       await mineToNextEpoch();
-
       await razor.transfer(signers[2].address, tokenAmount('423000'));
       await razor.transfer(signers[3].address, tokenAmount('19000'));
       let epoch = await getEpoch();

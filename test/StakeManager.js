@@ -63,10 +63,8 @@ describe('StakeManager', function () {
 
     it('should not be able to initiliaze StakeManager contract without admin role', async () => {
       const tx = stakeManager.connect(signers[1]).initialize(
-
         razor.address,
         rewardManager.address,
-
         voteManager.address,
         parameters.address
       );
@@ -92,7 +90,6 @@ describe('StakeManager', function () {
       const stake1 = tokenAmount('420000');
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
-
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.stakers(stakerId);
@@ -109,7 +106,6 @@ describe('StakeManager', function () {
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('19000');
-
       await razor.connect(signers[2]).approve(stakeManager.address, stake);
 
       await stakeManager.connect(signers[2]).stake(epoch, stake);
@@ -140,7 +136,6 @@ describe('StakeManager', function () {
       const stake = tokenAmount('3000');
       const stake2 = tokenAmount('423000');
       await mineToNextEpoch();
-
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
 
       const epoch = await getEpoch();
@@ -199,7 +194,6 @@ describe('StakeManager', function () {
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
       const rAmount = ((lock.amount).mul(staker.stake)).div(totalSupply);
-
       await mineToNextEpoch();
 
       epoch = await getEpoch();
