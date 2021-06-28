@@ -417,7 +417,7 @@ describe('BlockManager', function () {
       assert((await proposedBlock.valid) === false);
     });
 
-    it('no block should be confirmed in the previous epoch and no peanalization for one block which is invalid', async function () {
+    it('if no block is valid in previous epoch, stakers should not be penalised', async function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
