@@ -54,4 +54,21 @@ describe('SchellingCoin', function () {
     const tx = schellingCoin.connect(signers[1]).mint(signers[3].address, tokenAmount('10'));
     await assertRevert(tx, 'Caller is not a minter');
   });
+
+  it('should not be able to grant minter role', async () => {
+    const tx = schellingCoin.connect(signers[1]).addMinter(signers[2].address);
+    await assertRevert(tx, 'ACL: sender not authorized');
+  });
+  it('should be able to grant minter role', async () => {
+    const tx = schellingCoin.connect(signers[0]).addMinter(signers[2].address);
+    await assert(tx, 'ACL: Minter Role granted');
+  });
+  it('should be able to Revoke minter role', async () => {
+    const tx = schellingCoin.connect(signers[0]).removeMinter(signers[2].address);
+    await assert(tx, 'ACL: Minter Role Revoked');
+  });
+  it('should not be able to revoke minter role', async () => {
+    const tx = schellingCoin.connect(signers[1]).removeMinter(signers[2].address);
+    await assertRevert(tx, 'ACL: sender not authorized');
+  });
 });

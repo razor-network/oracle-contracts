@@ -30,6 +30,7 @@ describe('BlockManager', function () {
   let random;
   let schellingCoin;
   let stakeManager;
+  let rewardManager;
   let parameters;
   let voteManager;
   let initializeContracts;
@@ -42,6 +43,7 @@ describe('BlockManager', function () {
       random,
       schellingCoin,
       stakeManager,
+      rewardManager,
       voteManager,
       initializeContracts,
     } = await setupContracts());
@@ -76,6 +78,7 @@ describe('BlockManager', function () {
     it('should not be able to initiliaze BlockManager contract without admin role', async () => {
       const tx = blockManager.connect(signers[1]).initialize(
         stakeManager.address,
+        rewardManager.address,
         parameters.address,
         voteManager.address,
         assetManager.address
@@ -476,16 +479,15 @@ describe('BlockManager', function () {
     it('should be able to dispute in batches', async function () {
       // Commit
       await mineToNextEpoch();
-      await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
-      await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));
+      await schellingCoin.transfer(signers[2].address, tokenAmount('423000'));
+      await schellingCoin.transfer(signers[3].address, tokenAmount('19000'));
       let epoch = await getEpoch();
-      await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
 
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+      await schellingCoin.connect(signers[2]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('420000'));
 
-      await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
-
+      await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
+      await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
 
@@ -495,7 +497,7 @@ describe('BlockManager', function () {
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
-      await voteManager.connect(signers[5]).commit(epoch, commitment1);
+      await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree2 = merkle('keccak256').sync(votes2);
@@ -506,7 +508,7 @@ describe('BlockManager', function () {
         [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
-      await voteManager.connect(signers[6]).commit(epoch, commitment2);
+      await voteManager.connect(signers[3]).commit(epoch, commitment2);
 
       // Reveal
       await mineToNextState();
@@ -514,27 +516,27 @@ describe('BlockManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[5]).reveal(epoch, tree.root(), votes, proof,
+      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[5].address);
+        signers[2].address);
 
       const proof2 = [];
       for (let i = 0; i < votes2.length; i++) {
         proof2.push(tree2.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[6]).reveal(epoch, tree2.root(), votes2, proof2,
+      await voteManager.connect(signers[3]).reveal(epoch, tree2.root(), votes2, proof2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[6].address);
+        signers[3].address);
 
       // Propose
       await mineToNextState();
-      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc5);
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
 
       const iteration = await getIteration(stakeManager, random, staker);
 
-      await blockManager.connect(signers[5]).propose(epoch,
+      await blockManager.connect(signers[2]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         [99, 199, 299, 399, 499, 599, 699, 799, 899],
@@ -542,8 +544,7 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
       // Calculate Dispute data
       await mineToNextState();
