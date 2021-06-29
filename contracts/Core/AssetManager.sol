@@ -4,11 +4,13 @@ pragma solidity ^0.8.0;
 import "./interface/IParameters.sol";
 import "./storage/AssetStorage.sol";
 import "./ACL.sol";
+import "./interface/IBlockManager.sol";
 
 
 contract AssetManager is ACL, AssetStorage {
 
     IParameters public parameters;
+    IBlockManager public blockManager;
 
     event JobCreated(
         uint256 id,
@@ -69,8 +71,12 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    constructor(address parametersAddress) {
+    constructor(
+        address parametersAddress,
+        address blockManagerAddress
+    ) {
        parameters = IParameters(parametersAddress);
+       blockManager = IBlockManager(blockManagerAddress);
     }
 
     function createJob (
@@ -79,9 +85,12 @@ contract AssetManager is ACL, AssetStorage {
         string calldata name,
         bool repeat
     ) external payable {
-        //numAssets = numAssets + 1;
-        numPendingJobs = numPendingJobs+1;
+        
         uint256 epoch = parameters.getEpoch();
+        require(blockManager.getBlock(epoch-1).proposerId != 0,"Block not yet confirmed");
+        
+        numPendingJobs = numPendingJobs+1;
+
         Structs.Job memory job = Structs.Job(
             numAssets,
             epoch,
@@ -170,37 +179,26 @@ contract AssetManager is ACL, AssetStorage {
     {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
         require(jobIDs.length > 1,"Number of jobIDs low to create collection");
-        
-        //numAssets = numAssets + 1;
-        numPendingCollections = numPendingCollections+1;
+
         uint256 epoch = parameters.getEpoch();
-        collections[numAssets].id = numAssets;
-        collections[numAssets].name = name;
-        collections[numAssets].aggregationMethod = aggregationMethod;
-        collections[numAssets].epoch = epoch;
-        collections[numAssets].creator = msg.sender;
-        collections[numAssets].credit = msg.value;
+        require(blockManager.getBlock(epoch-1).proposerId != 0,"Block not yet confirmed");
+
+        numPendingCollections = numPendingCollections+1;
+        pendingCollections[numPendingCollections].id = numAssets;
+        pendingCollections[numPendingCollections].name = name;
+        pendingCollections[numPendingCollections].aggregationMethod = aggregationMethod;
+        pendingCollections[numPendingCollections].epoch = epoch;
+        pendingCollections[numPendingCollections].creator = msg.sender;
+        pendingCollections[numPendingCollections].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
-            require(!collections[numAssets].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
-            collections[numAssets].jobIDs.push(jobIDs[i]);
-            collections[numAssets].jobIDExist[jobIDs[i]] = true;
+            require(!pendingCollections[numPendingCollections].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
+            pendingCollections[numPendingCollections].jobIDs.push(jobIDs[i]);
+            pendingCollections[numPendingCollections].jobIDExist[jobIDs[i]] = true;
         }
-        collections[numAssets].assetType = uint256(assetTypes.Collection);
-        /* Structs.Collection memory Collections = Structs.Collection(
-          numAssets,
-          epoch,
-          name,
-          aggregationMethod,
-          jobIDs,
-          msg.sender,
-          msg.value,
-          0,
-          uint256(assetTypes.Collection)
-      ); */
-        pendingCollections[numPendingCollections] = Collections;
+        pendingCollections[numPendingCollections].assetType = uint256(assetTypes.Collection);
         emit CollectionCreated(
-            numAssets,
+            numPendingCollections,
             epoch,
             name,
             aggregationMethod,
@@ -231,6 +229,55 @@ contract AssetManager is ACL, AssetStorage {
         collections[collectionID].jobIDs,
         block.timestamp
         );
+    }
+
+    function addPendingJobs() external {
+        if(numPendingJobs!=0)
+        {
+            uint8 i;
+            uint256 temp = numPendingJobs;
+            for(i=1; i<=temp; i++){
+                uint256 currentEpoch = parameters.getEpoch();
+                if(pendingJobs[i].epoch  < currentEpoch){
+                    numAssets = numAssets+1;
+                    jobs[numAssets] = pendingJobs[i];
+                    delete (pendingJobs[i]);
+                    numActiveAssets = numActiveAssets+1;
+                    numPendingJobs = numPendingJobs-1;
+                }
+            }
+        }
+    }
+
+    function addPendingCollections() external {
+        if(numPendingCollections!=0)
+        {
+            
+            uint256 temp = numPendingCollections;
+            for(uint8 i = 1; i <= temp; i++){
+                uint256 currentEpoch = parameters.getEpoch();
+                if(pendingCollections[i].epoch  < currentEpoch){
+                    numAssets = numAssets+1;
+                    collections[numAssets].id = numAssets; 
+                    collections[numAssets].name = pendingCollections[i].name; 
+                    collections[numAssets].aggregationMethod = pendingCollections[i].aggregationMethod; 
+                    collections[numAssets].epoch = currentEpoch;
+                    collections[numAssets].creator = pendingCollections[i].creator;
+                    collections[numAssets].credit = pendingCollections[i].credit;
+                    uint256[] memory jobIDs = pendingCollections[i].jobIDs;
+                    for(uint256 j = 0; j < jobIDs.length; j++){
+                        require(jobs[jobIDs[j]].assetType==uint256(assetTypes.Job),"Job ID not present");
+                        require(!collections[numAssets].jobIDExist[jobIDs[j]],"Duplicate JobIDs sent");
+                        collections[numAssets].jobIDs.push(jobIDs[j]);
+                        collections[numAssets].jobIDExist[jobIDs[j]] = true;
+                    }
+                    collections[numAssets].assetType = uint256(assetTypes.Collection);
+                    delete (pendingCollections[i]);
+                    numActiveAssets = numActiveAssets+1;
+                    numPendingCollections = numPendingCollections-1;
+                }
+            }    
+        }
     }
 
     function getResult(
@@ -310,46 +357,16 @@ contract AssetManager is ACL, AssetStorage {
     function getNumAssets() external view returns(uint256) {
         return numAssets;
     }
+
     function getActiveAssets() external view returns(uint256) {
       return numActiveAssets;
-  }
+    }
 
-  function getPendingJobs() external view returns(uint256) {
-      return numPendingJobs;
-  }
+    function getPendingJobs() external view returns(uint256) {
+        return numPendingJobs;
+    }
 
-   function addPendingJobs() external {
-     if(numPendingJobs!=0)
-     {
-       uint8 i;
-       uint256 temp = numPendingJobs;
-       for(i=1; i<=temp; i++){
-         uint256 currentEpoch = parameters.getEpoch();
-           if(pendingJobs[i].epoch  < currentEpoch)
-           {
-               numAssets = numAssets+1;
-               jobs[numAssets] = pendingJobs[i];
-               delete (pendingJobs[i]);
-               numActiveAssets = numActiveAssets+1;
-               numPendingJobs = numPendingJobs-1;
-             }
-           }
-   }}
-   function addPendingCollections() external {
-     if(numPendingCollections!=0)
-     {
-       uint8 i;
-       uint256 temp = numPendingCollections;
-       for(i=1; i<=temp; i++){
-         uint256 currentEpoch = parameters.getEpoch();
-          if(pendingCollections[i].epoch  < currentEpoch)
-           {
-               numAssets = numAssets+1;
-               collections[numAssets] = pendingCollections[i];
-               delete (pendingCollections[i]);
-               numActiveAssets = numActiveAssets+1;
-               numPendingCollections = numPendingCollections-1;
-             }
-           }
-   }}
+    function getPendingCollections() external view returns(uint256) {
+        return numPendingCollections;
+    }
 }

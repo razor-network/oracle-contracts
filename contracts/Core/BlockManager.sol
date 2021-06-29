@@ -144,7 +144,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             stakeManager.getStaker(proposerId).stake >= parameters.minStake(),
             "stake below minimum stake"
         );
-        require(ids.length == assetManager.getActiveAssets());
+        require(ids.length == assetManager.getActiveAssets(),"");
         _insertAppropriately(
             epoch,
             Structs.Block(
