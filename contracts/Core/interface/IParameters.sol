@@ -29,6 +29,6 @@ interface IParameters {
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
     function getRewardModifierHash() external view returns(bytes32);
-    function getAssetCreatorHash() external view returns (bytes32);
+    function getAssetModifierHash() external view returns (bytes32);
     function getDefaultAdminHash() external view returns(bytes32);
 }

@@ -17,6 +17,7 @@ contract AssetManager is ACL, AssetStorage {
         string selector,
         string name,
         bool repeat,
+        address creator,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -29,6 +30,7 @@ contract AssetManager is ACL, AssetStorage {
         string selector,
         string name,
         bool repeat,
+        address creator,
         bool active,
         uint256 timestamp
     );
@@ -55,6 +57,7 @@ contract AssetManager is ACL, AssetStorage {
         uint32 aggregationMethod,
         uint256[] jobIDs,
         bool active,
+        address creator,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -66,6 +69,7 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
+        address creator,
         uint256 timestamp
     );
 
@@ -95,7 +99,7 @@ contract AssetManager is ACL, AssetStorage {
         bool repeat
     ) 
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         numAssets = numAssets + 1;
         uint256 epoch = parameters.getEpoch();
@@ -106,7 +110,8 @@ contract AssetManager is ACL, AssetStorage {
             selector, 
             name, 
             repeat, 
-            true, 
+            true,
+            msg.sender, 
             0,
             uint256(assetTypes.Job)
         );
@@ -118,7 +123,8 @@ contract AssetManager is ACL, AssetStorage {
             url, 
             selector, 
             name, 
-            repeat,  
+            repeat,
+            msg.sender,  
             block.timestamp, 
             assetTypes.Job
         );
@@ -130,10 +136,9 @@ contract AssetManager is ACL, AssetStorage {
         string calldata selector
     ) 
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
-        require(jobs[jobID].active, "Job has been inactivated");
 
         uint256 epoch = parameters.getEpoch();
 
@@ -152,19 +157,18 @@ contract AssetManager is ACL, AssetStorage {
 
     function updateAssetStatus(
         uint256 id,
-        uint256 activationMethod
+        bool isActive
     ) 
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         require(id != 0, "ID cannot be 0");
         require(id<=numAssets,"ID does not exist");
-        require(activationMethod<=1,"Range out of bounds");
 
         uint256 epoch = parameters.getEpoch();
 
         if(jobs[id].assetType==uint256(assetTypes.Job)){
-            if(activationMethod == 0){
+            if(isActive){
                 jobs[id].active = false;
             }
             else{
@@ -179,7 +183,7 @@ contract AssetManager is ACL, AssetStorage {
             );
         }
         else{
-            if(activationMethod == 0){
+            if(isActive){
                 collections[id].active = false;
             }
             else{
@@ -224,6 +228,7 @@ contract AssetManager is ACL, AssetStorage {
                 job.selector,
                 job.name,
                 job.repeat,
+                job.creator,
                 job.active,
                 block.timestamp
             );
@@ -241,6 +246,7 @@ contract AssetManager is ACL, AssetStorage {
                 collection.name,
                 collection.aggregationMethod,
                 collection.jobIDs,
+                collection.creator,
                 block.timestamp
             );
         }
@@ -252,7 +258,7 @@ contract AssetManager is ACL, AssetStorage {
         uint32 aggregationMethod
     ) 
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
         require(jobIDs.length > 1,"Number of jobIDs low to create collection");
@@ -270,6 +276,7 @@ contract AssetManager is ACL, AssetStorage {
             collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
+        collections[numAssets].creator = msg.sender;
         collections[numAssets].assetType = uint256(assetTypes.Collection);
         collections[numAssets].active = true;
 
@@ -280,6 +287,7 @@ contract AssetManager is ACL, AssetStorage {
             aggregationMethod,
             jobIDs,
             true,
+            msg.sender,
             block.timestamp, 
             assetTypes.Collection
         );
@@ -290,7 +298,7 @@ contract AssetManager is ACL, AssetStorage {
         uint256 jobID
     )  
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
         require(collections[collectionID].active,"Collection is inactive");
@@ -316,10 +324,9 @@ contract AssetManager is ACL, AssetStorage {
         uint256 jobIDIndex
     )  
         external 
-        onlyRole(parameters.getAssetCreatorHash()) 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
         require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
-        require(collections[collectionID].active,"Collection is inactive");
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
         
         uint256 epoch = parameters.getEpoch();

@@ -336,7 +336,7 @@ describe('Access Control Test', async () => {
   });
 
   it('createJob() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
@@ -361,7 +361,7 @@ describe('Access Control Test', async () => {
   });
 
   it('updateJob() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2');
@@ -387,7 +387,7 @@ describe('Access Control Test', async () => {
   });
 
   it('updateAssetStatus() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.updateAssetStatus(1, 0);
@@ -413,7 +413,7 @@ describe('Access Control Test', async () => {
   });
 
   it('createCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);
@@ -440,7 +440,7 @@ describe('Access Control Test', async () => {
   });
 
   it('addJobToCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);
@@ -469,7 +469,7 @@ describe('Access Control Test', async () => {
   });
 
   it('removeJobFromCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetCreatorHash();
+    const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);

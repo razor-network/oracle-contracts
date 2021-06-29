@@ -53,6 +53,7 @@ library Structs {
         string name;
         bool repeat;
         bool active;
+        address creator;
         uint256 result;
         uint256 assetType;
     }
@@ -65,6 +66,7 @@ library Structs {
         mapping(uint256=>bool) jobIDExist;
         uint256 epoch;
         bool active;
+        address creator;
         uint256 result;
         uint256 assetType;
     }

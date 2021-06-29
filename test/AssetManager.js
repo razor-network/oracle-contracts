@@ -28,7 +28,7 @@ describe('AssetManager', function () {
       assert(await assetManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
     it('should be able to create Job', async function () {
-      await assetManager.grantRole(await parameters.getAssetCreatorHash(), signers[0].address);
+      await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       const name = 'test';
@@ -108,13 +108,13 @@ describe('AssetManager', function () {
     });
 
     it('should be able to inactivate Job', async function () {
-      await assetManager.updateAssetStatus(5, 0);
+      await assetManager.updateAssetStatus(5, true);
       const job = await assetManager.jobs(5);
       assert(job.active === false);
     });
 
     it('should be able to reactivate Job', async function () {
-      await assetManager.updateAssetStatus(5, 1);
+      await assetManager.updateAssetStatus(5, false);
       const job = await assetManager.jobs(5);
       assert(job.active === true);
       await assetManager.updateAssetStatus(5, 0);
@@ -130,38 +130,26 @@ describe('AssetManager', function () {
     it('should be able to inactivate collection', async function () {
       const collectionName = 'Test Collection6';
       await assetManager.createCollection(collectionName, [1, 2], 2);
-      await assetManager.updateAssetStatus(6, 0);
+      await assetManager.updateAssetStatus(6, true);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === false);
     });
 
     it('should be able to reactivate collection', async function () {
-      await assetManager.updateAssetStatus(6, 1);
+      await assetManager.updateAssetStatus(6, false);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === true);
-      await assetManager.updateAssetStatus(6, 0);
+      await assetManager.updateAssetStatus(6, true);
     });
 
     it('should not be able to remove or add job to collection if the collection has been inactivated', async function () {
       const tx1 = assetManager.addJobToCollection(6, 4);
       await assertRevert(tx1, 'Collection is inactive');
-      const tx2 = assetManager.removeJobFromCollection(6, 1);
-      await assertRevert(tx2, 'Collection is inactive');
     });
 
     it('should not be able to remove job from collection if index is out of range', async function () {
       const tx = assetManager.removeJobFromCollection(3, 5);
       await assertRevert(tx, 'Index not in range');
-    });
-
-    it('should not be able to add job from collection if job has been inactivated', async function () {
-      const tx = assetManager.addJobToCollection(3, 5);
-      await assertRevert(tx, 'Job ID not active');
-    });
-
-    it('should not be able to update job if job has been inactivated', async function () {
-      const tx = assetManager.updateJob(5, 'http://testurl.com/4', 'selector/4');
-      await assertRevert(tx, 'Job has been inactivated');
     });
 
     it('should not be able to update job if job does not exist', async function () {
@@ -177,11 +165,6 @@ describe('AssetManager', function () {
     it('should not be able to update activity status of asset if assetID does not exist', async function () {
       const tx = assetManager.updateAssetStatus(100, 0);
       await assertRevert(tx, 'ID does not exist');
-    });
-
-    it('should not be able to update activity status of asset if activation method out of bounds', async function () {
-      const tx = assetManager.updateAssetStatus(6, 5);
-      await assertRevert(tx, 'Range out of bounds');
     });
 
     it('should not create a collection if one of the jobIDs is not a job', async function () {
