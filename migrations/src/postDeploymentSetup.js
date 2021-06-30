@@ -42,7 +42,7 @@ module.exports = async () => {
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
-    const supply = (BigNumber.from(10).pow(BigNumber.from(26))).mul(BigNumber.from(6));
+    const supply = (BigNumber.from(10).pow(BigNumber.from(23))).mul(BigNumber.from(5));
 
     await RAZOR.transfer(stakeManagerAddress, supply);
 
