@@ -138,7 +138,7 @@ contract AssetManager is ACL, AssetStorage {
         external 
         onlyRole(parameters.getAssetModifierHash()) 
     {
-        require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
+        require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
 
         uint256 epoch = parameters.getEpoch();
 
@@ -163,11 +163,11 @@ contract AssetManager is ACL, AssetStorage {
         onlyRole(parameters.getAssetModifierHash()) 
     {
         require(id != 0, "ID cannot be 0");
-        require(id<=numAssets,"ID does not exist");
+        require(id <= numAssets, "ID does not exist");
 
         uint256 epoch = parameters.getEpoch();
 
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             if(isActive){
                 jobs[id].active = false;
             }
@@ -198,9 +198,6 @@ contract AssetManager is ACL, AssetStorage {
             );
             
         }
-
-        
-
     }
 
     function fulfillAsset(
@@ -233,7 +230,7 @@ contract AssetManager is ACL, AssetStorage {
                 block.timestamp
             );
         }
-        else if(collections[id].assetType==uint256(assetTypes.Collection)){
+        else if(collections[id].assetType == uint256(assetTypes.Collection)){
 
             Structs.Collection storage collection = collections[id];
 
@@ -260,8 +257,8 @@ contract AssetManager is ACL, AssetStorage {
         external 
         onlyRole(parameters.getAssetModifierHash()) 
     {
-        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
-        require(jobIDs.length > 1,"Number of jobIDs low to create collection");
+        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
+        require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
         uint256 epoch = parameters.getEpoch();
@@ -270,9 +267,9 @@ contract AssetManager is ACL, AssetStorage {
         collections[numAssets].aggregationMethod = aggregationMethod; 
         collections[numAssets].epoch = epoch;
         for(uint256 i = 0; i < jobIDs.length; i++){
-            require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
-            require(jobs[jobIDs[i]].active,"Job ID not active");
-            require(!collections[numAssets].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
+            require(jobs[jobIDs[i]].assetType == uint256(assetTypes.Job), "Job ID not present");
+            require(jobs[jobIDs[i]].active, "Job ID not active");
+            require(!collections[numAssets].jobIDExist[jobIDs[i]], "Duplicate JobIDs sent");
             collections[numAssets].jobIDs.push(jobIDs[i]);
             collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
@@ -300,11 +297,11 @@ contract AssetManager is ACL, AssetStorage {
         external 
         onlyRole(parameters.getAssetModifierHash()) 
     {
-        require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
-        require(collections[collectionID].active,"Collection is inactive");
-        require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
-        require(jobs[jobID].active,"Job ID not active");
-        require(!collections[collectionID].jobIDExist[jobID],"Job exists in this collection");
+        require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].active, "Collection is inactive");
+        require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
+        require(jobs[jobID].active, "Job ID not active");
+        require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
         
         uint256 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
@@ -326,7 +323,7 @@ contract AssetManager is ACL, AssetStorage {
         external 
         onlyRole(parameters.getAssetModifierHash()) 
     {
-        require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
+        require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
         
         uint256 epoch = parameters.getEpoch();
@@ -356,9 +353,9 @@ contract AssetManager is ACL, AssetStorage {
         ) 
     {
         require(id != 0, "ID cannot be 0");
-        require(id<=numAssets,"ID does not exist");
+        require(id <= numAssets, "ID does not exist");
         
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             return jobs[id].result;
         }
         else{
@@ -380,7 +377,7 @@ contract AssetManager is ACL, AssetStorage {
             bool active
         ) 
     {
-        require(jobs[id].assetType==uint256(assetTypes.Job),"ID is not a job");
+        require(jobs[id].assetType == uint256(assetTypes.Job), "ID is not a job");
         Structs.Job memory job = jobs[id];
         return(job.url, job.selector, job.name, job.repeat, job.result, job.active);
     }
@@ -398,7 +395,7 @@ contract AssetManager is ACL, AssetStorage {
             bool active
         ) 
     {
-        require(collections[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
+        require(collections[id].assetType == uint256(assetTypes.Collection), "ID is not a collection");
         return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result, collections[id].active);
     }
 
@@ -412,9 +409,9 @@ contract AssetManager is ACL, AssetStorage {
         )
     {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets,"ID does not exist");
+        require(id <= numAssets, "ID does not exist");
 
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             return uint256(assetTypes.Job);
         } 
         else{
@@ -432,9 +429,9 @@ contract AssetManager is ACL, AssetStorage {
         )
     {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets,"ID does not exist");
+        require(id <= numAssets, "ID does not exist");
 
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             return jobs[id].active;
         } 
         else{
