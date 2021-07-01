@@ -201,8 +201,10 @@ contract RewardManager is Initializable, ACL, RewardStorage {
        uint256 slashPenaltyAmount = (((stakeManager.getStaker(id).stake)*parameters.percentSlashPenalty())/100);
        uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
        uint256 bountyReward = slashPenaltyAmount/2;
-       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
-       stakeManager.transferBounty(bountyHunter, bountyReward);
+       if(bountyReward > 0){
+          stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
+          stakeManager.transferBounty(bountyHunter, bountyReward);
+      }
     }
 
     /// @notice This function is used by StakeManager to increment reward pool,
