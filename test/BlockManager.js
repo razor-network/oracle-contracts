@@ -89,7 +89,6 @@ describe('BlockManager', function () {
       await Promise.all(await initializeContracts());
 
       await mineToNextEpoch();
-      
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.transfer(signers[6].address, tokenAmount('19000'));
       await razor.transfer(signers[8].address, tokenAmount('18000'));
@@ -101,7 +100,7 @@ describe('BlockManager', function () {
       await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
 
-      await schellingCoin.connect(signers[8]).approve(stakeManager.address, tokenAmount('18000'));
+      await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -459,7 +458,7 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
-      await schellingCoin.connect(signers[19]).approve(stakeManager.address, tokenAmount('19000'));
+      await razor.connect(signers[19]).approve(stakeManager.address, tokenAmount('19000'));
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
