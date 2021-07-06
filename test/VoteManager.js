@@ -347,14 +347,14 @@ describe('VoteManager', function () {
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore.add(rewardPool), stakeAfter);
       });
-      
+
       it('Should be able to slash if stake is zero', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        
+
         await parameters.setMinStake(0);
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
-        
+
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
@@ -362,9 +362,9 @@ describe('VoteManager', function () {
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-      
+
         await voteManager.connect(signers[6]).commit(epoch, commitment3);
-        
+
         const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
         const stakeBeforeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -374,19 +374,20 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
         const balanceBeforeAcc10 = await schellingCoin.balanceOf(signers[10].address);
-        
+
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[6].address);
-          
+
         const balanceAfterAcc10 = await schellingCoin.balanceOf(signers[10].address);
         const slashPenaltyAmount = stakeBeforeAcc6.mul(((await parameters.slashPenaltyNum())).div(await parameters.slashPenaltyDenom()));
         const stakeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
-        assertBNEqual(stakeAcc6, toBigNumber('0'), "Stake of account 6 should be zero");
-        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+        assertBNEqual(stakeAcc6, toBigNumber('0'), 'Stake of account 6 should be zero');
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
+          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
-      
-      it('Should be able to slash if stake is one', async function () {        
+
+      it('Should be able to slash if stake is one', async function () {
         const epoch = await getEpoch();
         await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
 
@@ -397,9 +398,9 @@ describe('VoteManager', function () {
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-      
+
         await voteManager.connect(signers[5]).commit(epoch, commitment3);
-        
+
         const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
         const stakeBeforeAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -409,16 +410,17 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
         const balanceBeforeAcc10 = await schellingCoin.balanceOf(signers[10].address);
-        
+
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
-          
+
         const balanceAfterAcc10 = await schellingCoin.balanceOf(signers[10].address);
         const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
-        assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), "Stake of account 5 should lessen by slashPenaltyAmount");
-        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+        assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
+          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
     });
   });
