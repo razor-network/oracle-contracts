@@ -87,7 +87,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
-            require(thisStaker.stake > 0, "nonpositive stake");
+            require(thisStaker.stake > parameters.minStake(), "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
                 "invalid merkle proof");
