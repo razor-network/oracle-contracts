@@ -11,6 +11,8 @@ const {
 } = process.env;
 
 module.exports = async () => {
+  const signers = await ethers.getSigners();
+
   const {
     Random: randomAddress,
     Parameters: parametersAddress,
