@@ -11,6 +11,8 @@ contract Parameters is IParameters, ACL {
     // penalty not reveal = 0.01% per epch
     uint256 public override penaltyNotRevealNum = 1;
     uint256 public override penaltyNotRevealDenom = 10000;
+    uint256 public override slashPenaltyNum = 1000;
+    uint256 public override slashPenaltyDenom = 1000;
 
     uint256 public override minStake = 100 * (10 ** 18);
     uint256 public override withdrawLockPeriod = 1;
@@ -20,7 +22,6 @@ contract Parameters is IParameters, ACL {
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
     uint256 public override aggregationRange = 3;
-    uint256 public override percentSlashPenalty = 100;
     uint256 public override withdrawReleasePeriod = 5;
     uint256 public override resetLockPenalty = 1;
 
@@ -53,6 +54,14 @@ contract Parameters is IParameters, ACL {
 
     function setPenaltyNotRevealDeom(uint256 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
+    }
+    
+    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE){
+        slashPenaltyNum = _slashPenaltyNumerator;
+    }
+    
+    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE){
+        slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
     function setWithdrawLockPeriod(uint256 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) { 
@@ -93,10 +102,6 @@ contract Parameters is IParameters, ACL {
 
     function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
         aggregationRange = _aggregationRange;
-    }
-    
-    function setpercentSlashPenalty(uint256 _percentSlashPenalty) external onlyRole(DEFAULT_ADMIN_ROLE){
-        percentSlashPenalty = _percentSlashPenalty;
     }
 
     function getEpoch() external view override returns (uint256) {

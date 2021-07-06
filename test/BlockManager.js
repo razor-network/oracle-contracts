@@ -258,7 +258,6 @@ describe('BlockManager', function () {
 
       const firstProposedBlockIndex = (firstProposedBlock.proposerId.gt(secondProposedBlock.proposerId))
         ? 1 : 0;
-        
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await schellingCoin.balanceOf(signers[19].address);
@@ -268,11 +267,10 @@ describe('BlockManager', function () {
 
       assert((await proposedBlock.valid) === false);
 
-      const percentSlashPenalty = await parameters.percentSlashPenalty();
-      const slashPenalty = ((stakeBeforeAcc5.mul(percentSlashPenalty)).div('100'));
+      const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
-      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenalty));
-      assertBNEqual(await schellingCoin.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenalty.div('2')));
+      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
+      assertBNEqual(await schellingCoin.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
