@@ -66,6 +66,7 @@ module.exports = async () => {
   pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getAssetCreatorHash(), signers[0].address));
 
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 
