@@ -189,8 +189,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     }
 
     /// @notice The function is used by the Votemanager reveal function
-    /// to penalise the staker who lost his secret and make his stake zero and
-    /// transfer to bounty hunter half the schelling tokens of the stakers stake
+    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
+    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
     /// @param id The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash(
@@ -198,11 +198,11 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         address bountyHunter,
         uint256 epoch
     ) external onlyRole(parameters.getRewardModifierHash()) {
-        uint256 halfStake = stakeManager.getStaker(id).stake / (2);
-        stakeManager.setStakerStake(id, 0, "Slashed", epoch);
-        if (halfStake > 1) {
-            stakeManager.transferBounty(bountyHunter, halfStake);
-        }
+       uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
+       uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
+       uint256 bountyReward = slashPenaltyAmount/2;
+       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
+       stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
     /// @notice This function is used by StakeManager to increment reward pool,

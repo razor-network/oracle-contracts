@@ -11,6 +11,8 @@ contract Parameters is IParameters, ACL {
     // penalty not reveal = 0.01% per epch
     uint256 public override penaltyNotRevealNum = 1;
     uint256 public override penaltyNotRevealDenom = 10000;
+    uint256 public override slashPenaltyNum = 10000;
+    uint256 public override slashPenaltyDenom = 10000;
 
     uint256 public override minStake = 100 * (10 ** 18);
     uint256 public override withdrawLockPeriod = 1;
@@ -52,6 +54,14 @@ contract Parameters is IParameters, ACL {
 
     function setPenaltyNotRevealDeom(uint256 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) { 
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
+    }
+    
+    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE){
+        slashPenaltyNum = _slashPenaltyNumerator;
+    }
+    
+    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE){
+        slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
     function setWithdrawLockPeriod(uint256 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) { 
