@@ -373,13 +373,13 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-        const balanceBeforeAcc10 = await schellingCoin.balanceOf(signers[10].address);
+        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[6].address);
 
-        const balanceAfterAcc10 = await schellingCoin.balanceOf(signers[10].address);
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
         const slashPenaltyAmount = stakeBeforeAcc6.mul(((await parameters.slashPenaltyNum())).div(await parameters.slashPenaltyDenom()));
         const stakeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
         assertBNEqual(stakeAcc6, toBigNumber('0'), 'Stake of account 6 should be zero');
@@ -409,13 +409,13 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-        const balanceBeforeAcc10 = await schellingCoin.balanceOf(signers[10].address);
+        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
-        const balanceAfterAcc10 = await schellingCoin.balanceOf(signers[10].address);
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
         const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
         assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
