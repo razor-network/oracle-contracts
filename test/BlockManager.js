@@ -260,7 +260,7 @@ describe('BlockManager', function () {
         ? 1 : 0;
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
-      const balanceBeforeAcc19 = await schellingCoin.balanceOf(signers[19].address);
+      const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
