@@ -171,7 +171,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 );
                 uint256 newStake = thisStaker.stake + reward;
                 uint256 prevRewardPool = rewardPool;
-                rewardPool = rewardPool - (reward);
+                rewardPool = rewardPool >= reward ? rewardPool - reward : 0 ;
                 emit RewardPoolChange(
                     epoch,
                     prevRewardPool,
