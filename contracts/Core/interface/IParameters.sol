@@ -21,6 +21,8 @@ interface IParameters {
     function gracePeriod() external view returns(uint256);
     function aggregationRange() external view returns(uint256);
     function exposureDenominator() external view returns(uint256);
+    function slashPenaltyNum() external view returns(uint256);
+    function slashPenaltyDenom() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
 
@@ -29,5 +31,6 @@ interface IParameters {
     function getStakeModifierHash() external view returns(bytes32);
     function getStakerActivityUpdaterHash() external view returns(bytes32);
     function getRewardModifierHash() external view returns(bytes32);
+    function getAssetModifierHash() external view returns (bytes32);
     function getDefaultAdminHash() external view returns(bytes32);
 }

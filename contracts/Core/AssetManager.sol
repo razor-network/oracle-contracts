@@ -20,7 +20,6 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         bool repeat,
         address creator,
-        uint256 credit,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -34,8 +33,22 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         bool repeat,
         address creator,
-        uint256 credit,
-        bool fulfilled,
+        bool active,
+        uint256 timestamp
+    );
+
+    event JobUpdated(
+        uint256 id,
+        uint256 epoch,
+        string url,
+        string selector,
+        uint256 timestamp
+    );
+
+    event JobActivityStatus(
+        uint256 id,
+        uint256 epoch,
+        bool active,
         uint256 timestamp
     );
 
@@ -45,8 +58,8 @@ contract AssetManager is ACL, AssetStorage {
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
+        bool active,
         address creator,
-        uint256 credit,
         uint256 timestamp,
         assetTypes assetType
     );
@@ -59,7 +72,6 @@ contract AssetManager is ACL, AssetStorage {
         uint32 aggregationMethod,
         uint256[] jobIDs,
         address creator,
-        uint256 credit,
         uint256 timestamp
     );
 
@@ -68,6 +80,13 @@ contract AssetManager is ACL, AssetStorage {
         uint256 epoch,
         string name,
         uint256[] updatedJobIDs,
+        uint256 timestamp
+    );
+
+    event CollectionActivityStatus(
+        uint256 id,
+        uint256 epoch,
+        bool active,
         uint256 timestamp
     );
 
@@ -84,39 +103,108 @@ contract AssetManager is ACL, AssetStorage {
         string calldata selector,
         string calldata name,
         bool repeat
-    ) external payable {
-        
+    ) 
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
+    {
         uint256 epoch = parameters.getEpoch();
-        require(blockManager.getBlock(epoch-1).proposerId != 0,"Block not yet confirmed");
         
         numPendingJobs = numPendingJobs+1;
 
         Structs.Job memory job = Structs.Job(
-            numAssets,
-            epoch,
-            url,
-            selector,
-            name,
-            repeat,
-            msg.sender,
-            msg.value,
-            false,
+            numPendingJobs, 
+            epoch, 
+            url, 
+            selector, 
+            name, 
+            repeat, 
+            true,
+            msg.sender, 
             0,
             uint256(assetTypes.Job)
         );
         pendingJobs[numPendingJobs] = job;
         emit JobCreated(
-            numAssets,
-            epoch,
-            url,
-            selector,
-            name,
+            numPendingJobs, 
+            epoch, 
+            url, 
+            selector, 
+            name, 
             repeat,
-            msg.sender,
-            msg.value,
-            block.timestamp,
+            msg.sender,  
+            block.timestamp, 
             assetTypes.Job
         );
+    }
+
+    function updateJob(
+        uint256 jobID,
+        string calldata url,
+        string calldata selector
+    ) 
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
+    {
+        require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
+
+        uint256 epoch = parameters.getEpoch();
+
+        jobs[jobID].url = url;
+        jobs[jobID].selector = selector;
+
+        emit JobUpdated(
+        jobID,
+        epoch,
+        url,
+        selector,
+        block.timestamp
+        );
+
+    }
+
+    function updateAssetStatus(
+        uint256 id,
+        bool isActive
+    ) 
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
+    {
+        require(id != 0, "ID cannot be 0");
+        require(id <= numAssets, "ID does not exist");
+
+        uint256 epoch = parameters.getEpoch();
+
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
+            if(isActive){
+                jobs[id].active = false;
+            }
+            else{
+                jobs[id].active = true;
+            }
+
+            emit JobActivityStatus(
+            id,
+            epoch,
+            jobs[id].active,
+            block.timestamp
+            );
+        }
+        else{
+            if(isActive){
+                collections[id].active = false;
+            }
+            else{
+                collections[id].active = true;
+            }
+
+            emit CollectionActivityStatus(
+            id,
+            epoch,
+            collections[id].active,
+            block.timestamp
+            );
+            
+        }
     }
 
     function fulfillAsset(
@@ -132,7 +220,7 @@ contract AssetManager is ACL, AssetStorage {
             Structs.Job storage job = jobs[id];
 
             if (!job.repeat) {
-                job.fulfilled = true;
+                job.active = false;
                 numActiveAssets = numActiveAssets-1;
             }
 
@@ -146,12 +234,11 @@ contract AssetManager is ACL, AssetStorage {
                 job.name,
                 job.repeat,
                 job.creator,
-                job.credit,
-                job.fulfilled,
+                job.active,
                 block.timestamp
             );
         }
-        else if(collections[id].assetType==uint256(assetTypes.Collection)){
+        else if(collections[id].assetType == uint256(assetTypes.Collection)){
 
             Structs.Collection storage collection = collections[id];
 
@@ -165,7 +252,6 @@ contract AssetManager is ACL, AssetStorage {
                 collection.aggregationMethod,
                 collection.jobIDs,
                 collection.creator,
-                collection.credit,
                 block.timestamp
             );
         }
@@ -175,37 +261,40 @@ contract AssetManager is ACL, AssetStorage {
         string calldata name,
         uint256[] memory jobIDs,
         uint32 aggregationMethod
-    ) external payable
+    ) 
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
     {
-        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(),"Aggregation range out of bounds");
-        require(jobIDs.length > 1,"Number of jobIDs low to create collection");
+        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
+        require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         uint256 epoch = parameters.getEpoch();
         require(blockManager.getBlock(epoch-1).proposerId != 0,"Block not yet confirmed");
 
         numPendingCollections = numPendingCollections+1;
-        pendingCollections[numPendingCollections].id = numAssets;
+        pendingCollections[numPendingCollections].id = numPendingCollections;
         pendingCollections[numPendingCollections].name = name;
         pendingCollections[numPendingCollections].aggregationMethod = aggregationMethod;
         pendingCollections[numPendingCollections].epoch = epoch;
-        pendingCollections[numPendingCollections].creator = msg.sender;
-        pendingCollections[numPendingCollections].credit = msg.value;
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
+            require(jobs[jobIDs[i]].active, "Job ID not active");
             require(!pendingCollections[numPendingCollections].jobIDExist[jobIDs[i]],"Duplicate JobIDs sent");
             pendingCollections[numPendingCollections].jobIDs.push(jobIDs[i]);
             pendingCollections[numPendingCollections].jobIDExist[jobIDs[i]] = true;
         }
+        pendingCollections[numPendingCollections].creator = msg.sender;
         pendingCollections[numPendingCollections].assetType = uint256(assetTypes.Collection);
+        pendingCollections[numPendingCollections].active = true;
         emit CollectionCreated(
             numPendingCollections,
             epoch,
             name,
             aggregationMethod,
             jobIDs,
+            true,
             msg.sender,
-            msg.value,
-            block.timestamp,
+            block.timestamp, 
             assetTypes.Collection
         );
     }
@@ -213,11 +302,16 @@ contract AssetManager is ACL, AssetStorage {
     function addJobToCollection(
         uint256 collectionID,
         uint256 jobID
-        ) external {
-        require(collections[collectionID].assetType==uint256(assetTypes.Collection),"Collection ID not present");
-        require(jobs[jobID].assetType==uint256(assetTypes.Job),"Job ID not present");
-        require(!collections[collectionID].jobIDExist[jobID],"Job exists in this collection");
-
+    )  
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
+    {
+        require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].active, "Collection is inactive");
+        require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
+        require(jobs[jobID].active, "Job ID not active");
+        require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
+        
         uint256 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobIDExist[jobID] = true;
@@ -263,11 +357,8 @@ contract AssetManager is ACL, AssetStorage {
                     collections[numAssets].aggregationMethod = pendingCollections[i].aggregationMethod; 
                     collections[numAssets].epoch = currentEpoch;
                     collections[numAssets].creator = pendingCollections[i].creator;
-                    collections[numAssets].credit = pendingCollections[i].credit;
                     uint256[] memory jobIDs = pendingCollections[i].jobIDs;
                     for(uint256 j = 0; j < jobIDs.length; j++){
-                        require(jobs[jobIDs[j]].assetType==uint256(assetTypes.Job),"Job ID not present");
-                        require(!collections[numAssets].jobIDExist[jobIDs[j]],"Duplicate JobIDs sent");
                         collections[numAssets].jobIDs.push(jobIDs[j]);
                         collections[numAssets].jobIDExist[jobIDs[j]] = true;
                     }
@@ -280,6 +371,33 @@ contract AssetManager is ACL, AssetStorage {
         }
     }
 
+    function removeJobFromCollection(
+        uint256 collectionID, 
+        uint256 jobIDIndex
+    )  
+        external 
+        onlyRole(parameters.getAssetModifierHash()) 
+    {
+        require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
+        
+        uint256 epoch = parameters.getEpoch();
+
+        for (uint256 i = jobIDIndex; i < collections[collectionID].jobIDs.length-1; i++){
+            collections[collectionID].jobIDs[i] = collections[collectionID].jobIDs[i+1];
+        }
+        collections[collectionID].jobIDs.pop();
+    
+
+        emit CollectionUpdated(
+        collectionID,
+        epoch,
+        collections[collectionID].name,
+        collections[collectionID].jobIDs,
+        block.timestamp
+        );
+    }
+
     function getResult(
         uint256 id
     )
@@ -290,9 +408,9 @@ contract AssetManager is ACL, AssetStorage {
         )
     {
         require(id != 0, "ID cannot be 0");
-        require(id<=numAssets,"ID does not exist");
-
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        require(id <= numAssets, "ID does not exist");
+        
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             return jobs[id].result;
         }
         else{
@@ -310,12 +428,13 @@ contract AssetManager is ACL, AssetStorage {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result
-        )
+            uint256 result,
+            bool active
+        ) 
     {
-        require(jobs[id].assetType==uint256(assetTypes.Job),"ID is not a job");
+        require(jobs[id].assetType == uint256(assetTypes.Job), "ID is not a job");
         Structs.Job memory job = jobs[id];
-        return(job.url, job.selector, job.name, job.repeat, job.result);
+        return(job.url, job.selector, job.name, job.repeat, job.result, job.active);
     }
 
     function getCollection(
@@ -324,14 +443,15 @@ contract AssetManager is ACL, AssetStorage {
         external
         view
         returns(
-            string memory name,
-            uint32 aggregationMethod,
-            uint256[] memory jobIDs,
-            uint256 result
-        )
+            string memory name, 
+            uint32 aggregationMethod, 
+            uint256[] memory jobIDs, 
+            uint256 result,
+            bool active
+        ) 
     {
-        require(collections[id].assetType==uint256(assetTypes.Collection),"ID is not a collection");
-        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result);
+        require(collections[id].assetType == uint256(assetTypes.Collection), "ID is not a collection");
+        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result, collections[id].active);
     }
 
     function getAssetType(
@@ -344,13 +464,33 @@ contract AssetManager is ACL, AssetStorage {
         )
     {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets,"ID does not exist");
+        require(id <= numAssets, "ID does not exist");
 
-        if(jobs[id].assetType==uint256(assetTypes.Job)){
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
             return uint256(assetTypes.Job);
         }
         else{
             return uint256(assetTypes.Collection);
+        }
+    }
+
+    function getActiveStatus(
+        uint256 id
+    )
+        external
+        view
+        returns(
+            bool
+        )
+    {
+        require(id != 0, "ID cannot be 0");
+        require(id <= numAssets, "ID does not exist");
+
+        if(jobs[id].assetType == uint256(assetTypes.Job)){
+            return jobs[id].active;
+        } 
+        else{
+            return collections[id].active;
         }
     }
 
