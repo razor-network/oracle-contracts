@@ -347,6 +347,43 @@ describe('VoteManager', function () {
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore.add(rewardPool), stakeAfter);
       });
+      
+      it('Account 3 should not get rewards since lower cutOffs length of previous block was zero',async function(){
+        let epoch = await getEpoch();
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+        const {biggestStakerId} = await getBiggestStakeAndId(stakeManager);
+        const iteration = await getIteration(stakeManager, random, staker);
+        await mineToNextState();//propose
+        await blockManager.connect(signers[3]).propose(epoch,[],[],[],[],iteration,biggestStakerId);
+
+        await mineToNextState();//dispute
+        await mineToNextState();//commit
+
+        epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[3]).commit(epoch, commitment1);
+        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        await mineToNextState(); //reveal
+        await rewardManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
+        await rewardManager.incrementRewardPool(100);
+        await voteManager.connect(signers[3]).reveal(epoch, tree.root(),votes,proof,'0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',signers[3].address);
+        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
+        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        assertBNEqual(stakeBefore, stakeAfter);
+      });
 
       it('Should be able to slash if stake is zero', async function () {
         await mineToNextEpoch();
