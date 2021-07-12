@@ -74,13 +74,11 @@ describe('VoteManager', function () {
         await schellingCoin.transfer(signers[4].address, tokenAmount('19000'));
         await schellingCoin.transfer(signers[5].address, tokenAmount('1000'));
         await schellingCoin.transfer(signers[6].address, tokenAmount('1000'));
-        await schellingCoin.transfer(signers[7].address, tokenAmount('1000'));
 
         await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
         await schellingCoin.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
         await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
         await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
-        await schellingCoin.connect(signers[7]).approve(stakeManager.address, tokenAmount('1000'));
 
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
@@ -335,7 +333,6 @@ describe('VoteManager', function () {
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
@@ -384,7 +381,6 @@ describe('VoteManager', function () {
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-        await voteManager.connect(signers[7]).commit(epoch, commitment2);
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
         const proof = [];
