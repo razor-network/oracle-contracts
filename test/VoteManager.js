@@ -350,7 +350,7 @@ describe('VoteManager', function () {
         assertBNEqual(stakeBefore.add(rewardPool), stakeAfter);
       });
 
-      it('Account 3 should be able to reveal if rewardPool amount is less then reward', async function () {
+      it('Account 3 should not be able to reveal if rewardPool amount is less then reward', async function () {
         let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const staker0 = await stakeManager.getStaker(stakerIdAcc3);
@@ -377,10 +377,6 @@ describe('VoteManager', function () {
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-        const commitment2 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
         const proof = [];
@@ -393,10 +389,9 @@ describe('VoteManager', function () {
         await rewardManager.incrementRewardPool('237929');
         await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
         await stakeManager.setStakerStake(1, tokenAmount('1000000'), 'increase reward', epoch);
-        const tx = await voteManager.connect(signers[3])
-          .reveal(epoch, tree.root(), votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', signers[3].address);
-
-        assertRevert(tx, "Error: Transaction reverted and Hardhat couldn't infer the reason. Please report this to help us improve Hardhat.");
+        assertRevert(voteManager.connect(signers[3])
+          .reveal(epoch, tree.root(), votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', signers[3].address),
+        "Transaction reverted and Hardhat couldn't infer the reason. Please report this to help us improve Hardhat.");
       });
 
       it('Account 3 should not get rewards since lower cutOffs length of previous block was zero', async function () {
