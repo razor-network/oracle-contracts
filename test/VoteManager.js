@@ -399,8 +399,8 @@ describe('VoteManager', function () {
         await stakeManager.setStakerStake(1, tokenAmount('1000000'), 'increase reward', epoch);
         const tx = await voteManager.connect(signers[3])
           .reveal(epoch, tree.root(), votes, proof, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', signers[3].address);
-        
-        assert(tx,"it was not able to reveal");
+
+        assert(tx, 'it was not able to reveal');
       });
 
       it('Account 3 should not get rewards since lower cutOffs length of previous block was zero', async function () {
