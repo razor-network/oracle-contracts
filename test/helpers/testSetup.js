@@ -28,7 +28,7 @@ const setupContracts = async () => {
   const VoteManager = await ethers.getContractFactory('VoteManager', {
     libraries: {
       Random: random.address,
-    }
+    },
   });
 
   const parameters = await Parameters.deploy();
