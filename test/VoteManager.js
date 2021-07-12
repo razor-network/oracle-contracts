@@ -11,6 +11,7 @@ const {
   assertRevert,
   mineToNextEpoch,
   mineToNextState,
+  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -422,6 +423,13 @@ describe('VoteManager', function () {
         assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
+  
+      it("doesn't change anything if nobody votes", async function () {
+        const epochBefore = await getEpoch();
+        await mineToNextEpoch()
+        const epochAfter = await getEpoch();
+        assertBNNotEqual(epochBefore, epochAfter, "error if nobody votes")
+      })
     });
   });
 });
