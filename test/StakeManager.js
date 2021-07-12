@@ -103,12 +103,12 @@ describe('StakeManager', function () {
     });
 
     it('should not be able to stake if amount is too low', async function () {
-      const stakeAmounts = ['0', '1', '99']
-      for(let i = 0; i < stakeAmounts.length; i++) {
-        let signer = signers[i+1]
-        let stake = tokenAmount(stakeAmounts[i])
+      const stakeAmounts = ['0', '1', '99'];
+      for (let i = 0; i < stakeAmounts.length; i++) {
+        const signer = signers[i + 1];
+        const stake = tokenAmount(stakeAmounts[i]);
         await schellingCoin.connect(signer).approve(stakeManager.address, stake);
-        let tx = stakeManager.connect(signer).stake(await getEpoch(), stake);
+        const tx = stakeManager.connect(signer).stake(await getEpoch(), stake);
         await assertRevert(tx, 'staked amount is less than minimum stake required');
       }
     });
