@@ -371,28 +371,28 @@ describe('Access Control Test', async () => {
 
   it('setAssetStatus() should not be accessable by anyone besides AssetCreator', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.setAssetStatus(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(1, 0), expectedRevertMessage);
+    await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
   });
 
   it('setAssetStatus() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = await parameters.getAssetModifierHash();
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
-    await assetManager.setAssetStatus(1, 1);
+    await assetManager.setAssetStatus(1, true);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
   });
 
   it('createCollection() should not be accessable by anyone besides AssetCreator', async () => {

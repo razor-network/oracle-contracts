@@ -117,7 +117,7 @@ describe('AssetManager', function () {
       await assetManager.setAssetStatus(5, true);
       const job = await assetManager.jobs(5);
       assert(job.active === true);
-      await assetManager.setAssetStatus(5, 1);
+      await assetManager.setAssetStatus(5, true);
     });
 
     it('should be able remove job from collection', async function () {
@@ -158,12 +158,12 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to update activity status of asset if assetID is 0', async function () {
-      const tx = assetManager.setAssetStatus(0, 1);
+      const tx = assetManager.setAssetStatus(0, true);
       await assertRevert(tx, 'ID cannot be 0');
     });
 
     it('should not be able to update activity status of asset if assetID does not exist', async function () {
-      const tx = assetManager.setAssetStatus(100, 1);
+      const tx = assetManager.setAssetStatus(100, true);
       await assertRevert(tx, 'ID does not exist');
     });
 
