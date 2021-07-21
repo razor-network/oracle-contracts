@@ -172,38 +172,11 @@ contract AssetManager is ACL, AssetStorage {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
-        uint256 epoch = parameters.getEpoch();
-
-        if(jobs[id].assetType == uint256(assetTypes.Job)){
-            if(isActive){
-                jobs[id].active = false;
-            }
-            else{
-                jobs[id].active = true;
-            }
-
-            emit JobActivityStatus(
-            id,
-            epoch,
-            jobs[id].active,
-            block.timestamp
-            );
+        if(isActive){
+            pendingAssetDeactivation.push(id);
         }
         else{
-            if(isActive){
-                collections[id].active = false;
-            }
-            else{
-                collections[id].active = true;
-            }
-
-            emit CollectionActivityStatus(
-            id,
-            epoch,
-            collections[id].active,
-            block.timestamp
-            );
-            
+            pendingAssetActivation.push(id);
         }
     }
 
@@ -221,7 +194,7 @@ contract AssetManager is ACL, AssetStorage {
 
             if (!job.repeat) {
                 job.active = false;
-                numActiveAssets = numActiveAssets-1;
+                numActiveAssets = numActiveAssets - 1;
             }
 
             job.result = value;
@@ -269,13 +242,14 @@ contract AssetManager is ACL, AssetStorage {
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         uint256 epoch = parameters.getEpoch();
-        require(blockManager.getBlock(epoch-1).proposerId != 0,"Block not yet confirmed");
 
-        numPendingCollections = numPendingCollections+1;
+        numPendingCollections = numPendingCollections + 1;
         pendingCollections[numPendingCollections].id = numPendingCollections;
         pendingCollections[numPendingCollections].name = name;
         pendingCollections[numPendingCollections].aggregationMethod = aggregationMethod;
         pendingCollections[numPendingCollections].epoch = epoch;
+        pendingCollections[numPendingCollections].creator = msg.sender;
+        pendingCollections[numPendingCollections].assetType = uint256(assetTypes.Collection);
         for(uint256 i = 0; i < jobIDs.length; i++){
             require(jobs[jobIDs[i]].assetType==uint256(assetTypes.Job),"Job ID not present");
             require(jobs[jobIDs[i]].active, "Job ID not active");
@@ -283,9 +257,7 @@ contract AssetManager is ACL, AssetStorage {
             pendingCollections[numPendingCollections].jobIDs.push(jobIDs[i]);
             pendingCollections[numPendingCollections].jobIDExist[jobIDs[i]] = true;
         }
-        pendingCollections[numPendingCollections].creator = msg.sender;
-        pendingCollections[numPendingCollections].assetType = uint256(assetTypes.Collection);
-        pendingCollections[numPendingCollections].active = true;
+        
         emit CollectionCreated(
             numPendingCollections,
             epoch,
@@ -325,50 +297,139 @@ contract AssetManager is ACL, AssetStorage {
         );
     }
 
-    function addPendingJobs() external {
-        if(numPendingJobs!=0)
+    function addPendingJobs() 
+        external
+        onlyRole(parameters.getAssetConfirmerHash()) 
+    {
+        if(numPendingJobs != 0)
         {
             uint8 i;
             uint256 temp = numPendingJobs;
-            for(i=1; i<=temp; i++){
+            for(i = 1; i <= temp; i++){
                 uint256 currentEpoch = parameters.getEpoch();
-                if(pendingJobs[i].epoch  < currentEpoch){
-                    numAssets = numAssets+1;
-                    jobs[numAssets] = pendingJobs[i];
-                    delete (pendingJobs[i]);
-                    numActiveAssets = numActiveAssets+1;
-                    numPendingJobs = numPendingJobs-1;
-                }
+                numAssets = numAssets + 1;
+
+                jobs[numAssets] = pendingJobs[i];
+                delete (pendingJobs[i]);
+
+                numActiveAssets = numActiveAssets + 1;
+                numPendingJobs = numPendingJobs - 1;
+
+                emit JobActivityStatus(
+                    numAssets,
+                    currentEpoch,
+                    jobs[numAssets].active,
+                    block.timestamp
+                );
             }
         }
     }
 
-    function addPendingCollections() external {
-        if(numPendingCollections!=0)
+    function addPendingCollections() 
+        external
+        onlyRole(parameters.getAssetConfirmerHash()) 
+    {
+        if(numPendingCollections != 0)
         {
             
             uint256 temp = numPendingCollections;
             for(uint8 i = 1; i <= temp; i++){
                 uint256 currentEpoch = parameters.getEpoch();
-                if(pendingCollections[i].epoch  < currentEpoch){
-                    numAssets = numAssets+1;
-                    collections[numAssets].id = numAssets; 
-                    collections[numAssets].name = pendingCollections[i].name; 
-                    collections[numAssets].aggregationMethod = pendingCollections[i].aggregationMethod; 
-                    collections[numAssets].epoch = currentEpoch;
-                    collections[numAssets].creator = pendingCollections[i].creator;
-                    uint256[] memory jobIDs = pendingCollections[i].jobIDs;
-                    for(uint256 j = 0; j < jobIDs.length; j++){
-                        collections[numAssets].jobIDs.push(jobIDs[j]);
-                        collections[numAssets].jobIDExist[jobIDs[j]] = true;
-                    }
-                    collections[numAssets].assetType = uint256(assetTypes.Collection);
-                    delete (pendingCollections[i]);
-                    numActiveAssets = numActiveAssets+1;
-                    numPendingCollections = numPendingCollections-1;
+                numAssets = numAssets + 1;
+
+                collections[numAssets].id = numAssets; 
+                collections[numAssets].name = pendingCollections[i].name; 
+                collections[numAssets].aggregationMethod = pendingCollections[i].aggregationMethod; 
+                collections[numAssets].epoch = currentEpoch;
+                collections[numAssets].creator = pendingCollections[i].creator;
+                collections[numAssets].assetType = uint256(assetTypes.Collection);
+                collections[numAssets].active = true;
+                uint256[] memory jobIDs = pendingCollections[i].jobIDs;
+                for(uint256 j = 0; j < jobIDs.length; j++){
+                    collections[numAssets].jobIDs.push(jobIDs[j]);
+                    collections[numAssets].jobIDExist[jobIDs[j]] = true;
+                    pendingCollections[i].jobIDExist[jobIDs[j]] = false;
                 }
+                
+                delete (pendingCollections[i]);
+
+                numActiveAssets = numActiveAssets + 1;
+                numPendingCollections = numPendingCollections - 1;
+                
+                emit CollectionActivityStatus(
+                    numAssets,
+                    currentEpoch,
+                    collections[numAssets].active,
+                    block.timestamp
+                );
+
             }    
         }
+    }
+
+    function deactivateAssets() 
+        external
+        onlyRole(parameters.getAssetConfirmerHash()) 
+    {
+        uint256 epoch = parameters.getEpoch();
+        
+        for(uint256 i = 0; i < pendingAssetDeactivation.length; i++){
+            uint256 id = pendingAssetDeactivation[i];
+
+            if(jobs[id].assetType == uint256(assetTypes.Job)){
+                jobs[id].active = false;
+                emit JobActivityStatus(
+                id,
+                epoch,
+                jobs[id].active,
+                block.timestamp
+                );
+            }
+            else{
+                collections[id].active = false;
+                emit CollectionActivityStatus(
+                id,
+                epoch,
+                collections[id].active,
+                block.timestamp
+                );
+            }
+            numActiveAssets = numActiveAssets - 1;
+        }
+        delete(pendingAssetDeactivation);
+    }
+
+    function activateAssets() 
+        external
+        onlyRole(parameters.getAssetConfirmerHash()) 
+    {
+        uint256 epoch = parameters.getEpoch();
+        
+        for(uint256 i = 0; i < pendingAssetActivation.length; i++){
+            uint256 id = pendingAssetActivation[i];
+            if(jobs[id].assetType == uint256(assetTypes.Job)){
+                jobs[id].active = true;
+
+                emit JobActivityStatus(
+                id,
+                epoch,
+                jobs[id].active,
+                block.timestamp
+                );
+            }
+            else{
+                collections[id].active = true;
+
+                emit CollectionActivityStatus(
+                id,
+                epoch,
+                collections[id].active,
+                block.timestamp
+                );
+            }
+            numActiveAssets = numActiveAssets + 1;
+        }
+        delete(pendingAssetActivation);
     }
 
     function removeJobFromCollection(

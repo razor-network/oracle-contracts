@@ -7,6 +7,7 @@ interface IParameters {
     function reveal() external view returns(uint32);
     function propose() external view returns(uint32);
     function dispute() external view returns(uint32);
+    function confirm() external view returns(uint32);
 
     // penalty not reveal = 0.01% per epch
     function penaltyNotRevealNum() external view returns(uint256);

@@ -87,15 +87,81 @@ describe('BlockManager', function () {
 
     it('should be able to initialize', async () => {
       await Promise.all(await initializeContracts());
+      await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address);
 
+      for (let i = 1; i < 10; i++) {
+        await assetManager.createJob(`http://testurl.com/${String(i)}`, `selector${String(i)}`, `test${String(i)}`, true);
+      }
+      assertBNEqual(await assetManager.getPendingJobs(), toBigNumber('9'));
       await mineToNextEpoch();
       await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
-      await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));
-      await schellingCoin.transfer(signers[8].address, tokenAmount('18000'));
 
       await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+
+      const votes = [0];
+      const tree = merkle('keccak256').sync(votes);
+
+      const root = tree.root();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[5]).commit(epoch, commitment1);
+
+      await mineToNextState();
+      const proof = [];
+      for (let i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[5]).reveal(epoch, tree.root(), votes, proof,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[5].address);
+    });
+
+    it('should be able to propose', async () => {
+      const epoch = await getEpoch();
+
+      await mineToNextState();
+      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc5);
+
+      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const iteration = await getIteration(stakeManager, random, staker);
+      await blockManager.connect(signers[5]).propose(epoch,
+        [],
+        [],
+        [],
+        [],
+        iteration,
+        biggestStakerId);
+      const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
+    });
+
+    it('should be able to confirm block and receive block reward', async () => {
+      await mineToNextState();
+      await mineToNextState();
+
+      await blockManager.connect(signers[5]).claimBlockReward();
+
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      assertBNEqual(await assetManager.getActiveAssets(), toBigNumber('9'));
+      assertBNEqual(
+        (await blockManager.getBlock(epoch - 1)).proposerId,
+        await stakeManager.stakerIds(signers[5].address),
+        `${await stakeManager.stakerIds(signers[5].address)} ID is the one who proposed the block `
+      );
+    });
+
+    it('should allow another proposals', async () => {
+      await schellingCoin.transfer(signers[6].address, tokenAmount('19000'));
+      await schellingCoin.transfer(signers[8].address, tokenAmount('18000'));
+
+      const epoch = await getEpoch();
 
       await schellingCoin.connect(signers[6]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('18000'));
@@ -161,56 +227,38 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[8]).reveal(epoch, tree3.root(), votes3, proof3,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[8].address);
-    });
-
-    it('should be able to propose', async function () {
-      const epoch = await getEpoch();
 
       await mineToNextState();
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc5);
+      const staker1 = await stakeManager.getStaker(stakerIdAcc5);
 
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
-      const iteration = await getIteration(stakeManager, random, staker);
+      const iteration1 = await getIteration(stakeManager, random, staker1);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         [99, 199, 299, 399, 499, 599, 699, 799, 899],
         [101, 201, 301, 401, 501, 601, 701, 801, 901],
-        iteration,
+        iteration1,
         biggestStakerId);
-      const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
-    });
-
-    it('Number of proposals should be 1', async function () {
-      const epoch = await getEpoch();
-
-      const nblocks = await blockManager.getNumProposedBlocks(epoch);
-      assertBNEqual(nblocks, toBigNumber('1'), 'Only one block has been proposed till now. Incorrect Answer');
-    });
-
-    it('should allow another proposals', async function () {
-      const epoch = await getEpoch();
 
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc6);
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const staker2 = await stakeManager.getStaker(stakerIdAcc6);
 
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
 
-      const iteration = await getIteration(stakeManager, random, staker);
+      const iteration2 = await getIteration(stakeManager, random, staker2);
 
       await blockManager.connect(signers[6]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         [99, 199, 299, 399, 499, 599, 699, 799, 899],
         [101, 201, 301, 401, 501, 601, 701, 801, 901],
-        iteration,
+        iteration2,
         biggestStakerId);
 
-      const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration))
+      const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration2))
         ? await blockManager.proposedBlocks(epoch, 0) : await blockManager.proposedBlocks(epoch, 1);
 
       assertBNEqual(secondProposedBlock.proposerId, toBigNumber('2'));
@@ -273,8 +321,24 @@ describe('BlockManager', function () {
       assertBNEqual(await schellingCoin.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
     });
 
-    it('block proposed by account 6 should be confirmed', async function () {
+    it('only account 6 should be confirm his proposed block', async function () {
       await mineToNextState();
+
+      const tx = blockManager.connect(signers[5]).claimBlockReward();
+      await assertRevert(tx, 'Block can be confirmed by proposer of the block');
+
+      await blockManager.connect(signers[6]).claimBlockReward();
+
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      assertBNEqual(
+        (await blockManager.getBlock(epoch - 1)).proposerId,
+        await stakeManager.stakerIds(signers[6].address),
+        `${await stakeManager.stakerIds(signers[6].address)} ID is the one who proposed the block `
+      );
+    });
+
+    it('all blocks being disputed', async function () {
       await schellingCoin.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
 
       const epoch = await getEpoch();
@@ -326,10 +390,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[7]).reveal(epoch, tree2.root(), votes2, proof2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[7].address);
-    });
 
-    it('all blocks being disputed', async function () {
-      const epoch = await getEpoch();
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker6 = await stakeManager.getStaker(stakerIdAcc6);
 
@@ -422,6 +483,7 @@ describe('BlockManager', function () {
 
     it('if no block is valid in previous epoch, stakers should not be penalised', async function () {
       await mineToNextState();
+      await mineToNextState();
       const epoch = await getEpoch();
 
       const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
@@ -457,7 +519,7 @@ describe('BlockManager', function () {
       assertBNEqual(staker.stake, stake, 'Stake should have remained the same');
     });
 
-    it('should be able to reset dispute incase of wrong values being entered', async function () {
+    it('should be able to propose a block with a job being created mid-epoch', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -485,6 +547,8 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[19].address);
 
+      await assetManager.createJob('http://testurl.com/10', 'selector10', 'test10', false);
+
       await mineToNextState();
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
@@ -493,7 +557,7 @@ describe('BlockManager', function () {
 
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[19]).propose(epoch,
-        [10, 12, 13, 14, 15, 16, 17, 18, 19],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
         [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
         [1002, 2002, 3002, 4002, 5002, 6002, 7002, 8002, 9002],
@@ -501,8 +565,11 @@ describe('BlockManager', function () {
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
+    });
 
+    it('should be able to reset dispute incase of wrong values being entered', async () => {
       await mineToNextState();
+      const epoch = await getEpoch();
 
       const sortedVotes = [toBigNumber('20000')];
 
@@ -523,8 +590,13 @@ describe('BlockManager', function () {
     });
 
     it('should be able to dispute in batches', async function () {
+      await mineToNextState();
+
+      await blockManager.connect(signers[19]).claimBlockReward();
+      assertBNEqual(await assetManager.getActiveAssets(), toBigNumber('10'));
+
       // Commit
-      await mineToNextEpoch();
+      await mineToNextState();
       await schellingCoin.transfer(signers[2].address, tokenAmount('423000'));
       await schellingCoin.transfer(signers[3].address, tokenAmount('19000'));
       let epoch = await getEpoch();
@@ -534,7 +606,7 @@ describe('BlockManager', function () {
 
       await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
       const tree = merkle('keccak256').sync(votes);
 
       const root = tree.root();
@@ -545,7 +617,7 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
-      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000];
       const tree2 = merkle('keccak256').sync(votes2);
 
       const root2 = tree2.root();
@@ -583,10 +655,10 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        [99, 199, 299, 399, 499, 599, 699, 799, 899],
-        [101, 201, 301, 401, 501, 601, 701, 801, 901],
+        [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+        [100, 201, 300, 400, 500, 600, 700, 800, 900, 1000],
+        [99, 199, 299, 399, 499, 599, 699, 799, 899, 999],
+        [101, 201, 301, 401, 501, 601, 701, 801, 901, 1001],
         iteration,
         biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);

@@ -14,6 +14,8 @@ contract AssetStorage {
 
     mapping (uint256 => Structs.Collection) public pendingCollections;
     mapping (uint256 => Structs.Job) public pendingJobs;
+    uint256[] public pendingAssetActivation;
+    uint256[] public pendingAssetDeactivation;
     uint256 public numPendingCollections;
     uint256 public numPendingJobs;
     uint256 public numActiveAssets;

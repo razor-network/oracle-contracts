@@ -500,10 +500,10 @@ describe('StakeManager', function () {
         const iteration = await getIteration(stakeManager, random, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
-          [1, 2, 3, 4, 5, 6, 7, 8, 9],
-          [100, 200, 300, 400, 500, 600, 700, 800, 900],
-          [99, 199, 299, 399, 499, 599, 699, 799, 899],
-          [101, 201, 301, 401, 501, 601, 701, 801, 901],
+          [],
+          [],
+          [],
+          [],
           iteration,
           biggestStakerId);
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
@@ -512,17 +512,12 @@ describe('StakeManager', function () {
         staker = await stakeManager.getStaker(4);
         const stakeBefore = staker.stake;
         await mineToNextState(); // dispute
-        await mineToNextState(); // commit again in order to get block reward
-        epoch = await getEpoch();
-        const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree1 = merkle('keccak256').sync(votes1);
-        const root1 = tree1.root();
-        const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
+        await mineToNextState(); // confirm
 
-        await voteManager.connect(signers[4]).commit(epoch, commitment1);
+        await blockManager.connect(signers[4]).claimBlockReward();
+
+        await mineToNextState(); // commit again
+        epoch = await getEpoch();
         staker = await stakeManager.getStaker(4);
         const stakeAfter = staker.stake;
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded'); // Staker 4 gets Block Reward results in increase of valuation of sRZR

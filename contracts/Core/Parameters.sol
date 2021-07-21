@@ -18,7 +18,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override withdrawLockPeriod = 1;
     uint256 public override maxAltBlocks = 5;
     uint256 public override epochLength = 300;
-    uint256 public override numStates = 4;
+    uint256 public override numStates = 5;
     uint256 public override exposureDenominator = 1000;
     uint256 public override gracePeriod = 8;
     uint256 public override aggregationRange = 3;
@@ -29,6 +29,7 @@ contract Parameters is IParameters, ACL {
     uint32 constant private _REVEAL = 1;
     uint32 constant private _PROPOSE = 2;
     uint32 constant private _DISPUTE = 3;
+    uint32 constant private _CONFIRM = 4;
 
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 constant private _BLOCK_CONFIRMER_HASH = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f; 
@@ -128,6 +129,10 @@ contract Parameters is IParameters, ACL {
 
     function dispute() external pure override returns (uint32) {
         return _DISPUTE;
+    }
+
+    function confirm() external pure override returns (uint32) {
+        return _CONFIRM;
     }
 
     function getBlockConfirmerHash() external pure override returns (bytes32) {

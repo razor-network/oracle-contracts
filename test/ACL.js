@@ -62,21 +62,129 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
   });
 
+  it('addPendingJobs() should not be accessable by anyone besides AssetConfirmer', async () => {
+    // Checking if Anyone can access it
+    await assertRevert(assetManager.addPendingJobs(), expectedRevertMessage);
+
+    // Checking if BlockConfirmer can access it
+    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingJobs(), expectedRevertMessage);
+
+    // Checking if StakeModifier can access it
+    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingJobs(), expectedRevertMessage);
+
+    // Checking if StakerActivityUpdater can access it
+    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingJobs(), expectedRevertMessage);
+  });
+
+  it('addPendingJobs() should be accessable by AssetConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+    await waitNBlocks(300);
+    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
+    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
+    await assetManager.addPendingJobs();
+    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
+    await assertRevert(assetManager.addPendingJobs(), expectedRevertMessage);
+  });
+
+  it('addPendingCollections() should not be accessable by anyone besides AssetConfirmer', async () => {
+    // Checking if Anyone can access it
+    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
+
+    // Checking if BlockConfirmer can access it
+    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
+
+    // Checking if StakeModifier can access it
+    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
+
+    // Checking if StakerActivityUpdater can access it
+    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
+  });
+
+  it('addPendingCollections() should be accessable by AssetConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+    await waitNBlocks(300);
+    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
+    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
+    await assetManager.addPendingCollections();
+    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
+    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
+  });
+
+  it('deactivateAssets() should not be accessable by anyone besides AssetConfirmer', async () => {
+    // Checking if Anyone can access it
+    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
+
+    // Checking if BlockConfirmer can access it
+    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
+
+    // Checking if StakeModifier can access it
+    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
+
+    // Checking if StakerActivityUpdater can access it
+    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
+  });
+
+  it('deactivateAssets() should be accessable by AssetConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+    await waitNBlocks(300);
+    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
+    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
+    await assetManager.deactivateAssets();
+    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
+    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
+  });
+
+  it('activateAssets() should not be accessable by anyone besides BlockConfirmer', async () => {
+    // Checking if Anyone can access it
+    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
+
+    // Checking if BlockConfirmer can access it
+    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
+
+    // Checking if StakeModifier can access it
+    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
+
+    // Checking if StakerActivityUpdater can access it
+    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
+  });
+
+  it('activateAssets() should be accessable by AssetConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+    await waitNBlocks(300);
+    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
+    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
+    await assetManager.activateAssets();
+    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
+    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
+  });
+
   it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
     // Checking if Anyone can access it
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await blockManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await blockManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await blockManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
   });
 
   it('confirmBlock() should be accessable by BlockConfirmer', async () => {
@@ -84,9 +192,9 @@ describe('Access Control Test', async () => {
     await waitNBlocks(300);
     const blockConfirmerHash = await parameters.getBlockConfirmerHash();
     await blockManager.grantRole(blockConfirmerHash, signers[0].address);
-    await blockManager.confirmBlock();
+    await blockManager.confirmBlock(1);
     await blockManager.revokeRole(blockConfirmerHash, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
   });
 
   it('slash() should not be accessable by anyone besides RewardModifier', async () => {
@@ -318,7 +426,7 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.updateCommitmentEpoch(1), expectedRevertMessage);
   });
 
-  it('createJob() should not be accessable by anyone besides AssetCreator', async () => {
+  it('createJob() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true), expectedRevertMessage);
 
@@ -335,15 +443,22 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true), expectedRevertMessage);
   });
 
-  it('createJob() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('createJob() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true), expectedRevertMessage);
   });
 
-  it('updateJob() should not be accessable by anyone besides AssetCreator', async () => {
+  it('updateJob() should not be accessable by anyone besides AssetModifier', async () => {
+    // Setting up a Job
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[1].address);
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assetManager.connect(signers[1]).createJob('http://testurl.com/1', 'selector/1', 'test1', true);
+    await assetManager.addPendingJobs();
+
     // Checking if Anyone can access it
     await assertRevert(assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
 
@@ -360,16 +475,18 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
   });
 
-  it('updateJob() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('updateJob() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
+    await assetManager.addPendingJobs();
     await assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2');
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
   });
 
-  it('updateAssetStatus() should not be accessable by anyone besides AssetCreator', async () => {
+  it('updateAssetStatus() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(assetManager.updateAssetStatus(1, 0), expectedRevertMessage);
 
@@ -386,16 +503,18 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.updateAssetStatus(1, 0), expectedRevertMessage);
   });
 
-  it('updateAssetStatus() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('updateAssetStatus() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
+    await assetManager.addPendingJobs();
     await assetManager.updateAssetStatus(1, 0);
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.updateAssetStatus(1, 0), expectedRevertMessage);
   });
 
-  it('createCollection() should not be accessable by anyone besides AssetCreator', async () => {
+  it('createCollection() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(assetManager.createCollection('test', [1, 2], 1), expectedRevertMessage);
 
@@ -412,17 +531,19 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.createCollection('test', [1, 2], 1), expectedRevertMessage);
   });
 
-  it('createCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('createCollection() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);
+    await assetManager.addPendingJobs();
     await assetManager.createCollection('test', [1, 2], 1);
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.createCollection('test', [1, 2], 1), expectedRevertMessage);
   });
 
-  it('addJobToCollection() should not be accessable by anyone besides AssetCreator', async () => {
+  it('addJobToCollection() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(assetManager.addJobToCollection(3, 4), expectedRevertMessage);
 
@@ -439,19 +560,23 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.addJobToCollection(3, 4), expectedRevertMessage);
   });
 
-  it('addJobToCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('addJobToCollection() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);
+    await assetManager.addPendingJobs();
     await assetManager.createCollection('test', [1, 2], 1);
     await assetManager.createJob('http://testurl.com/3', 'selector/3', 'test3', true);
+    await assetManager.addPendingCollections();
+    await assetManager.addPendingJobs();
     await assetManager.addJobToCollection(3, 4);
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.addJobToCollection(3, 4), expectedRevertMessage);
   });
 
-  it('removeJobFromCollection() should not be accessable by anyone besides AssetCreator', async () => {
+  it('removeJobFromCollection() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(assetManager.removeJobFromCollection(3, 1), expectedRevertMessage);
 
@@ -468,14 +593,17 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.removeJobFromCollection(3, 1), expectedRevertMessage);
   });
 
-  it('removeJobFromCollection() should be accessable by only AssetCreator', async () => {
-    const assetCreatorHash = await parameters.getAssetModifierHash();
-    await assetManager.grantRole(assetCreatorHash, signers[0].address);
+  it('removeJobFromCollection() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = await parameters.getAssetModifierHash();
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
+    await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1', true);
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2', true);
+    await assetManager.addPendingJobs();
     await assetManager.createCollection('test', [1, 2], 1);
+    await assetManager.addPendingCollections();
     await assetManager.removeJobFromCollection(3, 1);
-    await assetManager.revokeRole(assetCreatorHash, signers[0].address);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.removeJobFromCollection(3, 1), expectedRevertMessage);
   });
 

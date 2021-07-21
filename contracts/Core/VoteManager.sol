@@ -47,6 +47,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Structs.Staker does not exist");
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
@@ -54,7 +55,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
-            blockManager.confirmBlock();
+            blockManager.confirmBlock(stakerId);
         }
         rewardManager.givePenalties(stakerId, epoch);
 

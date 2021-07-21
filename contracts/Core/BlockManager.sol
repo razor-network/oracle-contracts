@@ -144,7 +144,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             stakeManager.getStaker(proposerId).stake >= parameters.minStake(),
             "stake below minimum stake"
         );
-        require(ids.length == assetManager.getActiveAssets(),"");
+        require(ids.length == assetManager.getActiveAssets(),"Invalid proposed block");
         _insertAppropriately(
             epoch,
             Structs.Block(
@@ -246,31 +246,40 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function confirmBlock() public initialized onlyRole(parameters.getBlockConfirmerHash()) {
+    function claimBlockReward() public initialized checkState(parameters.confirm()){
         uint256 epoch = parameters.getEpoch();
+        uint256 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Structs.Staker does not exist");
+        require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
-            if (proposedBlocks[epoch - 1][i].valid) {
-                blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
-                uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
-                emit BlockConfirmed(epoch - 1,
-                                    proposerId,
-                                    proposedBlocks[epoch - 1][i].medians,
-                                    proposedBlocks[epoch - 1][i].lowerCutoffs,
-                                    proposedBlocks[epoch - 1][i].higherCutoffs,
-                                    proposedBlocks[epoch - 1][i].ids,
-                                    block.timestamp);
-                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
-                    assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j],
-                                        proposedBlocks[epoch - 1][i].medians[j]);
-                }
+        for (uint8 i = 0; i < proposedBlocks[epoch].length; i++) {
+            if (proposedBlocks[epoch][i].valid) {
+                require(proposedBlocks[epoch][i].proposerId == stakerId, "Block can be confirmed by proposer of the block");
+                _confirmBlock(epoch, i);
                 assetManager.addPendingJobs();
                 assetManager.addPendingCollections();
-                rewardManager.giveBlockReward(proposerId, epoch);
+                assetManager.deactivateAssets();
+                assetManager.activateAssets();
+                rewardManager.giveBlockReward(stakerId, epoch);
                 return;
             }
         }
+    }
 
+    function confirmBlock(uint256 stakerId) public initialized onlyRole(parameters.getBlockConfirmerHash()){
+        uint256 epoch = parameters.getEpoch();
+
+        for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
+            if (proposedBlocks[epoch - 1][i].valid) {
+                _confirmBlock(epoch - 1, i);
+                assetManager.addPendingJobs();
+                assetManager.addPendingCollections();
+                assetManager.deactivateAssets();
+                assetManager.activateAssets();
+                rewardManager.giveBlockReward(stakerId, epoch);
+                return;
+            }
+        }
     }
 
     function isElectedProposer(
@@ -325,5 +334,21 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
+    function _confirmBlock(uint256 epoch, uint256 proposedBlock) internal {
+        blocks[epoch] = proposedBlocks[epoch][proposedBlock];
+        uint256 proposerId = proposedBlocks[epoch][proposedBlock].proposerId;
+        emit BlockConfirmed(epoch,
+                            proposerId,
+                            proposedBlocks[epoch][proposedBlock].medians,
+                            proposedBlocks[epoch][proposedBlock].lowerCutoffs,
+                            proposedBlocks[epoch][proposedBlock].higherCutoffs,
+                            proposedBlocks[epoch][proposedBlock].ids,
+                            block.timestamp);
+        for (uint8 j = 0; j < proposedBlocks[epoch][proposedBlock].ids.length; j++) {
+            assetManager.fulfillAsset(proposedBlocks[epoch][proposedBlock].ids[j],
+                                proposedBlocks[epoch][proposedBlock].medians[j]);
+        }
+
+    }
 
 }
