@@ -140,7 +140,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 100, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -443,6 +443,31 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @return The number of stakers in the razor network
     function getNumStakers() external view returns(uint256) {
         return(numStakers);
+    }
+
+
+    function getAge(uint256 stakerId)
+        external
+        view
+        returns(uint256)
+    {
+        return stakers[stakerId].age;
+    }
+
+    function getMaturity(uint256 stakerId)
+        external
+        view
+        returns(uint256)
+    {
+        return stakers[stakerId].age;
+    }
+
+    function getInfluence(uint256 stakerId)
+        external
+        view
+        returns(uint256)
+    {
+        return stakers[stakerId].age * stakers[stakerId].stake;
     }
 
     /// @notice 1 sRZR = ? RZR

@@ -30,18 +30,14 @@ library Structs {
         uint256 proposerId;
         uint256[] ids;
         uint256[] medians;
-        uint256[] lowerCutoffs;
-        uint256[] higherCutoffs;
         uint256 iteration;
-        uint256 biggestStake;
+        uint256 biggestInfluence;
         bool valid;
     }
 
     struct Dispute {
         uint256 accWeight;
         uint256 median;
-        uint256 lowerCutoff;
-        uint256 higherCutoff;
         uint256 lastVisited;
         uint256 assetId;
     }

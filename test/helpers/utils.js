@@ -43,7 +43,7 @@ const prng = async (seed, max, blockHashes) => {
   return (sum.mod(max));
 };
 
-const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, blockHashes) => {
+const isElectedProposer = async (iteration, biggestInfluence, influence, stakerId, numStakers, blockHashes) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const seed = await web3.utils.soliditySha3(iteration);
 
@@ -53,25 +53,41 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
   const randHash = await prngHash(seed2, blockHashes);
   const rand = (toBigNumber(randHash).mod('2').pow('32'));
 
-  if ((rand.mul(biggestStake)).gt(stake.mul(toBigNumber('2').pow('32')))) return false;
+  if ((rand.mul(biggestInfluence)).gt(influence.mul(toBigNumber('2').pow('32')))) return false;
 
   return true;
 };
 
-const getBiggestStakeAndId = async (razor) => {
-  const numStakers = await razor.numStakers();
-  let biggestStake = toBigNumber('0');
-  let biggestStakerId = toBigNumber('0');
+// const getBiggestStakeAndId = async (razor) => {
+//   const numStakers = await razor.numStakers();
+//   let biggestStake = toBigNumber('0');
+//   let biggestStakerId = toBigNumber('0');
+//
+//   for (let i = 1; i <= numStakers; i++) {
+//     const { stake } = await razor.stakers(i);
+//
+//     if (stake.gt(biggestStakerId)) {
+//       biggestStake = stake;
+//       biggestStakerId = i;
+//     }
+//   }
+//   return { biggestStake, biggestStakerId };
+// };
+
+const getBiggestInfluenceAndId = async (stakeManager) => {
+  const numStakers = await stakeManager.numStakers();
+  let biggestInfluence = toBigNumber('0');
+  let biggestInfluencerId = toBigNumber('0');
 
   for (let i = 1; i <= numStakers; i++) {
-    const { stake } = await razor.stakers(i);
-
-    if (stake.gt(biggestStakerId)) {
-      biggestStake = stake;
-      biggestStakerId = i;
+    const  influence  = await stakeManager.getInfluence(i);
+    // console.log(influence)
+    if (influence.gt(biggestInfluence)) {
+      biggestInfluence = influence;
+      biggestInfluencerId = i;
     }
   }
-  return { biggestStake, biggestStakerId };
+  return { biggestInfluence, biggestInfluencerId };
 };
 
 const getEpoch = async () => {
@@ -81,13 +97,14 @@ const getEpoch = async () => {
 
 const getIteration = async (stakeManager, random, staker) => {
   const numStakers = await stakeManager.getNumStakers();
-  const { stake } = staker;
   const stakerId = staker.id;
-  const { biggestStake } = await getBiggestStakeAndId(stakeManager);
+  const influence = await stakeManager.getInfluence(stakerId)
+
+  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
   const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
 
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, blockHashes);
+    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, blockHashes);
     if (isElected) return (i);
   }
   return 0;
@@ -102,7 +119,8 @@ const getState = async () => {
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
-  getBiggestStakeAndId,
+  // getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getEpoch,
   getIteration,
   getState,

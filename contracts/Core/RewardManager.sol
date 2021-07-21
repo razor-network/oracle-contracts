@@ -83,29 +83,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     }
 
 
-    function getAge(uint256 stakerId)
-        external
-        view
-
-    {
-        return stakeManager.getStaker(stakerId).age
-    }
-
-    function getMaturity(uint256 stakerId)
-        external
-        view
-
-    {
-        return stakeManager.getStaker(stakerId).age
-    }
-
-    function getInfluence(uint256 stakerId)
-        external
-        view
-
-    {
-        return stakeManager.getStaker(stakerId).age * stakeManager.getStaker(stakerId).stake
-    }
 
 
     /// @notice The function gives block reward for one valid proposer in the
@@ -339,18 +316,19 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 uint256 medianLastEpoch = mediansLastEpoch[i];
 
                 if (voteLastEpoch > medianLastEpoch) {
-                  penalty = penalty + (voteLastEpoch - medianLastEpoch)**2 /medianLastEpoch**2
+                  penalty = penalty + (previousAge*(voteLastEpoch - medianLastEpoch)**2) /medianLastEpoch**2;
                 }
                 else {
-                  penalty = penalty + (medianLastEpoch - voteLastEpoch)**2 /medianLastEpoch**2
+                  penalty = penalty + (previousAge*(medianLastEpoch - voteLastEpoch)**2) /medianLastEpoch**2;
                 }
             }
-          }
+
           stakeManager.setStakerAge(
               thisStaker.id,
-              (previousAge + 1 - (penalty)),
+              (previousAge + 1000 - (penalty)),
               epoch
           );
+        }
 
     }
 }

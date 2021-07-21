@@ -18,7 +18,7 @@ const {
   getEpoch,
   toBigNumber,
   tokenAmount,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getIteration,
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
@@ -87,6 +87,8 @@ describe('StakeManager', function () {
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
+      const age1 = toBigNumber(100)
+      const influence1 = stake1.mul(age1)
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
@@ -99,6 +101,8 @@ describe('StakeManager', function () {
       assertBNEqual(numStakers, toBigNumber('1'));
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
+      assertBNEqual(staker.age, age1, 'age is incorrect');
+      assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
 
@@ -495,16 +499,14 @@ describe('StakeManager', function () {
 
         // propose
         await mineToNextState();
-        const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(stakeManager, random, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
-          [99, 199, 299, 399, 499, 599, 699, 799, 899],
-          [101, 201, 301, 401, 501, 601, 701, 801, 901],
           iteration,
-          biggestStakerId);
+          biggestInfluencerId);
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
         assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
 

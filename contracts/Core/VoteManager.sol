@@ -96,8 +96,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
             }
 
-            // rewardManager.giveRewards(thisStakerId, epoch);
-
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 

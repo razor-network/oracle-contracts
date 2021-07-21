@@ -14,7 +14,7 @@ const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
   calculateDisputesData,
   getEpoch,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getIteration,
   toBigNumber,
   tokenAmount,
@@ -170,16 +170,14 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        [99, 199, 299, 399, 499, 599, 699, 799, 899],
-        [101, 201, 301, 401, 501, 601, 701, 801, 901],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
     });
@@ -191,24 +189,19 @@ describe('BlockManager', function () {
       assertBNEqual(nblocks, toBigNumber('1'), 'Only one block has been proposed till now. Incorrect Answer');
     });
 
-    it('should allow another proposals', async function () {
+    it('should allow another proposal', async function () {
       const epoch = await getEpoch();
 
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker = await stakeManager.getStaker(stakerIdAcc6);
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
-
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
-
       const iteration = await getIteration(stakeManager, random, staker);
-
       await blockManager.connect(signers[6]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        [99, 199, 299, 399, 499, 599, 699, 799, 899],
-        [101, 201, 301, 401, 501, 601, 701, 801, 901],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration))
         ? await blockManager.proposedBlocks(epoch, 0) : await blockManager.proposedBlocks(epoch, 1);
@@ -335,12 +328,12 @@ describe('BlockManager', function () {
 
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
 
-      const iteration6 = await getIteration(stakeManager, random, staker6);
+      const iteration6 = await getIteration(stakeManager,random, staker6);
 
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
       const staker7 = await stakeManager.getStaker(stakerIdAcc7);
 
-      const iteration7 = await getIteration(stakeManager, random, staker7);
+      const iteration7 = await getIteration(stakeManager,random, staker7);
 
       await mineToNextState();
 
@@ -491,7 +484,7 @@ describe('BlockManager', function () {
 
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
 
-      const iteration = await getIteration(stakeManager, random, staker);
+      const iteration = await getIteration(stakeManager,random, staker);
       await blockManager.connect(signers[19]).propose(epoch,
         [10, 12, 13, 14, 15, 16, 17, 18, 19],
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
@@ -580,7 +573,7 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc2);
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
 
-      const iteration = await getIteration(stakeManager, random, staker);
+      const iteration = await getIteration(stakeManager,random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
