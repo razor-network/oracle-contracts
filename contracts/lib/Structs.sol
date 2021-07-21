@@ -12,6 +12,7 @@ library Structs {
         uint256 id;
         address _address;
         uint256 stake;
+        uint256 age;
         uint256 epochStaked;
         uint256 epochLastCommitted;
         uint256 epochLastRevealed;
@@ -62,7 +63,7 @@ library Structs {
         uint256 id;
         string name;
         uint32 aggregationMethod;
-        uint256[] jobIDs; 
+        uint256[] jobIDs;
         mapping(uint256=>bool) jobIDExist;
         uint256 epoch;
         bool active;

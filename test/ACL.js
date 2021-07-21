@@ -137,29 +137,29 @@ describe('Access Control Test', async () => {
     await assertRevert(rewardManager.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
-  it('giveRewards() should not be accessable by anyone besides RewardModifier', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
-
-    // Checking if AssetConfirmer can access it
-    await rewardManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await rewardManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await rewardManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
-  });
-
-  it('giveRewards() should be accessable by RewardModifier', async () => {
-    await rewardManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
-    await rewardManager.giveRewards(1, 1);
-    await rewardManager.revokeRole(await parameters.getRewardModifierHash(), signers[0].address);
-    await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
-  });
+  // it('giveRewards() should not be accessable by anyone besides RewardModifier', async () => {
+  //   // Checking if Anyone can access it
+  //   await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
+  //
+  //   // Checking if AssetConfirmer can access it
+  //   await rewardManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
+  //   await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
+  //
+  //   // Checking if BlockConfirmer can access it
+  //   await rewardManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
+  //   await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
+  //
+  //   // Checking if StakerActivityUpdater can access it
+  //   await rewardManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
+  //   await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
+  // });
+  //
+  // it('giveRewards() should be accessable by RewardModifier', async () => {
+  //   await rewardManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
+  //   await rewardManager.giveRewards(1, 1);
+  //   await rewardManager.revokeRole(await parameters.getRewardModifierHash(), signers[0].address);
+  //   await assertRevert(rewardManager.giveRewards(1, 1), expectedRevertMessage);
+  // });
 
   it('givePenalties() should not be accessable by anyone besides RewardModifier', async () => {
     // Checking if Anyone can access it

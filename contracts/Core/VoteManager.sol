@@ -43,14 +43,14 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         blockManager = IBlockManager(blockManagerAddress);
         parameters = IParameters(parametersAddress);
     }
-    
+
 
     function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
-        // Switch to call confirm block only when block in previous epoch has not been confirmed 
+        // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
@@ -75,7 +75,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     )
         public
         initialized
-        checkEpoch(epoch) 
+        checkEpoch(epoch)
     {
         uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
@@ -83,7 +83,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId],
                 "incorrect secret/value");
-        
+
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
@@ -96,7 +96,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
                 totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
             }
 
-            rewardManager.giveRewards(thisStakerId, epoch);
+            // rewardManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
