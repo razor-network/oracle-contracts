@@ -28,7 +28,7 @@ describe('AssetManager', function () {
   let blockManager;
   let assetManager;
   let random;
-  let schellingCoin;
+  let razor;
   let stakeManager;
   let parameters;
   let voteManager;
@@ -40,7 +40,7 @@ describe('AssetManager', function () {
       parameters,
       assetManager,
       random,
-      schellingCoin,
+      razor,
       stakeManager,
       voteManager,
       initializeContracts,
@@ -77,9 +77,9 @@ describe('AssetManager', function () {
       const repeat = true;
       await assetManager.createJob(url, selector, name, repeat);
 
-      await schellingCoin.transfer(signers[5].address, tokenAmount('423000'));
+      await razor.transfer(signers[5].address, tokenAmount('423000'));
 
-      await schellingCoin.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
+      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
 
