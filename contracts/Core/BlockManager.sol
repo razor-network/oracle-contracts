@@ -206,8 +206,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             if (disputes[epoch][msg.sender].higherCutoff == 0 && accWeight > higherCutoffWeight) {
                 disputes[epoch][msg.sender].higherCutoff = sorted[i];
             }
-            //TODO verify how much gas required for below operations and update this value
-            if (gasleft() < 10000) break;
+            if (gasleft() < 60000) break;
         }
         disputes[epoch][msg.sender].lastVisited = lastVisited;
         disputes[epoch][msg.sender].accWeight = accWeight;

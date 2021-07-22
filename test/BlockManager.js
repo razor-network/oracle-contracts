@@ -250,6 +250,21 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
     });
 
+    it('giveSorted function should not work as exepected with insufficient gas amount', async function () {
+      const epoch = await getEpoch();
+      const sortedVotes = [250, 260, 270, 280, 290];
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes, { gasLimit: 100000 });
+      const dispute = await blockManager.disputes(epoch, signers[19].address);
+      assertBNEqual(dispute.lastVisited, 250, 'it should not have visited all');
+    });
+    it('giveSorted function should work as exepected with sufficient gas amount', async function () {
+      const epoch = await getEpoch();
+      const sortedVotes = [300, 310, 320, 330, 350];
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes, { gasLimit: 190000 });
+      const dispute = await blockManager.disputes(epoch, signers[19].address);
+      assertBNEqual(dispute.lastVisited, 350, 'it should have visited all');
+    });
+
     it('should be able to finalize Dispute', async function () {
       const epoch = await getEpoch();
 
