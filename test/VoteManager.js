@@ -151,7 +151,7 @@ describe('VoteManager', function () {
       it('should be able to commit again with correct influence', async function () {
         let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
-        const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
+        // const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
@@ -164,9 +164,7 @@ describe('VoteManager', function () {
           biggestInfluencerId);
 
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
-        const influenceBefore2 = (await stakeManager.getInfluence(stakerIdAcc4));
         const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
-        const ageBefore2 = (await stakeManager.stakers(stakerIdAcc3)).age;
 
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
@@ -195,10 +193,8 @@ describe('VoteManager', function () {
         assertBNEqual(commitment1, commitment3, 'commitment1, commitment3 not equal');
 
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
-        const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
-        const expectedAgeDifference = toBigNumber(10000)
+        const expectedAgeDifference = toBigNumber(10000);
         const influenceAfter = (await stakeManager.getInfluence(stakerIdAcc3));
-        const influenceAfter2 = (await stakeManager.getInfluence(stakerIdAcc4));
 
         assertBNEqual(ageAfter.sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
         assertBNLessThan(influenceBefore, influenceAfter, 'Not rewarded');
@@ -264,8 +260,8 @@ describe('VoteManager', function () {
           iteration,
           biggestInfluencerId);
 
-        const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
-        const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
+        // const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
+        // const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
         const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
         const ageBefore2 = (await stakeManager.stakers(stakerIdAcc4)).age;
         await mineToNextState(); // dispute
@@ -286,18 +282,18 @@ describe('VoteManager', function () {
 
         assert(commitment1 === commitment2, 'commitment1, commitment2 not equal');
 
-        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
+        // const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        // const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         let penalty = toBigNumber('0');
-        let toAdd = toBigNumber(0)
-        let num = toBigNumber(0)
-        let denom = toBigNumber(0)
+        let toAdd = toBigNumber(0);
+        let num = toBigNumber(0);
+        let denom = toBigNumber(0);
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         for (let i = 0; i < votes2.length; i++) {
-          num = (toBigNumber(votes2[i]).sub(medians[i])).pow(2)
+          num = (toBigNumber(votes2[i]).sub(medians[i])).pow(2);
           denom = toBigNumber(medians[i]).pow(2);
           toAdd = (ageBefore2.mul(num).div(denom));
-          penalty = penalty.add( toAdd);
+          penalty = penalty.add(toAdd);
         }
         const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
@@ -334,7 +330,7 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
 
-        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
+        // const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -351,7 +347,7 @@ describe('VoteManager', function () {
         // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
 
-        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
       });
 

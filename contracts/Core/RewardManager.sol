@@ -99,11 +99,12 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         address bountyHunter,
         uint256 epoch
     ) external onlyRole(parameters.getRewardModifierHash()) {
-       uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
-       uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
-       uint256 bountyReward = slashPenaltyAmount/2;
-       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
-       stakeManager.transferBounty(bountyHunter, bountyReward);
+        uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())
+        /parameters.slashPenaltyDenom();
+        uint256 stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
+        uint256 bountyReward = slashPenaltyAmount/2;
+        stakeManager.setStakerStake(id, stake, "Slashed", epoch);
+        stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
     /// @notice Calculates the inactivity penalties of the staker
@@ -180,23 +181,26 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 uint256 medianLastEpoch = mediansLastEpoch[i];
 
                 if (voteLastEpoch > medianLastEpoch) {
-                  penalty = penalty + (previousAge*(voteLastEpoch - medianLastEpoch)**2) /medianLastEpoch**2;
-                }
-                else {
-                  penalty = penalty + (previousAge*(medianLastEpoch - voteLastEpoch)**2) /medianLastEpoch**2;
+                    penalty = penalty +
+                    (previousAge * (voteLastEpoch - medianLastEpoch)**2)
+                    /medianLastEpoch**2;
+                } else {
+                    penalty = penalty +
+                    (previousAge*(medianLastEpoch - voteLastEpoch)**2)
+                    /medianLastEpoch**2;
                 }
             }
 
-          uint256 newAge = (previousAge + 10000 - (penalty));
-          newAge = newAge > parameters.getMaxAge() ?
-          parameters.getMaxAge() :
-          newAge;
+            uint256 newAge = (previousAge + 10000 - (penalty));
+            newAge = newAge > parameters.getMaxAge() ?
+            parameters.getMaxAge() :
+            newAge;
 
-          stakeManager.setStakerAge(
-              thisStaker.id,
-              newAge,
-              epoch
-          );
+            stakeManager.setStakerAge(
+                thisStaker.id,
+                newAge,
+                epoch
+            );
         }
 
     }

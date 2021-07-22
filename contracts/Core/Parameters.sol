@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/IParameters.sol";
 import "./ACL.sol";
 
+
 contract Parameters is IParameters, ACL {
 
     // constant type can be readjusted to some smaller type than uint256 for saving gas (storage variable packing).
@@ -56,11 +57,11 @@ contract Parameters is IParameters, ACL {
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
     }
 
-    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE){
+    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         slashPenaltyNum = _slashPenaltyNumerator;
     }
 
-    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE){
+    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
@@ -69,7 +70,7 @@ contract Parameters is IParameters, ACL {
     }
 
     function setWithdrawReleasePeriod(uint256 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
-         withdrawReleasePeriod = _withdrawReleasePeriod;
+        withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
     function setResetLockPenalty(uint256 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
