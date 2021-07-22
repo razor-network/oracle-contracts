@@ -25,12 +25,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         uint256 rewardPool,
         uint256 timestamp
     );
-    event StakeGettingRewardChange(
-        uint256 epoch,
-        uint256 prevStakeGettingReward,
-        uint256 stakeGettingReward,
-        uint256 timestamp
-    );
 
     modifier checkEpoch(uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -103,93 +97,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 epoch
             );
         }
-        uint256 prevStakeGettingReward = stakeGettingReward;
-        stakeGettingReward = 0;
-
-        emit StakeGettingRewardChange(
-            epoch,
-            prevStakeGettingReward,
-            stakeGettingReward,
-            block.timestamp
-        );
     }
-
-    /// @notice This function is called in VoteManager reveal function to give
-    /// rewards to all the stakers who have correctly staked, committed, revealed
-    /// the Values of assets according to the razor protocol rules.
-    /// @param stakerId The staker id
-    /// @param epoch The epoch number for which reveal has been called
-    // function giveRewards(uint256 stakerId, uint256 epoch)
-    //     external
-    //     initialized
-    //     onlyRole(parameters.getRewardModifierHash())
-    // {
-    //     if (stakeGettingReward == 0) return;
-    //     Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-    //     uint256 epochLastRevealed = thisStaker.epochLastRevealed;
-    //
-    //     // no rewards if last epoch didn't got revealed
-    //     if ((epoch - epochLastRevealed) != 1) return;
-    //     uint256[] memory mediansLastEpoch =
-    //         blockManager.getBlockMedians(epochLastRevealed);
-    //     uint256[] memory lowerCutoffsLastEpoch =
-    //         blockManager.getLowerCutoffs(epochLastRevealed);
-    //     uint256[] memory higherCutoffsLastEpoch =
-    //         blockManager.getHigherCutoffs(epochLastRevealed);
-    //
-    //     if (lowerCutoffsLastEpoch.length > 0) {
-    //         uint256 rewardable = 0;
-    //         for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
-    //             uint256 voteLastEpoch =
-    //                 voteManager
-    //                     .getVote(epochLastRevealed, thisStaker.id, i)
-    //                     .value;
-    //             uint256 medianLastEpoch = mediansLastEpoch[i];
-    //             uint256 lowerCutoffLastEpoch = lowerCutoffsLastEpoch[i];
-    //             uint256 higherCutoffLastEpoch = higherCutoffsLastEpoch[i];
-    //
-    //             //give rewards if voted in zone
-    //             if (
-    //                 (voteLastEpoch == medianLastEpoch) ||
-    //                 ((voteLastEpoch > lowerCutoffLastEpoch) ||
-    //                     (voteLastEpoch < higherCutoffLastEpoch))
-    //             ) {
-    //                 rewardable = rewardable + 1;
-    //             }
-    //         }
-    //
-    //         uint256 reward =
-    //             (thisStaker.stake * rewardPool * rewardable) /
-    //                 (stakeGettingReward * lowerCutoffsLastEpoch.length);
-    //         if (reward > 0) {
-    //             uint256 prevStakeGettingReward = stakeGettingReward;
-    //             stakeGettingReward = stakeGettingReward >= thisStaker.stake
-    //                 ? stakeGettingReward - (thisStaker.stake)
-    //                 : 0;
-    //             emit StakeGettingRewardChange(
-    //                 epoch,
-    //                 prevStakeGettingReward,
-    //                 stakeGettingReward,
-    //                 block.timestamp
-    //             );
-    //             uint256 newStake = thisStaker.stake + reward;
-    //             uint256 prevRewardPool = rewardPool;
-    //             rewardPool = rewardPool - (reward);
-    //             emit RewardPoolChange(
-    //                 epoch,
-    //                 prevRewardPool,
-    //                 rewardPool,
-    //                 block.timestamp
-    //             );
-    //             stakeManager.setStakerStake(
-    //                 thisStaker.id,
-    //                 newStake,
-    //                 "Voting Rewards",
-    //                 epoch
-    //             );
-    //         }
-    //     }
-    // }
 
     /// @notice The function is used by the Votemanager reveal function
     /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
@@ -229,10 +137,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         return (rewardPool);
     }
 
-    /// @return The stakeGettingReward value
-    function getStakeGettingReward() external view returns (uint256) {
-        return (stakeGettingReward);
-    }
 
     /// @notice Calculates the inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
@@ -325,7 +229,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
 
           stakeManager.setStakerAge(
               thisStaker.id,
-              (previousAge + 1000 - (penalty)),
+              (previousAge + 10000 - (penalty)),
               epoch
           );
         }

@@ -21,12 +21,10 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   for (let i = 0; i < sortedVotes.length; i++) {
     weight = weight.add(weights[i]);
     if (weight.gt(medianWeight) && median.eq('0')) median = sortedVotes[i];
-    if (weight.gt(lowerCutoffWeight) && lowerCutoff.eq('0')) lowerCutoff = sortedVotes[i];
-    if (weight.gt(higherCutoffWeight) && higherCutoff.eq('0')) higherCutoff = sortedVotes[i];
   }
 
   return {
-    median, totalStakeRevealed, lowerCutoff, higherCutoff,
+    median, totalStakeRevealed,
   };
 };
 
@@ -51,28 +49,11 @@ const isElectedProposer = async (iteration, biggestInfluence, influence, stakerI
 
   const seed2 = await web3.utils.soliditySha3(stakerId, iteration);
   const randHash = await prngHash(seed2, blockHashes);
-  const rand = (toBigNumber(randHash).mod('2').pow('32'));
-
+  const rand = (toBigNumber(randHash).mod(toBigNumber(2).pow(toBigNumber(32))));
   if ((rand.mul(biggestInfluence)).gt(influence.mul(toBigNumber('2').pow('32')))) return false;
 
   return true;
 };
-
-// const getBiggestStakeAndId = async (razor) => {
-//   const numStakers = await razor.numStakers();
-//   let biggestStake = toBigNumber('0');
-//   let biggestStakerId = toBigNumber('0');
-//
-//   for (let i = 1; i <= numStakers; i++) {
-//     const { stake } = await razor.stakers(i);
-//
-//     if (stake.gt(biggestStakerId)) {
-//       biggestStake = stake;
-//       biggestStakerId = i;
-//     }
-//   }
-//   return { biggestStake, biggestStakerId };
-// };
 
 const getBiggestInfluenceAndId = async (stakeManager) => {
   const numStakers = await stakeManager.numStakers();
@@ -81,7 +62,6 @@ const getBiggestInfluenceAndId = async (stakeManager) => {
 
   for (let i = 1; i <= numStakers; i++) {
     const  influence  = await stakeManager.getInfluence(i);
-    // console.log(influence)
     if (influence.gt(biggestInfluence)) {
       biggestInfluence = influence;
       biggestInfluencerId = i;
@@ -102,7 +82,6 @@ const getIteration = async (stakeManager, random, staker) => {
 
   const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
   const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
-
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, blockHashes);
     if (isElected) return (i);

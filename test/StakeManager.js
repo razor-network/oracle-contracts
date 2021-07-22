@@ -87,7 +87,7 @@ describe('StakeManager', function () {
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
-      const age1 = toBigNumber(100)
+      const age1 = toBigNumber(10000)
       const influence1 = stake1.mul(age1)
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);

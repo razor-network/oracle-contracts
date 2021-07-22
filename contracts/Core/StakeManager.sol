@@ -140,7 +140,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 100, epoch, 0, 0, false, 0, address(sToken));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -445,28 +445,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         return(numStakers);
     }
 
-
-    function getAge(uint256 stakerId)
-        external
-        view
-        returns(uint256)
-    {
+    /// @return age of staker
+    function getAge(uint256 stakerId) external view returns(uint256) {
         return stakers[stakerId].age;
     }
 
-    function getMaturity(uint256 stakerId)
-        external
-        view
-        returns(uint256)
-    {
+    /// @return maturity of staker
+    function getMaturity(uint256 stakerId) external view returns(uint256) {
         return stakers[stakerId].age;
     }
 
-    function getInfluence(uint256 stakerId)
-        external
-        view
-        returns(uint256)
-    {
+    /// @return influence of staker
+    function getInfluence(uint256 stakerId)  external view returns(uint256) {
         return stakers[stakerId].age * stakers[stakerId].stake;
     }
 

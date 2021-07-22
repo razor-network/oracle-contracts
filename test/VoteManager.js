@@ -196,18 +196,13 @@ describe('VoteManager', function () {
 
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
-        const expectedAgeDifference = toBigNumber(1000)
+        const expectedAgeDifference = toBigNumber(10000)
         const influenceAfter = (await stakeManager.getInfluence(stakerIdAcc3));
         const influenceAfter2 = (await stakeManager.getInfluence(stakerIdAcc4));
 
-        console.log('staker',(await stakeManager.stakers(stakerIdAcc3)).age);
-        console.log('ageBefore',(ageBefore).toString())
-        console.log('ageAfter',(ageAfter).toString())
         assertBNEqual(ageAfter.sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
         assertBNLessThan(influenceBefore, influenceAfter, 'Not rewarded');
-        // assertBNEqual(stakeBefore2, stakeAfter2, 'Penalty should not be applied');
-        // const stakeGettingReward = await rewardManager.stakeGettingReward();
-        // assertBNEqual(stakeGettingReward, (stakeAfter2.add(stakeAfter)), 'Error 3');
+        assertBNEqual(ageBefore.add(10000), ageAfter, 'Penalty should not be applied');
       });
 
       it('should be able to reveal again but with no rewards for now', async function () {
@@ -264,14 +259,17 @@ describe('VoteManager', function () {
 
         const iteration = await getIteration(stakeManager, random, staker);
         await mineToNextState(); // propose
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[3]).propose(epoch,
           [10, 11, 12, 13, 14, 15, 16, 17, 18],
-          [100, 200, 300, 400, 500, 600, 700, 800, 900],
+          medians,
           iteration,
           biggestInfluencerId);
 
         const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
         const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
+        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
+        const ageBefore2 = (await stakeManager.stakers(stakerIdAcc4)).age;
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
         epoch = await getEpoch();
@@ -293,17 +291,22 @@ describe('VoteManager', function () {
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         let penalty = toBigNumber('0');
-        const den = toBigNumber('1000');
-        for (let i = 0; i < votes.length; i++) {
-          penalty = penalty.add((stakeBefore2.div(den)));
+        let toAdd = toBigNumber(0)
+        let num = toBigNumber(0)
+        let denom = toBigNumber(0)
+        const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        for (let i = 0; i < votes2.length; i++) {
+          num = (toBigNumber(votes2[i]).sub(medians[i])).pow(2)
+          denom = toBigNumber(medians[i]).pow(2);
+          toAdd = (ageBefore2.mul(num).div(denom));
+          penalty = penalty.add( toAdd);
         }
+        const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
+        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
 
-        assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded');
-        assertBNEqual(stakeBefore2.sub(penalty), stakeAfter2, 'Penalty should be applied');
-        const stakeGettingReward = await rewardManager.stakeGettingReward();
-        assertBNEqual(stakeGettingReward, stakeAfter, 'Error 3');
-        const rewardPool = await rewardManager.rewardPool();
-        assertBNEqual(rewardPool, penalty, 'reward pool should not be zero as penalties have been applied');
+        assertBNLessThan(ageBefore, ageAfter, 'Not rewarded');
+        assertBNEqual(expectedAgeAfter2, ageAfter2, 'Age Penalty should be applied');
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {
