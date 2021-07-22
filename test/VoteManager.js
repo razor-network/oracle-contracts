@@ -21,6 +21,7 @@ const {
   tokenAmount,
   getAssignedAssets,
   getNumRevealedAssets,
+  findAssetNotAlloted,
 } = require('./helpers/utils');
 
 describe('VoteManager', function () {
@@ -130,7 +131,7 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[4]).commit(epoch, commitment3);
       });
 
-      it('should be able to reveal', async function () {
+      it('should be able to reveal assigned assets', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -152,6 +153,24 @@ describe('VoteManager', function () {
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
+        // Revealed assets not equal to required assets per staker
+        let assignedAssetsVotesCopy = JSON.parse(JSON.stringify(assigneedAssetsVotes)); // Deep Clone
+        assignedAssetsVotesCopy.push({ id: 5, value: 500 });
+        let tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+        await assertRevert(tx, 'Revealed assets not equal to required assets per staker');
+
+        // Incorrect Reveal 
+        assignedAssetsVotesCopy.splice(0, 1);
+        let assetId = await findAssetNotAlloted(assignedAssetsVotesCopy, votes.length);
+        assignedAssetsVotesCopy[0].id = assetId
+        tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+        await assertRevert(tx, 'Revealed asset not alloted');
+
+        // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
@@ -175,9 +194,6 @@ describe('VoteManager', function () {
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
 
-        console.log(assignedAssets);
-        console.log(assignedAssets2);
-
         // To Form Block Proposal On basis of revealed assets this epoch
         for (let i = 0; i < maxAssetsPerStaker; i++) {
           revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
@@ -192,7 +208,6 @@ describe('VoteManager', function () {
             blockThisEpoch.higherCutOffs.push(i * 100 + 4);
           }
         }
-        // console.log(blockThisEpoch);
       });
 
       it('should be able to commit again with correct rewards', async function () {
@@ -204,7 +219,6 @@ describe('VoteManager', function () {
 
         const iteration = await getIteration(stakeManager, random, staker);
         await mineToNextState(); // propose
-        console.log(blockThisEpoch);
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,
           blockThisEpoch.medians,
@@ -322,7 +336,6 @@ describe('VoteManager', function () {
             blockThisEpoch.higherCutOffs.push(i * 100 + 3);
           }
         }
-        console.log(blockThisEpoch);
       });
 
       it('account 4 should be penalised for trying to make fraudulent predictions in the previous epoch', async function () {

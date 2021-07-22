@@ -240,14 +240,14 @@ describe('BlockManager', function () {
           toBeDisputedAssetId = assetId;
         }
       }
-
       // Forming block
       // Purposefully proposing malicious value for assetTobeDisputed
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === toBeDisputedAssetId) {
-            blockThisEpoch.medians.push(i * 100 + 1); disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+          if (i === parseInt(toBeDisputedAssetId)) {
+            disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+            blockThisEpoch.medians.push(i * 100 + 1);
           } else blockThisEpoch.medians.push(i * 100);
           blockThisEpoch.lowerCutOffs.push(i * 100 - 1);
           blockThisEpoch.higherCutOffs.push(i * 100 + 1);
@@ -325,9 +325,7 @@ describe('BlockManager', function () {
 
       const sortedVotes = [toBigNumber(toBeDisputedAssetId * 100)];
       let weights = tokenAmount('0');
-      console.log(weights);
       for (let i = 0; i < weightsPerRevealedAssets[toBeDisputedAssetId].length; i++) {
-        console.log(weightsPerRevealedAssets[toBeDisputedAssetId][i] / 1);
         weights = weights.add(weightsPerRevealedAssets[toBeDisputedAssetId][i]);
       }
       const {
@@ -339,14 +337,9 @@ describe('BlockManager', function () {
         [weights], // initial weights,
         toBeDisputedAssetId - 1
       );
-
       await blockManager.connect(signers[19]).giveSorted(epoch, toBeDisputedAssetId - 1, sortedVotes);
-      console.log(toBeDisputedAssetId);
-      console.log(weights / 1);
-      console.log(median / 1);
-
       const dispute = await blockManager.disputes(epoch, signers[19].address);
-      console.log(dispute.median / 1);
+
       assertBNEqual(dispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
       assertBNEqual(dispute.accWeight, totalStakeRevealed, 'totalStakeRevealed should match');
       assertBNEqual(dispute.median, median, 'median should match');
@@ -367,7 +360,7 @@ describe('BlockManager', function () {
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
 
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
+      await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex, disputedAssetIdIndexInBlock);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
 
       assert((await proposedBlock.valid) === false);
@@ -436,7 +429,6 @@ describe('BlockManager', function () {
       const assignedAssets2 = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[7].address), votes2, proof2, maxAssetsPerStaker, random);
       const assigneedAssetsVotes2 = assignedAssets2[0];
       const assigneedAssetsProofs2 = assignedAssets2[1];
-
       await voteManager.connect(signers[7]).reveal(epoch, tree2.root(), assigneedAssetsVotes2, assigneedAssetsProofs2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[7].address);
@@ -483,8 +475,9 @@ describe('BlockManager', function () {
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === toBeDisputedAssetId) {
-            blockThisEpoch.medians.push(i * 1000 + 1); disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+          if (i === parseInt(toBeDisputedAssetId)) {
+            disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+            blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 1000);
           blockThisEpoch.lowerCutOffs.push(i * 1000);
           blockThisEpoch.higherCutOffs.push(i * 1000 + 10);
@@ -528,13 +521,6 @@ describe('BlockManager', function () {
 
       let sortedVotes1;
       let weights;
-      const a = await stakeManager.stakerIds(signers[6].address);
-      const b = await stakeManager.stakerIds(signers[7].address);
-      console.log(a, b);
-      const x = await stakeManager.getStaker(Number(a));
-      const y = await stakeManager.getStaker(Number(b));
-      console.log('Staker 6', x.stake);
-      console.log('Staker 7', y.stake);
       if (weightsPerRevealedAssets[toBeDisputedAssetId].length === 2) { // If toBeDisputedAssetId is revealed by both stakers
         sortedVotes1 = [toBigNumber(toBeDisputedAssetId * 1000), toBigNumber(toBeDisputedAssetId * 1000 + 10)];
         weights = [tokenAmount('18000'), tokenAmount('19000')];
@@ -559,15 +545,9 @@ describe('BlockManager', function () {
         toBeDisputedAssetId - 1
       );
 
-      console.log(blockThisEpoch);
-      console.log(weightsPerRevealedAssets[toBeDisputedAssetId]);
-      console.log(sortedVotes1);
-      console.log(weights);
       await blockManager.connect(signers[19]).giveSorted(epoch, toBeDisputedAssetId - 1, sortedVotes1);
 
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
-      console.log(firstDispute.assetId / 1, toBeDisputedAssetId - 1);
-      console.log(firstDispute.median / 1, median1 / 1);
       assertBNEqual(firstDispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
       assertBNEqual(firstDispute.accWeight, totalStakeRevealed1, 'totalStakeRevealed should match');
       assertBNEqual(firstDispute.median, median1, 'median should match');
@@ -575,7 +555,7 @@ describe('BlockManager', function () {
       assertBNEqual(firstDispute.higherCutoff, higherCutoff1, 'higherCutoff should match');
       assertBNEqual(firstDispute.lastVisited, sortedVotes1[sortedVotes1.length - 1], 'lastVisited should match');
 
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0, disputedAssetIdIndexInBlock);
       let proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assert((await proposedBlock.valid) === false);
 
@@ -603,7 +583,7 @@ describe('BlockManager', function () {
       assertBNEqual(secondDispute.higherCutoff, higherCutoff2, 'higherCutoff should match');
       assertBNEqual(secondDispute.lastVisited, sortedVotes1[sortedVotes1.length - 1], 'lastVisited should match');
 
-      await blockManager.connect(signers[15]).finalizeDispute(epoch, 1);
+      await blockManager.connect(signers[15]).finalizeDispute(epoch, 1, disputedAssetIdIndexInBlock);
       proposedBlock = await blockManager.proposedBlocks(epoch, 1);
       assert((await proposedBlock.valid) === false);
     });
@@ -845,8 +825,9 @@ describe('BlockManager', function () {
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === toBeDisputedAssetId) {
-            blockThisEpoch.medians.push(i * 1000 + 1); disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+          if (i === parseInt(toBeDisputedAssetId)) {
+            disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
+            blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 100);
           blockThisEpoch.lowerCutOffs.push(i * 100 - 1);
           blockThisEpoch.higherCutOffs.push(i * 100 + 1);

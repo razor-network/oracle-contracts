@@ -91,8 +91,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         onlyRole(parameters.getRewardModifierHash())
     {
         if (blockReward > 0) {
-            uint256 newStake =
-                stakeManager.getStaker(stakerId).stake + (blockReward);
+            uint256 newStake = stakeManager.getStaker(stakerId).stake +
+                (blockReward);
             stakeManager.setStakerStake(
                 stakerId,
                 newStake,
@@ -197,11 +197,12 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         address bountyHunter,
         uint256 epoch
     ) external onlyRole(parameters.getRewardModifierHash()) {
-       uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
-       uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
-       uint256 bountyReward = slashPenaltyAmount/2;
-       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
-       stakeManager.transferBounty(bountyHunter, bountyReward);
+        uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake *
+            parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        uint256 Stake = stakeManager.getStaker(id).stake - slashPenaltyAmount;
+        uint256 bountyReward = slashPenaltyAmount / 2;
+        stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
+        stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
     /// @notice This function is used by StakeManager to increment reward pool,
@@ -243,9 +244,9 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             return (stakeValue);
         }
 
-        uint256 penalty =
-            ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) /
-                parameters.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) *
+            (stakeValue * (parameters.penaltyNotRevealNum()))) /
+            parameters.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return (stakeValue - (penalty));
         } else {
@@ -263,17 +264,20 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     {
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
-        uint256 epochLastActive =
-            thisStaker.epochStaked < thisStaker.epochLastRevealed
-                ? thisStaker.epochLastRevealed
-                : thisStaker.epochStaked;
+        uint256 epochLastActive = thisStaker.epochStaked <
+            thisStaker.epochLastRevealed
+            ? thisStaker.epochLastRevealed
+            : thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 inactiveEpochs =
-            (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
+        uint256 inactiveEpochs = (epoch - epochLastActive == 0)
+            ? 0
+            : epoch - epochLastActive - 1;
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
-        uint256 currentStake =
-            calculateInactivityPenalties(inactiveEpochs, previousStake);
+        uint256 currentStake = calculateInactivityPenalties(
+            inactiveEpochs,
+            previousStake
+        );
         if (currentStake < previousStake) {
             stakeManager.setStakerStake(
                 thisStaker.id,
@@ -298,25 +302,24 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         uint256 previousStake = thisStaker.stake;
         uint256 epochLastRevealed = thisStaker.epochLastRevealed;
 
-        Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
+        Structs.Block memory blockLastEpoch = blockManager.getBlock(
+            epochLastRevealed
+        );
 
-        uint256[] memory lowerCutoffsLastEpoch = _block.lowerCutoffs;
-        uint256[] memory higherCutoffsLastEpoch = _block.higherCutoffs;
-        uint256[] memory ids = _block.ids;
-
-        if (lowerCutoffsLastEpoch.length > 0) {
+        if (blockLastEpoch.lowerCutoffs.length > 0) {
             uint256 penalty = 0;
-            for (uint256 i = 0; i < lowerCutoffsLastEpoch.length; i++) {
+            for (uint256 i = 0; i < blockLastEpoch.lowerCutoffs.length; i++) {
                 Structs.Vote memory voteLastEpoch = voteManager.getVote(
                     epochLastRevealed,
                     thisStaker.id,
-                    ids[i] - 1
+                    blockLastEpoch.ids[i] - 1
                 );
 
                 if (voteLastEpoch.weight > 0) {
                     if (
-                        (voteLastEpoch.value < lowerCutoffsLastEpoch[i]) ||
-                        (voteLastEpoch.value > higherCutoffsLastEpoch[i])
+                        (voteLastEpoch.value <
+                            blockLastEpoch.lowerCutoffs[i]) ||
+                        (voteLastEpoch.value > blockLastEpoch.higherCutoffs[i])
                     ) {
                         // WARNING: Potential security vulnerability. Could increase stake maliciously, need analysis
                         // For more info, See issue -: https://github.com/razor-network/contracts/issues/112

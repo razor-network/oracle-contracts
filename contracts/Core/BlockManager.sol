@@ -11,7 +11,6 @@ import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-
 contract BlockManager is Initializable, ACL, BlockStorage {
     
     IParameters public parameters;
@@ -67,26 +66,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
+    function getBlock(uint256 epoch) external view returns(Structs.Block memory) {
         return(blocks[epoch]);
-    }
-
-    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians) {
-        _blockMedians = blocks[epoch].medians;
-        return(_blockMedians);
-    }
-
-    function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs) {
-        _lowerCutoffs = blocks[epoch].lowerCutoffs;
-        return(_lowerCutoffs);
-    }
-
-    function getHigherCutoffs(
-        uint256 epoch
-    ) external view returns(uint256[] memory _higherCutoffs) 
-    {
-        _higherCutoffs = blocks[epoch].higherCutoffs;
-        return(_higherCutoffs);
     }
 
     function getProposedBlock(
@@ -96,20 +77,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         external
         view 
         returns(
-            Structs.Block memory _block,
-            uint256[] memory _blockMedians,
-            uint256[] memory _lowerCutoffs,
-            uint256[] memory _higherCutoffs
+            Structs.Block memory
         ) 
     {
-        _block = proposedBlocks[epoch][proposedBlock];
-        return(_block, _block.medians, _block.lowerCutoffs, _block.higherCutoffs);
-    }
-
-    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
-    external view returns(uint256[] memory _blockMedians) {
-        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
-        return(_blockMedians);
+        return proposedBlocks[epoch][proposedBlock];
     }
 
     function getNumProposedBlocks(uint256 epoch)
@@ -196,7 +167,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
             accWeight = accWeight + (voteManager.getVoteWeight(epoch, assetId, sorted[i]));
-            
             if (disputes[epoch][msg.sender].lowerCutoff == 0 && accWeight >= lowerCutoffWeight) {
                 disputes[epoch][msg.sender].lowerCutoff = sorted[i];
             }
@@ -221,7 +191,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
-    function finalizeDispute (uint256 epoch, uint256 blockId)
+    function finalizeDispute (uint256 epoch, uint256 blockId, uint256 assetPosInBlock)
     public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
@@ -232,11 +202,11 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 lowerCutoff = disputes[epoch][msg.sender].lowerCutoff;
         uint256 higherCutoff = disputes[epoch][msg.sender].higherCutoff;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        //
+    
         require(median > 0, "median can't be zero");
-        if (proposedBlocks[epoch][blockId].medians[assetId] != median ||
-            proposedBlocks[epoch][blockId].lowerCutoffs[assetId] != lowerCutoff ||
-            proposedBlocks[epoch][blockId].higherCutoffs[assetId] != higherCutoff) {
+        if (proposedBlocks[epoch][blockId].medians[assetPosInBlock] != median ||
+            proposedBlocks[epoch][blockId].lowerCutoffs[assetPosInBlock] != lowerCutoff ||
+            proposedBlocks[epoch][blockId].higherCutoffs[assetPosInBlock] != higherCutoff) {
             proposedBlocks[epoch][blockId].valid = false;
             rewardManager.slash(proposerId, msg.sender, epoch);
         } else {

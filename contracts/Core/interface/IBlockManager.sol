@@ -40,18 +40,5 @@ interface IBlockManager {
     function confirmBlock() external;
 
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block);
-    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians);
-
-    function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs);
-
-    function getHigherCutoffs(
-        uint256 epoch
-    ) external view returns(uint256[] memory _higherCutoffs);
-
-    function getProposedBlockMedians(
-        uint256 epoch,
-        uint256 proposedBlock
-    ) external view returns(uint256[] memory _blockMedians);
-
     function getNumProposedBlocks(uint256 epoch) external view returns(uint256);
 }

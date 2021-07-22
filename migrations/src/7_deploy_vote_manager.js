@@ -1,7 +1,7 @@
 const { deployContract } = require('../migrationHelpers');
 
 const deployVoteManager = async () => {
-  await deployContract('VoteManager');
+  await deployContract('VoteManager', ['Random']);
 };
 
 module.exports = async () => {

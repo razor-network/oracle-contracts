@@ -17,9 +17,6 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights, a
   let lowerCutoff = toBigNumber('0');
   let higherCutoff = toBigNumber('0');
   let weight = toBigNumber('0');
-
-  console.log('Test Weights');
-  console.log(totalStakeRevealed, medianWeight, lowerCutoffWeight, higherCutoffWeight);
   for (let i = 0; i < sortedVotes.length; i++) {
     weight = weight.add(weights[i]);
     if (weight.gt(medianWeight) && median.eq('0')) median = sortedVotes[i];
@@ -129,6 +126,18 @@ const getNumRevealedAssets = async (assignedAssetsVotes) => {
   return numRevealedAssetsForStaker;
 };
 
+const findAssetNotAlloted = async (assignedAssetsVotes, numAssets) => {
+
+  let map = {}
+  for (let i = 0; i < assignedAssetsVotes.length; i++) {
+    map[assignedAssetsVotes[i].id] = true;
+  }
+  for (let i = 1; i <= numAssets; i++) {
+    if (!map[i]) return i;
+  }
+
+}
+
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
@@ -142,4 +151,5 @@ module.exports = {
   tokenAmount,
   getAssignedAssets,
   getNumRevealedAssets,
+  findAssetNotAlloted
 };
