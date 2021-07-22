@@ -726,5 +726,40 @@ describe('StakeManager', function () {
       const newBalance = prevBalance.add(rAmount);
       assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
     });
+
+    it('non admin should not be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[1].address);
+      const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
+      await assertRevert(tx, 'VM Exception while processing transaction: revert ACL: sender not authorized');
+
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[1].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).escape(signers[0].address);
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceAdminAfter.sub(balanceAdminBefore), 'admin didnt get entire balance');
+      assertBNEqual(balanceContractAfter, toBigNumber(0), 'stakeManager still has balance');
+    });
+
+    it('admin should not be able to withdraw funds if escape hatch is disabled', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await parameters.connect(signers[0]).disableEscapeHatch();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'escape hatch is disabled');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
   });
 });
