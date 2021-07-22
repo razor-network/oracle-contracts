@@ -11,11 +11,7 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   // We should rethink about overloading functions.
   const totalStakeRevealed = await voteManager['getTotalStakeRevealed(uint256,uint256)'](epoch, 1);
   const medianWeight = totalStakeRevealed.div(2);
-  const lowerCutoffWeight = totalStakeRevealed.div(4);
-  const higherCutoffWeight = totalStakeRevealed.mul(3).div(4);
   let median = toBigNumber('0');
-  let lowerCutoff = toBigNumber('0');
-  let higherCutoff = toBigNumber('0');
   let weight = toBigNumber('0');
 
   for (let i = 0; i < sortedVotes.length; i++) {
@@ -61,7 +57,7 @@ const getBiggestInfluenceAndId = async (stakeManager) => {
   let biggestInfluencerId = toBigNumber('0');
 
   for (let i = 1; i <= numStakers; i++) {
-    const  influence  = await stakeManager.getInfluence(i);
+    const influence = await stakeManager.getInfluence(i);
     if (influence.gt(biggestInfluence)) {
       biggestInfluence = influence;
       biggestInfluencerId = i;
@@ -78,7 +74,7 @@ const getEpoch = async () => {
 const getIteration = async (stakeManager, random, staker) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
-  const influence = await stakeManager.getInfluence(stakerId)
+  const influence = await stakeManager.getInfluence(stakerId);
 
   const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
   const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);

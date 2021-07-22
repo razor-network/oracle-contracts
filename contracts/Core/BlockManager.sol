@@ -72,7 +72,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return(_blockMedians);
     }
 
-
     function getProposedBlock(
         uint256 epoch,
         uint256 proposedBlock
@@ -245,7 +244,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
-        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)), parameters.epochLength())+(1)) != stakerId) {
+        if ((Random.prng(10,
+            stakeManager.getNumStakers(), 
+            keccak256(abi.encode(iteration)),
+            parameters.epochLength())+(1)) != stakerId) {
             return false;
         }
         bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)), parameters.epochLength());

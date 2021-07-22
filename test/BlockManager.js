@@ -326,12 +326,12 @@ describe('BlockManager', function () {
 
       const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-      const iteration6 = await getIteration(stakeManager,random, staker6);
+      const iteration6 = await getIteration(stakeManager, random, staker6);
 
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
       const staker7 = await stakeManager.getStaker(stakerIdAcc7);
 
-      const iteration7 = await getIteration(stakeManager,random, staker7);
+      const iteration7 = await getIteration(stakeManager, random, staker7);
 
       await mineToNextState();
 
@@ -470,7 +470,7 @@ describe('BlockManager', function () {
 
       const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-      const iteration = await getIteration(stakeManager,random, staker);
+      const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[19]).propose(epoch,
         [10, 12, 13, 14, 15, 16, 17, 18, 19],
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
@@ -555,7 +555,7 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc2);
       const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-      const iteration = await getIteration(stakeManager,random, staker);
+      const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
         [1, 2, 3, 4, 5, 6, 7, 8, 9],
