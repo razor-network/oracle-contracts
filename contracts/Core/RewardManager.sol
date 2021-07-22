@@ -19,13 +19,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     IVoteManager public voteManager;
     IBlockManager public blockManager;
 
-    event RewardPoolChange(
-        uint256 epoch,
-        uint256 prevRewardPool,
-        uint256 rewardPool,
-        uint256 timestamp
-    );
-
     modifier checkEpoch(uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
@@ -76,9 +69,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         _givePenalties(stakerId, epoch);
     }
 
-
-
-
     /// @notice The function gives block reward for one valid proposer in the
     /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
@@ -115,28 +105,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
        stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
        stakeManager.transferBounty(bountyHunter, bountyReward);
     }
-
-    /// @notice This function is used by StakeManager to increment reward pool,
-    // in case of resetLock() penalty
-    function incrementRewardPool(uint256 penalty)
-        external
-        onlyRole(parameters.getRewardModifierHash())
-    {
-        uint256 prevRewardPool = rewardPool;
-        rewardPool = rewardPool + (penalty);
-        emit RewardPoolChange(
-            parameters.getEpoch(),
-            prevRewardPool,
-            rewardPool,
-            block.timestamp
-        );
-    }
-
-    /// @return The rewardpool
-    function getRewardPool() external view returns (uint256) {
-        return (rewardPool);
-    }
-
 
     /// @notice Calculates the inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
@@ -189,14 +157,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 "Inactivity Penalty",
                 epoch
             );
-            uint256 prevRewardPool = rewardPool;
-            rewardPool = rewardPool + (previousStake - (currentStake));
-            emit RewardPoolChange(
-                epoch,
-                prevRewardPool,
-                rewardPool,
-                block.timestamp
-            );
         }
     }
 
@@ -227,9 +187,14 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 }
             }
 
+          uint256 newAge = (previousAge + 10000 - (penalty));
+          newAge = newAge > parameters.getMaxAge() ?
+          parameters.getMaxAge() :
+          newAge;
+
           stakeManager.setStakerAge(
               thisStaker.id,
-              (previousAge + 10000 - (penalty)),
+              newAge,
               epoch
           );
         }

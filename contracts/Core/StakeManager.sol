@@ -20,7 +20,18 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     IRewardManager public rewardManager;
     RAZOR public razor;
     IVoteManager public voteManager;
-
+    //[math.floor(getMaturity2(i*10000)) for i in range(1,100)]
+    uint256[] public maturities =
+    [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
+    165, 173, 180, 187, 193, 200, 206, 212, 217, 223,
+    229, 234, 239, 244, 250, 254, 259, 264, 269, 273,
+    278, 282, 287, 291, 295, 300, 304, 308, 312, 316,
+    320, 324, 327, 331, 335, 339, 342, 346, 350, 353,
+    357, 360, 364, 367, 370, 374, 377, 380, 384, 387,
+    390, 393, 396, 400, 403, 406, 409, 412, 415, 418,
+    421, 424, 427, 430, 433, 435, 438, 441, 444, 447,
+    450, 452, 455, 458, 460, 463, 466, 469, 471, 474,
+    476, 479, 482, 484, 487, 489, 492, 494, 497];
     event StakeChange(
         uint256 indexed stakerId,
         uint256 previousStake,
@@ -370,9 +381,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         //Updating Staker Stake
         staker.stake = staker.stake - penalty;
 
-        //Adding it in reward pool
-        rewardManager.incrementRewardPool(penalty);
-
         _resetLock(stakerId);
     }
 
@@ -452,7 +460,9 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @return maturity of staker
     function getMaturity(uint256 stakerId) external view returns(uint256) {
-        return stakers[stakerId].age;
+        uint256 index = stakers[stakerId].age/10000;
+
+        return maturities[index];
     }
 
     /// @return influence of staker

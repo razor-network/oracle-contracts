@@ -185,34 +185,6 @@ describe('Access Control Test', async () => {
     await assertRevert(rewardManager.givePenalties(1, 1), expectedRevertMessage);
   });
 
-  it('incrementRewardPool() should not be accessable by anyone besides RewardModifier', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-
-    // Checking if AssetConfirmer can access it
-    await rewardManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await rewardManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await rewardManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-
-    // Checking if StakeModifier can access it
-    await rewardManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-  });
-
-  it('incrementRewardPool() should be accessable by RewardModifier', async () => {
-    await rewardManager.grantRole(await parameters.getRewardModifierHash(), signers[0].address);
-    await rewardManager.incrementRewardPool(1);
-    await rewardManager.revokeRole(await parameters.getRewardModifierHash(), signers[0].address);
-    await assertRevert(rewardManager.incrementRewardPool(1), expectedRevertMessage);
-  });
-
   it('setStakerStake() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
     await assertRevert(stakeManager.setStakerStake(1, 10, 'test', 1), expectedRevertMessage);

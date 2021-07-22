@@ -241,10 +241,8 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const rewardPool = await rewardManager.rewardPool();
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        assertBNEqual(rewardPool, toBigNumber('0'));
         assertBNEqual(stakeBefore, stakeAfter);
         assertBNEqual(stakeBefore2, stakeAfter2);
       });
@@ -332,11 +330,11 @@ describe('VoteManager', function () {
         assertBNEqual(stakeAcc10, slashPenaltyAmount.div('2'), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
 
-      it('Account 3 should be able to reveal again with correct rewards', async function () {
+      it('Account 3 should be able to reveal again', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
 
-        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -346,7 +344,6 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
         await mineToNextState(); // reveal
-        const rewardPool = await rewardManager.rewardPool();
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
@@ -354,8 +351,8 @@ describe('VoteManager', function () {
         // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
 
-        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        assertBNEqual(stakeBefore.add(rewardPool), stakeAfter);
+        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        // assertBNEqual(ageBefore.add(10000), ageAfter);
       });
 
       it('Should be able to slash if stake is zero', async function () {
