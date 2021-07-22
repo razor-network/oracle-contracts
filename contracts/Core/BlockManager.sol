@@ -11,6 +11,7 @@ import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
+
 contract BlockManager is Initializable, ACL, BlockStorage {
     
     IParameters public parameters;

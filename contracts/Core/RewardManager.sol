@@ -197,12 +197,11 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         address bountyHunter,
         uint256 epoch
     ) external onlyRole(parameters.getRewardModifierHash()) {
-        uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake *
-            parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
-        uint256 Stake = stakeManager.getStaker(id).stake - slashPenaltyAmount;
-        uint256 bountyReward = slashPenaltyAmount / 2;
-        stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
-        stakeManager.transferBounty(bountyHunter, bountyReward);
+       uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
+       uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
+       uint256 bountyReward = slashPenaltyAmount/2;
+       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
+       stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
     /// @notice This function is used by StakeManager to increment reward pool,
@@ -244,9 +243,9 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             return (stakeValue);
         }
 
-        uint256 penalty = ((epochs) *
-            (stakeValue * (parameters.penaltyNotRevealNum()))) /
-            parameters.penaltyNotRevealDenom();
+        uint256 penalty =
+            ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) /
+                parameters.penaltyNotRevealDenom();
         if (penalty < stakeValue) {
             return (stakeValue - (penalty));
         } else {
@@ -264,20 +263,17 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     {
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
-        uint256 epochLastActive = thisStaker.epochStaked <
-            thisStaker.epochLastRevealed
-            ? thisStaker.epochLastRevealed
-            : thisStaker.epochStaked;
+        uint256 epochLastActive =
+            thisStaker.epochStaked < thisStaker.epochLastRevealed
+                ? thisStaker.epochLastRevealed
+                : thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
-        uint256 inactiveEpochs = (epoch - epochLastActive == 0)
-            ? 0
-            : epoch - epochLastActive - 1;
+        uint256 inactiveEpochs =
+            (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
         uint256 previousStake = thisStaker.stake;
         // uint256 currentStake = previousStake;
-        uint256 currentStake = calculateInactivityPenalties(
-            inactiveEpochs,
-            previousStake
-        );
+        uint256 currentStake =
+            calculateInactivityPenalties(inactiveEpochs, previousStake);
         if (currentStake < previousStake) {
             stakeManager.setStakerStake(
                 thisStaker.id,
