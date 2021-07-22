@@ -127,16 +127,15 @@ const getNumRevealedAssets = async (assignedAssetsVotes) => {
 };
 
 const findAssetNotAlloted = async (assignedAssetsVotes, numAssets) => {
-
-  let map = {}
+  const map = {};
   for (let i = 0; i < assignedAssetsVotes.length; i++) {
     map[assignedAssetsVotes[i].id] = true;
   }
   for (let i = 1; i <= numAssets; i++) {
     if (!map[i]) return i;
   }
-
-}
+  return 1000;
+};
 
 module.exports = {
   calculateDisputesData,
@@ -151,5 +150,5 @@ module.exports = {
   tokenAmount,
   getAssignedAssets,
   getNumRevealedAssets,
-  findAssetNotAlloted
+  findAssetNotAlloted,
 };

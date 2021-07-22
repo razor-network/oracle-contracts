@@ -245,7 +245,7 @@ describe('BlockManager', function () {
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === parseInt(toBeDisputedAssetId)) {
+          if (i === parseInt(toBeDisputedAssetId, 10)) {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 100 + 1);
           } else blockThisEpoch.medians.push(i * 100);
@@ -475,7 +475,7 @@ describe('BlockManager', function () {
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === parseInt(toBeDisputedAssetId)) {
+          if (i === parseInt(toBeDisputedAssetId, 10)) {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 1000);
@@ -825,7 +825,7 @@ describe('BlockManager', function () {
       for (let i = 1; i <= numAssets; i++) {
         if (typeof weightsPerRevealedAssets[i] !== 'undefined') {
           blockThisEpoch.ids.push(i);
-          if (i === parseInt(toBeDisputedAssetId)) {
+          if (i === parseInt(toBeDisputedAssetId, 10)) {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 100);

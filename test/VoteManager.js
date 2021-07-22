@@ -154,17 +154,17 @@ describe('VoteManager', function () {
         const assigneedAssetsProofs = assignedAssets[1];
 
         // Revealed assets not equal to required assets per staker
-        let assignedAssetsVotesCopy = JSON.parse(JSON.stringify(assigneedAssetsVotes)); // Deep Clone
+        const assignedAssetsVotesCopy = JSON.parse(JSON.stringify(assigneedAssetsVotes)); // Deep Clone
         assignedAssetsVotesCopy.push({ id: 5, value: 500 });
         let tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         await assertRevert(tx, 'Revealed assets not equal to required assets per staker');
 
-        // Incorrect Reveal 
+        // Incorrect Reveal
         assignedAssetsVotesCopy.splice(0, 1);
-        let assetId = await findAssetNotAlloted(assignedAssetsVotesCopy, votes.length);
-        assignedAssetsVotesCopy[0].id = assetId
+        const assetId = await findAssetNotAlloted(assignedAssetsVotesCopy, votes.length);
+        assignedAssetsVotesCopy[0].id = assetId;
         tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
