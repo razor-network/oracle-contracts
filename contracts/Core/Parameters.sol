@@ -24,7 +24,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override aggregationRange = 3;
     uint256 public override withdrawReleasePeriod = 5;
     uint256 public override resetLockPenalty = 1;
-    uint256 public maxAge = 100 * 10000;
+    uint256 public override maxAge = 100 * 10000;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -117,10 +117,6 @@ contract Parameters is IParameters, ACL {
         uint256 _numStates = numStates;
         uint256 state = (block.number/(epochLength/_numStates));
         return (state%(_numStates));
-    }
-
-    function getMaxAge() external view override returns (uint256) {
-        return maxAge;
     }
 
     function commit() external pure override returns (uint32) {

@@ -192,8 +192,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             }
 
             uint256 newAge = (previousAge + 10000 - (penalty));
-            newAge = newAge > parameters.getMaxAge() ?
-            parameters.getMaxAge() :
+            newAge = newAge > parameters.maxAge() ?
+            parameters.maxAge() :
             newAge;
 
             stakeManager.setStakerAge(
