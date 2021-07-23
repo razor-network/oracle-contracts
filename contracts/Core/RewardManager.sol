@@ -327,8 +327,6 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
                     (voteLastEpoch < lowerCutoffLastEpoch) ||
                     (voteLastEpoch > higherCutoffLastEpoch)
                 ) {
-                    // WARNING: Potential security vulnerability. Could increase stake maliciously, need analysis
-                    // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
                     penalty =
                         penalty +
                         (previousStake / parameters.exposureDenominator());

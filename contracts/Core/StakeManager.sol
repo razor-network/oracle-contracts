@@ -121,6 +121,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         external
         initialized
         checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused()
+
     {
         require(
             amount >= parameters.minStake(),
@@ -310,6 +311,19 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+    }
+
+    /// @notice remove all funds in case of emergency
+    function escape(address _address)
+        external
+        initialized
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (parameters.escapeHatchEnabled()) {
+            razor.transfer(_address, razor.balanceOf(address(this)));
+        } else {
+            revert("escape hatch is disabled");
+        }
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default

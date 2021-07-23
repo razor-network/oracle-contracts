@@ -24,6 +24,7 @@ contract Parameters is IParameters, ACL {
     uint256 public override aggregationRange = 3;
     uint256 public override withdrawReleasePeriod = 5;
     uint256 public override resetLockPenalty = 1;
+    bool public override escapeHatchEnabled = true;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -56,11 +57,11 @@ contract Parameters is IParameters, ACL {
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
     }
 
-    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE){
+    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         slashPenaltyNum = _slashPenaltyNumerator;
     }
 
-    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE){
+    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
@@ -69,7 +70,7 @@ contract Parameters is IParameters, ACL {
     }
 
     function setWithdrawReleasePeriod(uint256 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
-         withdrawReleasePeriod = _withdrawReleasePeriod;
+        withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
     function setResetLockPenalty(uint256 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -102,6 +103,10 @@ contract Parameters is IParameters, ACL {
 
     function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
         aggregationRange = _aggregationRange;
+    }
+
+    function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        escapeHatchEnabled = false;
     }
 
     function getEpoch() external view override returns (uint256) {
