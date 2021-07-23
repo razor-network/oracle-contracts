@@ -50,12 +50,12 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
     "ethers": "^5.0.31",
-    "hardhat": "2.1.2",
+    "hardhat": "2.5.0",
     "hardhat-gas-reporter": "1.0.4",
     "solhint": "~3.3.4",
     "solidity-coverage": "^0.7.13"
   },
-  "engines" : {
-    "node" : ">=15.3.0"
+  "engines": {
+    "node": ">=15.3.0"
   }
 }
