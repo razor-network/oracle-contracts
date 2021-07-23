@@ -8,13 +8,14 @@ import "./storage/StakeStorage.sol";
 import "../Initializable.sol";
 import "../RAZOR.sol";
 import "./ACL.sol";
+import "../Pause.sol";
 import "../StakedToken.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Initializable, ACL, StakeStorage {
+contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     IParameters public parameters;
     IRewardManager public rewardManager;
@@ -62,7 +63,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 newStake,
         uint256 timestamp
     );
-
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -117,13 +117,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function stake(
         uint256 epoch,
         uint256 amount
-    ) 
+    )
         external
         initialized
-        checkEpoch(epoch) checkState(parameters.commit()) 
+        checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused()
     {
         require(
-            amount >= parameters.minStake(), 
+            amount >= parameters.minStake(),
             "staked amount is less than minimum stake required"
         );
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
@@ -171,7 +171,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 epoch,
         uint256 amount,
         uint256 stakerId
-    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    ) external initialized checkEpoch(epoch) checkState(parameters.commit())
+        whenNotPaused() {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(
             stakers[stakerId].tokenAddress !=
@@ -209,7 +210,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
     // and should wait for params.withdraw_after period
-    // after which she can call withdraw() in withdrawReleasePeriod. 
+    // after which she can call withdraw() in withdrawReleasePeriod.
     // If this period pass, lock expires and she will have to resetLock() to able to withdraw again
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
@@ -218,7 +219,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 epoch,
         uint256 stakerId,
         uint256 sAmount
-    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused() {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -250,6 +251,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         initialized
         checkEpoch(epoch)
         checkState(parameters.commit())
+        whenNotPaused()
     {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
@@ -262,10 +264,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             "Release Period Passed"
         ); // Can Use ResetLock
         require(staker.stake > 0, "Nonpositive Stake");
-        if (
-            stakerIds[msg.sender] == stakerId
-        ) // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-        {
+        if (stakerIds[msg.sender] == stakerId) {
+          // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
             require(
                 (lock.withdrawAfter - parameters.withdrawLockPeriod()) >=
                     staker.epochLastRevealed,
@@ -339,7 +339,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-    function resetLock(uint256 stakerId) external initialized {
+    function resetLock(uint256 stakerId) external initialized whenNotPaused()
+{
         // Lock should be expired if you want to reset
         require(
             locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0,
@@ -369,7 +370,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @notice External function for setting stake of the staker
-    /// Used by RewardManager 
+    /// Used by RewardManager
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
@@ -377,7 +378,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 _stake,
         string memory _reason,
         uint256 _epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) {
+    ) external onlyRole(parameters.getStakeModifierHash()) whenNotPaused()
+ {
         uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
         emit StakeChange(
@@ -397,6 +399,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function transferBounty(address bountyHunter, uint256 bounty)
         external
         onlyRole(parameters.getStakeModifierHash())
+        whenNotPaused()
     {
         require(
             razor.transfer(bountyHunter, bounty),
@@ -444,7 +447,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 _totalSupply
     ) internal pure returns (uint256) {
         // Follwoing require is included to cover case where
-        // CurrentStake Becomes zero beacues of penalties, this is likely scenario when staker stakes is slashed to 0 for invalid block.
+        // CurrentStake Becomes zero beacues of penalties,
+        //this is likely scenario when staker stakes is slashed to 0 for invalid block.
         require(_currentStake != 0, "Stakers Stake is 0");
         return ((_amount * _totalSupply) / _currentStake);
     }

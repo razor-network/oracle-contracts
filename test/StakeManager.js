@@ -84,6 +84,28 @@ describe('StakeManager', function () {
       await razor.transfer(signers[6].address, stake1); // new Delegator
     });
 
+    it('should not allow non admin to pause', async function () {
+      const tx1 = stakeManager.connect(signers[1]).pause();
+      assertRevert(tx1, 'ACL');
+    });
+
+    it('should not be able to stake if contract is paused', async function () {
+      const epoch = await getEpoch();
+      const stake1 = tokenAmount('420000');
+
+      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[0]).pause();
+
+      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
+      assertRevert(tx, 'pause');
+    });
+
+    it('should not allow pause if already paused', async function () {
+      const tx = stakeManager.connect(signers[0]).pause();
+      assertRevert(tx, 'pause');
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');

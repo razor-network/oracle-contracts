@@ -58,11 +58,11 @@ library Structs {
         uint256 assetType;
     }
 
-    struct Collection{
+    struct Collection {
         uint256 id;
         string name;
         uint32 aggregationMethod;
-        uint256[] jobIDs; 
+        uint256[] jobIDs;
         mapping(uint256=>bool) jobIDExist;
         uint256 epoch;
         bool active;

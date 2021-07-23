@@ -10,10 +10,11 @@ import "./storage/BlockStorage.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
+import "../Pause.sol";
 
 
-contract BlockManager is Initializable, ACL, BlockStorage {
-    
+contract BlockManager is Initializable, ACL, BlockStorage, Pause {
+
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -40,7 +41,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 iteration,
         uint256 biggestStakerId,
         uint256 timestamp
-    );    
+    );
 
     modifier checkEpoch (uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -83,7 +84,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     function getHigherCutoffs(
         uint256 epoch
-    ) external view returns(uint256[] memory _higherCutoffs) 
+    ) external view returns(uint256[] memory _higherCutoffs)
     {
         _higherCutoffs = blocks[epoch].higherCutoffs;
         return(_higherCutoffs);
@@ -94,13 +95,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 proposedBlock
     )
         external
-        view 
+        view
         returns(
             Structs.Block memory _block,
             uint256[] memory _blockMedians,
             uint256[] memory _lowerCutoffs,
             uint256[] memory _higherCutoffs
-        ) 
+        )
     {
         _block = proposedBlocks[epoch][proposedBlock];
         return(_block, _block.medians, _block.lowerCutoffs, _block.higherCutoffs);
@@ -117,11 +118,11 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return(proposedBlocks[epoch].length);
     }
 
-    // elected proposer proposes block. 
+    // elected proposer proposes block.
     //we use a probabilistic method to elect stakers weighted by stake
-    // protocol works like this. 
+    // protocol works like this.
     //select a staker pseudorandomly (not weighted by anything)
-    // that staker then tosses a biased coin. 
+    // that staker then tosses a biased coin.
     //bias = hisStake/biggestStake. if its heads, he can propose block
     // end of iteration. try next iteration
     // note that only one staker or no stakers selected in each iteration.
@@ -135,7 +136,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256[] memory higherCutoffs,
         uint256 iteration,
         uint256 biggestStakerId
-    ) public initialized checkEpoch(epoch) checkState(parameters.propose()) 
+    ) public initialized checkEpoch(epoch) checkState(parameters.propose()) whenNotPaused()
+
     {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestStakerId, proposerId), "not elected");
@@ -145,7 +147,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         );
 
         _insertAppropriately(
-            epoch, 
+            epoch,
             Structs.Block(
                 proposerId,
                 ids,
@@ -176,11 +178,12 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 epoch,
         uint256 assetId,
         uint256[] memory sorted
-    ) 
+    )
         public
         initialized
         checkEpoch(epoch)
-        checkState(parameters.dispute()) 
+        checkState(parameters.dispute())
+        whenNotPaused()
     {
         uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
         uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(4);
@@ -216,13 +219,14 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(
         uint256 epoch
-    ) public initialized checkEpoch(epoch) checkState(parameters.dispute())
+    ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) whenNotPaused()
+
     {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
-    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    public initialized checkEpoch(epoch) checkState(parameters.dispute()) whenNotPaused() {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
@@ -244,9 +248,12 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function confirmBlock() public initialized onlyRole(parameters.getBlockConfirmerHash()) {
+    function confirmBlock() public
+    initialized
+    onlyRole(parameters.getBlockConfirmerHash())
+    whenNotPaused() {
         uint256 epoch = parameters.getEpoch();
-        
+
         for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
                 blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
@@ -266,7 +273,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
                 return;
             }
         }
-        
+
     }
 
     function isElectedProposer(
@@ -277,8 +284,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         public
         view
         initialized
-        returns (bool) 
-    {   
+        returns (bool)
+    {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
         if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)), parameters.epochLength())+(1)) != stakerId) {
