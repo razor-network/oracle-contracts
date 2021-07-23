@@ -261,6 +261,7 @@ describe('BlockManager', function () {
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
+      const balanceBeforeBurn = await razor.balanceOf(parameters.burnAddress());
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
@@ -270,6 +271,7 @@ describe('BlockManager', function () {
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
+      assertBNEqual(await razor.balanceOf(parameters.burnAddress()), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
       assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
     });
 

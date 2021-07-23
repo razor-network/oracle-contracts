@@ -25,6 +25,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         uint256 rewardPool,
         uint256 timestamp
     );
+
     event StakeGettingRewardChange(
         uint256 epoch,
         uint256 prevStakeGettingReward,
@@ -186,23 +187,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
                 );
             }
         }
-    }
-
-    /// @notice The function is used by the Votemanager reveal function
-    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
-    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
-    /// @param id The ID of the staker who is penalised
-    /// @param bountyHunter The address of the bounty hunter
-    function slash(
-        uint256 id,
-        address bountyHunter,
-        uint256 epoch
-    ) external onlyRole(parameters.getRewardModifierHash()) {
-       uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
-       uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
-       uint256 bountyReward = slashPenaltyAmount/2;
-       stakeManager.setStakerStake(id, Stake, "Slashed", epoch);
-       stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
     /// @notice This function is used by StakeManager to increment reward pool,
