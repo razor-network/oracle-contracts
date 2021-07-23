@@ -119,13 +119,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function stake(
         uint256 epoch,
         uint256 amount
-    ) 
+    )
         external
         initialized
-        checkEpoch(epoch) checkState(parameters.commit()) 
+        checkEpoch(epoch) checkState(parameters.commit())
     {
         require(
-            amount >= parameters.minStake(), 
+            amount >= parameters.minStake(),
             "staked amount is less than minimum stake required"
         );
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
@@ -211,7 +211,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
     // and should wait for params.withdraw_after period
-    // after which she can call withdraw() in withdrawReleasePeriod. 
+    // after which she can call withdraw() in withdrawReleasePeriod.
     // If this period pass, lock expires and she will have to resetLock() to able to withdraw again
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
@@ -314,6 +314,19 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
     }
 
+    /// @notice remove all funds in case of emergency
+    function escape(address _address)
+        external
+        initialized
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (parameters.escapeHatchEnabled()) {
+            razor.transfer(_address, razor.balanceOf(address(this)));
+        } else {
+            revert("escape hatch is disabled");
+        }
+    }
+
     /// @notice Used by staker to set delegation acceptance, its set as False by default
     function setDelegationAcceptance(bool status) external {
         uint256 stakerId = stakerIds[msg.sender];
@@ -371,7 +384,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @notice External function for setting stake of the staker
-    /// Used by RewardManager 
+    /// Used by RewardManager
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
