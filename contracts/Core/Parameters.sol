@@ -109,6 +109,7 @@ contract Parameters is IParameters, ACL {
 
     function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxAge = _maxAge;
+    }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
         escapeHatchEnabled = false;
