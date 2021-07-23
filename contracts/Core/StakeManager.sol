@@ -312,7 +312,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             //Transfer stake
             require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
-            emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+            emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
         }
 
     /// @notice remove all funds in case of emergency
