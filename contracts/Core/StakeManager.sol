@@ -20,7 +20,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     IRewardManager public rewardManager;
     RAZOR public razor;
     IVoteManager public voteManager;
-    //[math.floor(getMaturity2(i*10000)) for i in range(1,100)]
+    //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
     uint256[] public maturities =
     [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
     165, 173, 180, 187, 193, 200, 206, 212, 217, 223,
