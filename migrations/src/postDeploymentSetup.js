@@ -71,7 +71,6 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address));
-
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 
   // eslint-disable-next-line no-console
