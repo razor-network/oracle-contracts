@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../lib/Structs.sol";
 
+
 interface IStakeManager {
 
     function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
@@ -18,6 +19,7 @@ interface IStakeManager {
     function setStakerStake(uint256 _id, uint256 _stake, string memory _reason, uint256 _epoch) external;
     function setStakerAge(uint256 _id, uint256 _age, uint256 _epoch) external;
     function transferBounty(address bountyHunter, uint256 halfStake) external;
+    function escape(address _address) external;
     function getStakerId(address _address) external view returns(uint256);
     function getStaker(uint256 _id) external view returns(Structs.Staker memory staker);
     function getNumStakers() external view returns(uint256);

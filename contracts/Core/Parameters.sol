@@ -25,6 +25,8 @@ contract Parameters is IParameters, ACL {
     uint256 public override withdrawReleasePeriod = 5;
     uint256 public override resetLockPenalty = 1;
     uint256 public override maxAge = 100 * 10000;
+    
+    bool public override escapeHatchEnabled = true;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -107,6 +109,9 @@ contract Parameters is IParameters, ACL {
 
     function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxAge = _maxAge;
+
+    function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        escapeHatchEnabled = false;
     }
 
     function getEpoch() external view override returns (uint256) {
