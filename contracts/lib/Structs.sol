@@ -15,13 +15,19 @@ library Structs {
         uint256 epochStaked;
         uint256 epochLastCommitted;
         uint256 epochLastRevealed;
-        uint256 unstakeAfter;
+        bool acceptDelegation;
+        uint256 commission;
+        address tokenAddress;
+    }
+
+    struct Lock {
+        uint256 amount; //amount in sTokens
         uint256 withdrawAfter;
     }
 
     struct Block {
         uint256 proposerId;
-        uint256[] jobIds;
+        uint256[] ids;
         uint256[] medians;
         uint256[] lowerCutoffs;
         uint256[] higherCutoffs;
@@ -46,10 +52,23 @@ library Structs {
         string selector;
         string name;
         bool repeat;
+        bool active;
         address creator;
-        uint256 credit;
-        bool fulfilled;
         uint256 result;
+        uint256 assetType;
+    }
+
+    struct Collection{
+        uint256 id;
+        string name;
+        uint32 aggregationMethod;
+        uint256[] jobIDs; 
+        mapping(uint256=>bool) jobIDExist;
+        uint256 epoch;
+        bool active;
+        address creator;
+        uint256 result;
+        uint256 assetType;
     }
 
 }

@@ -4,6 +4,9 @@ coverage/
 coverage.json
 cache/
 deployed/ganache
+deployed/goerli/abi
+deployed/matic/abi
+abi
 .env
 .env.goerli
 .env.matic_mumbai_testnet

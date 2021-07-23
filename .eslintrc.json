@@ -19,6 +19,7 @@
       "no-else-return": "off",
       "no-mixed-operators": "off",
       "no-param-reassign": "off",
+      "no-underscore-dangle" : "off", // This is added as stakers address is stored in _address in struct
       "no-plusplus": "off",
       "no-shadow": "off",
       "import/no-extraneous-dependencies": "off",

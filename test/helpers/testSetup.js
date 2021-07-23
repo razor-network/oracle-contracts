@@ -1,98 +1,83 @@
 const { BLOCK_REWARD } = require('./constants');
 
+const { BigNumber } = ethers;
+const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const setupContracts = async () => {
-  const Constants = await ethers.getContractFactory('Constants');
-  const constants = await Constants.deploy();
-  await constants.deployed();
-
   const Structs = await ethers.getContractFactory('Structs');
   const structs = await Structs.deploy();
   await structs.deployed();
 
-  const Random = await ethers.getContractFactory('Random', {
-    libraries: {
-      Constants: constants.address,
-    },
-  });
+  const Random = await ethers.getContractFactory('Random');
   const random = await Random.deploy();
   await random.deployed();
 
   const BlockManager = await ethers.getContractFactory('BlockManager', {
     libraries: {
-      Constants: constants.address,
       Random: random.address,
     },
   });
+
+  const Parameters = await ethers.getContractFactory('Parameters');
   const Delegator = await ethers.getContractFactory('Delegator');
   const Faucet = await ethers.getContractFactory('Faucet');
-  const JobManager = await ethers.getContractFactory('JobManager', {
-    libraries: {
-      Constants: constants.address,
-    },
-  });
-  const SchellingCoin = await ethers.getContractFactory('SchellingCoin');
-  const StakeManager = await ethers.getContractFactory('StakeManager', {
-    libraries: {
-      Constants: constants.address,
-    },
-  });
-  const StateManager = await ethers.getContractFactory('StateManager', {
-    libraries: {
-      Constants: constants.address,
-    },
-  });
-  const VoteManager = await ethers.getContractFactory('VoteManager', {
-    libraries: {
-      Constants: constants.address,
-    },
-  });
+  const AssetManager = await ethers.getContractFactory('AssetManager');
+  const RAZOR = await ethers.getContractFactory('RAZOR');
+  const StakeManager = await ethers.getContractFactory('StakeManager');
+  const RewardManager = await ethers.getContractFactory('RewardManager');
+  const VoteManager = await ethers.getContractFactory('VoteManager');
 
+  const parameters = await Parameters.deploy();
   const blockManager = await BlockManager.deploy();
-  const stateManager = await StateManager.deploy();
+  const stakedToken = await ethers.getContractFactory('StakedToken');
   const delegator = await Delegator.deploy();
-  const jobManager = await JobManager.deploy(stateManager.address);
-  const stakeManager = await StakeManager.deploy(BLOCK_REWARD.toHexString());
+  const assetManager = await AssetManager.deploy(parameters.address);
+  const stakeManager = await StakeManager.deploy();
+  const rewardManager = await RewardManager.deploy(BLOCK_REWARD.toHexString());
   const voteManager = await VoteManager.deploy();
-  const schellingCoin = await SchellingCoin.deploy();
-  const faucet = await Faucet.deploy(schellingCoin.address);
+  const razor = await RAZOR.deploy(initialSupply);
+  const faucet = await Faucet.deploy(razor.address);
 
+  await parameters.deployed();
   await blockManager.deployed();
-
   await delegator.deployed();
   await faucet.deployed();
-  await jobManager.deployed();
-  await schellingCoin.deployed();
+  await assetManager.deployed();
+  await razor.deployed();
   await stakeManager.deployed();
-  await stateManager.deployed();
+  await rewardManager.deployed();
   await voteManager.deployed();
 
   const initializeContracts = async () => [
-    blockManager.initialize(stakeManager.address, stateManager.address, voteManager.address, jobManager.address),
-    voteManager.initialize(stakeManager.address, stateManager.address, blockManager.address),
-    stakeManager.initialize(schellingCoin.address, voteManager.address, blockManager.address, stateManager.address),
+    blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
+    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
+    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
+    rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 
-    jobManager.grantRole(await constants.getJobConfirmerHash(), blockManager.address),
-    blockManager.grantRole(await constants.getBlockConfirmerHash(), voteManager.address),
-    stakeManager.grantRole(await constants.getStakeModifierHash(), blockManager.address),
-    stakeManager.grantRole(await constants.getStakeModifierHash(), voteManager.address),
-    stakeManager.grantRole(await constants.getStakerActivityUpdaterHash(), voteManager.address),
+    assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
+    blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManager.address),
+    rewardManager.grantRole(await parameters.getRewardModifierHash(), blockManager.address),
+    rewardManager.grantRole(await parameters.getRewardModifierHash(), voteManager.address),
+    rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManager.address),
+    stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManager.address),
+    stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManager.address),
 
-    delegator.upgradeDelegate(jobManager.address),
+    delegator.upgradeDelegate(assetManager.address),
   ];
 
   return {
     blockManager,
-    constants,
+    parameters,
     delegator,
     faucet,
-    jobManager,
+    assetManager,
     random,
-    schellingCoin,
+    razor,
     stakeManager,
-    stateManager,
+    rewardManager,
     structs,
     voteManager,
     initializeContracts,
+    stakedToken,
   };
 };
 

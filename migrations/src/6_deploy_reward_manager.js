@@ -4,10 +4,10 @@ const { deployContract } = require('../migrationHelpers');
 // Edit it as per deployment chain
 const blockReward = BigNumber.from(40).mul((BigNumber.from(10).pow(BigNumber.from(18))));
 
-const deployStakeManager = async () => {
-  await deployContract('StakeManager', ['Constants'], [blockReward.toHexString()]);
+const deployRewardManager = async () => {
+  await deployContract('RewardManager', [], [blockReward.toHexString()]);
 };
 
 module.exports = async () => {
-  await deployStakeManager();
+  await deployRewardManager();
 };

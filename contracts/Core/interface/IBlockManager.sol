@@ -10,7 +10,6 @@ interface IBlockManager {
     //we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this. 
     //select a staker pseudorandomly (not weighted by anything)
-    // (todo what if it is below min stake)
     // that staker then tosses a biased coin. 
     //bias = hisStake/biggestStake. if its heads, he can propose block
     // end of iteration. try next iteration
@@ -19,7 +18,7 @@ interface IBlockManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint256 epoch,
-        uint256[] memory jobIds,
+        uint256[] memory ids,
         uint256[] memory medians,
         uint256[] memory lowerCutoffs,
         uint256[] memory higherCutoffs,

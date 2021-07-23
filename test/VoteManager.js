@@ -25,21 +25,22 @@ describe('VoteManager', function () {
   describe('BlockManager', function () {
     let signers;
     let blockManager;
+    let parameters;
     let random;
-    let schellingCoin;
+    let razor;
     let stakeManager;
-    let stateManager;
+    let rewardManager;
     let voteManager;
     let initializeContracts;
 
     before(async () => {
       ({
-        blockManager, random, schellingCoin, stakeManager, stateManager, voteManager, initializeContracts,
+        blockManager, parameters, random, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
 
-    describe('SchellingCoin', async function () {
+    describe('razor', async function () {
       it('admin role should be granted', async () => {
         const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
         assert(isAdminRoleGranted === true, 'Admin role was not Granted');
@@ -61,7 +62,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, stateManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
         await assertRevert(tx, 'ACL: sender not authorized');
       });
 
@@ -69,10 +70,14 @@ describe('VoteManager', function () {
         await Promise.all(await initializeContracts());
 
         await mineToNextEpoch();
-        await schellingCoin.transfer(signers[3].address, tokenAmount('423000'));
-        await schellingCoin.transfer(signers[4].address, tokenAmount('19000'));
-        await schellingCoin.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
-        await schellingCoin.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
+        await razor.transfer(signers[3].address, tokenAmount('423000'));
+        await razor.transfer(signers[4].address, tokenAmount('19000'));
+        await razor.transfer(signers[5].address, tokenAmount('1000'));
+        await razor.transfer(signers[6].address, tokenAmount('1000'));
+        await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
+        await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
+        await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
+        await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
@@ -164,7 +169,7 @@ describe('VoteManager', function () {
         const stakeBefore2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
-        epoch = await stateManager.getEpoch();
+        epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
@@ -192,12 +197,12 @@ describe('VoteManager', function () {
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded');
         assertBNEqual(stakeBefore2, stakeAfter2, 'Penalty should not be applied');
-        const stakeGettingReward = await stakeManager.stakeGettingReward();
+        const stakeGettingReward = await rewardManager.stakeGettingReward();
         assertBNEqual(stakeGettingReward, (stakeAfter2.add(stakeAfter)), 'Error 3');
       });
 
       it('should be able to reveal again but with no rewards for now', async function () {
-        const epoch = await stateManager.getEpoch();
+        const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
 
@@ -232,7 +237,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const rewardPool = await stakeManager.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         assertBNEqual(rewardPool, toBigNumber('0'));
@@ -262,7 +267,7 @@ describe('VoteManager', function () {
         const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
-        epoch = await stateManager.getEpoch();
+        epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
@@ -288,9 +293,9 @@ describe('VoteManager', function () {
 
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded');
         assertBNEqual(stakeBefore2.sub(penalty), stakeAfter2, 'Penalty should be applied');
-        const stakeGettingReward = await stakeManager.stakeGettingReward();
+        const stakeGettingReward = await rewardManager.stakeGettingReward();
         assertBNEqual(stakeGettingReward, stakeAfter, 'Error 3');
-        const rewardPool = await stakeManager.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
         assertBNEqual(rewardPool, penalty, 'reward pool should not be zero as penalties have been applied');
       });
 
@@ -298,7 +303,7 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
 
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
-        const stakeBefore = (await stakeManager.stakers(stakerIdAcc4)).stake;
+        const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -311,10 +316,10 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const stakeAfter = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        const stakeAcc10 = await schellingCoin.connect(signers[10]).balanceOf(signers[10].address);
-        assertBNEqual(stakeAfter, toBigNumber('0'), 'stake should be zero');
-        assertBNEqual(stakeAcc10, stakeBefore.div('2'), 'the bounty hunter should receive half of the stake of account 4');
+        const stakeAcc10 = await razor.connect(signers[10]).balanceOf(signers[10].address);
+        const slashPenaltyAmount = (stakeBeforeAcc4.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
+        assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
+        assertBNEqual(stakeAcc10, slashPenaltyAmount.div('2'), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
 
       it('Account 3 should be able to reveal again with correct rewards', async function () {
@@ -331,7 +336,7 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
         await mineToNextState(); // reveal
-        const rewardPool = await stakeManager.rewardPool();
+        const rewardPool = await rewardManager.rewardPool();
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
@@ -341,6 +346,81 @@ describe('VoteManager', function () {
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore.add(rewardPool), stakeAfter);
+      });
+
+      it('Should be able to slash if stake is zero', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+
+        await parameters.setMinStake(0);
+        await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
+
+        const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree2 = merkle('keccak256').sync(votes2);
+        const root2 = tree2.root();
+        const commitment3 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[6]).commit(epoch, commitment3);
+
+        const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
+        const stakeBeforeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
+
+        await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[6].address);
+
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
+        const slashPenaltyAmount = stakeBeforeAcc6.mul(((await parameters.slashPenaltyNum())).div(await parameters.slashPenaltyDenom()));
+        const stakeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
+        assertBNEqual(stakeAcc6, toBigNumber('0'), 'Stake of account 6 should be zero');
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
+          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+      });
+
+      it('Should be able to slash if stake is one', async function () {
+        const epoch = await getEpoch();
+        await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
+
+        const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree2 = merkle('keccak256').sync(votes2);
+        const root2 = tree2.root();
+        const commitment3 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[5]).commit(epoch, commitment3);
+
+        const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
+        const stakeBeforeAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
+
+        await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[5].address);
+
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
+        const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
+        const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
+        assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
+          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
     });
   });
