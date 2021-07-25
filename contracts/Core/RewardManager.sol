@@ -107,27 +107,21 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         stakeManager.transferBounty(bountyHunter, bountyReward);
     }
 
-    /// @notice Calculates the inactivity penalties of the staker
+    /// @notice Calculates the stake and age inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
-    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue)
+    function calculateInactivityPenalties(uint256 epochs, uint256 stakeValue, uint256 ageValue)
         public
         view
-        returns (uint256)
+        returns (uint256, uint256)
     {
-        //If no of inactive epochs falls under grace period, do not penalise.
-        if (epochs <= parameters.gracePeriod()) {
-            return (stakeValue);
-        }
-
         uint256 penalty =
             ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) /
                 parameters.penaltyNotRevealDenom();
-        if (penalty < stakeValue) {
-            return (stakeValue - (penalty));
-        } else {
-            return (0);
-        }
+        uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
+        uint256 penaltyAge = epochs * 10000;
+        uint256 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
+        return (newStake, newAge);
     }
 
     /// @notice The function gives out penalties to stakers during commit.
@@ -147,17 +141,28 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         // penalize or reward if last active more than epoch - 1
         uint256 inactiveEpochs =
             (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
+
+        if (inactiveEpochs <= parameters.gracePeriod()) {
+            return;
+        }
         uint256 previousStake = thisStaker.stake;
+        uint256 previousAge = thisStaker.age;
         // uint256 currentStake = previousStake;
-        uint256 currentStake =
-            calculateInactivityPenalties(inactiveEpochs, previousStake);
-        if (currentStake < previousStake) {
+        (uint256 newStake, uint256 newAge) = calculateInactivityPenalties(inactiveEpochs, previousStake, previousAge);
+        if (newStake < previousStake) {
             stakeManager.setStakerStake(
                 thisStaker.id,
-                currentStake,
+                newStake,
                 "Inactivity Penalty",
                 epoch
             );
+        }
+        if (newAge < previousAge) {
+            stakeManager.setStakerAge(
+                thisStaker.id,
+                newAge,
+                epoch
+        );
         }
     }
 
