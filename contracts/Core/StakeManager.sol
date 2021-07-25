@@ -20,7 +20,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     IRewardManager public rewardManager;
     RAZOR public razor;
     IVoteManager public voteManager;
-    //[math.floor(getMaturity2(i*10000)) for i in range(1,100)]
+    //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
     uint256[] public maturities =
     [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
     165, 173, 180, 187, 193, 200, 206, 212, 217, 223,
@@ -62,7 +62,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 timestamp
+        uint256 timestamp,
+        address unstaker
     );
 
     event Withdrew(
@@ -70,7 +71,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 timestamp
+        uint256 timestamp,
+        address withdrawer
     );
 
     event Delegated(
@@ -252,7 +254,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             sAmount,
             epoch + (parameters.withdrawLockPeriod())
         );
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp, msg.sender);
         //emit event here
     }
 
@@ -328,7 +330,20 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         //Transfer stake
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
+    }
+
+    /// @notice remove all funds in case of emergency
+    function escape(address _address)
+        external
+        initialized
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (parameters.escapeHatchEnabled()) {
+            razor.transfer(_address, razor.balanceOf(address(this)));
+        } else {
+            revert("escape hatch is disabled");
+        }
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
