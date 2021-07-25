@@ -1,6 +1,6 @@
 const { BigNumber } = ethers;
 const {
-  ONE_ETHER, EPOCH_LENGTH, NUM_BLOCKS, NUM_STATES,
+  ONE_ETHER, EPOCH_LENGTH, NUM_BLOCKS, NUM_STATES, MATURITIES
 } = require('./constants');
 
 const toBigNumber = (value) => BigNumber.from(value);
@@ -9,8 +9,9 @@ const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
 const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
-  const totalStakeRevealed = await voteManager['getTotalStakeRevealed(uint256,uint256)'](epoch, 1);
-  const medianWeight = totalStakeRevealed.div(2);
+  const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint256,uint256)'](epoch, 1);
+
+  const medianWeight = totalInfluenceRevealed.div(2);
   let median = toBigNumber('0');
   let weight = toBigNumber('0');
 
@@ -20,7 +21,7 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   }
 
   return {
-    median, totalStakeRevealed,
+    median, totalInfluenceRevealed,
   };
 };
 
@@ -28,6 +29,11 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
 const prngHash = async (seed, blockHashes) => {
   const sum = await web3.utils.soliditySha3(blockHashes, seed);
   return (sum);
+};
+
+const maturity = async (age) => {
+  const index = age / 10000;
+  return MATURITIES[index];
 };
 
 const prng = async (seed, max, blockHashes) => {
@@ -103,4 +109,5 @@ module.exports = {
   prngHash,
   toBigNumber,
   tokenAmount,
+  maturity
 };

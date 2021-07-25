@@ -159,7 +159,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         checkEpoch(epoch)
         checkState(parameters.dispute())
     {
-        uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
+        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, assetId)/(2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
         if (disputes[epoch][msg.sender].accWeight == 0) {
@@ -194,13 +194,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
-            "Total stake revealed doesnt match"
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
+            "Total influence revealed doesnt match"
         );
         uint256 median = disputes[epoch][msg.sender].median;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
         //
-        require(median > 0, "median can't be zero");
+        require(median > 0, "median can not be zero");
         if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
             proposedBlocks[epoch][blockId].valid = false;
             rewardManager.slash(proposerId, msg.sender, epoch);
@@ -245,7 +245,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
         if ((Random.prng(10,
-            stakeManager.getNumStakers(), 
+            stakeManager.getNumStakers(),
             keccak256(abi.encode(iteration)),
             parameters.epochLength())+(1)) != stakerId) {
             return false;

@@ -458,16 +458,21 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         return stakers[stakerId].age;
     }
 
+    /// @return influence of staker
+    function getInfluence(uint256 stakerId)  external view returns(uint256) {
+        return _getMaturity(stakerId) * stakers[stakerId].stake;
+    }
+
+    /// @return stake of staker
+    function getStake(uint256 stakerId)  external view returns(uint256) {
+        return stakers[stakerId].stake;
+    }
+
     /// @return maturity of staker
-    function getMaturity(uint256 stakerId) external view returns(uint256) {
+    function _getMaturity(uint256 stakerId) internal view returns(uint256) {
         uint256 index = stakers[stakerId].age/10000;
 
         return maturities[index];
-    }
-
-    /// @return influence of staker
-    function getInfluence(uint256 stakerId)  external view returns(uint256) {
-        return stakers[stakerId].age * stakers[stakerId].stake;
     }
 
     /// @notice 1 sRZR = ? RZR
