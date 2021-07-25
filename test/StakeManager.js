@@ -752,6 +752,7 @@ describe('StakeManager', function () {
     it('non admin should not be able to withdraw funds in emergency', async function () {
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       const balanceAdminBefore = await razor.balanceOf(signers[1].address);
+      await stakeManager.connect(signers[0]).pause();
       const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
       await assertRevert(tx, 'VM Exception while processing transaction: reverted with reason string \'ACL: sender not authorized\'');
 
@@ -778,6 +779,19 @@ describe('StakeManager', function () {
       await parameters.connect(signers[0]).disableEscapeHatch();
       const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
       await assertRevert(tx, 'escape hatch is disabled');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should not be able to withdraw funds if contract is not paused', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).unpause();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'paused');
       const balanceContractAfter = await razor.balanceOf(stakeManager.address);
       const balanceAdminAfter = await razor.balanceOf(signers[0].address);
       assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');

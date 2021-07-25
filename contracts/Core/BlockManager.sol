@@ -136,7 +136,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, Pause {
         uint256[] memory higherCutoffs,
         uint256 iteration,
         uint256 biggestStakerId
-    ) public initialized checkEpoch(epoch) checkState(parameters.propose()) whenNotPaused()
+    ) public initialized checkEpoch(epoch) checkState(parameters.propose())
 
     {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
@@ -183,7 +183,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, Pause {
         initialized
         checkEpoch(epoch)
         checkState(parameters.dispute())
-        whenNotPaused()
     {
         uint256 medianWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(2);
         uint256 lowerCutoffWeight = voteManager.getTotalStakeRevealed(epoch, assetId)/(4);
@@ -219,14 +218,14 @@ contract BlockManager is Initializable, ACL, BlockStorage, Pause {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(
         uint256 epoch
-    ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) whenNotPaused()
+    ) public initialized checkEpoch(epoch) checkState(parameters.dispute())
 
     {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
-    public initialized checkEpoch(epoch) checkState(parameters.dispute()) whenNotPaused() {
+    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalStakeRevealed(epoch, assetId),
@@ -251,7 +250,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, Pause {
     function confirmBlock() public
     initialized
     onlyRole(parameters.getBlockConfirmerHash())
-    whenNotPaused() {
+    {
         uint256 epoch = parameters.getEpoch();
 
         for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {

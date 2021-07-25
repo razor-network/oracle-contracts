@@ -320,6 +320,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         external
         initialized
         onlyRole(DEFAULT_ADMIN_ROLE)
+        whenPaused()
     {
         if (parameters.escapeHatchEnabled()) {
             razor.transfer(_address, razor.balanceOf(address(this)));
@@ -394,8 +395,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 _stake,
         string memory _reason,
         uint256 _epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) whenNotPaused()
- {
+    ) external onlyRole(parameters.getStakeModifierHash())
+    {
         uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
         emit StakeChange(

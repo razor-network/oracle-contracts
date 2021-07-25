@@ -9,16 +9,14 @@ import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "../Pause.sol";
 
 
-contract VoteManager is Initializable, ACL, VoteStorage, Pause {
+contract VoteManager is Initializable, ACL, VoteStorage {
 
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
-
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
 
@@ -49,7 +47,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, Pause {
     initialized
     checkEpoch(epoch)
     checkState(parameters.commit())
-    whenNotPaused() {
+    {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -79,7 +77,6 @@ contract VoteManager is Initializable, ACL, VoteStorage, Pause {
         public
         initialized
         checkEpoch(epoch)
-        whenNotPaused()
     {
         uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");

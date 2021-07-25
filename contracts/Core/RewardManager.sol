@@ -26,7 +26,7 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
         uint256 rewardPool,
         uint256 timestamp
     );
-    
+
     event StakeGettingRewardChange(
         uint256 epoch,
         uint256 prevStakeGettingReward,
@@ -80,7 +80,6 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
         external
         initialized
         onlyRole(parameters.getRewardModifierHash())
-        whenNotPaused()
     {
         _givePenalties(stakerId, epoch);
     }
@@ -92,8 +91,6 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
     function giveBlockReward(uint256 stakerId, uint256 epoch)
         external
         onlyRole(parameters.getRewardModifierHash())
-        whenNotPaused()
-
     {
         if (blockReward > 0) {
             uint256 newStake =
@@ -125,7 +122,6 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
         external
         initialized
         onlyRole(parameters.getRewardModifierHash())
-        whenNotPaused()
     {
         if (stakeGettingReward == 0) return;
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -203,7 +199,7 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
         uint256 id,
         address bountyHunter,
         uint256 epoch
-    ) external onlyRole(parameters.getRewardModifierHash()) whenNotPaused()
+    ) external onlyRole(parameters.getRewardModifierHash())
 {
        uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())/parameters.slashPenaltyDenom();
        uint256 Stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
@@ -301,7 +297,6 @@ contract RewardManager is Initializable, ACL, RewardStorage, Pause {
     }
 
     function _givePenalties(uint256 stakerId, uint256 epoch) internal
-    whenNotPaused()
     {
         _giveInactivityPenalties(stakerId, epoch);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
