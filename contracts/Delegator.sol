@@ -13,7 +13,7 @@ contract Delegator {
 
     function getJob(
         uint256 id
-    ) 
+    )
         external
         view
         returns(
@@ -27,7 +27,7 @@ contract Delegator {
         return assetManager.getJob(id);
     }
 
-    function upgradeDelegate(address newDelegateAddress) public {
+    function upgradeDelegate(address newDelegateAddress) external {
         require(msg.sender == owner, "caller is not the owner");
         delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
