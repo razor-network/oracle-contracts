@@ -26,6 +26,7 @@ interface IParameters {
     function slashPenaltyDenom() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
+    function escapeHatchEnabled() external view returns(bool);
 
     function getAssetConfirmerHash() external view returns(bytes32);
     function getBlockConfirmerHash() external view returns(bytes32);
