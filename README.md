@@ -1,4 +1,5 @@
 # Razor network - Contracts
+[![Coverage Status](https://coveralls.io/repos/github/razor-network/contracts/badge.svg?branch=master)](https://coveralls.io/github/razor-network/contracts?branch=master)
 
 These are the contracts for Razor network.
 
@@ -7,7 +8,7 @@ These are the contracts for Razor network.
 You'll need npm to install the required packages.
 To install npm , go to this [link](https://www.npmjs.com/get-npm)
 
-#### jq 
+#### jq
 For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
 
 For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
