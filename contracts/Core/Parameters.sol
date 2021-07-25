@@ -23,7 +23,7 @@ contract Parameters is ACL {
     uint256 public aggregationRange = 3;
     uint256 public withdrawReleasePeriod = 5;
     uint256 public resetLockPenalty = 1;
-    bool public override escapeHatchEnabled = true;
+    bool public escapeHatchEnabled = true;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -61,7 +61,6 @@ contract Parameters is ACL {
     }
 
     function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
