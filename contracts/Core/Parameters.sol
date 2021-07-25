@@ -108,7 +108,7 @@ contract Parameters is ACL {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view override returns (uint256) {
+    function getEpoch() external view returns (uint256) {
         return(block.number/(epochLength));
     }
 
