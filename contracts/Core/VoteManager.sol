@@ -44,7 +44,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -71,7 +71,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         bytes32[][] memory proofs, bytes32 secret,
         address stakerAddress
     )
-        public
+        external
         initialized
         checkEpoch(epoch)
     {

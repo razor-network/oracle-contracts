@@ -1,32 +1,32 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IParameters.sol";
 import "./ACL.sol";
 
 
-contract Parameters is IParameters, ACL {
+contract Parameters is ACL {
 
     // constant type can be readjusted to some smaller type than uint256 for saving gas (storage variable packing).
     // penalty not reveal = 0.01% per epch
-    uint256 public override penaltyNotRevealNum = 1;
-    uint256 public override penaltyNotRevealDenom = 10000;
-    uint256 public override slashPenaltyNum = 10000;
-    uint256 public override slashPenaltyDenom = 10000;
 
-    uint256 public override minStake = 100 * (10 ** 18);
-    uint256 public override withdrawLockPeriod = 1;
-    uint256 public override maxAltBlocks = 5;
-    uint256 public override epochLength = 300;
-    uint256 public override numStates = 4;
-    uint256 public override exposureDenominator = 1000;
-    uint256 public override gracePeriod = 8;
-    uint256 public override aggregationRange = 3;
-    uint256 public override withdrawReleasePeriod = 5;
-    uint256 public override resetLockPenalty = 1;
-    uint256 public override maxAge = 100 * 10000;
-    
-    bool public override escapeHatchEnabled = true;
+    uint256 public penaltyNotRevealNum = 1;
+    uint256 public penaltyNotRevealDenom = 10000;
+    uint256 public slashPenaltyNum = 10000;
+    uint256 public slashPenaltyDenom = 10000;
+
+    uint256 public minStake = 100 * (10 ** 18);
+    uint256 public withdrawLockPeriod = 1;
+    uint256 public maxAltBlocks = 5;
+    uint256 public epochLength = 300;
+    uint256 public numStates = 4;
+    uint256 public exposureDenominator = 1000;
+    uint256 public gracePeriod = 8;
+    uint256 public aggregationRange = 3;
+    uint256 public withdrawReleasePeriod = 5;
+    uint256 public resetLockPenalty = 1;
+    uint256 public maxAge = 100 * 10000;
+
+    bool public escapeHatchEnabled = true;
 
     uint32 constant private _COMMIT = 0;
     uint32 constant private _REVEAL = 1;
@@ -115,57 +115,57 @@ contract Parameters is IParameters, ACL {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view override returns (uint256) {
+    function getEpoch() external view returns (uint256) {
         return(block.number/(epochLength));
     }
 
-    function getState() external view override returns (uint256) {
+    function getState() external view returns (uint256) {
         uint256 _numStates = numStates;
         uint256 state = (block.number/(epochLength/_numStates));
         return (state%(_numStates));
     }
 
-    function commit() external pure override returns (uint32) {
+    function commit() external pure returns (uint32) {
         return _COMMIT;
     }
 
-    function reveal() external pure override returns (uint32) {
+    function reveal() external pure returns (uint32) {
         return _REVEAL;
     }
 
-    function propose() external pure override returns (uint32) {
+    function propose() external pure returns (uint32) {
         return _PROPOSE;
     }
 
-    function dispute() external pure override returns (uint32) {
+    function dispute() external pure returns (uint32) {
         return _DISPUTE;
     }
 
-    function getBlockConfirmerHash() external pure override returns (bytes32) {
+    function getBlockConfirmerHash() external pure returns (bytes32) {
         return _BLOCK_CONFIRMER_HASH;
     }
 
-    function getDefaultAdminHash() external pure override returns (bytes32) {
+    function getDefaultAdminHash() external pure returns (bytes32) {
         return DEFAULT_ADMIN_ROLE;
     }
 
-    function getAssetConfirmerHash() external pure override returns (bytes32) {
+    function getAssetConfirmerHash() external pure returns (bytes32) {
         return _ASSET_CONFIRMER_HASH;
     }
 
-    function getStakerActivityUpdaterHash() external pure override returns (bytes32) {
+    function getStakerActivityUpdaterHash() external pure returns (bytes32) {
         return _STAKER_ACTIVITY_UPDATER_HASH;
     }
 
-    function getStakeModifierHash() external pure override returns (bytes32) {
+    function getStakeModifierHash() external pure returns (bytes32) {
         return _STAKE_MODIFIER_HASH;
     }
 
-    function getRewardModifierHash() external pure override returns (bytes32) {
+    function getRewardModifierHash() external pure returns (bytes32) {
         return _REWARD_MODIFIER_HASH;
     }
 
-    function getAssetModifierHash() external pure override returns (bytes32) {
+    function getAssetModifierHash() external pure returns (bytes32) {
         return _ASSET_MODIFIER_HASH;
     }
 

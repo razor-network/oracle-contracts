@@ -63,41 +63,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
-        return(blocks[epoch]);
-    }
-
-    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians) {
-        _blockMedians = blocks[epoch].medians;
-        return(_blockMedians);
-    }
-
-    function getProposedBlock(
-        uint256 epoch,
-        uint256 proposedBlock
-    )
-        external
-        view
-        returns(
-            Structs.Block memory _block,
-            uint256[] memory _blockMedians
-        )
-    {
-        _block = proposedBlocks[epoch][proposedBlock];
-        return(_block, _block.medians);
-    }
-
-    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
-    external view returns(uint256[] memory _blockMedians) {
-        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
-        return(_blockMedians);
-    }
-
-    function getNumProposedBlocks(uint256 epoch)
-    external view returns(uint256) {
-        return(proposedBlocks[epoch].length);
-    }
-
     // elected proposer proposes block.
     //we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this.
@@ -115,6 +80,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 iteration,
         uint256 biggestInfluencerId
     ) public initialized checkEpoch(epoch) checkState(parameters.propose())
+
     {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
@@ -154,7 +120,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 assetId,
         uint256[] memory sorted
     )
-        public
+        external
         initialized
         checkEpoch(epoch)
         checkState(parameters.dispute())
@@ -185,13 +151,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(
         uint256 epoch
-    ) public initialized checkEpoch(epoch) checkState(parameters.dispute())
+    ) external initialized checkEpoch(epoch) checkState(parameters.dispute())
     {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
     function finalizeDispute (uint256 epoch, uint256 blockId)
-    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
@@ -209,7 +175,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function confirmBlock() public initialized onlyRole(parameters.getBlockConfirmerHash()) {
+    function confirmBlock() external initialized onlyRole(parameters.getBlockConfirmerHash()) {
         uint256 epoch = parameters.getEpoch();
 
         for (uint8 i=0; i < proposedBlocks[epoch - 1].length; i++) {
@@ -230,6 +196,42 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             }
         }
 
+    }
+    
+ function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
+        return(blocks[epoch]);
+    }
+
+    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = blocks[epoch].medians;
+        return(_blockMedians);
+    }
+
+    function getProposedBlock(
+        uint256 epoch,
+        uint256 proposedBlock
+    )
+        external
+        view
+        returns(
+            Structs.Block memory _block,
+            uint256[] memory _blockMedians
+        )
+    {
+        _block = proposedBlocks[epoch][proposedBlock];
+        return(_block, _block.medians);
+    }
+
+    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock)
+    external view returns(uint256[] memory _blockMedians) {
+        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
+        return(_blockMedians);
+    }
+
+    function getNumProposedBlocks(uint256 epoch)
+    external view returns(uint256) {
+        return(proposedBlocks[epoch].length);
+    
     }
 
     function isElectedProposer(

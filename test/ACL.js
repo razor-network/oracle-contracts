@@ -14,7 +14,7 @@ describe('Access Control Test', async () => {
   let stakeManager;
   let rewardManager;
   let initializeContracts;
-  const expectedRevertMessage = 'ACL: sender not authorized';
+  const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
@@ -457,7 +457,6 @@ describe('Access Control Test', async () => {
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {
-    const expectedRevertMessage = 'AccessControl: sender must be an admin to grant';
     // Old admin should be able to grant admin role to another account
     await stakeManager.grantRole(DEFAULT_ADMIN_ROLE_HASH, signers[1].address);
 

@@ -82,7 +82,7 @@ describe('BlockManager', function () {
         voteManager.address,
         assetManager.address
       );
-      await assertRevert(tx, 'ACL: sender not authorized');
+      await assertRevert(tx, 'AccessControl');
     });
 
     it('should be able to initialize', async () => {
