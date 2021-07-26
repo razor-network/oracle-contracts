@@ -1,5 +1,8 @@
 # Razor network - Contracts
 
+[![Build Status](https://travis-ci.com/razor-network/contracts.svg?branch=master)](https://travis-ci.com/razor-network/contracts)
+[![Coverage Status](https://coveralls.io/repos/github/razor-network/contracts/badge.svg?branch=master)](https://coveralls.io/github/razor-network/contracts?branch=master)
+
 These are the contracts for Razor network.
 
 ## Prerequisites :
