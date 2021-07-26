@@ -89,24 +89,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         }
     }
 
-    /// @notice The function is used by the Votemanager reveal function
-    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
-    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
-    /// @param id The ID of the staker who is penalised
-    /// @param bountyHunter The address of the bounty hunter
-    function slash(
-        uint256 id,
-        address bountyHunter,
-        uint256 epoch
-    ) external onlyRole(parameters.getRewardModifierHash()) {
-        uint256 slashPenaltyAmount = (stakeManager.getStaker(id).stake*parameters.slashPenaltyNum())
-        /parameters.slashPenaltyDenom();
-        uint256 stake =  stakeManager.getStaker(id).stake - slashPenaltyAmount;
-        uint256 bountyReward = slashPenaltyAmount/2;
-        stakeManager.setStakerStake(id, stake, "Slashed", epoch);
-        stakeManager.transferBounty(bountyHunter, bountyReward);
-    }
-
     /// @notice Calculates the stake and age inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch

@@ -34,6 +34,8 @@ contract Parameters is ACL {
     uint32 constant private _DISPUTE = 3;
     uint32 constant private _CONFIRM = 4;
 
+    address public burnAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 constant private _BLOCK_CONFIRMER_HASH = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
 

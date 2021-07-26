@@ -10,7 +10,8 @@ interface IParameters {
     function dispute() external view returns(uint32);
     function confirm() external view returns(uint32);
 
-    // penalty not reveal = 0.01% per epch
+    function burnAddress() external view returns(address);
+
     function penaltyNotRevealNum() external view returns(uint256);
     function penaltyNotRevealDenom() external view returns(uint256);
     function resetLockPenalty() external view returns(uint256);

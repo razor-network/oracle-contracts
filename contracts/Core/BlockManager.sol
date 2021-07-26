@@ -79,9 +79,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256[] memory medians,
         uint256 iteration,
         uint256 biggestInfluencerId
-    ) public initialized checkEpoch(epoch) checkState(parameters.propose())
-
-    {
+    ) public initialized checkEpoch(epoch) checkState(parameters.propose()) {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(
@@ -170,7 +168,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         require(median > 0, "median can not be zero");
         if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
             proposedBlocks[epoch][blockId].valid = false;
-            rewardManager.slash(proposerId, msg.sender, epoch);
+            stakeManager.slash(proposerId, msg.sender, epoch);
         } else {
             revert("Proposed Alternate block is identical to proposed block");
         }
@@ -209,7 +207,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             }
         }
     }
-
+    
     function getBlock(uint256 epoch) external view returns(Structs.Block memory _block) {
         return(blocks[epoch]);
     }
