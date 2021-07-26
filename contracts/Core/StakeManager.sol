@@ -84,7 +84,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 timestamp
     );
 
-
     modifier checkEpoch (uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
@@ -259,10 +258,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
-    // To be eligible for withdraw it must be called with in withDrawReleasePeriod(), this is added to avoid front-run unstake/withdraw.
-    // For Staker, To be eligible for withdraw she must not participate in lock duration, this is added to avoid hit and run dispute attack.
+    // To be eligible for withdraw it must be called with in withDrawReleasePeriod(),
+    //this is added to avoid front-run unstake/withdraw.
+    // For Staker, To be eligible for withdraw she must not participate in lock duration,
+    //this is added to avoid hit and run dispute attack.
     // For Delegator, there is no such restriction
-    // Both Staker and Delegator should have their locked funds(sRZR) present in their wallet at time of if not withdraw reverts
+    // Both Staker and Delegator should have their locked funds(sRZR) present in
+    //their wallet at time of if not withdraw reverts
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
@@ -270,68 +272,67 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         external
         initialized
         checkEpoch(epoch)
-        checkState(parameters.commit())
-    {
-        Structs.Staker storage staker = stakers[stakerId];
-        Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
+        checkState(parameters.commit()) {
+            Structs.Staker storage staker = stakers[stakerId];
+            Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
-        require(staker.id != 0, "staker doesnt exist");
-        require(lock.withdrawAfter != 0, "Did not unstake");
-        require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
-        require(
-            lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch,
-            "Release Period Passed"
-        ); // Can Use ResetLock
-        require(staker.stake > 0, "Nonpositive Stake");
-        if (
-            stakerIds[msg.sender] == stakerId
-        ) // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-        {
+            require(staker.id != 0, "staker doesnt exist");
+            require(lock.withdrawAfter != 0, "Did not unstake");
+            require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
             require(
-                (lock.withdrawAfter - parameters.withdrawLockPeriod()) >=
-                    staker.epochLastRevealed,
-                "Participated in Lock Period"
-            );
+                lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch,
+                "Release Period Passed"
+            ); // Can Use ResetLock
+            require(staker.stake > 0, "Nonpositive Stake");
+            if (
+                stakerIds[msg.sender] == stakerId
+            ) // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
+            {
+                require(
+                    (lock.withdrawAfter - parameters.withdrawLockPeriod()) >=
+                        staker.epochLastRevealed,
+                    "Participated in Lock Period"
+                );
+                require(
+                    voteManager.getCommitment(epoch, stakerId) == 0x0,
+                    "Already commited"
+                );
+            }
+
+            StakedToken sToken = StakedToken(staker.tokenAddress);
             require(
-                voteManager.getCommitment(epoch, stakerId) == 0x0,
-                "Already commited"
-            );
+                sToken.balanceOf(msg.sender) >= lock.amount,
+                "locked amount lost"
+            ); // Can Use ResetLock
+
+            uint256 rAmount =
+                _convertSRZRToRZR(
+                    lock.amount,
+                    staker.stake,
+                    sToken.totalSupply()
+                );
+            require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
+            staker.stake = staker.stake - rAmount;
+
+            // Function to Reset the lock
+            _resetLock(stakerId);
+
+            // Transfer commission in case of delegators
+            // Check commission rate >0
+            if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+                uint256 commission = (rAmount * staker.commission) / 100;
+                require(
+                    razor.transfer(staker._address, commission),
+                    "couldnt transfer"
+                );
+                rAmount = rAmount - commission;
+            }
+
+            //Transfer stake
+            require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
+
+            emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
         }
-
-        StakedToken sToken = StakedToken(staker.tokenAddress);
-        require(
-            sToken.balanceOf(msg.sender) >= lock.amount,
-            "locked amount lost"
-        ); // Can Use ResetLock
-
-        uint256 rAmount =
-            _convertSRZRToRZR(
-                lock.amount,
-                staker.stake,
-                sToken.totalSupply()
-            );
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
-        staker.stake = staker.stake - rAmount;
-
-        // Function to Reset the lock
-        _resetLock(stakerId);
-
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (rAmount * staker.commission) / 100;
-            require(
-                razor.transfer(staker._address, commission),
-                "couldnt transfer"
-            );
-            rAmount = rAmount - commission;
-        }
-
-        //Transfer stake
-        require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
-
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
-    }
 
     /// @notice remove all funds in case of emergency
     function escape(address _address)
@@ -409,18 +410,37 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         string memory _reason,
         uint256 _epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 previousStake = stakers[_id].stake;
-        stakers[_id].stake = _stake;
-        emit StakeChange(
-            _id,
-            previousStake,
-            _stake,
-            _reason,
-            _epoch,
-            block.timestamp
-        );
+        _setStakerStake(_id, _stake, _reason, _epoch);
     }
 
+    /// @notice The function is used by the Votemanager reveal function
+    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
+    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
+    /// @param id The ID of the staker who is penalised
+    /// @param bountyHunter The address of the bounty hunter
+    function slash(
+        uint256 id,
+        address bountyHunter,
+        uint256 epoch
+    ) external onlyRole(parameters.getStakeModifierHash()) {
+        uint256 slashPenaltyAmount = (stakers[id].stake *
+        parameters.slashPenaltyNum())/
+        parameters.slashPenaltyDenom();
+        uint256 newStake =  stakers[id].stake - slashPenaltyAmount;
+        uint256 halfPenalty = slashPenaltyAmount/2;
+
+        if (halfPenalty == 0) return;
+
+        _setStakerStake(id, newStake, "Slashed", epoch);
+        //reward half the amount to bounty hunter
+        //please note that since slashing is a critical part of consensus algorithm,
+        //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
+        //tx should complete.
+        razor.transfer(bountyHunter, halfPenalty);
+        //burn half the amount
+        razor.transfer(parameters.burnAddress(), halfPenalty);
+    }
+    
     function setStakerAge(
         uint256 _id,
         uint256 _age,
@@ -434,20 +454,6 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             _age,
             _epoch,
             block.timestamp
-        );
-    }
-
-    /// @notice External function for trasnfering bounty to bountyHunter
-    /// Used by RewardManager in slash()
-    /// @param bountyHunter The address of bountyHunter
-    /// @param bounty The bounty to be rewarded
-    function transferBounty(address bountyHunter, uint256 bounty)
-        external
-        onlyRole(parameters.getStakeModifierHash())
-    {
-        require(
-            razor.transfer(bountyHunter, bounty),
-            "failed to transfer bounty"
         );
     }
 
@@ -468,6 +474,27 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         return(numStakers);
     }
 
+    /// @notice Internal function for setting stake of the staker
+    /// @param _id of the staker
+    /// @param _stake the amount of Razor tokens staked
+    function _setStakerStake(
+        uint256 _id,
+        uint256 _stake,
+        string memory _reason,
+        uint256 _epoch
+    ) internal {
+        uint256 previousStake = stakers[_id].stake;
+        stakers[_id].stake = _stake;
+        emit StakeChange(
+            _id,
+            previousStake,
+            _stake,
+            _reason,
+            _epoch,
+            block.timestamp
+        );
+    }
+    
     /// @return age of staker
     function getAge(uint256 stakerId) external view returns(uint256) {
         return stakers[stakerId].age;
@@ -513,7 +540,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 _totalSupply
     ) internal pure returns (uint256) {
         // Follwoing require is included to cover case where
-        // CurrentStake Becomes zero beacues of penalties, this is likely scenario when staker stakes is slashed to 0 for invalid block.
+        // CurrentStake Becomes zero beacues of penalties,
+        //this is likely scenario when staker stakes is slashed to 0 for invalid block.
         require(_currentStake != 0, "Stakers Stake is 0");
         return ((_amount * _totalSupply) / _currentStake);
     }

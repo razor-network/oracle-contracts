@@ -103,7 +103,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             //bounty hunter revealing someone else's secret in commit state
             require(parameters.getState() == parameters.commit(), "Not commit state");
             commitments[epoch][thisStakerId] = 0x0;
-            rewardManager.slash(thisStakerId, msg.sender, epoch);
+            stakeManager.slash(thisStakerId, msg.sender, epoch);
         }
     }
 

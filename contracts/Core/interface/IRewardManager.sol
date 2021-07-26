@@ -8,5 +8,4 @@ interface IRewardManager {
 
     function givePenalties (uint256 stakerId, uint256 epoch) external;
     function giveBlockReward(uint256 stakerId, uint256 epoch) external;
-    function slash (uint256 id, address bountyHunter, uint256 epoch) external;
 }
