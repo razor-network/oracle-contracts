@@ -6,6 +6,7 @@ orbs:
   # The Node.js orb contains a set of prepackaged CircleCI configuration you can utilize
   # Orbs reduce the amount of configuration required for common tasks. 
   # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/node
+  coveralls: coveralls/coveralls@1.0.6
   node: circleci/node@4.1
 
 
@@ -35,9 +36,17 @@ jobs:
       - run:
           name: Run Coverage
           command: npm run coverage
-      - run:
-          name: Send Coverage to Coveralls
-          command: cat coverage/lcov.info | npx coveralls
+      - coveralls/upload
+      - store_artifacts: # special step to save test results as as artifact
+          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: test-results
+          prefix: tests
+      - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+          path: coverage
+          prefix: coverage
+      - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+          path: test-results
+          
   mythx:
     docker:
     - image: cimg/python:3.9.6-node
@@ -57,6 +66,10 @@ jobs:
           command: |
             . venv/bin/activate
             mythx --ci --yes analyze --remap-import "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version 0.8.4 contracts/ --swc-blacklist 103,120
+notify:
+  webhooks:
+    - url: https://coveralls.io/webhook?repo_token=${process.env.COVERALLS_REPO_TOKEN}
+    
 workflows:
   # Below is the definition of your workflow.
   # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
