@@ -10,10 +10,9 @@ import "./storage/BlockStorage.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "../Pause.sol";
 
 
-contract BlockManager is Initializable, ACL, BlockStorage, Pause {
+contract BlockManager is Initializable, ACL, BlockStorage {
 
     IParameters public parameters;
     IStakeManager public stakeManager;

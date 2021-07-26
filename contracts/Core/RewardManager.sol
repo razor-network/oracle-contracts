@@ -8,13 +8,12 @@ import "./interface/IVoteManager.sol";
 import "./storage/RewardStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "../Pause.sol";
+
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-
-contract RewardManager is Initializable, ACL, RewardStorage, Pause {
+contract RewardManager is Initializable, ACL, RewardStorage {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
