@@ -137,6 +137,12 @@ describe('AssetManager', function () {
       assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('1'));
     });
 
+    it('activeAssets list should be updated to 1', async () => {
+      const activeAssets = await assetManager.getActiveAssetsList();
+      assert(activeAssets.length === 1);
+      assertBNEqual(activeAssets, toBigNumber('4'));
+    });
+
     it('should be able to add a job to a collection', async function () {
       await assetManager.addJobToCollection(4, 3);
       const collection = await assetManager.getCollection(4);
@@ -156,11 +162,19 @@ describe('AssetManager', function () {
       }
     });
 
+    it('should return the correct active status when getActiveStatus is called', async () => {
+      const numAssets = await assetManager.getNumAssets();
+      for (let i = 1; i <= numAssets; i++) {
+        const active = await assetManager.getActiveStatus(i);
+        assert(active === true);
+      }
+    });
+
     it('should fulfill result to the correct asset', async function () {
       await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
       await assetManager.fulfillAsset(4, 444);
-      const c4 = await assetManager.getCollection(4);
-      assertBNEqual(c4.result, toBigNumber('444'));
+      const c4 = await assetManager.getResult(4);
+      assertBNEqual(c4, toBigNumber('444'));
     });
 
     it('should be able to update Job', async function () {
