@@ -33,7 +33,7 @@ jobs:
           command: npm test
       - run:
           name: Run Coverage
-          command: npx truffle run coverage
+          command: npm run coverage
       - run:
           name: Send Coverage to Coveralls
           command: cat coverage/lcov.info | npx coveralls
