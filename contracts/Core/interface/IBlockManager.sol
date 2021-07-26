@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import "../../lib/Structs.sol";
 
+
 interface IBlockManager {
+
     // elected proposer proposes block.
     //we use a probabilistic method to elect stakers weighted by stake
     // protocol works like this.
@@ -24,13 +26,8 @@ interface IBlockManager {
 
     //anyone can give sorted votes in batches in dispute state
 
-    function giveSorted(
-        uint256 epoch,
-        uint256 assetId,
-        uint256[] calldata sorted
-    ) external;
-
-    function resetDispute(uint256 epoch) external;
+    function giveSorted (uint256 epoch, uint256 assetId, uint256[] calldata sorted) external;
+    function resetDispute (uint256 epoch) external;
 
     function isElectedProposer(
         uint256 iteration,
@@ -40,15 +37,19 @@ interface IBlockManager {
 
     function confirmBlock() external;
 
-    function getBlock(uint256 epoch) external view returns (Structs.Block memory _block);
+    function getBlock(uint256 epoch) external view returns(Structs.Block memory _block);
+    function getBlockMedians(uint256 epoch) external view returns(uint256[] memory _blockMedians);
 
-    function getBlockMedians(uint256 epoch) external view returns (uint256[] memory _blockMedians);
+    function getLowerCutoffs(uint256 epoch) external view returns(uint256[] memory _lowerCutoffs);
 
-    function getLowerCutoffs(uint256 epoch) external view returns (uint256[] memory _lowerCutoffs);
+    function getHigherCutoffs(
+        uint256 epoch
+    ) external view returns(uint256[] memory _higherCutoffs);
 
-    function getHigherCutoffs(uint256 epoch) external view returns (uint256[] memory _higherCutoffs);
+    function getProposedBlockMedians(
+        uint256 epoch,
+        uint256 proposedBlock
+    ) external view returns(uint256[] memory _blockMedians);
 
-    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock) external view returns (uint256[] memory _blockMedians);
-
-    function getNumProposedBlocks(uint256 epoch) external view returns (uint256);
+    function getNumProposedBlocks(uint256 epoch) external view returns(uint256);
 }

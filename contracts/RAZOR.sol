@@ -10,11 +10,13 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * `ERC20` functions.
  */
 
-contract RAZOR is ERC20 {
+contract RAZOR is ERC20{
+    
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    constructor(uint256 initialSupply) ERC20("RAZOR", "RAZOR") {
+    constructor (uint initialSupply) ERC20("RAZOR", "RAZOR") {
         _mint(msg.sender, initialSupply);
     }
+
 }
