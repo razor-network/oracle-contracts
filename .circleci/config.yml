@@ -44,18 +44,18 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Setup virtual environment
-        command: python -m virtualenv venv
+          name: Setup virtual environment
+          command: python -m virtualenv venv
       - run:
-        name: Install MythX CLI
-        command: |
-          . venv/bin/activate
-          pip install mythx-cli
+          name: Install MythX CLI
+          command: |
+            . venv/bin/activate
+            pip install mythx-cli
       - run:
-        name: Analyze with MythX
-        command: |
-          . venv/bin/activate
-          mythx --ci --yes analyze --solc-version 0.8.4 contracts/
+          name: Analyze with MythX
+          command: |
+            . venv/bin/activate
+            mythx --ci --yes analyze --solc-version 0.8.4 contracts/
 workflows:
   # Below is the definition of your workflow.
   # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
