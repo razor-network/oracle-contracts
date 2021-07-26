@@ -8,6 +8,7 @@ contract Parameters is ACL {
 
     // constant type can be readjusted to some smaller type than uint256 for saving gas (storage variable packing).
     // penalty not reveal = 0.01% per epch
+
     uint256 public penaltyNotRevealNum = 1;
     uint256 public penaltyNotRevealDenom = 10000;
     uint256 public slashPenaltyNum = 10000;
@@ -23,6 +24,8 @@ contract Parameters is ACL {
     uint256 public aggregationRange = 3;
     uint256 public withdrawReleasePeriod = 5;
     uint256 public resetLockPenalty = 1;
+    uint256 public maxAge = 100 * 10000;
+
     bool public escapeHatchEnabled = true;
 
     uint32 constant private _COMMIT = 0;
@@ -104,6 +107,10 @@ contract Parameters is ACL {
         aggregationRange = _aggregationRange;
     }
 
+    function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxAge = _maxAge;
+    }
+
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
         escapeHatchEnabled = false;
     }
@@ -161,4 +168,5 @@ contract Parameters is ACL {
     function getAssetModifierHash() external pure returns (bytes32) {
         return _ASSET_MODIFIER_HASH;
     }
+
 }
