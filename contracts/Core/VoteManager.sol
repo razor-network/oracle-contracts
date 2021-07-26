@@ -99,7 +99,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
                     uint256 influence = stakeManager.getInfluence(thisStakerId);
                     votes[epoch][thisStakerId][values[i].id-1] = Structs.Vote(values[i].value, thisStaker.stake);
                     voteWeights[epoch][values[i].id-1][values[i].value] = voteWeights[epoch][values[i].id-1][values[i].value] + influence;
-                    totalStakeRevealed[epoch][values[i].id-1] = totalStakeRevealed[epoch][values[i].id-1] + influence;
+                    totalInfluenceRevealed[epoch][values[i].id-1] = totalInfluenceRevealed[epoch][values[i].id-1] + influence;
                 }
             }
 

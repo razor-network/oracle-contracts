@@ -379,16 +379,19 @@ describe('VoteManager', function () {
         let toAdd = toBigNumber(0);
         let num = toBigNumber(0);
         let denom = toBigNumber(0);
+        let map = {};
         for (let i = 0; i < revealedVotesForStaker.length; i++) {
-          num = (toBigNumber(revealedVotesForStaker[i]).sub(revealedVotesForStaker[i] - revealedVotesForStaker[i] % 100)).pow(2);
-          denom = toBigNumber(revealedVotesForStaker[i] - revealedVotesForStaker[i] % 100).pow(2);
-          toAdd = (ageBefore2.mul(num).div(denom));
-          penalty = penalty.add(toAdd);
+          if (typeof map[revealedVotesForStaker[i].id] === 'undefined') {
+            num = (toBigNumber(revealedVotesForStaker[i].value).sub(revealedVotesForStaker[i].value - revealedVotesForStaker[i].value % 100)).pow(2);
+            denom = toBigNumber(revealedVotesForStaker[i].value - revealedVotesForStaker[i].value % 100).pow(2);
+            toAdd = (ageBefore2.mul(num).div(denom));
+            penalty = penalty.add(toAdd);
+            map[revealedVotesForStaker[i].id] = true;
+          }
         }
         const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
-
         assertBNLessThan(ageBefore, ageAfter, 'Not rewarded');
         assertBNEqual(expectedAgeAfter2, ageAfter2, 'Age Penalty should be applied');
       });
