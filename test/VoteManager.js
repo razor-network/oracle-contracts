@@ -63,7 +63,7 @@ describe('VoteManager', function () {
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
         const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
-        await assertRevert(tx, 'ACL: sender not authorized');
+        await assertRevert(tx, 'AccessControl');
       });
 
       it('should be able to initialize', async function () {

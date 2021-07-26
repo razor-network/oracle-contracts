@@ -11,9 +11,15 @@ contract Delegator {
     address public owner = msg.sender;
     IAssetManager public assetManager;
 
+    function upgradeDelegate(address newDelegateAddress) external {
+        require(msg.sender == owner, "caller is not the owner");
+        delegate = newDelegateAddress;
+        assetManager = IAssetManager(newDelegateAddress);
+    }
+    
     function getJob(
         uint256 id
-    ) 
+    )
         external
         view
         returns(
@@ -25,12 +31,6 @@ contract Delegator {
         )
     {
         return assetManager.getJob(id);
-    }
-
-    function upgradeDelegate(address newDelegateAddress) public {
-        require(msg.sender == owner, "caller is not the owner");
-        delegate = newDelegateAddress;
-        assetManager = IAssetManager(newDelegateAddress);
     }
 
     function getResult(uint256 id) public view returns(uint256) {

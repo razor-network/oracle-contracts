@@ -25,6 +25,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         uint256 rewardPool,
         uint256 timestamp
     );
+    
     event StakeGettingRewardChange(
         uint256 epoch,
         uint256 prevStakeGettingReward,

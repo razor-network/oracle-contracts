@@ -68,7 +68,7 @@ describe('StakeManager', function () {
         voteManager.address,
         parameters.address
       );
-      await assertRevert(tx, 'ACL: sender not authorized');
+      await assertRevert(tx, 'AccessControl');
     });
 
     it('should be able to initialize', async function () {
@@ -731,7 +731,7 @@ describe('StakeManager', function () {
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       const balanceAdminBefore = await razor.balanceOf(signers[1].address);
       const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
-      await assertRevert(tx, 'sender not authorized');
+      await assertRevert(tx, 'AccessControl');
 
       const balanceContractAfter = await razor.balanceOf(stakeManager.address);
       const balanceAdminAfter = await razor.balanceOf(signers[1].address);
