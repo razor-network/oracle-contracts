@@ -55,7 +55,7 @@ library Structs {
         uint256 assetType;
     }
 
-    struct Collection{
+    struct Collection {
         uint256 id;
         string name;
         uint32 aggregationMethod;

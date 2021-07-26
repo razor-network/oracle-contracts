@@ -275,12 +275,24 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         external
         initialized
         checkEpoch(epoch)
+<<<<<<< HEAD
         checkState(parameters.commit())
         whenNotPaused()
     {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
+||||||| 1084333
+        checkState(parameters.commit())
+    {
+        Structs.Staker storage staker = stakers[stakerId];
+        Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
+=======
+        checkState(parameters.commit()) {
+            Structs.Staker storage staker = stakers[stakerId];
+            Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
+>>>>>>> b0be81359994890b35678c7cdbe0180344891d3e
 
+<<<<<<< HEAD
         require(staker.id != 0, "staker doesnt exist");
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
@@ -291,51 +303,78 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(staker.stake > 0, "Nonpositive Stake");
         if (stakerIds[msg.sender] == stakerId) {
           // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-            require(
-                (lock.withdrawAfter - parameters.withdrawLockPeriod()) >=
-                    staker.epochLastRevealed,
-                "Participated in Lock Period"
-            );
-            require(
-                voteManager.getCommitment(epoch, stakerId) == 0x0,
-                "Already commited"
-            );
-        }
-
-        StakedToken sToken = StakedToken(staker.tokenAddress);
+||||||| 1084333
+        require(staker.id != 0, "staker doesnt exist");
+        require(lock.withdrawAfter != 0, "Did not unstake");
+        require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(
-            sToken.balanceOf(msg.sender) >= lock.amount,
-            "locked amount lost"
+            lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch,
+            "Release Period Passed"
         ); // Can Use ResetLock
-
-        uint256 rAmount =
-            _convertSRZRToRZR(
-                lock.amount,
-                staker.stake,
-                sToken.totalSupply()
-            );
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
-        staker.stake = staker.stake - rAmount;
-
-        // Function to Reset the lock
-        _resetLock(stakerId);
-
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (rAmount * staker.commission) / 100;
+        require(staker.stake > 0, "Nonpositive Stake");
+        if (
+            stakerIds[msg.sender] == stakerId
+        ) // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
+        {
+=======
+            require(staker.id != 0, "staker doesnt exist");
+            require(lock.withdrawAfter != 0, "Did not unstake");
+            require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
+>>>>>>> b0be81359994890b35678c7cdbe0180344891d3e
             require(
-                razor.transfer(staker._address, commission),
-                "couldnt transfer"
-            );
-            rAmount = rAmount - commission;
+                lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch,
+                "Release Period Passed"
+            ); // Can Use ResetLock
+            require(staker.stake > 0, "Nonpositive Stake");
+            if (
+                stakerIds[msg.sender] == stakerId
+            ) // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
+            {
+                require(
+                    (lock.withdrawAfter - parameters.withdrawLockPeriod()) >=
+                        staker.epochLastRevealed,
+                    "Participated in Lock Period"
+                );
+                require(
+                    voteManager.getCommitment(epoch, stakerId) == 0x0,
+                    "Already commited"
+                );
+            }
+
+            StakedToken sToken = StakedToken(staker.tokenAddress);
+            require(
+                sToken.balanceOf(msg.sender) >= lock.amount,
+                "locked amount lost"
+            ); // Can Use ResetLock
+
+            uint256 rAmount =
+                _convertSRZRToRZR(
+                    lock.amount,
+                    staker.stake,
+                    sToken.totalSupply()
+                );
+            require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
+            staker.stake = staker.stake - rAmount;
+
+            // Function to Reset the lock
+            _resetLock(stakerId);
+
+            // Transfer commission in case of delegators
+            // Check commission rate >0
+            if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+                uint256 commission = (rAmount * staker.commission) / 100;
+                require(
+                    razor.transfer(staker._address, commission),
+                    "couldnt transfer"
+                );
+                rAmount = rAmount - commission;
+            }
+
+            //Transfer stake
+            require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
+
+            emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
         }
-
-        //Transfer stake
-        require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
-
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
-    }
 
     /// @notice remove all funds in case of emergency
     function escape(address _address)
@@ -414,8 +453,35 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 _stake,
         string memory _reason,
         uint256 _epoch
+<<<<<<< HEAD
+    ) external onlyRole(parameters.getStakeModifierHash())
+    {
+        uint256 previousStake = stakers[_id].stake;
+        stakers[_id].stake = _stake;
+        emit StakeChange(
+            _id,
+            previousStake,
+            _stake,
+            _reason,
+            _epoch,
+            block.timestamp
+        );
+||||||| 1084333
+    ) external onlyRole(parameters.getStakeModifierHash()) {
+        uint256 previousStake = stakers[_id].stake;
+        stakers[_id].stake = _stake;
+        emit StakeChange(
+            _id,
+            previousStake,
+            _stake,
+            _reason,
+            _epoch,
+            block.timestamp
+        );
+=======
     ) external onlyRole(parameters.getStakeModifierHash()) {
         _setStakerStake(_id, _stake, _reason, _epoch);
+>>>>>>> b0be81359994890b35678c7cdbe0180344891d3e
     }
 
     /// @notice The function is used by the Votemanager reveal function
@@ -462,6 +528,39 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         );
     }
 
+<<<<<<< HEAD
+    /// @notice External function for trasnfering bounty to bountyHunter
+    /// Used by RewardManager in slash()
+    /// @param bountyHunter The address of bountyHunter
+    /// @param bounty The bounty to be rewarded
+    function transferBounty(address bountyHunter, uint256 bounty)
+        external
+        onlyRole(parameters.getStakeModifierHash())
+        whenNotPaused()
+    {
+        require(
+            razor.transfer(bountyHunter, bounty),
+            "failed to transfer bounty"
+        );
+    }
+
+||||||| 1084333
+    /// @notice External function for trasnfering bounty to bountyHunter
+    /// Used by RewardManager in slash()
+    /// @param bountyHunter The address of bountyHunter
+    /// @param bounty The bounty to be rewarded
+    function transferBounty(address bountyHunter, uint256 bounty)
+        external
+        onlyRole(parameters.getStakeModifierHash())
+    {
+        require(
+            razor.transfer(bountyHunter, bounty),
+            "failed to transfer bounty"
+        );
+    }
+
+=======
+>>>>>>> b0be81359994890b35678c7cdbe0180344891d3e
     /// @param _address Address of the staker
     /// @return The staker ID
     function getStakerId(address _address) external view returns(uint256) {
