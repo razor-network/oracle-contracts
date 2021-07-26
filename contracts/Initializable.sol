@@ -19,7 +19,6 @@ pragma solidity ^0.8.0;
  */
 
 abstract contract Initializable {
-
     /**
      * @dev Indicates that the contract has been initialized.
      */
