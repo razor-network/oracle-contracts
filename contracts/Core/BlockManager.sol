@@ -254,7 +254,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             if (proposedBlocks[epoch][i].valid) {
                 require(proposedBlocks[epoch][i].proposerId == stakerId, "Block can be confirmed by proposer of the block");
                 _confirmBlock(epoch, i);
-                assetManager.addPendingJobs();
                 assetManager.addPendingCollections();
                 assetManager.deactivateAssets();
                 assetManager.activateAssets();
@@ -270,7 +269,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
                 _confirmBlock(epoch - 1, i);
-                assetManager.addPendingJobs();
                 assetManager.addPendingCollections();
                 assetManager.deactivateAssets();
                 assetManager.activateAssets();

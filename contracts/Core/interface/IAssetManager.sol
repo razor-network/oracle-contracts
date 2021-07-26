@@ -5,7 +5,6 @@ interface IAssetManager {
 
     function createJob (string calldata url, string calldata selector, bool repeat) external;
     function fulfillAsset(uint256 id, uint256 value) external;
-    function addPendingJobs() external;
     function addPendingCollections() external;
     function deactivateAssets() external;
     function activateAssets() external;

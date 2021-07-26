@@ -52,30 +52,40 @@ describe('AssetManager', function () {
     it('Admin role should be granted', async () => {
       assert(await assetManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
-    it('should be able to create Job but it should not be activated yet', async function () {
+    it('should be able to create Job', async function () {
       await mineToNextEpoch();
       await Promise.all(await initializeContracts());
       await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       const name = 'test';
-      const repeat = true;
-      await assetManager.createJob(url, selector, name, repeat);
-      const job = await assetManager.pendingJobs(1);
+      await assetManager.createJob(url, selector, name);
+      const job = await assetManager.jobs(1);
       assert(job.url === url);
       assert(job.selector === selector);
-      assert(job.repeat === repeat);
       assertBNEqual(job.assetType, toBigNumber('1'));
-      assertBNEqual((await assetManager.numPendingJobs()), toBigNumber('1'));
-      assertBNEqual((await assetManager.getNumAssets()), toBigNumber('0'));
+      assertBNEqual((await assetManager.getNumAssets()), toBigNumber('1'));
     });
 
-    it('Jobs to be activated when the block is confirmed', async function () {
+    it('should be able to create collection but not yet activated', async function () {
       const url = 'http://testurl.com/2';
       const selector = 'selector/2';
       const name = 'test2';
-      const repeat = true;
-      await assetManager.createJob(url, selector, name, repeat);
+      await assetManager.createJob(url, selector, name);
+
+      const collectionName = 'Test Collection';
+      await assetManager.createCollection(collectionName, [1, 2], 1, true);
+      const collection = await assetManager.pendingCollections(1);
+      assert(collection.name === collectionName);
+      assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
+      assertBNEqual((await assetManager.numPendingCollections()), toBigNumber('1'));
+    });
+
+    it('collection should be activated when the block is confirmed', async () => {
+      const url = 'http://testurl.com/3';
+      const selector = 'selector/3';
+      const name = 'test3';
+      await assetManager.createJob(url, selector, name);
 
       await razor.transfer(signers[5].address, tokenAmount('423000'));
 
@@ -121,70 +131,13 @@ describe('AssetManager', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
 
       await mineToNextEpoch();
-      assertBNEqual((await assetManager.getNumAssets()), toBigNumber('2'));
-      assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('2'));
-    });
-
-    it('should be able to create collection but not yet activated', async () => {
-      const collectionName = 'Test Collection';
-      await assetManager.createCollection(collectionName, [1, 2], 1);
-      const collection = await assetManager.pendingCollections(1);
-      assert(collection.name === collectionName);
-      assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
-      assertBNEqual((await assetManager.numPendingCollections()), toBigNumber('1'));
-    });
-
-    it('collection should be activated when the block is confirmed', async () => {
-      const url = 'http://testurl.com/3';
-      const selector = 'selector/3';
-      const name = 'test3';
-      const repeat = true;
-      await assetManager.createJob(url, selector, name, repeat);
-      const epoch = await getEpoch();
-      const votes = [100, 200];
-      const tree = merkle('keccak256').sync(votes);
-
-      const root = tree.root();
-      const commitment1 = utils.solidityKeccak256(
-        ['uint256', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-
-      await voteManager.connect(signers[5]).commit(epoch, commitment1);
-
-      await mineToNextState();
-      const proof = [];
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[5]).reveal(epoch, tree.root(), votes, proof,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[5].address);
-      await mineToNextState();
-      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc5);
-
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
-      const iteration = await getIteration(stakeManager, random, staker);
-      await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2],
-        [100, 200],
-        [99, 199],
-        [101, 201],
-        iteration,
-        biggestStakerId);
-
-      await mineToNextState();
-      await mineToNextState();
-      await blockManager.connect(signers[5]).claimBlockReward();
-
-      await mineToNextEpoch();
       const collection = await assetManager.getCollection(4);
       assert(collection.name === 'Test Collection');
       assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
       assert((collection.jobIDs).length === 2);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('4'));
-      assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('4'));
+      assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('1'));
+      console.log(await assetManager.getActiveAssetsList());
     });
 
     it('should be able to add a job to a collection', async function () {
@@ -208,23 +161,13 @@ describe('AssetManager', function () {
 
     it('should fulfill result to the correct asset', async function () {
       await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-      await assetManager.fulfillAsset(1, 111);
-      await assetManager.fulfillAsset(2, 222);
-      await assetManager.fulfillAsset(3, 333);
       await assetManager.fulfillAsset(4, 444);
-      const j1 = await assetManager.getJob(1);
-      const j2 = await assetManager.getJob(2);
       const c4 = await assetManager.getCollection(4);
-      const j3 = await assetManager.getJob(3);
-      assertBNEqual(j1.result, toBigNumber('111'));
-      assertBNEqual(j2.result, toBigNumber('222'));
-      assertBNEqual(j3.result, toBigNumber('333'));
       assertBNEqual(c4.result, toBigNumber('444'));
     });
 
     it('should be able to update Job', async function () {
-      await assetManager.createJob('http://testurl.com/4', 'selector/4', 'test4', true);
-      await assetManager.addPendingJobs();
+      await assetManager.createJob('http://testurl.com/4', 'selector/4', 'test4');
       await assetManager.updateJob(5, 'http://testurl.com/5', 'selector/5');
       const job = await assetManager.jobs(5);
       assert(job.url === 'http://testurl.com/5');
@@ -234,7 +177,7 @@ describe('AssetManager', function () {
     it('should be able to inactivate Job', async function () {
       await assetManager.updateAssetStatus(5, true);
       const epoch = await getEpoch();
-      const votes = [100, 200, 300, 400, 500];
+      const votes = [400];
       const tree = merkle('keccak256').sync(votes);
 
       const root = tree.root();
@@ -260,10 +203,10 @@ describe('AssetManager', function () {
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4, 5],
-        [100, 200, 300, 400, 500],
-        [99, 199, 299, 399, 499],
-        [101, 201, 301, 401, 501],
+        [4],
+        [400],
+        [399],
+        [401],
         iteration,
         biggestStakerId);
 
@@ -279,7 +222,7 @@ describe('AssetManager', function () {
     it('should be able to reactivate Job', async function () {
       await assetManager.updateAssetStatus(5, false);
       const epoch = await getEpoch();
-      const votes = [100, 200, 300, 400];
+      const votes = [400];
       const tree = merkle('keccak256').sync(votes);
 
       const root = tree.root();
@@ -305,10 +248,10 @@ describe('AssetManager', function () {
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4],
-        [100, 200, 300, 400],
-        [99, 199, 299, 399],
-        [101, 201, 301, 401],
+        [4],
+        [400],
+        [399],
+        [401],
         iteration,
         biggestStakerId);
 
@@ -332,11 +275,12 @@ describe('AssetManager', function () {
 
     it('should be able to inactivate collection', async function () {
       const collectionName = 'Test Collection6';
-      await assetManager.createCollection(collectionName, [1, 2], 2);
+      await assetManager.createCollection(collectionName, [1, 2], 2, true);
       await assetManager.addPendingCollections();
+      console.log(await assetManager.getActiveAssetsList());
       await assetManager.updateAssetStatus(6, true);
       const epoch = await getEpoch();
-      const votes = [100, 200, 300, 400, 600];
+      const votes = [400, 600];
       const tree = merkle('keccak256').sync(votes);
 
       const root = tree.root();
@@ -362,10 +306,10 @@ describe('AssetManager', function () {
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4, 6],
-        [100, 200, 300, 400, 600],
-        [99, 199, 299, 399, 599],
-        [101, 201, 301, 401, 601],
+        [4, 6],
+        [400, 600],
+        [399, 599],
+        [401, 601],
         iteration,
         biggestStakerId);
 
@@ -376,12 +320,13 @@ describe('AssetManager', function () {
       await mineToNextEpoch();
       const collection = await assetManager.getCollection(6);
       assert(collection.active === false);
+      console.log(await assetManager.getActiveAssetsList());
     });
 
     it('should be able to reactivate collection', async function () {
       await assetManager.updateAssetStatus(6, false);
       const epoch = await getEpoch();
-      const votes = [100, 200, 300, 400];
+      const votes = [400];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
       const commitment1 = utils.solidityKeccak256(
@@ -406,10 +351,10 @@ describe('AssetManager', function () {
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4],
-        [100, 200, 300, 400],
-        [99, 199, 299, 399],
-        [101, 201, 301, 401],
+        [4],
+        [400],
+        [399],
+        [401],
         iteration,
         biggestStakerId);
 
@@ -429,7 +374,7 @@ describe('AssetManager', function () {
       await assetManager.updateAssetStatus(2, true);
       await assetManager.updateAssetStatus(3, true);
       const epoch = await getEpoch();
-      const votes = [100, 200, 300, 400];
+      const votes = [400];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
       const commitment1 = utils.solidityKeccak256(
@@ -454,10 +399,10 @@ describe('AssetManager', function () {
       const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4],
-        [100, 200, 300, 400],
-        [99, 199, 299, 399],
-        [101, 201, 301, 401],
+        [4],
+        [400],
+        [399],
+        [401],
         iteration,
         biggestStakerId);
 
@@ -515,7 +460,7 @@ describe('AssetManager', function () {
       await mineToNextState();
       await blockManager.connect(signers[5]).claimBlockReward();
       await mineToNextEpoch();
-      assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('4'));
+      assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('1'));
       const job1 = await assetManager.jobs(1);
       const job2 = await assetManager.jobs(2);
       const job3 = await assetManager.jobs(3);
@@ -551,29 +496,29 @@ describe('AssetManager', function () {
 
     it('should not create a collection if one of the jobIDs is not a job', async function () {
       const collectionName = 'Test Collection2';
-      const tx = assetManager.createCollection(collectionName, [1, 2, 4], 2);
+      const tx = assetManager.createCollection(collectionName, [1, 2, 4], 2, true);
       await assertRevert(tx, 'Job ID not present');
     });
 
     it('should not create collection if it does not have more than 1 or any jobIDs', async function () {
       const collectionName = 'Test Collection2';
-      const tx1 = assetManager.createCollection(collectionName, [], 1);
+      const tx1 = assetManager.createCollection(collectionName, [], 1, true);
       await assertRevert(tx1, 'Number of jobIDs low to create collection');
-      const tx2 = assetManager.createCollection(collectionName, [1], 1);
+      const tx2 = assetManager.createCollection(collectionName, [1], 1, true);
       await assertRevert(tx2, 'Number of jobIDs low to create collection');
     });
 
     it('aggregationMethod should not be equal to 0 or greater than 3', async function () {
       const collectionName = 'Test Collection2';
-      const tx1 = assetManager.createCollection(collectionName, [1, 2, 5], 4);
+      const tx1 = assetManager.createCollection(collectionName, [1, 2, 5], 4, true);
       await assertRevert(tx1, 'Aggregation range out of bounds');
-      const tx2 = assetManager.createCollection(collectionName, [1, 2, 5], 0);
+      const tx2 = assetManager.createCollection(collectionName, [1, 2, 5], 0, true);
       await assertRevert(tx2, 'Aggregation range out of bounds');
     });
 
     it('should not create collection if duplicates jobIDs are present', async function () {
       const collectionName = 'Test Collection2';
-      const tx = assetManager.createCollection(collectionName, [1, 2, 2, 5], 1);
+      const tx = assetManager.createCollection(collectionName, [1, 2, 2, 5], 1, true);
       await assertRevert(tx, 'Duplicate JobIDs sent');
     });
 
