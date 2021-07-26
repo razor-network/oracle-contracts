@@ -1,6 +1,6 @@
 {
   "name": "@razor-network/contracts",
-  "version": "0.0.4",
+  "version": "0.1.1",
   "description": "These are the contracts for Razor network testnet",
   "author": "Razor Network",
   "private": false,
@@ -35,7 +35,7 @@
   },
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.0.0",
+    "@openzeppelin/contracts": "^4.2.0",
     "@razor-network/merkle": "^0.6.0",
     "hardhat-abi-exporter": "^2.2.1",
     "jsonfile": "^6.1.0"
@@ -45,14 +45,18 @@
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "chai": "^4.3.0",
+    "coveralls": "^3.1.1",
     "dotenv": "8.2.0",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
     "ethers": "^5.0.31",
-    "hardhat": "2.1.2",
+    "hardhat": "2.5.0",
     "hardhat-gas-reporter": "1.0.4",
     "solhint": "~3.3.4",
     "solidity-coverage": "^0.7.13"
+  },
+  "engines": {
+    "node": ">=15.3.0"
   }
 }

@@ -18,9 +18,10 @@ const {
   getEpoch,
   toBigNumber,
   tokenAmount,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getIteration,
   getAssignedAssets,
+  maturity,
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
@@ -41,7 +42,7 @@ describe('StakeManager', function () {
     let numAssets;
     let revealedAssetsThisEpoch = {};
     let blockThisEpoch = {
-      ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+      ids: [], medians: []
     };
 
     before(async () => {
@@ -77,7 +78,7 @@ describe('StakeManager', function () {
         voteManager.address,
         parameters.address
       );
-      await assertRevert(tx, 'ACL: sender not authorized');
+      await assertRevert(tx, 'AccessControl');
     });
 
     it('should be able to initialize', async function () {
@@ -109,6 +110,9 @@ describe('StakeManager', function () {
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
+      const age1 = 10000;
+      const maturity1 = await maturity(age1);
+      const influence1 = stake1.mul(toBigNumber(maturity1));
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
@@ -121,6 +125,8 @@ describe('StakeManager', function () {
       assertBNEqual(numStakers, toBigNumber('1'));
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
+      assertBNEqual(staker.age, age1, 'age is incorrect');
+      assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
 
@@ -542,28 +548,24 @@ describe('StakeManager', function () {
           revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
         }
         blockThisEpoch = {
-          ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+          ids: [], medians: []
         };
         for (let i = 1; i <= numAssets; i++) {
           if (revealedAssetsThisEpoch[i]) {
             blockThisEpoch.ids.push(i);
             blockThisEpoch.medians.push(i * 100);
-            blockThisEpoch.lowerCutOffs.push(i * 100 - 1);
-            blockThisEpoch.higherCutOffs.push(i * 100 + 1);
           }
         }
 
         await mineToNextState();
-        const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(stakeManager, random, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
           blockThisEpoch.ids,
           blockThisEpoch.medians,
-          blockThisEpoch.lowerCutOffs,
-          blockThisEpoch.higherCutOffs,
           iteration,
-          biggestStakerId);
+          biggestInfluencerId);
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
         assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
 
@@ -789,6 +791,42 @@ describe('StakeManager', function () {
       const DelegatorBalance = await razor.balanceOf(signers[6].address);
       const newBalance = prevBalance.add(rAmount);
       assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
+    });
+
+    it('non admin should not be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[1].address);
+      const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
+
+      await assertRevert(tx, 'AccessControl');
+
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[1].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).escape(signers[0].address);
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceAdminAfter.sub(balanceAdminBefore), 'admin didnt get entire balance');
+      assertBNEqual(balanceContractAfter, toBigNumber(0), 'stakeManager still has balance');
+    });
+
+    it('admin should not be able to withdraw funds if escape hatch is disabled', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await parameters.connect(signers[0]).disableEscapeHatch();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'escape hatch is disabled');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
     });
   });
 });

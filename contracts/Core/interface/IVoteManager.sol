@@ -29,11 +29,6 @@ interface IVoteManager {
     function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
     external view returns(uint256);
 
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) external view returns(uint256);
+    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) external view returns(uint256);
 
-    function getTotalStakeRevealed(
-        uint256 epoch,
-        uint256 assetId,
-        uint256 voteValue
-    ) external view returns(uint256);
 }

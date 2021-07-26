@@ -65,6 +65,8 @@ const setupContracts = async () => {
     rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManager.address),
     stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManager.address),
     stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManager.address),
+    stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManager.address),
+    stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManager.address),
 
     delegator.upgradeDelegate(assetManager.address),
   ];

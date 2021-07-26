@@ -6,11 +6,11 @@ import "../../lib/Structs.sol";
 
 interface IBlockManager {
 
-    // elected proposer proposes block. 
+    // elected proposer proposes block.
     //we use a probabilistic method to elect stakers weighted by stake
-    // protocol works like this. 
+    // protocol works like this.
     //select a staker pseudorandomly (not weighted by anything)
-    // that staker then tosses a biased coin. 
+    // that staker then tosses a biased coin.
     //bias = hisStake/biggestStake. if its heads, he can propose block
     // end of iteration. try next iteration
     // note that only one staker or no stakers selected in each iteration.
@@ -20,12 +20,10 @@ interface IBlockManager {
         uint256 epoch,
         uint256[] memory ids,
         uint256[] memory medians,
-        uint256[] memory lowerCutoffs,
-        uint256[] memory higherCutoffs,
         uint256 iteration,
-        uint256 biggestStakerId
+        uint256 biggestInfluencerId
     ) external;
-                    
+
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted (uint256 epoch, uint256 assetId, uint256[] calldata sorted) external;
@@ -33,7 +31,7 @@ interface IBlockManager {
 
     function isElectedProposer(
         uint256 iteration,
-        uint256 biggestStakerId,
+        uint256 biggestInfluencerId,
         uint256 stakerId
     ) external;
 

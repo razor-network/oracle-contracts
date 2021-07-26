@@ -14,7 +14,7 @@ const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
   calculateDisputesData,
   getEpoch,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getIteration,
   toBigNumber,
   tokenAmount,
@@ -27,18 +27,18 @@ describe('BlockManager', function () {
   let signers;
   let blockManager;
   let assetManager;
+  let voteManager;
   let random;
   let razor;
   let stakeManager;
   let rewardManager;
   let parameters;
-  let voteManager;
   let initializeContracts;
   let maxAssetsPerStaker;
   let numAssets;
   let weightsPerRevealedAssets = {};
   let blockThisEpoch = {
-    ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+    ids: [], medians: []
   };
   let toBeDisputedAssetId = 0;
   let disputedAssetIdIndexInBlock = 0;
@@ -90,7 +90,7 @@ describe('BlockManager', function () {
         voteManager.address,
         assetManager.address
       );
-      await assertRevert(tx, 'ACL: sender not authorized');
+      await assertRevert(tx, 'AccessControl');
     });
 
     it('should be able to initialize', async () => {
@@ -205,7 +205,15 @@ describe('BlockManager', function () {
       const assetRevealedByStaker = {};
       const assetRevealedByStaker2 = {};
       const assetRevealedByStaker3 = {};
+      
+      const stakerIdAccount1 = await stakeManager.stakerIds(signers[5].address);
+      const stakerIdAccount2 = await stakeManager.stakerIds(signers[6].address);
+      const stakerIdAccount3 = await stakeManager.stakerIds(signers[8].address);
 
+      const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
+      const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
+      const influence3 = await stakeManager.getInfluence(stakerIdAccount3);
+      
       for (let i = 0; i < maxAssetsPerStaker; i++) {
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes[i].id] = [];
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] = [];
@@ -215,19 +223,19 @@ describe('BlockManager', function () {
 
         // Staker 5
         if (!assetRevealedByStaker[assigneedAssetsVotes[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(tokenAmount('420000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(influence1);
           assetRevealedByStaker[assigneedAssetsVotes[i].id] = true;
         }
 
         // Staker 6
         if (!assetRevealedByStaker2[assigneedAssetsVotes2[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(tokenAmount('180000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(influence2);
           assetRevealedByStaker2[assigneedAssetsVotes2[i].id] = true;
         }
 
         // Staker 8
         if (!assetRevealedByStaker3[assigneedAssetsVotes3[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes3[i].id].push(tokenAmount('180000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes3[i].id].push(influence3);
           assetRevealedByStaker3[assigneedAssetsVotes3[i].id] = true;
         }
       }
@@ -249,8 +257,6 @@ describe('BlockManager', function () {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 100 + 1);
           } else blockThisEpoch.medians.push(i * 100);
-          blockThisEpoch.lowerCutOffs.push(i * 100 - 1);
-          blockThisEpoch.higherCutOffs.push(i * 100 + 1);
         }
       }
     });
@@ -262,16 +268,14 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[5]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
     });
@@ -283,15 +287,13 @@ describe('BlockManager', function () {
       assertBNEqual(nblocks, toBigNumber('1'), 'Only one block has been proposed till now. Incorrect Answer');
     });
 
-    it('should allow another proposals', async function () {
+    it('should allow another proposal', async function () {
       const epoch = await getEpoch();
 
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker = await stakeManager.getStaker(stakerIdAcc6);
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
-
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
-
       const iteration = await getIteration(stakeManager, random, staker);
 
       // Correcting Invalid Value
@@ -300,10 +302,8 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[6]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration))
         ? await blockManager.proposedBlocks(epoch, 0) : await blockManager.proposedBlocks(epoch, 1);
@@ -323,13 +323,15 @@ describe('BlockManager', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
+
       const sortedVotes = [toBigNumber(toBeDisputedAssetId * 100)];
       let weights = tokenAmount('0');
       for (let i = 0; i < weightsPerRevealedAssets[toBeDisputedAssetId].length; i++) {
         weights = weights.add(weightsPerRevealedAssets[toBeDisputedAssetId][i]);
       }
+    
       const {
-        median, totalStakeRevealed, lowerCutoff, higherCutoff,
+        median, totalInfluenceRevealed,
       } = await calculateDisputesData(
         voteManager,
         epoch,
@@ -341,10 +343,8 @@ describe('BlockManager', function () {
       const dispute = await blockManager.disputes(epoch, signers[19].address);
 
       assertBNEqual(dispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
-      assertBNEqual(dispute.accWeight, totalStakeRevealed, 'totalStakeRevealed should match');
+      assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.median, median, 'median should match');
-      assertBNEqual(dispute.lowerCutoff, lowerCutoff, 'lowerCutoff should match');
-      assertBNEqual(dispute.higherCutoff, higherCutoff, 'higherCutoff should match');
       assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
     });
 
@@ -359,6 +359,7 @@ describe('BlockManager', function () {
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
+      const balanceBeforeBurn = await razor.balanceOf(parameters.burnAddress());
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex, disputedAssetIdIndexInBlock);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
@@ -368,6 +369,7 @@ describe('BlockManager', function () {
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
+      assertBNEqual(await razor.balanceOf(parameters.burnAddress()), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
       assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
     });
 
@@ -434,14 +436,20 @@ describe('BlockManager', function () {
         signers[7].address);
 
       blockThisEpoch = {
-        ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+        ids: [], medians: []
       };
       weightsPerRevealedAssets = {};
 
       // To Form Block Proposal On basis of revealed assets this epoch
       const assetRevealedByStaker = {};
       const assetRevealedByStaker2 = {};
+      
+      const stakerIdAccount1 = await stakeManager.stakerIds(signers[6].address);
+      const stakerIdAccount2 = await stakeManager.stakerIds(signers[7].address);
 
+      const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
+      const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
+      
       for (let i = 0; i < maxAssetsPerStaker; i++) {
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes[i].id] = [];
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] = [];
@@ -450,13 +458,13 @@ describe('BlockManager', function () {
 
         // Staker 6
         if (!assetRevealedByStaker[assigneedAssetsVotes[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(tokenAmount('18000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(influence1);
           assetRevealedByStaker[assigneedAssetsVotes[i].id] = true;
         }
 
         // Staker 7
         if (!assetRevealedByStaker2[assigneedAssetsVotes2[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(tokenAmount('19000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(influence2);
           assetRevealedByStaker2[assigneedAssetsVotes2[i].id] = true;
         }
       }
@@ -479,8 +487,6 @@ describe('BlockManager', function () {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 1000);
-          blockThisEpoch.lowerCutOffs.push(i * 1000);
-          blockThisEpoch.higherCutOffs.push(i * 1000 + 10);
         }
       }
     });
@@ -490,7 +496,7 @@ describe('BlockManager', function () {
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker6 = await stakeManager.getStaker(stakerIdAcc6);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
       const iteration6 = await getIteration(stakeManager, random, staker6);
 
@@ -504,39 +510,40 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[6]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration6,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await blockManager.connect(signers[7]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration7,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
 
       let sortedVotes1;
       let weights;
+      
+      const stakerIdAccount1 = await stakeManager.stakerIds(signers[6].address);
+      const stakerIdAccount2 = await stakeManager.stakerIds(signers[7].address);
+
+      const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
+      const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
+      
       if (weightsPerRevealedAssets[toBeDisputedAssetId].length === 2) { // If toBeDisputedAssetId is revealed by both stakers
         sortedVotes1 = [toBigNumber(toBeDisputedAssetId * 1000), toBigNumber(toBeDisputedAssetId * 1000 + 10)];
-        weights = [tokenAmount('18000'), tokenAmount('19000')];
-      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] === tokenAmount('18000')) {
+        weights = [influence1, influence2];
+      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] === influence1) {
         sortedVotes1 = [toBigNumber(toBeDisputedAssetId * 1000)];
-        weights = [tokenAmount('18000')];
+        weights = [influence1];
       } else {
         sortedVotes1 = [toBigNumber(toBeDisputedAssetId * 1000 + 10)];
-        weights = [tokenAmount('19000')];
+        weights = [influence2];
       }
 
       const {
         median: median1,
-        totalStakeRevealed: totalStakeRevealed1,
-        lowerCutoff: lowerCutoff1,
-        higherCutoff: higherCutoff1,
+        totalInfluenceRevealed: totalInfluenceRevealed1,
       } = await calculateDisputesData(
         voteManager,
         epoch,
@@ -549,10 +556,8 @@ describe('BlockManager', function () {
 
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(firstDispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
-      assertBNEqual(firstDispute.accWeight, totalStakeRevealed1, 'totalStakeRevealed should match');
+      assertBNEqual(firstDispute.accWeight, totalInfluenceRevealed1, 'totalInfluenceRevealed should match');
       assertBNEqual(firstDispute.median, median1, 'median should match');
-      assertBNEqual(firstDispute.lowerCutoff, lowerCutoff1, 'lowerCutoff should match');
-      assertBNEqual(firstDispute.higherCutoff, higherCutoff1, 'higherCutoff should match');
       assertBNEqual(firstDispute.lastVisited, sortedVotes1[sortedVotes1.length - 1], 'lastVisited should match');
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0, disputedAssetIdIndexInBlock);
@@ -561,9 +566,7 @@ describe('BlockManager', function () {
 
       const {
         median: median2,
-        totalStakeRevealed: totalStakeRevealed2,
-        lowerCutoff: lowerCutoff2,
-        higherCutoff: higherCutoff2,
+        totalInfluenceRevealed: totalInfluenceRevealed2,
       } = await calculateDisputesData(
         voteManager,
         epoch,
@@ -577,10 +580,8 @@ describe('BlockManager', function () {
       const secondDispute = await blockManager.disputes(epoch, signers[15].address);
 
       assertBNEqual(secondDispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
-      assertBNEqual(secondDispute.accWeight, totalStakeRevealed2, 'totalStakeRevealed should match');
+      assertBNEqual(secondDispute.accWeight, totalInfluenceRevealed2, 'totalInfluenceRevealed should match');
       assertBNEqual(secondDispute.median, median2, 'median should match');
-      assertBNEqual(secondDispute.lowerCutoff, lowerCutoff2, 'lowerCutoff should match');
-      assertBNEqual(secondDispute.higherCutoff, higherCutoff2, 'higherCutoff should match');
       assertBNEqual(secondDispute.lastVisited, sortedVotes1[sortedVotes1.length - 1], 'lastVisited should match');
 
       await blockManager.connect(signers[15]).finalizeDispute(epoch, 1, disputedAssetIdIndexInBlock);
@@ -663,7 +664,7 @@ describe('BlockManager', function () {
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
       const iteration = await getIteration(stakeManager, random, staker);
 
@@ -673,7 +674,7 @@ describe('BlockManager', function () {
         revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
       }
       blockThisEpoch = {
-        ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+        ids: [], medians: []
       };
       // Purposefully Proposing invalid value for 1st asset of block
       let firstAsset = true;
@@ -683,8 +684,6 @@ describe('BlockManager', function () {
           firstAsset && (toBeDisputedAssetId = i);
           // Purposefully Proposing invalid value for 1st asset of block
           firstAsset ? blockThisEpoch.medians.push(i * 1000 + 1) : blockThisEpoch.medians.push(i * 1000);
-          blockThisEpoch.lowerCutOffs.push(i * 1000);
-          blockThisEpoch.higherCutOffs.push(i * 1000 + 2);
           firstAsset = false;
         }
       }
@@ -692,10 +691,8 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
@@ -716,8 +713,6 @@ describe('BlockManager', function () {
       assertBNEqual(afterDisputeReset.median, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.lastVisited, toBigNumber('0'));
-      assertBNEqual(afterDisputeReset.lowerCutoff, toBigNumber('0'));
-      assertBNEqual(afterDisputeReset.higherCutoff, toBigNumber('0'));
     });
 
     it('should be able to dispute in batches', async function () {
@@ -784,14 +779,20 @@ describe('BlockManager', function () {
 
       // Propose
       blockThisEpoch = {
-        ids: [], medians: [], lowerCutOffs: [], higherCutOffs: [],
+        ids: [], medians: []
       };
       weightsPerRevealedAssets = {};
 
       // To Form Block Proposal On basis of revealed assets this epoch
       const assetRevealedByStaker = {};
       const assetRevealedByStaker2 = {};
-
+      
+      const stakerIdAccount1 = await stakeManager.stakerIds(signers[2].address);
+      const stakerIdAccount2 = await stakeManager.stakerIds(signers[3].address);
+      
+      const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
+      const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
+   
       for (let i = 0; i < maxAssetsPerStaker; i++) {
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes[i].id] = [];
         if (typeof weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] === 'undefined') weightsPerRevealedAssets[assigneedAssetsVotes2[i].id] = [];
@@ -800,13 +801,13 @@ describe('BlockManager', function () {
 
         // Staker 2
         if (!assetRevealedByStaker[assigneedAssetsVotes[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(tokenAmount('420000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes[i].id].push(influence1);
           assetRevealedByStaker[assigneedAssetsVotes[i].id] = true;
         }
 
         // Staker 3
         if (!assetRevealedByStaker2[assigneedAssetsVotes2[i].id]) {
-          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(tokenAmount('18000'));
+          weightsPerRevealedAssets[assigneedAssetsVotes2[i].id].push(influence2);
           assetRevealedByStaker2[assigneedAssetsVotes2[i].id] = true;
         }
       }
@@ -829,25 +830,21 @@ describe('BlockManager', function () {
             disputedAssetIdIndexInBlock = blockThisEpoch.medians.length;
             blockThisEpoch.medians.push(i * 1000 + 1);
           } else blockThisEpoch.medians.push(i * 100);
-          blockThisEpoch.lowerCutOffs.push(i * 100 - 1);
-          blockThisEpoch.higherCutOffs.push(i * 100 + 1);
         }
       }
 
       await mineToNextState();
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
         blockThisEpoch.ids,
         blockThisEpoch.medians,
-        blockThisEpoch.lowerCutOffs,
-        blockThisEpoch.higherCutOffs,
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('6'), 'incorrect proposalID');
 
@@ -859,23 +856,22 @@ describe('BlockManager', function () {
       let weights;
       if (weightsPerRevealedAssets[toBeDisputedAssetId].length === 2) { // If toBeDisputedAssetId is revealed by both stakers
         sortedVotes = [toBigNumber(votes[toBeDisputedAssetId - 1]), toBigNumber(votes2[toBeDisputedAssetId - 1])];
-        weights = [tokenAmount('420000'), tokenAmount('18000')];
-      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] === tokenAmount('420000')) {
+        weights = [influence1, influence2];
+      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] === influence1) {
         sortedVotes = [toBigNumber(votes[toBeDisputedAssetId - 1])];
-        weights = [tokenAmount('420000')];
+        weights = [influence1];
       } else {
         sortedVotes = [toBigNumber(votes2[toBeDisputedAssetId - 1])];
-        weights = [tokenAmount('18000')];
+        weights = [influence2];
       }
 
       const {
-        median, totalStakeRevealed, lowerCutoff, higherCutoff,
+        median, totalInfluenceRevealed,
       } = await calculateDisputesData(
         voteManager,
         epoch,
         sortedVotes,
         weights, // initial weights
-        toBeDisputedAssetId - 1
       );
 
       // Dispute in batches
@@ -887,10 +883,8 @@ describe('BlockManager', function () {
       const dispute = await blockManager.disputes(epoch, signers[19].address);
 
       assertBNEqual(dispute.assetId, toBigNumber(toBeDisputedAssetId - 1), 'assetId should match');
-      assertBNEqual(dispute.accWeight, totalStakeRevealed, 'totalStakeRevealed should match');
+      assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.median, median, 'median should match');
-      assertBNEqual(dispute.lowerCutoff, lowerCutoff, 'lowerCutoff should match');
-      assertBNEqual(dispute.higherCutoff, higherCutoff, 'higherCutoff should match');
       assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
     });
   });
