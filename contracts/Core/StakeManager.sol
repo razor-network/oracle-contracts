@@ -21,12 +21,31 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     IRewardManager public rewardManager;
     RAZOR public razor;
     IVoteManager public voteManager;
-
+    //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
+    uint256[] public maturities =
+    [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
+    165, 173, 180, 187, 193, 200, 206, 212, 217, 223,
+    229, 234, 239, 244, 250, 254, 259, 264, 269, 273,
+    278, 282, 287, 291, 295, 300, 304, 308, 312, 316,
+    320, 324, 327, 331, 335, 339, 342, 346, 350, 353,
+    357, 360, 364, 367, 370, 374, 377, 380, 384, 387,
+    390, 393, 396, 400, 403, 406, 409, 412, 415, 418,
+    421, 424, 427, 430, 433, 435, 438, 441, 444, 447,
+    450, 452, 455, 458, 460, 463, 466, 469, 471, 474,
+    476, 479, 482, 484, 487, 489, 492, 494, 497];
     event StakeChange(
         uint256 indexed stakerId,
         uint256 previousStake,
         uint256 newStake,
         string reason,
+        uint256 epoch,
+        uint256 timestamp
+    );
+
+    event AgeChange(
+        uint256 indexed stakerId,
+        uint256 previousAge,
+        uint256 newAge,
         uint256 epoch,
         uint256 timestamp
     );
@@ -135,7 +154,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -380,9 +399,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         //Updating Staker Stake
         staker.stake = staker.stake - penalty;
 
-        //Adding it in reward pool
-        rewardManager.incrementRewardPool(penalty);
-
         _resetLock(stakerId);
     }
 
@@ -404,6 +420,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
             previousStake,
             _stake,
             _reason,
+            _epoch,
+            block.timestamp
+        );
+    }
+
+    function setStakerAge(
+        uint256 _id,
+        uint256 _age,
+        uint256 _epoch
+    ) external onlyRole(parameters.getStakeModifierHash()) {
+        uint256 previousAge = stakers[_id].age;
+        stakers[_id].age = _age;
+        emit AgeChange(
+            _id,
+            previousAge,
+            _age,
             _epoch,
             block.timestamp
         );
@@ -439,6 +471,28 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @return The number of stakers in the razor network
     function getNumStakers() external view returns(uint256) {
         return(numStakers);
+    }
+
+    /// @return age of staker
+    function getAge(uint256 stakerId) external view returns(uint256) {
+        return stakers[stakerId].age;
+    }
+
+    /// @return influence of staker
+    function getInfluence(uint256 stakerId)  external view returns(uint256) {
+        return _getMaturity(stakerId) * stakers[stakerId].stake;
+    }
+
+    /// @return stake of staker
+    function getStake(uint256 stakerId)  external view returns(uint256) {
+        return stakers[stakerId].stake;
+    }
+
+    /// @return maturity of staker
+    function _getMaturity(uint256 stakerId) internal view returns(uint256) {
+        uint256 index = stakers[stakerId].age/10000;
+
+        return maturities[index];
     }
 
     /// @notice 1 sRZR = ? RZR

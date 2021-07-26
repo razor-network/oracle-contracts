@@ -89,7 +89,7 @@ contract AssetManager is ACL, AssetStorage {
     );
 
     constructor(address parametersAddress) {
-       parameters = IParameters(parametersAddress);
+        parameters = IParameters(parametersAddress);
     }
 
     function createJob (
@@ -158,16 +158,16 @@ contract AssetManager is ACL, AssetStorage {
     function setAssetStatus(
         uint256 id,
         bool assetStatus
-    ) 
-        external 
-        onlyRole(parameters.getAssetModifierHash()) 
+    )
+        external
+        onlyRole(parameters.getAssetModifierHash())
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
         uint256 epoch = parameters.getEpoch();
 
-        if(jobs[id].assetType == uint256(assetTypes.Job)){
+        if (jobs[id].assetType == uint256(assetTypes.Job)) {
             jobs[id].active = assetStatus;
 
             emit JobActivityStatus(
@@ -176,8 +176,7 @@ contract AssetManager is ACL, AssetStorage {
             jobs[id].active,
             block.timestamp
             );
-        }
-        else{
+        } else {
             collections[id].active = assetStatus;
 
             emit CollectionActivityStatus(
