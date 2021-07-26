@@ -86,6 +86,28 @@ describe('StakeManager', function () {
       await razor.transfer(signers[7].address, stake1);
     });
 
+    it('should not allow non admin to pause', async function () {
+      const tx1 = stakeManager.connect(signers[1]).pause();
+      assertRevert(tx1, 'AccessControl');
+    });
+
+    it('should not be able to stake if contract is paused', async function () {
+      const epoch = await getEpoch();
+      const stake1 = tokenAmount('420000');
+
+      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[0]).pause();
+
+      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
+      assertRevert(tx, 'pause');
+    });
+
+    it('should not allow pause if already paused', async function () {
+      const tx = stakeManager.connect(signers[0]).pause();
+      assertRevert(tx, 'pause');
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
@@ -802,6 +824,7 @@ describe('StakeManager', function () {
     it('non admin should not be able to withdraw funds in emergency', async function () {
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       const balanceAdminBefore = await razor.balanceOf(signers[1].address);
+      await stakeManager.connect(signers[0]).pause();
       const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
 
       await assertRevert(tx, 'AccessControl');
@@ -829,6 +852,19 @@ describe('StakeManager', function () {
       await parameters.connect(signers[0]).disableEscapeHatch();
       const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
       await assertRevert(tx, 'escape hatch is disabled');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should not be able to withdraw funds if contract is not paused', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).unpause();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'paused');
       const balanceContractAfter = await razor.balanceOf(stakeManager.address);
       const balanceAdminAfter = await razor.balanceOf(signers[0].address);
       assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');

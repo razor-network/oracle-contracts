@@ -9,4 +9,7 @@ module.exports = {
     default_balance_ether: '1000000000000000000',
     gasLimit: 0xfffffffffff,
   },
+  mocha: {
+    enableTimeouts: false
+  }
 }
