@@ -55,7 +55,7 @@ jobs:
           name: Analyze with MythX
           command: |
             . venv/bin/activate
-            mythx --ci --yes analyze --solc-version 0.8.4 contracts/
+            mythx --ci --yes analyze --remap-import "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version 0.8.4 contracts/
 workflows:
   # Below is the definition of your workflow.
   # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
