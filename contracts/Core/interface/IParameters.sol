@@ -9,7 +9,8 @@ interface IParameters {
     function propose() external view returns(uint32);
     function dispute() external view returns(uint32);
 
-    // penalty not reveal = 0.01% per epch
+    function burnAddress() external view returns(address);
+
     function penaltyNotRevealNum() external view returns(uint256);
     function penaltyNotRevealDenom() external view returns(uint256);
     function resetLockPenalty() external view returns(uint256);
@@ -26,6 +27,7 @@ interface IParameters {
     function slashPenaltyDenom() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
+    function maxAge() external view returns(uint256);
     function escapeHatchEnabled() external view returns(bool);
 
     function getAssetConfirmerHash() external view returns(bytes32);

@@ -5,6 +5,4 @@ import "../../lib/Structs.sol";
 
 contract RewardStorage {
     uint256 public blockReward;
-    uint256 public rewardPool;
-    uint256 public stakeGettingReward;
 }

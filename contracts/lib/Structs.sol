@@ -12,6 +12,7 @@ library Structs {
         uint256 id;
         address _address;
         uint256 stake;
+        uint256 age;
         uint256 epochStaked;
         uint256 epochLastCommitted;
         uint256 epochLastRevealed;
@@ -29,18 +30,14 @@ library Structs {
         uint256 proposerId;
         uint256[] ids;
         uint256[] medians;
-        uint256[] lowerCutoffs;
-        uint256[] higherCutoffs;
         uint256 iteration;
-        uint256 biggestStake;
+        uint256 biggestInfluence;
         bool valid;
     }
 
     struct Dispute {
         uint256 accWeight;
         uint256 median;
-        uint256 lowerCutoff;
-        uint256 higherCutoff;
         uint256 lastVisited;
         uint256 assetId;
     }
@@ -58,11 +55,11 @@ library Structs {
         uint256 assetType;
     }
 
-    struct Collection{
+    struct Collection {
         uint256 id;
         string name;
         uint32 aggregationMethod;
-        uint256[] jobIDs; 
+        uint256[] jobIDs;
         mapping(uint256=>bool) jobIDExist;
         uint256 epoch;
         bool active;
