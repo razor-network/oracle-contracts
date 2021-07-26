@@ -16,7 +16,7 @@ const {
 const {
   getEpoch,
   getIteration,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   toBigNumber,
   tokenAmount,
 } = require('./helpers/utils');
@@ -116,15 +116,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [],
         [],
-        [],
-        [],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -137,7 +135,6 @@ describe('AssetManager', function () {
       assert((collection.jobIDs).length === 2);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('4'));
       assertBNEqual((await assetManager.getActiveAssets()), toBigNumber('1'));
-      console.log(await assetManager.getActiveAssetsList());
     });
 
     it('should be able to add a job to a collection', async function () {
@@ -175,7 +172,7 @@ describe('AssetManager', function () {
     });
 
     it('should be able to inactivate Job', async function () {
-      await assetManager.updateAssetStatus(5, true);
+      await assetManager.setAssetStatus(5, false);
       const epoch = await getEpoch();
       const votes = [400];
       const tree = merkle('keccak256').sync(votes);
@@ -200,15 +197,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4],
         [400],
-        [399],
-        [401],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -220,7 +215,7 @@ describe('AssetManager', function () {
     });
 
     it('should be able to reactivate Job', async function () {
-      await assetManager.updateAssetStatus(5, false);
+      await assetManager.setAssetStatus(5, true);
       const epoch = await getEpoch();
       const votes = [400];
       const tree = merkle('keccak256').sync(votes);
@@ -245,15 +240,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4],
         [400],
-        [399],
-        [401],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -262,7 +255,7 @@ describe('AssetManager', function () {
       await mineToNextEpoch();
       const job = await assetManager.jobs(5);
       assert(job.active === true);
-      await assetManager.updateAssetStatus(5, true);
+      await assetManager.setAssetStatus(5, false);
       await assetManager.deactivateAssets();
     });
 
@@ -277,8 +270,7 @@ describe('AssetManager', function () {
       const collectionName = 'Test Collection6';
       await assetManager.createCollection(collectionName, [1, 2], 2, true);
       await assetManager.addPendingCollections();
-      console.log(await assetManager.getActiveAssetsList());
-      await assetManager.updateAssetStatus(6, true);
+      await assetManager.setAssetStatus(6, false);
       const epoch = await getEpoch();
       const votes = [400, 600];
       const tree = merkle('keccak256').sync(votes);
@@ -303,15 +295,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4, 6],
         [400, 600],
-        [399, 599],
-        [401, 601],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -320,11 +310,10 @@ describe('AssetManager', function () {
       await mineToNextEpoch();
       const collection = await assetManager.getCollection(6);
       assert(collection.active === false);
-      console.log(await assetManager.getActiveAssetsList());
     });
 
     it('should be able to reactivate collection', async function () {
-      await assetManager.updateAssetStatus(6, false);
+      await assetManager.setAssetStatus(6, true);
       const epoch = await getEpoch();
       const votes = [400];
       const tree = merkle('keccak256').sync(votes);
@@ -348,15 +337,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4],
         [400],
-        [399],
-        [401],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -365,14 +352,14 @@ describe('AssetManager', function () {
       await mineToNextEpoch();
       const collection = await assetManager.getCollection(6);
       assert(collection.active === true);
-      await assetManager.updateAssetStatus(6, true);
+      await assetManager.setAssetStatus(6, false);
       await assetManager.deactivateAssets();
     });
 
     it('should be able to deactivate more than 1 asset in an epoch', async () => {
-      await assetManager.updateAssetStatus(1, true);
-      await assetManager.updateAssetStatus(2, true);
-      await assetManager.updateAssetStatus(3, true);
+      await assetManager.setAssetStatus(1, false);
+      await assetManager.setAssetStatus(2, false);
+      await assetManager.setAssetStatus(3, false);
       const epoch = await getEpoch();
       const votes = [400];
       const tree = merkle('keccak256').sync(votes);
@@ -396,15 +383,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4],
         [400],
-        [399],
-        [401],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -420,9 +405,9 @@ describe('AssetManager', function () {
     });
 
     it('should be able to reactivate more than 1 asset in an epoch', async () => {
-      await assetManager.updateAssetStatus(1, false);
-      await assetManager.updateAssetStatus(2, false);
-      await assetManager.updateAssetStatus(3, false);
+      await assetManager.setAssetStatus(1, true);
+      await assetManager.setAssetStatus(2, true);
+      await assetManager.setAssetStatus(3, true);
       const epoch = await getEpoch();
       const votes = [400];
       const tree = merkle('keccak256').sync(votes);
@@ -446,15 +431,13 @@ describe('AssetManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(stakeManager, random, staker);
       await blockManager.connect(signers[5]).propose(epoch,
         [4],
         [400],
-        [399],
-        [401],
         iteration,
-        biggestStakerId);
+        biggestInfluencerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -485,12 +468,12 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to update activity status of asset if assetID is 0', async function () {
-      const tx = assetManager.updateAssetStatus(0, 0);
+      const tx = assetManager.setAssetStatus(0, true);
       await assertRevert(tx, 'ID cannot be 0');
     });
 
     it('should not be able to update activity status of asset if assetID does not exist', async function () {
-      const tx = assetManager.updateAssetStatus(100, 0);
+      const tx = assetManager.setAssetStatus(100, true);
       await assertRevert(tx, 'ID does not exist');
     });
 

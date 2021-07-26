@@ -43,15 +43,14 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         blockManager = IBlockManager(blockManagerAddress);
         parameters = IParameters(parametersAddress);
     }
-    
 
-    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
-        // Switch to call confirm block only when block in previous epoch has not been confirmed 
+        // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
@@ -66,7 +65,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-
     function reveal (
         uint256 epoch,
         bytes32 root,
@@ -74,9 +72,9 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         bytes32[][] memory proofs, bytes32 secret,
         address stakerAddress
     )
-        public
+        external
         initialized
-        checkEpoch(epoch) 
+        checkEpoch(epoch)
     {
         uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
@@ -84,7 +82,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId],
                 "incorrect secret/value");
-        
+
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
@@ -92,12 +90,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
                 "invalid merkle proof");
+                uint256 influence = stakeManager.getInfluence(thisStakerId);
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
-                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]]+(thisStaker.stake);
-                totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
+                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
+                totalInfluenceRevealed[epoch][i] = totalInfluenceRevealed[epoch][i] + influence;
             }
-
-            rewardManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
@@ -127,13 +124,8 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return(voteWeights[epoch][assetId][voteValue]);
     }
 
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
         // epoch -> asset -> stakeWeight
-        return(totalStakeRevealed[epoch][assetId]);
-    }
-
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
-        //epoch -> assetid -> voteValue -> weight
-        return(voteWeights[epoch][assetId][voteValue]);
+        return(totalInfluenceRevealed[epoch][assetId]);
     }
 }

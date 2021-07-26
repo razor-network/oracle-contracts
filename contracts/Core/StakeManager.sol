@@ -20,12 +20,31 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     IRewardManager public rewardManager;
     RAZOR public razor;
     IVoteManager public voteManager;
-
+    //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
+    uint256[] public maturities =
+    [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
+    165, 173, 180, 187, 193, 200, 206, 212, 217, 223,
+    229, 234, 239, 244, 250, 254, 259, 264, 269, 273,
+    278, 282, 287, 291, 295, 300, 304, 308, 312, 316,
+    320, 324, 327, 331, 335, 339, 342, 346, 350, 353,
+    357, 360, 364, 367, 370, 374, 377, 380, 384, 387,
+    390, 393, 396, 400, 403, 406, 409, 412, 415, 418,
+    421, 424, 427, 430, 433, 435, 438, 441, 444, 447,
+    450, 452, 455, 458, 460, 463, 466, 469, 471, 474,
+    476, 479, 482, 484, 487, 489, 492, 494, 497];
     event StakeChange(
         uint256 indexed stakerId,
         uint256 previousStake,
         uint256 newStake,
         string reason,
+        uint256 epoch,
+        uint256 timestamp
+    );
+
+    event AgeChange(
+        uint256 indexed stakerId,
+        uint256 previousAge,
+        uint256 newAge,
         uint256 epoch,
         uint256 timestamp
     );
@@ -43,7 +62,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 timestamp
+        uint256 timestamp,
+        address unstaker
     );
 
     event Withdrew(
@@ -51,7 +71,8 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         uint256 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 timestamp
+        uint256 timestamp,
+        address withdrawer
     );
 
     event Delegated(
@@ -117,13 +138,13 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     function stake(
         uint256 epoch,
         uint256 amount
-    ) 
+    )
         external
         initialized
-        checkEpoch(epoch) checkState(parameters.commit()) 
+        checkEpoch(epoch) checkState(parameters.commit())
     {
         require(
-            amount >= parameters.minStake(), 
+            amount >= parameters.minStake(),
             "staked amount is less than minimum stake required"
         );
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
@@ -132,7 +153,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, epoch, 0, 0, false, 0, address(sToken));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -209,7 +230,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
     // and should wait for params.withdraw_after period
-    // after which she can call withdraw() in withdrawReleasePeriod. 
+    // after which she can call withdraw() in withdrawReleasePeriod.
     // If this period pass, lock expires and she will have to resetLock() to able to withdraw again
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
@@ -233,7 +254,7 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             sAmount,
             epoch + (parameters.withdrawLockPeriod())
         );
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp, msg.sender);
         //emit event here
     }
 
@@ -309,7 +330,20 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         //Transfer stake
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
+    }
+
+    /// @notice remove all funds in case of emergency
+    function escape(address _address)
+        external
+        initialized
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        if (parameters.escapeHatchEnabled()) {
+            razor.transfer(_address, razor.balanceOf(address(this)));
+        } else {
+            revert("escape hatch is disabled");
+        }
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
@@ -362,14 +396,11 @@ contract StakeManager is Initializable, ACL, StakeStorage {
         //Updating Staker Stake
         staker.stake = staker.stake - penalty;
 
-        //Adding it in reward pool
-        rewardManager.incrementRewardPool(penalty);
-
         _resetLock(stakerId);
     }
 
     /// @notice External function for setting stake of the staker
-    /// Used by RewardManager 
+    /// Used by RewardManager
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
@@ -385,6 +416,22 @@ contract StakeManager is Initializable, ACL, StakeStorage {
             previousStake,
             _stake,
             _reason,
+            _epoch,
+            block.timestamp
+        );
+    }
+
+    function setStakerAge(
+        uint256 _id,
+        uint256 _age,
+        uint256 _epoch
+    ) external onlyRole(parameters.getStakeModifierHash()) {
+        uint256 previousAge = stakers[_id].age;
+        stakers[_id].age = _age;
+        emit AgeChange(
+            _id,
+            previousAge,
+            _age,
             _epoch,
             block.timestamp
         );
@@ -419,6 +466,28 @@ contract StakeManager is Initializable, ACL, StakeStorage {
     /// @return The number of stakers in the razor network
     function getNumStakers() external view returns(uint256) {
         return(numStakers);
+    }
+
+    /// @return age of staker
+    function getAge(uint256 stakerId) external view returns(uint256) {
+        return stakers[stakerId].age;
+    }
+
+    /// @return influence of staker
+    function getInfluence(uint256 stakerId)  external view returns(uint256) {
+        return _getMaturity(stakerId) * stakers[stakerId].stake;
+    }
+
+    /// @return stake of staker
+    function getStake(uint256 stakerId)  external view returns(uint256) {
+        return stakers[stakerId].stake;
+    }
+
+    /// @return maturity of staker
+    function _getMaturity(uint256 stakerId) internal view returns(uint256) {
+        uint256 index = stakers[stakerId].age/10000;
+
+        return maturities[index];
     }
 
     /// @notice 1 sRZR = ? RZR

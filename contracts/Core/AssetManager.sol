@@ -156,9 +156,9 @@ contract AssetManager is ACL, AssetStorage {
 
     }
 
-    function updateAssetStatus(
+    function setAssetStatus(
         uint256 id,
-        bool isActive
+        bool assetStatus
     ) 
         external 
         onlyRole(parameters.getAssetModifierHash()) 
@@ -166,11 +166,11 @@ contract AssetManager is ACL, AssetStorage {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
-        if(isActive){
-            pendingAssetDeactivation.push(id);
+        if(assetStatus){
+            pendingAssetActivation.push(id);
         }
         else{
-            pendingAssetActivation.push(id);
+            pendingAssetDeactivation.push(id);
         }
     }
 

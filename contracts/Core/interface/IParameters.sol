@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+
 interface IParameters {
 
     function commit() external view returns(uint32);
@@ -26,6 +27,8 @@ interface IParameters {
     function slashPenaltyDenom() external view returns(uint256);
     function getEpoch() external view returns(uint256);
     function getState() external view returns(uint256);
+    function maxAge() external view returns(uint256);
+    function escapeHatchEnabled() external view returns(bool);
 
     function getAssetConfirmerHash() external view returns(bytes32);
     function getBlockConfirmerHash() external view returns(bytes32);
