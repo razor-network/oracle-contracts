@@ -22,7 +22,7 @@
     "lint:js": "eslint \"**/*.js\"",
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
-    "fmt:sol": "prettier 'contracts/**/*.sol' -w",
+    "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
     "test": "hardhat compile && hardhat test",
     "prepublish": "npm run test"
   },
