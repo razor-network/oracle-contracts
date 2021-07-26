@@ -44,10 +44,6 @@ module.exports = {
     hardhat: {
       chainId: 31337,
     },
-    coverage: {
-      url: 'http://localhost:8555',
-      gas: 0xfffffffffff,
-    },
     ganache: {
       url: `http://${PROVIDER_HOST}:${PROVIDER_PORT}`,
       network_id: 31337,

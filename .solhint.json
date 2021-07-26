@@ -1,5 +1,8 @@
 {
   "extends": "solhint:recommended",
+  "plugins": [
+    "prettier"
+  ],
   "rules": {
     "avoid-suicide": "error",
     "compiler-version": ["error", "^0.8.0"],
@@ -11,9 +14,10 @@
     "imports-on-top": "warn",
     "mark-callable-contracts": "off",
     "max-line-length": ["warn", 127],
-    "no-unused-vars": "error", 
+    "no-unused-vars": "error",
     "not-rely-on-time" : "off",
     "ordering": "error",
+    "prettier/prettier": "error",
     "private-vars-leading-underscore": "error",
     "quotes": ["error","double"],
     "reentrancy": "error",
