@@ -8,9 +8,4 @@ contract ACL is AccessControl {
     constructor() {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
-
-    modifier onlyRole(bytes32 _hash) {
-        require(hasRole(_hash, msg.sender), "ACL: sender not authorized");
-        _;
-    }
 }

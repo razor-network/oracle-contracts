@@ -14,7 +14,7 @@ describe('Parameters contract Tests', async () => {
   let signers;
   let snapShotId;
   let parameters;
-  const expectedRevertMessage = 'ACL: sender not authorized';
+  const expectedRevertMessage = 'AccessControl';
 
   // parameters as initiliazed in Parameters contract
   const commit = toBigNumber('0');

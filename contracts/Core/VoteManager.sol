@@ -44,8 +44,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         parameters = IParameters(parametersAddress);
     }
 
-
-    function commit(uint256 epoch, bytes32 commitment) public initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    function commit(uint256 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[epoch][stakerId] == 0x0, "already commited");
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -65,7 +64,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-
     function reveal (
         uint256 epoch,
         bytes32 root,
@@ -73,7 +71,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         bytes32[][] memory proofs, bytes32 secret,
         address stakerAddress
     )
-        public
+        external
         initialized
         checkEpoch(epoch)
     {
@@ -91,12 +89,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             for (uint256 i = 0; i < values.length; i++) {
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
                 "invalid merkle proof");
+                uint256 influence = stakeManager.getInfluence(thisStakerId);
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
-                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]]+(thisStaker.stake);
-                totalStakeRevealed[epoch][i] = totalStakeRevealed[epoch][i]+(thisStaker.stake);
+                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
+                totalInfluenceRevealed[epoch][i] = totalInfluenceRevealed[epoch][i] + influence;
             }
-
-            rewardManager.giveRewards(thisStakerId, epoch);
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
@@ -126,13 +123,8 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return(voteWeights[epoch][assetId][voteValue]);
     }
 
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
         // epoch -> asset -> stakeWeight
-        return(totalStakeRevealed[epoch][assetId]);
-    }
-
-    function getTotalStakeRevealed(uint256 epoch, uint256 assetId, uint256 voteValue) public view returns(uint256) {
-        //epoch -> assetid -> voteValue -> weight
-        return(voteWeights[epoch][assetId][voteValue]);
+        return(totalInfluenceRevealed[epoch][assetId]);
     }
 }
