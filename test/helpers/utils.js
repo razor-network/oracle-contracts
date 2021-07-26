@@ -151,5 +151,5 @@ module.exports = {
   getAssignedAssets,
   getNumRevealedAssets,
   findAssetNotAlloted,
-  maturity
+  maturity,
 };

@@ -38,7 +38,7 @@ describe('BlockManager', function () {
   let numAssets;
   let weightsPerRevealedAssets = {};
   let blockThisEpoch = {
-    ids: [], medians: []
+    ids: [], medians: [],
   };
   let toBeDisputedAssetId = 0;
   let disputedAssetIdIndexInBlock = 0;
@@ -323,7 +323,6 @@ describe('BlockManager', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-
       const sortedVotes = [toBigNumber(toBeDisputedAssetId * 100)];
       let weights = tokenAmount('0');
       for (let i = 0; i < weightsPerRevealedAssets[toBeDisputedAssetId].length; i++) {
@@ -436,7 +435,7 @@ describe('BlockManager', function () {
         signers[7].address);
 
       blockThisEpoch = {
-        ids: [], medians: []
+        ids: [], medians: [],
       };
       weightsPerRevealedAssets = {};
 
@@ -674,7 +673,7 @@ describe('BlockManager', function () {
         revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
       }
       blockThisEpoch = {
-        ids: [], medians: []
+        ids: [], medians: [],
       };
       // Purposefully Proposing invalid value for 1st asset of block
       let firstAsset = true;
@@ -776,7 +775,7 @@ describe('BlockManager', function () {
         signers[3].address);
       // Propose
       blockThisEpoch = {
-        ids: [], medians: []
+        ids: [], medians: [],
       };
       weightsPerRevealedAssets = {};
 
@@ -849,7 +848,7 @@ describe('BlockManager', function () {
       if (weightsPerRevealedAssets[toBeDisputedAssetId].length === 2) { // If toBeDisputedAssetId is revealed by both stakers
         sortedVotes = [toBigNumber(votes[toBeDisputedAssetId - 1]), toBigNumber(votes2[toBeDisputedAssetId - 1])];
         weights = [influence1, influence2];
-      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] == influence1) {
+      } else if (weightsPerRevealedAssets[toBeDisputedAssetId][0] === influence1) {
         sortedVotes = [toBigNumber(votes[toBeDisputedAssetId - 1])];
         weights = [influence1];
       } else {

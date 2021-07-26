@@ -42,7 +42,7 @@ describe('StakeManager', function () {
     let numAssets;
     let revealedAssetsThisEpoch = {};
     let blockThisEpoch = {
-      ids: [], medians: []
+      ids: [], medians: [],
     };
 
     before(async () => {
@@ -548,7 +548,7 @@ describe('StakeManager', function () {
           revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
         }
         blockThisEpoch = {
-          ids: [], medians: []
+          ids: [], medians: [],
         };
         for (let i = 1; i <= numAssets; i++) {
           if (revealedAssetsThisEpoch[i]) {

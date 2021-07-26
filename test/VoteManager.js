@@ -20,7 +20,6 @@ const {
   toBigNumber,
   tokenAmount,
   getAssignedAssets,
-  getNumRevealedAssets,
   findAssetNotAlloted,
 } = require('./helpers/utils');
 
@@ -38,10 +37,8 @@ describe('VoteManager', function () {
     let initializeContracts;
     let revealedAssetsThisEpoch = {};
     let blockThisEpoch = {
-      ids: [], medians: []
+      ids: [], medians: [],
     };
-    let numRevealedAssetsForStaker4 = 0;
-    let numRevealedAssetsForStaker3 = 0;
     let revealedVotesForStaker = [];
     before(async () => {
       ({
@@ -293,7 +290,6 @@ describe('VoteManager', function () {
         const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
-        numRevealedAssetsForStaker3 = await getNumRevealedAssets(assigneedAssetsVotes);
 
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
@@ -306,7 +302,6 @@ describe('VoteManager', function () {
         const assigneedAssetsVotes2 = assignedAssets2[0];
         revealedVotesForStaker = assigneedAssetsVotes2;
         const assigneedAssetsProofs2 = assignedAssets2[1];
-        numRevealedAssetsForStaker4 = await getNumRevealedAssets(assigneedAssetsVotes2);
 
         await voteManager.connect(signers[4]).reveal(epoch, tree2.root(), assigneedAssetsVotes2, assigneedAssetsProofs2,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
@@ -324,7 +319,7 @@ describe('VoteManager', function () {
           revealedAssetsThisEpoch[assigneedAssetsVotes2[i].id] = true;
         }
         blockThisEpoch = {
-          ids: [], medians: []
+          ids: [], medians: [],
         };
         for (let i = 1; i <= numAssets; i++) {
           if (revealedAssetsThisEpoch[i]) {
@@ -344,7 +339,6 @@ describe('VoteManager', function () {
 
         const iteration = await getIteration(stakeManager, random, staker);
         await mineToNextState(); // propose
-        const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,
           blockThisEpoch.medians,
@@ -379,7 +373,7 @@ describe('VoteManager', function () {
         let toAdd = toBigNumber(0);
         let num = toBigNumber(0);
         let denom = toBigNumber(0);
-        let map = {};
+        const map = {};
         for (let i = 0; i < revealedVotesForStaker.length; i++) {
           if (typeof map[revealedVotesForStaker[i].id] === 'undefined') {
             num = (toBigNumber(revealedVotesForStaker[i].value).sub(revealedVotesForStaker[i].value - revealedVotesForStaker[i].value % 100)).pow(2);
