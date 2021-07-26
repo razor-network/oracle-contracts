@@ -40,9 +40,10 @@ jobs:
           command: cat coverage/lcov.info | npx coveralls
   mythx:
     docker:
-    - image: circleci/python:3.8
+    - image: cimg/python:3.9.6-node
     steps:
       - checkout
+      - node/install-packages
       - run:
           name: Setup virtual environment
           command: python -m virtualenv venv
