@@ -16,7 +16,7 @@ jobs:
     # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
     # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/node
     docker:
-      - image: cimg/node:15.3
+      - image: cimg/node:15.1
     # Then run your tests!
     # CircleCI will report the results back to your VCS provider.
     steps:
@@ -31,12 +31,6 @@ jobs:
       - run:
           name: Run tests
           command: npm test
-      - run:
-          name: Run Coverage
-          command: npx truffle run coverage
-      - run:
-          name: Send Coverage to Coveralls
-          command: cat coverage/lcov.info | npx coveralls
 
 workflows:
   # Below is the definition of your workflow.
