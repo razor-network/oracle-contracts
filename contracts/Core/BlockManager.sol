@@ -194,7 +194,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
 
-        // bytes32 blockHashes = Random.blockHashes(10, parameters.epochLength());
         bytes32 randaoHashes = voteManager.getRandaoHash();
         bytes32 seed1 = Random.prngHash(randaoHashes, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
