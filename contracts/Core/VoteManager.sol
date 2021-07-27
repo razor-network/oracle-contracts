@@ -80,13 +80,13 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId], "incorrect secret/value");
         require(values.length == parameters.maxAssetsPerStaker(), "Revealed assets not equal to required assets per staker");
-        
+
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
-                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) { // If Job Not Revealed before 
+                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) { // If Job Not Revealed before
                     require(isAssetAllotedToStaker(thisStakerId, i, values[i].id), "Revealed asset not alloted");
                     require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
                     uint256 influence = stakeManager.getInfluence(thisStakerId);
@@ -98,7 +98,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
-
+            secrets[thisStakerId] = secret;
             emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
         } else {
             //bounty hunter revealing someone else's secret in commit state
@@ -108,11 +108,31 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
+    // function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view returns (bool)
+    // {
+    //     bytes32 seed = Random.blockHashes(10,parameters.epochLength());
+    //     bytes32 salt = keccak256(abi.encode( iteration + stakerId));
+    //     bytes32 _hash = Random.prngHash(salt,seed);
+    //     uint256 prng = Random.prng(assetManager.getNumAssets(), seed);
+    //     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+    //     if ((prng+(1)) == assetId) return true;
+    //     return false;
+    // }
+
     function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view initialized returns (bool)
-    {   
-        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
-        if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
-        return false;
+ {
+     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+     if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
+     return false;
+ }
+
+    function prngRandaoHash() public view returns (bytes32) {
+      bytes32 sum;
+      for (uint8 i = 1; i <= stakeManager.getNumStakers(); i++) {
+          if(secrets[i]==0x0) continue;
+          sum = keccak256(abi.encodePacked(sum, secrets[i]));
+      }
+      return(sum);
     }
 
     function getCommitment(uint256 epoch, uint256 stakerId) public view returns (bytes32) {
