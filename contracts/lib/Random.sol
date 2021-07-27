@@ -5,22 +5,22 @@ library Random {
     // pseudo random number generator based on block hashes. returns 0 -> max-1
     function prng2(
       uint256 max,
-        bytes32 seed
-    ) public view returns (uint256) {
-        uint256 sum = uint256(seed);
+        bytes32 prngHash
+    ) public pure returns (uint256) {
+      uint256 sum = uint256(prngHash);
         return (sum % max);
     }
 
     // pseudo random hash generator based on block hashes.
     function prngHash2(
-        bytes32 salt,
-        bytes32 seed
-    ) public view returns (bytes32) {
-        bytes32 sum = keccak256(abi.encodePacked(seed, salt));
-        return (sum);
+        bytes32 seed,
+        bytes32 salt
+    ) public pure returns (bytes32) {
+        bytes32 prngHash = keccak256(abi.encodePacked(seed, salt));
+        return (prngHash);
     }
 
-    function blockHashes2(uint8 numBlocks, uint256 epochLength) public view returns (bytes32) {
+    function blockHashes(uint8 numBlocks, uint256 epochLength) public view returns (bytes32) {
         bytes32 sum;
         // start from the start of the epoch
         uint256 blockNumberEpochStart = (block.number / (epochLength)) * (epochLength);
@@ -52,13 +52,4 @@ library Random {
         return (sum);
     }
 
-    function blockHashes(uint8 numBlocks, uint256 epochLength) public view returns (bytes32) {
-        bytes32 sum;
-        // start from the start of the epoch
-        uint256 blockNumberEpochStart = (block.number / (epochLength)) * (epochLength);
-        for (uint8 i = 1; i <= numBlocks; i++) {
-            sum = keccak256(abi.encodePacked(sum, blockhash(blockNumberEpochStart - i)));
-        }
-        return (sum);
-}
 }

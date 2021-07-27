@@ -191,13 +191,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
 
-        bytes32 blockHashes = Random.blockHashes2(10, parameters.epochLength());
-        bytes32 seed1 = Random.prngHash2(keccak256(abi.encode(iteration)), blockHashes);
+        bytes32 blockHashes = Random.blockHashes(10, parameters.epochLength());
+        bytes32 seed1 = Random.prngHash2(blockHashes, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng2( stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
-        bytes32 seed2 = Random.prngHash2(keccak256(abi.encode(stakerId, iteration)), blockHashes);
+        bytes32 seed2 = Random.prngHash2(blockHashes, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2  = Random.prng2(2**32, seed2);
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);

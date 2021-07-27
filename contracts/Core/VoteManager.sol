@@ -108,23 +108,23 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    // function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view returns (bool)
-    // {
-    //     bytes32 seed = Random.blockHashes(10,parameters.epochLength());
-    //     bytes32 salt = keccak256(abi.encode( iteration + stakerId));
-    //     bytes32 _hash = Random.prngHash(salt,seed);
-    //     uint256 prng = Random.prng(assetManager.getNumAssets(), seed);
-    //     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
-    //     if ((prng+(1)) == assetId) return true;
-    //     return false;
-    // }
+    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view returns (bool)
+    {
+        bytes32 blockHashes = Random.blockHashes(10,parameters.epochLength());
+        bytes32 salt = keccak256(abi.encode( iteration + stakerId));
+        bytes32 seed = Random.prngHash2(blockHashes,salt);
+        uint256 prng = Random.prng2(assetManager.getNumAssets(), seed);
+        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+        if ((prng+(1)) == assetId) return true;
+        return false;
+    }
 
-    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view initialized returns (bool)
- {
-     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
-     if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
-     return false;
- }
+ //    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view initialized returns (bool)
+ // {
+ //     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+ //     if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
+ //     return false;
+ // }
 
     function prngRandaoHash() public view returns (bytes32) {
       bytes32 sum;
