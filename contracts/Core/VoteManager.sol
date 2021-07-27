@@ -6,42 +6,44 @@ import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
+import "./interface/IAssetManager.sol";
 import "./storage/VoteStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-
+import "../lib/Random.sol";
 
 contract VoteManager is Initializable, ACL, VoteStorage {
-
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
+    IAssetManager public assetManager;
 
     event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
+    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, Structs.AssignedAsset[] values, uint256 timestamp);
 
-    modifier checkEpoch (uint256 epoch) {
+    modifier checkEpoch(uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
-    modifier checkState (uint256 state) {
+    modifier checkState(uint256 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }
 
-    function initialize (
+    function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
         address blockManagerAddress,
-        address parametersAddress
-    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+        address parametersAddress,
+        address assetManagerAddress
+    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
         parameters = IParameters(parametersAddress);
+        assetManager = IAssetManager(assetManagerAddress);
     }
 
     function commit(uint256 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
@@ -52,7 +54,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
-        if (blockManager.getBlock(epoch-1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch-1) > 0) {
+        if (blockManager.getBlock(epoch - 1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch - 1) > 0) {
             blockManager.confirmBlock();
         }
         rewardManager.givePenalties(stakerId, epoch);
@@ -64,35 +66,34 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    function reveal (
+    function reveal(
         uint256 epoch,
         bytes32 root,
-        uint256[] memory values,
-        bytes32[][] memory proofs, bytes32 secret,
+        Structs.AssignedAsset [] memory values,
+        bytes32[][] memory proofs,
+        bytes32 secret,
         address stakerAddress
-    )
-        external
-        initialized
-        checkEpoch(epoch)
-    {
+    ) external initialized checkEpoch(epoch) {
         uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
         Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
-        require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId],
-                "incorrect secret/value");
-
+        require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId], "incorrect secret/value");
+        require(values.length == parameters.maxAssetsPerStaker(), "Revealed assets not equal to required assets per staker");
+        
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
-                require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))),
-                "invalid merkle proof");
-                uint256 influence = stakeManager.getInfluence(thisStakerId);
-                votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
-                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
-                totalInfluenceRevealed[epoch][i] = totalInfluenceRevealed[epoch][i] + influence;
+                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) { // If Job Not Revealed before 
+                    require(isAssetAllotedToStaker(thisStakerId, i, values[i].id), "Revealed asset not alloted");
+                    require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
+                    uint256 influence = stakeManager.getInfluence(thisStakerId);
+                    votes[epoch][thisStakerId][values[i].id-1] = Structs.Vote(values[i].value, thisStaker.stake);
+                    voteWeights[epoch][values[i].id-1][values[i].value] = voteWeights[epoch][values[i].id-1][values[i].value] + influence;
+                    totalInfluenceRevealed[epoch][values[i].id-1] = totalInfluenceRevealed[epoch][values[i].id-1] + influence;
+                }
             }
 
             commitments[epoch][thisStakerId] = 0x0;
@@ -107,24 +108,38 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    function getCommitment(uint256 epoch, uint256 stakerId) public view returns(bytes32) {
+    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view initialized returns (bool)
+    {   
+        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+        if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
+        return false;
+    }
+
+    function getCommitment(uint256 epoch, uint256 stakerId) public view returns (bytes32) {
         //epoch -> stakerid -> commitment
-        return(commitments[epoch][stakerId]);
+        return (commitments[epoch][stakerId]);
     }
 
-    function getVote(uint256 epoch, uint256 stakerId, uint256 assetId) public view returns(Structs.Vote memory vote) {
+    function getVote(
+        uint256 epoch,
+        uint256 stakerId,
+        uint256 assetId
+    ) public view returns (Structs.Vote memory vote) {
         //epoch -> stakerid -> assetid -> vote
-        return(votes[epoch][stakerId][assetId]);
+        return (votes[epoch][stakerId][assetId]);
     }
 
-    function getVoteWeight(uint256 epoch, uint256 assetId, uint256 voteValue)
-    public view returns(uint256) {
+    function getVoteWeight(
+        uint256 epoch,
+        uint256 assetId,
+        uint256 voteValue
+    ) public view returns (uint256) {
         //epoch -> assetid -> voteValue -> weight
-        return(voteWeights[epoch][assetId][voteValue]);
+        return (voteWeights[epoch][assetId][voteValue]);
     }
 
-    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns(uint256) {
+    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns (uint256) {
         // epoch -> asset -> stakeWeight
-        return(totalInfluenceRevealed[epoch][assetId]);
+        return (totalInfluenceRevealed[epoch][assetId]);
     }
 }
