@@ -7,7 +7,7 @@
     "avoid-suicide": "error",
     "compiler-version": ["error", "^0.8.0"],
     "const-name-snakecase": "error",
-    "contract-name-camelcase": "error",
+    "contract-name-camelcase": "warn",
     "event-name-camelcase": "error",
     "func-name-mixedcase": "error",
     "func-visibility": ["error", { "ignoreConstructors": true }],
