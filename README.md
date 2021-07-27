@@ -47,5 +47,11 @@ Run `npm run test`
 # Test Coverage
 Run `npm run coverage`
 
+# Test Lint
+Run `npm run lint`
+
+# prettify code
+Run `npm run lint:sol:fix`
+
 # Addresses
 Deployed contract addresses can be found [here](deployed/goerli/addresses.json)
