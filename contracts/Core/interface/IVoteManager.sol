@@ -31,4 +31,6 @@ interface IVoteManager {
     ) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) external view returns (uint256);
+
+    function getRandaoHash() external view returns (bytes32);
 }

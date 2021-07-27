@@ -69,7 +69,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function reveal(
         uint256 epoch,
         bytes32 root,
-        Structs.AssignedAsset [] memory values,
+        Structs.AssignedAsset[] memory values,
         bytes32[][] memory proofs,
         bytes32 secret,
         address stakerAddress
@@ -86,13 +86,16 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
-                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) { // If Job Not Revealed before
+                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) {
+                    // If Job Not Revealed before
                     require(isAssetAllotedToStaker(thisStakerId, i, values[i].id), "Revealed asset not alloted");
                     require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
                     uint256 influence = stakeManager.getInfluence(thisStakerId);
-                    votes[epoch][thisStakerId][values[i].id-1] = Structs.Vote(values[i].value, thisStaker.stake);
-                    voteWeights[epoch][values[i].id-1][values[i].value] = voteWeights[epoch][values[i].id-1][values[i].value] + influence;
-                    totalInfluenceRevealed[epoch][values[i].id-1] = totalInfluenceRevealed[epoch][values[i].id-1] + influence;
+                    votes[epoch][thisStakerId][values[i].id - 1] = Structs.Vote(values[i].value, thisStaker.stake);
+                    voteWeights[epoch][values[i].id - 1][values[i].value] =
+                        voteWeights[epoch][values[i].id - 1][values[i].value] +
+                        influence;
+                    totalInfluenceRevealed[epoch][values[i].id - 1] = totalInfluenceRevealed[epoch][values[i].id - 1] + influence;
                 }
             }
 
@@ -108,31 +111,23 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view returns (bool)
-    {
-        bytes32 blockHashes = Random.blockHashes(10,parameters.epochLength());
-        bytes32 salt = keccak256(abi.encode( iteration + stakerId));
-        bytes32 seed = Random.prngHash2(blockHashes,salt);
-        uint256 prng = Random.prng2(assetManager.getNumAssets(), seed);
-        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
-        if ((prng+(1)) == assetId) return true;
-        return false;
+    function getRandaoHash() external view returns (bytes32) {
+        return (_getRandaoHash());
     }
 
- //    function isAssetAllotedToStaker(uint256 stakerId, uint256 iteration, uint256 assetId) public view initialized returns (bool)
- // {
- //     // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
- //     if ((Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode( iteration + stakerId)), parameters.epochLength())+(1)) == assetId) return true;
- //     return false;
- // }
-
-    function prngRandaoHash() public view returns (bytes32) {
-      bytes32 sum;
-      for (uint8 i = 1; i <= stakeManager.getNumStakers(); i++) {
-          if(secrets[i]==0x0) continue;
-          sum = keccak256(abi.encodePacked(sum, secrets[i]));
-      }
-      return(sum);
+    function isAssetAllotedToStaker(
+        uint256 stakerId,
+        uint256 iteration,
+        uint256 assetId
+    ) public view returns (bool) {
+        // bytes32 blockHashes = Random.blockHashes(10,parameters.epochLength());
+        bytes32 randaoHash = _getRandaoHash();
+        bytes32 salt = keccak256(abi.encode(iteration + stakerId));
+        bytes32 seed = Random.prngHash(randaoHash, salt);
+        uint256 prng = Random.prng(assetManager.getNumAssets(), seed);
+        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+        if ((prng + (1)) == assetId) return true;
+        return false;
     }
 
     function getCommitment(uint256 epoch, uint256 stakerId) public view returns (bytes32) {
@@ -161,5 +156,14 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns (uint256) {
         // epoch -> asset -> stakeWeight
         return (totalInfluenceRevealed[epoch][assetId]);
+    }
+
+    function _getRandaoHash() internal view returns (bytes32) {
+        bytes32 sum;
+        for (uint8 i = 1; i <= stakeManager.getNumStakers(); i++) {
+            if (secrets[i] == 0x0) continue;
+            sum = keccak256(abi.encodePacked(sum, secrets[i]));
+        }
+        return (sum);
     }
 }

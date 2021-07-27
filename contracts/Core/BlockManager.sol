@@ -115,8 +115,11 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
-    function finalizeDispute (uint256 epoch, uint256 blockId, uint256 assetPosInBlock)
-    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    function finalizeDispute(
+        uint256 epoch,
+        uint256 blockId,
+        uint256 assetPosInBlock
+    ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
@@ -191,18 +194,19 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
 
-        bytes32 blockHashes = Random.blockHashes(10, parameters.epochLength());
-        bytes32 seed1 = Random.prngHash2(blockHashes, keccak256(abi.encode(iteration)));
-        uint256 rand1 = Random.prng2( stakeManager.getNumStakers(), seed1);
+        // bytes32 blockHashes = Random.blockHashes(10, parameters.epochLength());
+        bytes32 randaoHashes = voteManager.getRandaoHash();
+        bytes32 seed1 = Random.prngHash(randaoHashes, keccak256(abi.encode(iteration)));
+        uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
-        bytes32 seed2 = Random.prngHash2(blockHashes, keccak256(abi.encode(stakerId, iteration)));
-        uint256 rand2  = Random.prng2(2**32, seed2);
+        bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
+        uint256 rand2 = Random.prng(2**32, seed2);
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint256 influence = stakeManager.getInfluence(stakerId);
-        if (rand2 * biggestInfluence <= influence * (2**32)) return (true);
+        if (rand2 * biggestInfluence < influence * (2**32)) return (true);
         return false;
     }
 

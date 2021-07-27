@@ -147,7 +147,7 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
@@ -183,7 +183,7 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes2.length; i++) {
           proof2.push(tree2.getProofPath(i, true, true));
         }
-        const assignedAssets2 = await getAssignedAssets(numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
+        const assignedAssets2 = await getAssignedAssets(voteManager, numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
         const assigneedAssetsVotes2 = assignedAssets2[0];
         const assigneedAssetsProofs2 = assignedAssets2[1];
         await voteManager.connect(signers[4]).reveal(epoch, root2, assigneedAssetsVotes2, assigneedAssetsProofs2,
@@ -213,7 +213,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, random, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,
@@ -287,7 +287,7 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
@@ -298,7 +298,7 @@ describe('VoteManager', function () {
         assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
           'Vote Stored not equal to submitted one');
 
-        const assignedAssets2 = await getAssignedAssets(numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
+        const assignedAssets2 = await getAssignedAssets(voteManager, numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
         const assigneedAssetsVotes2 = assignedAssets2[0];
         revealedVotesForStaker = assigneedAssetsVotes2;
         const assigneedAssetsProofs2 = assignedAssets2[1];
@@ -337,7 +337,7 @@ describe('VoteManager', function () {
 
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, random, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,
@@ -406,7 +406,7 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc10, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc10, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
@@ -434,7 +434,7 @@ describe('VoteManager', function () {
         }
         await mineToNextState(); // reveal
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
@@ -475,7 +475,7 @@ describe('VoteManager', function () {
         }
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc6, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc6, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
@@ -518,7 +518,7 @@ describe('VoteManager', function () {
         }
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc5, votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc5, votes, proof, maxAssetsPerStaker, random);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
