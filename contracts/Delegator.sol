@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-
 import "./Core/interface/IAssetManager.sol";
 
-
 contract Delegator {
-
     address public delegate;
     address public owner = msg.sender;
     IAssetManager public assetManager;
@@ -16,13 +13,11 @@ contract Delegator {
         delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
     }
-    
-    function getJob(
-        uint256 id
-    )
+
+    function getJob(uint256 id)
         external
         view
-        returns(
+        returns (
             string memory url,
             string memory selector,
             string memory name,
@@ -33,7 +28,7 @@ contract Delegator {
         return assetManager.getJob(id);
     }
 
-    function getResult(uint256 id) public view returns(uint256) {
+    function getResult(uint256 id) public view returns (uint256) {
         return assetManager.getResult(id);
     }
 }
