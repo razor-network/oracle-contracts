@@ -32,7 +32,20 @@ jobs:
       - persist_to_workspace:
           root: .
           paths:
-            - node_modules/* 
+            - node_modules/*
+
+  compile:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: small
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Compile
+          command: 
+            npm run compile
+  
   test:
     docker:
       - image: 'cimg/node:16.5'
@@ -122,6 +135,7 @@ workflows:
       - test:
           requires:
           - install_dependencies
+          - compile
       - coverage:
           requires:
           - install_dependencies
