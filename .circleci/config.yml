@@ -92,6 +92,8 @@ jobs:
       - image: 'cimg/python:3.9.6-node'
     resource_class: medium
     steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Setup virtual environment
           command: python -m virtualenv venv
