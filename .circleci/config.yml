@@ -3,14 +3,44 @@ orbs:
   coveralls: coveralls/coveralls@1.0.6
   node: circleci/node@4.1
 jobs:
+  checkout_source:
+    docker:
+      - image: cimg/node:16.5
+    steps:
+      - checkout
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  install_dependencies:
+    docker:
+      - image: cimg/node:16.5
+    steps:
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - save_cache:
+          key: dependencies-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules/* 
   test:
     docker:
-      - image: 'cimg/node:15.3'
+      - image: 'cimg/node:16.5'
     parallelism: 6
     resource_class: medium
     steps:
-      - checkout
-      - node/install-packages
+      - attach_workspace:
+          at: .
       - run:
           name: Run tests
           command: |
@@ -24,12 +54,11 @@ jobs:
 
   lint:
     docker:
-      - image: 'cimg/node:15.3'
-    # parallelism: 10
+      - image: 'cimg/node:16.5'
     resource_class: medium
     steps:
-      - checkout
-      - node/install-packages
+      - attach_workspace:
+          at: .
       - run:
           name: Run Lint
           command: npm run lint
@@ -38,14 +67,15 @@ jobs:
           prefix: lint
       - store_test_results:
           path: test-results
+
   coverage:
     docker:
-      - image: 'cimg/node:15.3'
+      - image: 'cimg/node:16.5'
     # parallelism: 10
     resource_class: xlarge
     steps:
-      - checkout
-      - node/install-packages
+      - attach_workspace:
+          at: .
       - run:
           name: Run Coverage
           command: npm run coverage
@@ -55,13 +85,12 @@ jobs:
           prefix: coverage
       - store_test_results:
           path: test-results
+
   mythx:
     docker:
       - image: 'cimg/python:3.9.6-node'
-    resource_class: large
+    resource_class: medium
     steps:
-      - checkout
-      - node/install-packages
       - run:
           name: Setup virtual environment
           command: python -m virtualenv venv
@@ -86,7 +115,19 @@ notify:
 workflows:
   tests:
     jobs:
-      - test
-      - coverage
-      - mythx
-      - lint
+      - checkout_source
+      - install_dependencies:
+          requires:
+            - checkout_source
+      - test:
+          requires:
+          - install_dependencies
+      - coverage:
+          requires:
+          - install_dependencies
+      - mythx:
+          requires:
+          - install_dependencies
+      - lint:
+          requires:
+          - install_dependencies
