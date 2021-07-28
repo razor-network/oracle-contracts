@@ -34,18 +34,6 @@ jobs:
           paths:
             - node_modules/*
 
-  compile:
-    docker:
-      - image: 'cimg/node:16.5'
-    resource_class: small
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Compile
-          command: 
-            npm run compile
-  
   test:
     docker:
       - image: 'cimg/node:16.5'
@@ -132,12 +120,9 @@ workflows:
       - install_dependencies:
           requires:
             - checkout_source
-      - compile:
-          requires:
-          - install_dependencies
       - test:
           requires:
-          - compile
+            - install_dependencies
       - coverage:
           requires:
           - install_dependencies
