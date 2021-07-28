@@ -115,24 +115,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
-    function finalizeDispute (uint256 epoch, uint256 blockId, uint256 assetPosInBlock)
-    public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
-        uint256 assetId = disputes[epoch][msg.sender].assetId;
-        require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
-            "Total influence revealed doesnt match"
-        );
-        uint256 median = disputes[epoch][msg.sender].median;
-        uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        require(median > 0, "median can not be zero");
-        if (proposedBlocks[epoch][blockId].medians[assetPosInBlock] != median) {
-            proposedBlocks[epoch][blockId].valid = false;
-            stakeManager.slash(proposerId, msg.sender, epoch);
-        } else {
-            revert("Proposed Alternate block is identical to proposed block");
-        }
-    }
-
     function getBlock(uint256 epoch) external view returns (Structs.Block memory _block) {
         return (blocks[epoch]);
     }
@@ -180,6 +162,27 @@ contract BlockManager is Initializable, ACL, BlockStorage {
                 rewardManager.giveBlockReward(proposerId, epoch);
                 return;
             }
+        }
+    }
+
+    function finalizeDispute(
+        uint256 epoch,
+        uint256 blockId,
+        uint256 assetPosInBlock
+    ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+        uint256 assetId = disputes[epoch][msg.sender].assetId;
+        require(
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
+            "Total influence revealed doesnt match"
+        );
+        uint256 median = disputes[epoch][msg.sender].median;
+        uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        require(median > 0, "median can not be zero");
+        if (proposedBlocks[epoch][blockId].medians[assetPosInBlock] != median) {
+            proposedBlocks[epoch][blockId].valid = false;
+            stakeManager.slash(proposerId, msg.sender, epoch);
+        } else {
+            revert("Proposed Alternate block is identical to proposed block");
         }
     }
 

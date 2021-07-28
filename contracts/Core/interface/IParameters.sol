@@ -39,7 +39,7 @@ interface IParameters {
     function slashPenaltyNum() external view returns (uint256);
 
     function slashPenaltyDenom() external view returns (uint256);
-    
+
     function maxAssetsPerStaker() external view returns (uint256);
 
     function getEpoch() external view returns (uint256);
