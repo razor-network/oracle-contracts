@@ -72,5 +72,6 @@ notify:
 workflows:
   tests:
     jobs:
-      - build-and-test
+      - test
+      - coverage
       - mythx
