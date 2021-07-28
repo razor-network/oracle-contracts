@@ -11,8 +11,8 @@
   "scripts": {
     "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
-    "compile": "npx hardhat compile",
-    "coverage": "hardhat coverage && npm run coverage:check",
+    "compile": "npm run cp-ganache-env && npx hardhat compile",
+    "coverage": "npm run cp-ganache-env && hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
     "deploy:ganache": "./scripts/deploy.sh ganache",
     "deploy:goerli": "./scripts/deploy.sh goerli",
@@ -23,8 +23,7 @@
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
-    "test": "hardhat compile && hardhat test",
-    "prepublish": "npm run test"
+    "test": "hardhat test"
   },
   "repository": {
     "type": "git",
@@ -48,6 +47,7 @@
     "chai": "^4.3.0",
     "coveralls": "^3.1.1",
     "dotenv": "8.2.0",
+    "elliptic": "^6.5.4",
     "eslint": "^5.16.0",
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
@@ -58,7 +58,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "solhint": "~3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
-    "solidity-coverage": "^0.7.13"
+    "solidity-coverage": "^0.7.16"
   },
   "engines": {
     "node": ">=15.3.0"

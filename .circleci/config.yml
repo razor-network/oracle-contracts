@@ -1,58 +1,99 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine. 
-# See: https://circleci.com/docs/2.0/configuration-reference
 version: 2.1
-
 orbs:
-  # The Node.js orb contains a set of prepackaged CircleCI configuration you can utilize
-  # Orbs reduce the amount of configuration required for common tasks. 
-  # See the orb documentation here: https://circleci.com/developer/orbs/orb/circleci/node
   coveralls: coveralls/coveralls@1.0.6
   node: circleci/node@4.1
-
-
 jobs:
-
-  # Below is the definition of your job to build and test your app, you can rename and customize it as you want.
-  build-and-test:  
-    # These next lines define a Docker executor: https://circleci.com/docs/2.0/executor-types/
-    # You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # A list of available CircleCI Docker Convenience Images are available here: https://circleci.com/developer/images/image/cimg/node
+  checkout_source:
     docker:
-      - image: cimg/node:15.3
-    # Then run your tests!
-    # CircleCI will report the results back to your VCS provider.
+      - image: cimg/node:16.5
     steps:
-      # Checkout the code as the first step.
       - checkout
-      # Next, the node orb's install-packages step will install the dependencies from a package.json.
-      # The orb install-packages step will also automatically cache them for faster future runs.
-      - node/install-packages
-      # If you are using yarn instead npm, remove the line above and uncomment the two lines below.
-      # - node/install-packages:
-      #     pkg-manager: yarn 
+      - persist_to_workspace:
+          root: .
+          paths:
+            - .
+
+  install_dependencies:
+    docker:
+      - image: cimg/node:16.5
+    steps:
+      - attach_workspace:
+          at: .
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Install dependencies
+          command: npm install
+      - save_cache:
+          key: dependencies-{{ checksum "package-lock.json" }}
+          paths:
+            - node_modules
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules/*
+
+  test:
+    docker:
+      - image: 'cimg/node:16.5'
+    parallelism: 6
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run tests
-          command: npm test
+          command: |
+            TESTFILES=$(circleci tests glob "test/*.js" | circleci tests split --split-by=timings)
+            CI=true npm run test $TESTFILES
+      - store_artifacts:
+          path: test
+          prefix: test
+      - store_test_results:
+          path: test-results
+
+  lint:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run Lint
+          command: npm run lint
+      - store_artifacts:
+          path: lint
+          prefix: lint
+      - store_test_results:
+          path: test-results
+
+  coverage:
+    docker:
+      - image: 'cimg/node:16.5'
+    # parallelism: 10
+    resource_class: xlarge
+    steps:
+      - attach_workspace:
+          at: .
       - run:
           name: Run Coverage
           command: npm run coverage
       - coveralls/upload
-      - store_artifacts: # special step to save test results as as artifact
-          # Upload test summary for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
-          path: test-results
-          prefix: tests
-      - store_artifacts: # for display in Artifacts: https://circleci.com/docs/2.0/artifacts/
+      - store_artifacts:
           path: coverage
           prefix: coverage
-      - store_test_results: # for display in Test Summary: https://circleci.com/docs/2.0/collect-test-data/
+      - store_test_results:
           path: test-results
-          
+
   mythx:
     docker:
-    - image: cimg/python:3.9.6-node
+      - image: 'cimg/python:3.9.6-node'
+    resource_class: medium
     steps:
-      - checkout
-      - node/install-packages
+      - attach_workspace:
+          at: .
       - run:
           name: Setup virtual environment
           command: python -m virtualenv venv
@@ -63,21 +104,33 @@ jobs:
             pip install mythx-cli
       - run:
           name: Analyze with MythX
-          command: |
+          command: >
             . venv/bin/activate
-            mythx --ci --yes analyze --remap-import "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version 0.8.4 contracts/ --swc-blacklist 103,120
+
+            mythx --ci --yes analyze --remap-import
+            "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version
+            0.8.4 contracts/ --swc-blacklist 103,120
+  
 notify:
   webhooks:
-    - url: https://coveralls.io/webhook?repo_token=${process.env.COVERALLS_REPO_TOKEN}
-    
+    - url: >-
+        https://coveralls.io/webhook?repo_token=${process.env.COVERALLS_REPO_TOKEN}
 workflows:
-  # Below is the definition of your workflow.
-  # Inside the workflow, you provide the jobs you want to run, e.g this workflow runs the build-and-test job above.
-  # CircleCI will run this workflow on every commit.
-  # For more details on extending your workflow, see the configuration docs: https://circleci.com/docs/2.0/configuration-reference/#workflows
-  tests: 
+  tests:
     jobs:
-      - build-and-test
-      - mythx
-      # For running simple node tests, you could optionally use the node/test job from the orb to replicate and replace the job above in fewer lines.
-      # - node/test
+      - checkout_source
+      - install_dependencies:
+          requires:
+            - checkout_source
+      - test:
+          requires:
+            - install_dependencies
+      - coverage:
+          requires:
+          - install_dependencies
+      - mythx:
+          requires:
+          - install_dependencies
+      - lint:
+          requires:
+          - install_dependencies

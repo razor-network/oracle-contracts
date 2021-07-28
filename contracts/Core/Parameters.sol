@@ -107,7 +107,6 @@ contract Parameters is ACL {
         aggregationRange = _aggregationRange;
     }
 
-
     function setmaxAssetsPerStaker(uint256 _maxAssetsPerStaker) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxAssetsPerStaker = _maxAssetsPerStaker;
     }
