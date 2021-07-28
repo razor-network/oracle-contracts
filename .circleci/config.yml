@@ -133,9 +133,10 @@ workflows:
           requires:
             - checkout_source
       - compile
-      - test:
           requires:
           - install_dependencies
+      - test:
+          requires:
           - compile
       - coverage:
           requires:
