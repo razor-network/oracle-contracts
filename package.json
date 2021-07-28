@@ -58,7 +58,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "solhint": "~3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
-    "solidity-coverage": "^0.7.13"
+    "solidity-coverage": "^0.7.16"
   },
   "engines": {
     "node": ">=15.3.0"
