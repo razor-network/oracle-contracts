@@ -30,9 +30,9 @@ jobs:
     steps:
       - checkout
       - node/install-packages
-      - run: null
-        name: Run Coverage
-        command: npm run coverage
+      - run:
+          name: Run Coverage
+          command: npm run coverage
       - coveralls/upload
       - store_artifacts:
           path: test-results
