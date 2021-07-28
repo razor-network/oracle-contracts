@@ -12,7 +12,7 @@
     "cp-ganache-env": "cp .env.ganache .env",
     "pretest": "npm run cp-ganache-env",
     "compile": "npx hardhat compile",
-    "coverage": "hardhat coverage && npm run coverage:check",
+    "coverage": "npm run cp-ganache-env && hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
     "deploy:ganache": "./scripts/deploy.sh ganache",
     "deploy:goerli": "./scripts/deploy.sh goerli",
