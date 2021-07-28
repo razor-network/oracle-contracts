@@ -78,7 +78,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(stakeManager.getStaker(proposerId).epochLastRevealed == epoch, "Cannot propose without revealing");
-        
+
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
 
         _insertAppropriately(epoch, Structs.Block(proposerId, ids, medians, iteration, biggestInfluence, true));

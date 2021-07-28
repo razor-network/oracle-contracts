@@ -27,7 +27,6 @@ contract RewardManager is Initializable, ACL {
         _;
     }
 
-
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
@@ -92,8 +91,6 @@ contract RewardManager is Initializable, ACL {
             ? thisStaker.epochLastRevealed
             : thisStaker.epochStaked;
 
-
-
         // penalize or reward if last active more than epoch - 1
         uint256 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
 
@@ -107,8 +104,8 @@ contract RewardManager is Initializable, ACL {
 
         // Not reveal penalty due to Randao
         if (thisStaker.epochLastRevealed < thisStaker.epochLastCommitted) {
-          uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
-          newStake = newStake - randaoPenalty;
+            uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
+            newStake = newStake - randaoPenalty;
         }
         // uint256 currentStake = previousStake;
         (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
