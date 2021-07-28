@@ -6,14 +6,16 @@ jobs:
   test:
     docker:
       - image: 'cimg/node:15.3'
-    # parallelism: 10
-    resource_class: large
+    parallelism: 6
+    resource_class: medium
     steps:
       - checkout
       - node/install-packages
       - run:
           name: Run tests
-          command: npm test
+          command: |
+            TESTFILES=$(circleci tests glob "test/*.js" | circleci tests split --split-by=timings)
+            CI=true npm run test $TESTFILES
       - store_artifacts:
           path: test
           prefix: test
@@ -24,7 +26,7 @@ jobs:
     docker:
       - image: 'cimg/node:15.3'
     # parallelism: 10
-    resource_class: xlarge
+    resource_class: medium
     steps:
       - checkout
       - node/install-packages
