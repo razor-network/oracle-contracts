@@ -19,6 +19,8 @@ interface IParameters {
     function resetLockPenalty() external view returns (uint256);
 
     function minStake() external view returns (uint256);
+    
+    function blockReward() external view returns (uint256);
 
     function withdrawLockPeriod() external view returns (uint256);
 

@@ -5,14 +5,13 @@ import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
-import "./storage/RewardStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL, RewardStorage {
+contract RewardManager is Initializable, ACL {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
@@ -28,9 +27,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         _;
     }
 
-    constructor(uint256 _blockReward) {
-        blockReward = _blockReward;
-    }
 
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -48,10 +44,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function updateBlockReward(uint256 _blockReward) external onlyRole(parameters.getDefaultAdminHash()) {
-        blockReward = _blockReward;
-    }
-
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
     /// @param stakerId The id of staker currently in consideration
@@ -66,6 +58,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(parameters.getRewardModifierHash()) {
+        uint256 blockReward = parameters.blockReward();
         if (blockReward > 0) {
             uint256 newStake = stakeManager.getStaker(stakerId).stake + (blockReward);
             stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
@@ -98,6 +91,9 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed
             ? thisStaker.epochLastRevealed
             : thisStaker.epochStaked;
+
+
+
         // penalize or reward if last active more than epoch - 1
         uint256 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
 
@@ -105,9 +101,17 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             return;
         }
         uint256 previousStake = thisStaker.stake;
+        uint256 newStake = thisStaker.stake;
         uint256 previousAge = thisStaker.age;
+        uint256 newAge = thisStaker.age;
+
+        // Not reveal penalty due to Randao
+        if (thisStaker.epochLastRevealed < thisStaker.epochLastCommitted) {
+          uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
+          newStake = newStake - randaoPenalty;
+        }
         // uint256 currentStake = previousStake;
-        (uint256 newStake, uint256 newAge) = calculateInactivityPenalties(inactiveEpochs, previousStake, previousAge);
+        (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         if (newStake < previousStake) {
             stakeManager.setStakerStake(thisStaker.id, newStake, "Inactivity Penalty", epoch);
         }

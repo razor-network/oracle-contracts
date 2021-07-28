@@ -5,7 +5,7 @@ const { deployContract } = require('../migrationHelpers');
 const blockReward = BigNumber.from(40).mul((BigNumber.from(10).pow(BigNumber.from(18))));
 
 const deployRewardManager = async () => {
-  await deployContract('RewardManager', [], [blockReward.toHexString()]);
+  await deployContract('RewardManager', [], []);
 };
 
 module.exports = async () => {

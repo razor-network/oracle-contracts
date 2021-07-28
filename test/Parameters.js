@@ -31,7 +31,8 @@ describe('Parameters contract Tests', async () => {
   const totalStates = toBigNumber('4');
   const exposureDenominator = toBigNumber('1000');
   const gracePeriod = toBigNumber('8');
-  const minimumStake = tokenAmount('100');
+  const minimumStake = tokenAmount('1000');
+  const blockReward = tokenAmount('100');
   const aggregationRange = toBigNumber('3');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
@@ -167,6 +168,9 @@ describe('Parameters contract Tests', async () => {
 
     const minStakeValue = await parameters.minStake();
     assertBNEqual(minimumStake, minStakeValue);
+
+    const blockRewardValue = await parameters.blockReward();
+    assertBNEqual(blockReward, blockRewardValue);
 
     const withdrawLockPeriodValue = await parameters.withdrawLockPeriod();
     assertBNEqual(withdrawLockPeriod, withdrawLockPeriodValue);

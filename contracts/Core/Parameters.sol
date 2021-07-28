@@ -11,7 +11,8 @@ contract Parameters is ACL {
     uint256 public slashPenaltyNum = 10000;
     uint256 public slashPenaltyDenom = 10000;
 
-    uint256 public minStake = 100 * (10**18);
+    uint256 public minStake = 1000 * (10**18);
+    uint256 public blockReward = 100 * (10**18);
     uint256 public withdrawLockPeriod = 1;
     uint256 public maxAltBlocks = 5;
     uint256 public epochLength = 300;
@@ -97,6 +98,10 @@ contract Parameters is ACL {
 
     function setMinStake(uint256 _minStake) external onlyRole(DEFAULT_ADMIN_ROLE) {
         minStake = _minStake;
+    }
+
+    function setBlockReward(uint256 _blockReward) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        blockReward = _blockReward;
     }
 
     function setGracePeriod(uint256 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
