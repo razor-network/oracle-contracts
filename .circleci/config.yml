@@ -132,7 +132,7 @@ workflows:
       - install_dependencies:
           requires:
             - checkout_source
-      - compile
+      - compile:
           requires:
           - install_dependencies
       - test:
