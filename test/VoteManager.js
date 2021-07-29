@@ -87,9 +87,6 @@ describe('VoteManager', function () {
         for (let i = 1; i < 10; i++) {
           await assetManager.createJob(`http://testurl.com/${String(i)}`, `selector${String(i)}`, `test${String(i)}`);
         }
-        assetManager.createCollection('Collection1', [1, 2, 3], 1, true);
-        assetManager.createCollection('Collection2', [4, 5, 6], 1, true);
-        assetManager.createCollection('Collection3', [7, 8, 9], 1, true);
       });
 
       it('should be able to commit', async function () {
@@ -109,9 +106,10 @@ describe('VoteManager', function () {
         assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
       });
 
-      it('should be able to reveal', async function () {
-        const epoch = await getEpoch();
+      it('should be able to reveal with the correct value', async function () {
+        let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
 
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
 
@@ -124,7 +122,6 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
@@ -133,13 +130,8 @@ describe('VoteManager', function () {
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
-      });
-
-      it('should be able to commit again with correct influence', async function () {
-        let epoch = await getEpoch();
-        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         // const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
-        let staker = await stakeManager.getStaker(stakerIdAcc3);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
         const iteration = await getIteration(stakeManager, random, staker);
@@ -150,27 +142,19 @@ describe('VoteManager', function () {
           iteration,
           biggestInfluencerId);
 
-        const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
-        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
-
         await mineToNextState(); // dispute
+
+        assetManager.createCollection('Collection1', [1, 2, 3], 1, true);
+        assetManager.createCollection('Collection2', [4, 5, 6], 1, true);
+        assetManager.createCollection('Collection3', [7, 8, 9], 1, true);
+
         await mineToNextState(); // confirm
 
         await blockManager.connect(signers[3]).claimBlockReward();
 
         await mineToNextState(); // commit
         epoch = await getEpoch();
-        const votes = [100, 200, 300];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
-        const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
-
-        await voteManager.connect(signers[3]).commit(epoch, commitment1);
-
-        const votes2 = [104, 204, 304];
+        const votes2 = [100, 200, 300];
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
         const commitment2 = utils.solidityKeccak256(
@@ -178,37 +162,54 @@ describe('VoteManager', function () {
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
-        await voteManager.connect(signers[4]).commit(epoch, commitment2);
-        const commitment3 = await voteManager.getCommitment(epoch, stakerIdAcc3);
+        await voteManager.connect(signers[3]).commit(epoch, commitment2);
 
-        assertBNEqual(commitment1, commitment3, 'commitment1, commitment3 not equal');
+        const votes3 = [104, 204, 304];
+        const tree3 = merkle('keccak256').sync(votes3);
+        const root3 = tree3.root();
+        const commitment3 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[4]).commit(epoch, commitment3);
+        const commitment4 = await voteManager.getCommitment(epoch, stakerIdAcc3);
+
+        assertBNEqual(commitment2, commitment4, 'commitment1, commitment3 not equal');
 
         await mineToNextState(); // reveal
-
-        const proof = [];
-        for (let i = 0; i < votes.length; i++) {
-          proof.push(tree.getProofPath(i, true, true));
-        }
-
-        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
 
         const proof2 = [];
         for (let i = 0; i < votes2.length; i++) {
           proof2.push(tree2.getProofPath(i, true, true));
         }
+        await voteManager.connect(signers[3]).reveal(epoch, tree2.root(), votes2, proof2,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+        // arguments getvVote => epoch, stakerId, assetId
+        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
 
-        await voteManager.connect(signers[4]).reveal(epoch, root2, votes2, proof2,
+        const proof3 = [];
+        for (let i = 0; i < votes3.length; i++) {
+          proof3.push(tree3.getProofPath(i, true, true));
+        }
+        await voteManager.connect(signers[4]).reveal(epoch, root3, votes3, proof3,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
+        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc4, 0)).value, toBigNumber('104'), 'Vote not equal to 100');
+      });
+
+      it('should be able to commit again with correct influence', async function () {
+        let epoch = await getEpoch();
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+
+        const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
+        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
+
         await mineToNextState(); // propose
-
-        staker = await stakeManager.getStaker(stakerIdAcc3);
-
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration2 = await getIteration(stakeManager, random, staker);
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3],

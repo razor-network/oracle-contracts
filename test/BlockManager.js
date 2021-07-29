@@ -93,10 +93,6 @@ describe('BlockManager', function () {
         await assetManager.createJob(`http://testurl.com/${String(i)}`, `selector${String(i)}`, `test${String(i)}`);
       }
 
-      assetManager.createCollection('Collection1', [1, 2, 3], 1, true);
-      assetManager.createCollection('Collection2', [4, 5, 6], 1, true);
-      assetManager.createCollection('Collection3', [7, 8, 9], 1, true);
-
       await mineToNextEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));
 
@@ -145,13 +141,18 @@ describe('BlockManager', function () {
 
     it('should be able to confirm block and receive block reward', async () => {
       await mineToNextState();
+
+      assetManager.createCollection('Collection1', [1, 2, 3], 1, true);
+      assetManager.createCollection('Collection2', [4, 5, 6], 1, true);
+      assetManager.createCollection('Collection3', [7, 8, 9], 1, true);
+
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      assertBNEqual(await assetManager.getActiveAssets(), toBigNumber('3'));
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('3'));
       assertBNEqual(
         (await blockManager.getBlock(epoch - 1)).proposerId,
         await stakeManager.stakerIds(signers[5].address),
@@ -519,7 +520,7 @@ describe('BlockManager', function () {
       assertBNEqual(staker.stake, stake, 'Stake should have remained the same');
     });
 
-    it('should be able to propose a block with a collection being created mid-epoch', async function () {
+    it('should be able to reset dispute incase of wrong values being entered', async () => {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -547,8 +548,6 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[19].address);
 
-      await assetManager.createCollection('Collection4', [1, 3, 5, 6], 1, false);
-
       await mineToNextState();
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
@@ -561,13 +560,8 @@ describe('BlockManager', function () {
         [1000, 2001, 3000],
         iteration,
         biggestInfluencerId);
-      const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
-    });
 
-    it('should be able to reset dispute incase of wrong values being entered', async () => {
       await mineToNextState();
-      const epoch = await getEpoch();
 
       const sortedVotes = [toBigNumber('20000')];
 
@@ -589,7 +583,6 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[19]).claimBlockReward();
-      assertBNEqual(await assetManager.getActiveAssets(), toBigNumber('4'));
 
       // Commit
       await mineToNextEpoch();
@@ -602,7 +595,7 @@ describe('BlockManager', function () {
 
       await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
-      const votes = [100, 200, 300, 400];
+      const votes = [100, 200, 300];
       const tree = merkle('keccak256').sync(votes);
 
       const root = tree.root();
@@ -613,7 +606,7 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
-      const votes2 = [100, 200, 300, 400];
+      const votes2 = [100, 200, 300];
       const tree2 = merkle('keccak256').sync(votes2);
 
       const root2 = tree2.root();
@@ -651,8 +644,8 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
-        [10, 11, 12, 13],
-        [100, 201, 300, 400],
+        [10, 11, 12],
+        [100, 201, 300],
         iteration,
         biggestInfluencerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);

@@ -26,8 +26,7 @@ contract Delegator {
             string memory url,
             string memory selector,
             string memory name,
-            bool repeat,
-            uint256 result
+            bool active
         )
     {
         return assetManager.getJob(id);

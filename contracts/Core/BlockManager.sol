@@ -86,7 +86,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             stakeManager.getStaker(proposerId).stake >= parameters.minStake(),
             "stake below minimum stake"
         );
-        require(ids.length == assetManager.getActiveAssets(),"Invalid proposed block");
+        require(ids.length == assetManager.getNumActiveAssets(),"Invalid proposed block");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
 
@@ -174,7 +174,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function claimBlockReward() public initialized checkState(parameters.confirm()){
+    function claimBlockReward() external initialized checkState(parameters.confirm()){
         uint256 epoch = parameters.getEpoch();
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
@@ -184,24 +184,18 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             if (proposedBlocks[epoch][i].valid) {
                 require(proposedBlocks[epoch][i].proposerId == stakerId, "Block can be confirmed by proposer of the block");
                 _confirmBlock(epoch, i);
-                assetManager.addPendingCollections();
-                assetManager.deactivateAssets();
-                assetManager.activateAssets();
                 rewardManager.giveBlockReward(stakerId, epoch);
                 return;
             }
         }
     }
 
-    function confirmBlock(uint256 stakerId) public initialized onlyRole(parameters.getBlockConfirmerHash()){
+    function confirmBlock(uint256 stakerId) external initialized onlyRole(parameters.getBlockConfirmerHash()){
         uint256 epoch = parameters.getEpoch();
 
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
                 _confirmBlock(epoch - 1, i);
-                assetManager.addPendingCollections();
-                assetManager.deactivateAssets();
-                assetManager.activateAssets();
                 rewardManager.giveBlockReward(stakerId, epoch);
                 return;
             }

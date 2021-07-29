@@ -1,7 +1,7 @@
 const { assert } = require('chai');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
-  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks,
+  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 
@@ -60,87 +60,6 @@ describe('Access Control Test', async () => {
     await assetManager.fulfillAsset(2, 222);
     await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-  });
-
-  it('addPendingCollections() should not be accessable by anyone besides AssetConfirmer', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
-
-    // Checking if StakeModifier can access it
-    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
-  });
-
-  it('addPendingCollections() should be accessable by AssetConfirmer', async () => {
-    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
-    await waitNBlocks(300);
-    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
-    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
-    await assetManager.addPendingCollections();
-    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
-    await assertRevert(assetManager.addPendingCollections(), expectedRevertMessage);
-  });
-
-  it('deactivateAssets() should not be accessable by anyone besides AssetConfirmer', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
-
-    // Checking if StakeModifier can access it
-    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
-  });
-
-  it('deactivateAssets() should be accessable by AssetConfirmer', async () => {
-    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
-    await waitNBlocks(300);
-    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
-    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
-    await assetManager.deactivateAssets();
-    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
-    await assertRevert(assetManager.deactivateAssets(), expectedRevertMessage);
-  });
-
-  it('activateAssets() should not be accessable by anyone besides BlockConfirmer', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
-
-    // Checking if StakeModifier can access it
-    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
-  });
-
-  it('activateAssets() should be accessable by AssetConfirmer', async () => {
-    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
-    await waitNBlocks(300);
-    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
-    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
-    await assetManager.activateAssets();
-    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
-    await assertRevert(assetManager.activateAssets(), expectedRevertMessage);
   });
 
   it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
@@ -423,6 +342,9 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(assetModifierHash, signers[0].address);
     await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.setAssetStatus(1, true);
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.setAssetStatus(1, true), expectedRevertMessage);
@@ -451,6 +373,9 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection('test', [1, 2], 1, true);
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.createCollection('test', [1, 2], 1, true), expectedRevertMessage);
@@ -480,8 +405,11 @@ describe('Access Control Test', async () => {
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2');
     await assetManager.createJob('http://testurl.com/3', 'selector/3', 'test3');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection('test', [1, 2], 1, true);
-    await assetManager.addPendingCollections();
+    await mineToNextState();// confirm
     await assetManager.addJobToCollection(4, 3);
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.addJobToCollection(4, 3), expectedRevertMessage);
@@ -510,8 +438,11 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob('http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection('test', [1, 2], 1, true);
-    await assetManager.addPendingCollections();
+    await mineToNextState();// confirm
     await assetManager.removeJobFromCollection(3, 1);
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.removeJobFromCollection(3, 1), expectedRevertMessage);
