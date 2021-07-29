@@ -36,9 +36,11 @@ describe('VoteManager', function () {
     let assetManager;
     let initializeContracts;
     let revealedAssetsThisEpoch = {};
+
     let blockThisEpoch = {
       ids: [], medians: [],
     };
+    const toBeDisputedAssetId = 0;
     let revealedVotesForStaker = [];
     before(async () => {
       ({
@@ -532,6 +534,192 @@ describe('VoteManager', function () {
         assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
         assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+      });
+
+      it('if reported value is zero,should be able to commit', async function () {
+        await mineToNextEpoch();
+        await razor.transfer(signers[7].address, tokenAmount('19000'));
+        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('19000'));
+        await razor.transfer(signers[8].address, tokenAmount('17000'));
+        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('17000'));
+
+        const epoch = await getEpoch();
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('19000'));
+        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('17000'));
+
+        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[7]).commit(epoch, commitment1);
+        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
+        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc7);
+
+        assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
+      });
+
+      it('if reported value is zero, should not be able to reveal assigned assets', async function () {
+        const epoch = await getEpoch();
+        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
+        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
+        const numAssets = Number(await assetManager.getNumAssets());
+
+        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const tree = merkle('keccak256').sync(votes);
+
+        await mineToNextState(); // reveal
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc7, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+        // arguments getvVote => epoch, stakerId, assetId
+
+        await assertRevert(tx, 'revert');
+
+        // To Form Block Proposal On basis of revealed assets this epoch
+        revealedAssetsThisEpoch = {};
+        for (let i = 0; i < maxAssetsPerStaker; i++) {
+          revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
+        }
+
+        blockThisEpoch = {
+          ids: [], medians: [],
+        };
+        for (let i = 1; i <= numAssets; i++) {
+          if (revealedAssetsThisEpoch[i]) {
+            blockThisEpoch.ids.push(i);
+            blockThisEpoch.medians.push(i * 0);
+          }
+        }
+      });
+      it('if the reported value is zero, should not be able to propose', async function () {
+        const epoch = await getEpoch();
+
+        await mineToNextState(); // propose
+        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc7);
+
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const iteration = await getIteration(stakeManager, random, staker);
+
+        const tx = blockManager.connect(signers[7]).propose(epoch,
+          blockThisEpoch.ids,
+          blockThisEpoch.medians,
+          iteration,
+          biggestInfluencerId);
+
+        assertRevert(tx, 'revert');
+      });
+
+      it('if the reported value is zero, should not be able to dispute', async function () {
+        await mineToNextState(); // dispute
+        const epoch = await getEpoch();
+
+        const sortedVotes = [toBigNumber(toBeDisputedAssetId * 0)];
+
+        const tx = blockManager.connect(signers[8]).giveSorted(epoch, toBeDisputedAssetId, sortedVotes);
+
+        await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
+      });
+
+      it('if the reported value is zero , nothing should work in next epoch', async function () {
+        await mineToNextState(); // commit
+
+        let epoch = await getEpoch();
+        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[7]).commit(epoch, commitment1);
+
+        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
+        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc7);
+
+        assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
+
+        epoch = await getEpoch();
+
+        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
+        const numAssets = Number(await assetManager.getNumAssets());
+
+        const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const tree2 = merkle('keccak256').sync(votes2);
+
+        await mineToNextState(); // reveal
+
+        const proof2 = [];
+        for (let i = 0; i < votes2.length; i++) {
+          proof2.push(tree2.getProofPath(i, true, true));
+        }
+
+        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc7, votes2, proof2, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        const tx2 = voteManager.connect(signers[7]).reveal(epoch, tree2.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx2, 'revert');
+
+        // To Form Block Proposal On basis of revealed assets this epoch
+        revealedAssetsThisEpoch = {};
+        for (let i = 0; i < maxAssetsPerStaker; i++) {
+          revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
+        }
+
+        blockThisEpoch = {
+          ids: [], medians: [],
+        };
+        for (let i = 1; i <= numAssets; i++) {
+          if (revealedAssetsThisEpoch[i]) {
+            blockThisEpoch.ids.push(i);
+            blockThisEpoch.medians.push(i * 0);
+          }
+        }
+
+        epoch = await getEpoch();
+
+        await mineToNextState(); // propose
+
+        const staker = await stakeManager.getStaker(stakerIdAcc7);
+
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const iteration = await getIteration(stakeManager, random, staker);
+
+        const tx3 = blockManager.connect(signers[7]).propose(epoch,
+          blockThisEpoch.ids,
+          blockThisEpoch.medians,
+          iteration,
+          biggestInfluencerId);
+
+        assertRevert(tx3, 'revert');
+
+        await mineToNextState(); // dispute
+        epoch = await getEpoch();
+
+        const sortedVotes = [toBigNumber(toBeDisputedAssetId * 0)];
+
+        const tx4 = blockManager.connect(signers[8]).giveSorted(epoch, toBeDisputedAssetId, sortedVotes);
+
+        await assertRevert(tx4, 'sorted[i] is not greater than lastVisited');
       });
     });
   });
