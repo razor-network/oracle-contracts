@@ -1,4 +1,3 @@
-
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const setupContracts = async () => {

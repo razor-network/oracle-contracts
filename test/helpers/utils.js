@@ -77,7 +77,7 @@ const getEpoch = async () => {
   return blockNumber.div(EPOCH_LENGTH).toNumber();
 };
 
-const getIteration = async (voteManager, stakeManager, random, staker) => {
+const getIteration = async (voteManager, stakeManager, staker) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const influence = await stakeManager.getInfluence(stakerId);
@@ -97,7 +97,7 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
-const getAssignedAssets = async (voteManager, numAssets, stakerId, votes, proofs, maxAssetsPerStaker, random) => {
+const getAssignedAssets = async (voteManager, numAssets, stakerId, votes, proofs, maxAssetsPerStaker) => {
   const assignedAssetsVotes = [];
   const assignedAssetsProofs = [];
 

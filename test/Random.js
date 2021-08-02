@@ -9,13 +9,9 @@ const {
 
 describe('Random Test', async () => {
   let random;
-  let initializeContracts;
 
   before(async () => {
-    ({
-      random, initializeContracts,
-    } = await setupContracts());
-    signers = await ethers.getSigners();
+    ({ random } = await setupContracts());
   });
 
   it('prng should return correct value', async () => {

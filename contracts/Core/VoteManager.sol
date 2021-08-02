@@ -101,7 +101,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
-            secrets[thisStakerId] = secret;
+            secrets = keccak256(abi.encodePacked(secrets, secret));
             emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
         } else {
             //bounty hunter revealing someone else's secret in commit state
@@ -111,17 +111,13 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    function getRandaoHash() external view returns (bytes32) {
-        return (_getRandaoHash());
-    }
-
     function isAssetAllotedToStaker(
         uint256 stakerId,
         uint256 iteration,
         uint256 assetId
     ) public view returns (bool) {
         // bytes32 blockHashes = Random.blockHashes(10,parameters.epochLength());
-        bytes32 randaoHash = _getRandaoHash();
+        bytes32 randaoHash = getRandaoHash();
         bytes32 salt = keccak256(abi.encode(iteration + stakerId));
         bytes32 seed = Random.prngHash(randaoHash, salt);
         uint256 prng = Random.prng(assetManager.getNumAssets(), seed);
@@ -158,12 +154,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return (totalInfluenceRevealed[epoch][assetId]);
     }
 
-    function _getRandaoHash() internal view returns (bytes32) {
-        bytes32 sum;
-        for (uint8 i = 1; i <= stakeManager.getNumStakers(); i++) {
-            if (secrets[i] == 0x0) continue;
-            sum = keccak256(abi.encodePacked(sum, secrets[i]));
-        }
-        return (sum);
+    function getRandaoHash() public view returns (bytes32) {
+        return (secrets);
     }
 }

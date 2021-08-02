@@ -555,7 +555,7 @@ describe('StakeManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker, random);
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker);
         const assigneedAssetsVotes = assignedAssets[0];
         const assigneedAssetsProofs = assignedAssets[1];
 
@@ -581,7 +581,7 @@ describe('StakeManager', function () {
 
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-        const iteration = await getIteration(voteManager, stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
           blockThisEpoch.ids,

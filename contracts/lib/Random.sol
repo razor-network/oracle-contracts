@@ -10,7 +10,7 @@ library Random {
 
     // pseudo random hash generator based on block hashes.
     function prngHash(bytes32 seed, bytes32 salt) public pure returns (bytes32) {
-        bytes32 prngHash = keccak256(abi.encodePacked(seed, salt));
-        return (prngHash);
+        bytes32 prngHashVal = keccak256(abi.encodePacked(seed, salt));
+        return (prngHashVal);
     }
 }

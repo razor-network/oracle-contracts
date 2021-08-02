@@ -7,7 +7,7 @@ contract VoteStorage {
     //epoch -> stakerid -> commitment
     mapping(uint256 => mapping(uint256 => bytes32)) public commitments;
     //stakerid -> secret
-    mapping(uint256 => bytes32) public secrets;
+    bytes32 public secrets;
     //epoch -> stakerid -> assetid -> vote
     mapping(uint256 => mapping(uint256 => mapping(uint256 => Structs.Vote))) public votes;
     // epoch -> asset -> stakeWeight

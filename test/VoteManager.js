@@ -213,7 +213,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(voteManager, stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,
@@ -337,7 +337,7 @@ describe('VoteManager', function () {
 
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(voteManager, stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           blockThisEpoch.ids,

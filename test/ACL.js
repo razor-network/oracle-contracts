@@ -441,6 +441,4 @@ describe('Access Control Test', async () => {
     // New admin should be able to assign roles
     await stakeManager.connect(signers[1]).grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
   });
-
-
 });
