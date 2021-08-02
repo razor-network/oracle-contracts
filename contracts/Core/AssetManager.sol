@@ -6,9 +6,7 @@ import "./storage/AssetStorage.sol";
 import "./ACL.sol";
 import "./interface/IBlockManager.sol";
 
-
 contract AssetManager is ACL, AssetStorage {
-
     IParameters public parameters;
     IBlockManager public blockManager;
 
@@ -35,20 +33,9 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    event JobUpdated(
-        uint256 id,
-        uint256 epoch,
-        string url,
-        string selector,
-        uint256 timestamp
-    );
+    event JobUpdated(uint256 id, uint256 epoch, string url, string selector, uint256 timestamp);
 
-    event JobActivityStatus(
-        uint256 id,
-        uint256 epoch,
-        bool active,
-        uint256 timestamp
-    );
+    event JobActivityStatus(uint256 id, uint256 epoch, bool active, uint256 timestamp);
 
     event CollectionCreated(
         uint256 id,
@@ -73,20 +60,9 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    event CollectionUpdated(
-        uint256 id,
-        uint256 epoch,
-        string name,
-        uint256[] updatedJobIDs,
-        uint256 timestamp
-    );
+    event CollectionUpdated(uint256 id, uint256 epoch, string name, uint256[] updatedJobIDs, uint256 timestamp);
 
-    event CollectionActivityStatus(
-        uint256 id,
-        uint256 epoch,
-        bool active,
-        uint256 timestamp
-    );
+    event CollectionActivityStatus(uint256 id, uint256 epoch, bool active, uint256 timestamp);
 
     modifier checkState (uint256 state) {
         require(state == parameters.getState(), "incorrect state");
@@ -145,10 +121,7 @@ contract AssetManager is ACL, AssetStorage {
         uint256 jobID,
         string calldata url,
         string calldata selector
-    ) 
-        external 
-        onlyRole(parameters.getAssetModifierHash()) 
-    {
+    ) external onlyRole(parameters.getAssetModifierHash()) {
         require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
 
         uint256 epoch = parameters.getEpoch();
@@ -156,14 +129,7 @@ contract AssetManager is ACL, AssetStorage {
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
 
-        emit JobUpdated(
-        jobID,
-        epoch,
-        url,
-        selector,
-        block.timestamp
-        );
-
+        emit JobUpdated(jobID, epoch, url, selector, block.timestamp);
     }
 
     function setAssetStatus(
@@ -289,18 +255,12 @@ contract AssetManager is ACL, AssetStorage {
         require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
         require(jobs[jobID].active, "Job ID not active");
         require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
-        
+
         uint256 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobIDExist[jobID] = true;
 
-        emit CollectionUpdated(
-        collectionID,
-        epoch,
-        collections[collectionID].name,
-        collections[collectionID].jobIDs,
-        block.timestamp
-        );
+        emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
     function removeJobFromCollection(
@@ -313,20 +273,13 @@ contract AssetManager is ACL, AssetStorage {
     {
         require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
-        
+
         uint256 epoch = parameters.getEpoch();
 
         collections[collectionID].jobIDs[jobIDIndex] = collections[collectionID].jobIDs[collections[collectionID].jobIDs.length - 1];
         collections[collectionID].jobIDs.pop();
-    
 
-        emit CollectionUpdated(
-        collectionID,
-        epoch,
-        collections[collectionID].name,
-        collections[collectionID].jobIDs,
-        block.timestamp
-        );
+        emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
     function getResult(
@@ -349,12 +302,12 @@ contract AssetManager is ACL, AssetStorage {
     )
         external
         view
-        returns(
+        returns (
             string memory url,
             string memory selector,
             string memory name,
             bool active
-        ) 
+        )
     {
         require(jobs[id].assetType == uint256(assetTypes.Job), "ID is not a job");
         Structs.Job memory job = jobs[id];
@@ -379,47 +332,29 @@ contract AssetManager is ACL, AssetStorage {
         return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result, collections[id].active, collections[id].repeat);
     }
 
-    function getAssetType(
-        uint256 id
-    )
-        external
-        view
-        returns(
-            uint256
-        )
-    {
+    function getAssetType(uint256 id) external view returns (uint256) {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
-        if(jobs[id].assetType == uint256(assetTypes.Job)){
+        if (jobs[id].assetType == uint256(assetTypes.Job)) {
             return uint256(assetTypes.Job);
-        }
-        else{
+        } else {
             return uint256(assetTypes.Collection);
         }
     }
 
-    function getActiveStatus(
-        uint256 id
-    )
-        external
-        view
-        returns(
-            bool
-        )
-    {
+    function getActiveStatus(uint256 id) external view returns (bool) {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
-        if(jobs[id].assetType == uint256(assetTypes.Job)){
+        if (jobs[id].assetType == uint256(assetTypes.Job)) {
             return jobs[id].active;
-        } 
-        else{
+        } else {
             return collections[id].active;
         }
     }
 
-    function getNumAssets() external view returns(uint256) {
+    function getNumAssets() external view returns (uint256) {
         return numAssets;
     }
 

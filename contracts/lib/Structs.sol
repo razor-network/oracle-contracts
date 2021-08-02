@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-
 library Structs {
     struct Vote {
         uint256 value;
@@ -53,12 +52,12 @@ library Structs {
         uint256 assetType;
     }
 
-    struct Collection{
+    struct Collection {
         uint256 id;
         string name;
         uint32 aggregationMethod;
         uint256[] jobIDs;
-        mapping(uint256=>bool) jobIDExist;
+        mapping(uint256 => bool) jobIDExist;
         uint256 epoch;
         bool active;
         bool repeat;
@@ -67,4 +66,8 @@ library Structs {
         uint256 assetType;
     }
 
+    struct AssignedAsset {
+        uint256 id;
+        uint256 value;
+    }
 }
