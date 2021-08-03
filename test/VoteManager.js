@@ -65,13 +65,13 @@ describe('VoteManager', function () {
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
-        await assertRevert(tx, 'Contract should be initialized');
+        assertRevert(tx, 'Contract should be initialized');
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
         const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address,
           parameters.address, assetManager.address);
-        await assertRevert(tx, 'AccessControl');
+        assertRevert(tx, 'AccessControl');
       });
 
       it('should be able to initialize', async function () {
@@ -142,7 +142,7 @@ describe('VoteManager', function () {
         );
 
         const tx = voteManager.connect(signers[3]).commit(epoch, commitment1);
-        await assertRevert(tx, 'already commited');
+        assertRevert(tx, 'already commited');
       });
 
       it('should be able to reveal assigned assets', async function () {
@@ -173,7 +173,7 @@ describe('VoteManager', function () {
         let tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
-        await assertRevert(tx, 'Revealed assets not equal to required assets per staker');
+        assertRevert(tx, 'Revealed assets not equal to required assets per staker');
 
         // Incorrect Reveal
         assignedAssetsVotesCopy.splice(5, 6);
@@ -182,7 +182,7 @@ describe('VoteManager', function () {
         tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
-        await assertRevert(tx, 'Revealed asset not alloted');
+        assertRevert(tx, 'Revealed asset not alloted');
 
         // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
@@ -244,7 +244,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
 
-        await assertRevert(tx, 'not commited or already revealed');
+        assertRevert(tx, 'not commited or already revealed');
       });
 
       it('should be able to commit again with correct influence', async function () {
@@ -509,7 +509,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'Structs.Staker does not exist');
+        assertRevert(tx, 'Structs.Staker does not exist');
       });
 
       it('should not be able to commit if stake is below minstake', async function () {
@@ -607,7 +607,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'Not reveal state');
+        assertRevert(tx, 'Not reveal state');
       });
 
       it('Should not be able to reveal others secret if not in commit state', async function () {
@@ -632,7 +632,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'Not commit state');
+        assertRevert(tx, 'Not commit state');
       });
 
       it('Should not be able to reveal with incorrect value', async function () {
@@ -656,7 +656,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'incorrect secret/value');
+        assertRevert(tx, 'incorrect secret/value');
       });
 
       it('Should not be able to reveal with incorrect secret', async function () {
@@ -680,7 +680,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc',
           signers[7].address); // last digit 'd' changed to 'c' for having incorrect secret
 
-        await assertRevert(tx, 'incorrect secret/value');
+        assertRevert(tx, 'incorrect secret/value');
       });
 
       it('Should not be able to reveal with invalid MerkleProof', async function () {
@@ -704,7 +704,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'invalid merkle proof');
+        assertRevert(tx, 'invalid merkle proof');
       });
 
       it('Staker should not be able to commit in present epoch for commitment of next epoch', async function () {
@@ -719,7 +719,7 @@ describe('VoteManager', function () {
         );
 
         const tx = voteManager.connect(signers[7]).commit(epoch + 1, commitment);
-        await assertRevert(tx, 'incorrect epoch');
+        assertRevert(tx, 'incorrect epoch');
       });
 
       it('Staker should not be able to reveal if stake is zero', async function () {
@@ -755,7 +755,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'nonpositive stake');
+        assertRevert(tx, 'nonpositive stake');
       });
 
       it('Should be able to slash if stake is zero', async function () {
