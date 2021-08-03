@@ -57,7 +57,8 @@ module.exports = async () => {
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, parametersAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress,
+    parametersAddress, assetManagerAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
@@ -68,8 +69,9 @@ module.exports = async () => {
   pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManagerAddress));
-  pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address));
-
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address));
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 
   // eslint-disable-next-line no-console

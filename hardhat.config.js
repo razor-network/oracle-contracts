@@ -32,7 +32,7 @@ const ENV_CHAIN_IDS = {
 module.exports = {
   defaultNetwork: 'hardhat',
   solidity: {
-    version: '0.8.6',
+    version: '0.8.4',
     settings: {
       optimizer: {
         enabled: true,
@@ -43,10 +43,6 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
-    },
-    coverage: {
-      url: 'http://localhost:8555',
-      gas: 0xfffffffffff,
     },
     ganache: {
       url: `http://${PROVIDER_HOST}:${PROVIDER_PORT}`,

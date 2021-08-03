@@ -18,8 +18,10 @@ const {
   getEpoch,
   toBigNumber,
   tokenAmount,
-  getBiggestStakeAndId,
+  getBiggestInfluenceAndId,
   getIteration,
+  getAssignedAssets,
+  maturity,
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
@@ -32,9 +34,16 @@ describe('StakeManager', function () {
     let stakeManager;
     let rewardManager;
     let voteManager;
+    let assetManager;
     let initializeContracts;
     let stakedToken;
     let random;
+    let maxAssetsPerStaker;
+    let numAssets;
+    let revealedAssetsThisEpoch = {};
+    let blockThisEpoch = {
+      ids: [], medians: [],
+    };
 
     before(async () => {
       ({
@@ -44,6 +53,7 @@ describe('StakeManager', function () {
         rewardManager,
         parameters,
         voteManager,
+        assetManager,
         initializeContracts,
         stakedToken,
         random,
@@ -68,11 +78,24 @@ describe('StakeManager', function () {
         voteManager.address,
         parameters.address
       );
-      await assertRevert(tx, 'ACL: sender not authorized');
+      await assertRevert(tx, 'AccessControl');
     });
 
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
+
+      // Before Staker could commit even if there were no jobs, now as we are moving to assgined jobs, we need to create them first, and then only commit
+      await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address);
+      const url = 'http://testurl.com';
+      const selector = 'selector';
+      const name = 'test';
+      const repeat = true;
+      let i = 0;
+      while (i < 9) { await assetManager.createJob(url, selector, name, repeat); i++; }
+      // By default its 2 setting it 5
+      await parameters.setmaxAssetsPerStaker(5);
+      maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
+      numAssets = Number(await assetManager.getNumAssets());
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');
@@ -82,11 +105,37 @@ describe('StakeManager', function () {
       await razor.transfer(signers[4].address, stake1); // Chosen Staker by the Delegator
       await razor.transfer(signers[5].address, stake1); // Delegator
       await razor.transfer(signers[6].address, stake1); // new Delegator
+      await razor.transfer(signers[7].address, stake1);
+    });
+
+    it('should not allow non admin to pause', async function () {
+      const tx1 = stakeManager.connect(signers[1]).pause();
+      assertRevert(tx1, 'AccessControl');
+    });
+
+    it('should not be able to stake if contract is paused', async function () {
+      const epoch = await getEpoch();
+      const stake1 = tokenAmount('420000');
+
+      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[0]).pause();
+
+      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
+      assertRevert(tx, 'pause');
+    });
+
+    it('should not allow pause if already paused', async function () {
+      const tx = stakeManager.connect(signers[0]).pause();
+      assertRevert(tx, 'pause');
+      await stakeManager.connect(signers[0]).unpause();
     });
 
     it('should be able to stake', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
+      const age1 = 10000;
+      const maturity1 = await maturity(age1);
+      const influence1 = stake1.mul(toBigNumber(maturity1));
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
@@ -99,6 +148,8 @@ describe('StakeManager', function () {
       assertBNEqual(numStakers, toBigNumber('1'));
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
+      assertBNEqual(staker.age, age1, 'age is incorrect');
+      assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
 
@@ -201,6 +252,58 @@ describe('StakeManager', function () {
       assertBNEqual(await razor.balanceOf(staker._address), prevBalance.add(rAmount), 'Balance should be equal');
     });
 
+    it('should allow staker to add stake after withdraw or slash if either withdrawnAmount or slashPenaltyAmount is not the whole stake', async function () {
+      const epoch = await getEpoch();
+      const stake = tokenAmount('20000');
+      const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
+      const stakeBeforeAcc1 = (await stakeManager.stakers(stakerIdAcc1)).stake;
+      await razor.connect(signers[1]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[1]).stake(epoch, stake); // adding stake after withdraw
+      const stakeAfterAcc1 = (await stakeManager.stakers(stakerIdAcc1)).stake;
+      assertBNEqual(stakeAfterAcc1, stakeBeforeAcc1.add(stake), 'Stake did not increase on staking after withdraw');
+
+      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+      await parameters.setSlashPenaltyNum(5000); // slashing only half stake
+      await stakeManager.slash(stakerIdAcc1, signers[10].address, epoch); // slashing signers[1]
+
+      const slashPenaltyAmount = (stakeAfterAcc1.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
+      let staker = await stakeManager.getStaker(stakerIdAcc1);
+      const stakeAfterSlash = staker.stake;
+      assertBNEqual(stakeAfterSlash, stakeAfterAcc1.sub(slashPenaltyAmount), 'Stake should be less by slashPenalty');
+
+      const stake2 = tokenAmount('20000');
+      await razor.connect(signers[1]).approve(stakeManager.address, stake2);
+      await stakeManager.connect(signers[1]).stake(epoch, stake2);
+      staker = await stakeManager.getStaker(stakerIdAcc1);
+      assertBNEqual(staker.stake, stakeAfterSlash.add(stake2), 'Stake did not increase on staking after slash');
+    });
+
+    it('should not allow staker to add stake after withdrawing whole amount', async function () {
+      let epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[1].address);
+      let staker = await stakeManager.getStaker(stakerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const amount = await sToken.balanceOf(staker._address);
+      await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+        await mineToNextEpoch();
+      }
+      const prevBalance = await razor.balanceOf(staker._address);
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = ((lock.amount).mul(staker.stake)).div(totalSupply);
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      await (stakeManager.connect(signers[1]).withdraw(epoch, 1));
+      staker = await stakeManager.getStaker(stakerId);
+      assertBNEqual(staker.stake, toBigNumber('0'), 'Updated stake is not equal to calculated stake');
+      assertBNEqual(await razor.balanceOf(staker._address), prevBalance.add(rAmount), 'Balance should be equal');
+      const stake = await razor.balanceOf(staker._address);
+      await razor.connect(signers[1]).approve(stakeManager.address, stake);
+      const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
+      await assertRevert(tx, 'Stakers Stake is 0');
+    });
+
     it('Staker should not be able to withdraw after withdraw lock period if voted in withdraw lock period', async function () {
       // @notice: Checking for Staker 2
       const stake = tokenAmount('19000');
@@ -229,7 +332,12 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
+
+      const assignedAssets = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[2].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[2].address);
 
@@ -270,7 +378,12 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+
+      const assignedAssets = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[3].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[3].address);
       // Staker 3 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
@@ -307,7 +420,12 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
-      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+
+      const assignedAssets = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[3].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[3].address);
       // Staker is not penalised because no. of inactive epochs (8) <= max allowed inactive epochs i.e grace_period (8)
@@ -407,6 +525,16 @@ describe('StakeManager', function () {
       assert.isAbove(earlierCommission, updatedCommission2, 'Commission is decreased');
     });
 
+    it('Delegator should not be able to unstake if contract is paused', async function () {
+      const epoch = await getEpoch();
+      await stakeManager.connect(signers[0]).pause();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const amount = tokenAmount('20000');
+      const tx = stakeManager.connect(signers[5]).unstake(epoch, stakerId, amount);
+      await assertRevert(tx, 'paused');
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
     it('Delegator should be able to unstake when there is no existing lock', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -437,6 +565,16 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
       await assertRevert(tx, 'Withdraw epoch not reached');
       assertBNEqual(staker.stake, prevStake, 'Stake should not change');
+    });
+
+    it('Delegator should not be able to withdraw if contract is paused', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      await stakeManager.connect(signers[0]).pause();
+      const tx = stakeManager.connect(signers[5]).withdraw(epoch, stakerId);
+      await assertRevert(tx, 'paused');
+      await stakeManager.connect(signers[0]).unpause();
     });
 
     it('Delegator should be able to withdraw after withdraw lock period', async function () {
@@ -489,22 +627,40 @@ describe('StakeManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
+
+        const assignedAssets = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
         // propose
+        // To Form Block Proposal On basis of revealed assets this epoch
+        revealedAssetsThisEpoch = {};
+        for (let i = 0; i < maxAssetsPerStaker; i++) {
+          revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
+        }
+        blockThisEpoch = {
+          ids: [], medians: [],
+        };
+        for (let i = 1; i <= numAssets; i++) {
+          if (revealedAssetsThisEpoch[i]) {
+            blockThisEpoch.ids.push(i);
+            blockThisEpoch.medians.push(i * 100);
+          }
+        }
+
         await mineToNextState();
-        const { biggestStakerId } = await getBiggestStakeAndId(stakeManager);
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(stakeManager, random, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
-          [1, 2, 3, 4, 5, 6, 7, 8, 9],
-          [100, 200, 300, 400, 500, 600, 700, 800, 900],
-          [99, 199, 299, 399, 499, 599, 699, 799, 899],
-          [101, 201, 301, 401, 501, 601, 701, 801, 901],
+          blockThisEpoch.ids,
+          blockThisEpoch.medians,
           iteration,
-          biggestStakerId);
+          biggestInfluencerId);
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
         assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
 
@@ -591,7 +747,12 @@ describe('StakeManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
-        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
+
+        const assignedAssets = await getAssignedAssets(numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
@@ -662,6 +823,14 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Release Period Passed');
     }).timeout(100000);
 
+    it('Delegator/Staker should not be able to call resetlock if contract is paused', async function () {
+      const staker = await stakeManager.getStaker(4);
+      await stakeManager.connect(signers[0]).pause();
+      const tx = stakeManager.connect(signers[5]).resetLock(staker.id);
+      await assertRevert(tx, 'paused');
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
     it('Delegetor/Staker should be penalized when calling reset lock', async function () {
       let staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
@@ -725,6 +894,113 @@ describe('StakeManager', function () {
       const DelegatorBalance = await razor.balanceOf(signers[6].address);
       const newBalance = prevBalance.add(rAmount);
       assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
+    });
+
+    it('should not allow staker to add stake after being slashed the whole amount', async function () {
+      const epoch = await getEpoch();
+      const stake1 = tokenAmount('423000');
+      await razor.connect(signers[7]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[7]).stake(epoch, stake1);
+      const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
+      await parameters.setSlashPenaltyNum(10000);
+      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+      await stakeManager.slash(stakerIdAcc7, signers[10].address, epoch); // slashing whole stake of signers[7]
+      const stake2 = tokenAmount('20000');
+      await razor.connect(signers[7]).approve(stakeManager.address, stake2);
+      const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);
+      await assertRevert(tx, 'Stakers Stake is 0');
+    });
+
+    it('non admin should not be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[1].address);
+      await stakeManager.connect(signers[0]).pause();
+      const tx = stakeManager.connect(signers[1]).escape(signers[1].address);
+
+      await assertRevert(tx, 'AccessControl');
+
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[1].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should be able to withdraw funds in emergency', async function () {
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).escape(signers[0].address);
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceAdminAfter.sub(balanceAdminBefore), 'admin didnt get entire balance');
+      assertBNEqual(balanceContractAfter, toBigNumber(0), 'stakeManager still has balance');
+    });
+
+    it('admin should not be able to withdraw funds if escape hatch is disabled', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await parameters.connect(signers[0]).disableEscapeHatch();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'escape hatch is disabled');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('admin should not be able to withdraw funds if contract is not paused', async function () {
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      const balanceContractBefore = await razor.balanceOf(stakeManager.address);
+      const balanceAdminBefore = await razor.balanceOf(signers[0].address);
+      await stakeManager.connect(signers[0]).unpause();
+      const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
+      await assertRevert(tx, 'paused');
+      const balanceContractAfter = await razor.balanceOf(stakeManager.address);
+      const balanceAdminAfter = await razor.balanceOf(signers[0].address);
+      assertBNEqual(balanceContractBefore, balanceContractAfter, 'contract balance changed');
+      assertBNEqual(balanceAdminBefore, balanceAdminAfter, 'staker balance changed');
+    });
+
+    it('Delegator should not be able to delegate if contract is paused', async function () {
+      const epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const delegatedStake = tokenAmount('100000');
+      await stakeManager.connect(signers[0]).pause();
+      await razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
+      const tx = stakeManager.connect(signers[5]).delegate(epoch, delegatedStake, stakerId);
+      await assertRevert(tx, 'paused');
+    });
+
+    it('Staker should not be able to unstake if contract is paused', async function () {
+      const epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const amount = tokenAmount('20000');
+      const tx = stakeManager.connect(signers[4]).unstake(epoch, stakerId, amount);
+      await assertRevert(tx, 'paused');
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
+    it('Staker should not be able to withdraw if contract is paused', async function () {
+      let epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      let staker = await stakeManager.getStaker(stakerId);
+      const amount = tokenAmount('20000');
+      await stakeManager.connect(signers[4]).unstake(epoch, stakerId, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      const prevStake = staker.stake;
+      const prevBalance = await razor.balanceOf(staker._address);
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[0]).pause();
+      const tx = stakeManager.connect(signers[4]).withdraw(epoch, stakerId);
+      const presentBalance = await razor.balanceOf(staker._address);
+      staker = await stakeManager.getStaker(stakerId);
+      await assertRevert(tx, 'paused');
+      assertBNEqual(prevStake, staker.stake, "Staker's stake changed");
+      assertBNEqual(prevBalance, presentBalance, "Staker's razor balance changed");
     });
   });
 });
