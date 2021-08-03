@@ -134,7 +134,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     event Delegated(uint256 epoch, uint256 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
-    event DelegationEnabled(uint256 indexed stakerId, address staker, bool delegationEnabled);
+    event DelegationAcceptanceChanged(uint256 indexed stakerId, address staker, bool delegationEnabled);
 
     modifier checkEpoch(uint256 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -332,7 +332,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
-        emit DelegationEnabled(stakerId, msg.sender, status);
+        emit DelegationAcceptanceChanged(stakerId, msg.sender, status);
     }
 
     /// @notice Used by staker to set commision for delegation
