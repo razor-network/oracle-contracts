@@ -271,13 +271,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint256 stakerId)
-        external
-        initialized
-        checkEpoch(epoch)
-        checkState(parameters.commit())
-        whenNotPaused
-    {
+    function withdraw(uint32 epoch, uint256 stakerId) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 

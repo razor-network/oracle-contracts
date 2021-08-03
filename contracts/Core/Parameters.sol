@@ -123,7 +123,7 @@ contract Parameters is ACL {
     }
 
     function getEpoch() external view returns (uint32) {
-        return (uint32(block.number)/ (epochLength));
+        return (uint32(block.number) / (epochLength));
     }
 
     function getState() external view returns (uint32) {
@@ -174,7 +174,7 @@ contract Parameters is ACL {
     function getAssetModifierHash() external pure returns (bytes32) {
         return _ASSET_MODIFIER_HASH;
     }
-    
+
     function getVoteModifierHash() external pure returns (bytes32) {
         return _VOTE_MODIFIER_HASH;
     }

@@ -60,5 +60,4 @@ interface IStakeManager {
     function getInfluence(uint256 stakerId) external view returns (uint256);
 
     function getStake(uint256 stakerId) external view returns (uint256);
-
 }

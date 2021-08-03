@@ -63,7 +63,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
         commitments[stakerId] = Structs.Commitment({epoch: epoch, commitmentHash: commitment});
         emit Committed(epoch, stakerId, commitment, block.timestamp);
-
     }
 
     function reveal(
@@ -86,9 +85,9 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
-                if ((votes[thisStakerId][values[i].id - 1]).epoch!=epoch) {
-                  console.log('values[i].id',values[i].id);
-                  console.log('thisStakerId',thisStakerId);
+                if ((votes[thisStakerId][values[i].id - 1]).epoch != epoch) {
+                    console.log("values[i].id", values[i].id);
+                    console.log("thisStakerId", thisStakerId);
                     // If Job Not Revealed before
                     require(isAssetAllotedToStaker(thisStakerId, i, values[i].id), "Revealed asset not alloted");
                     require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
@@ -131,10 +130,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return (commitments[stakerId]);
     }
 
-    function getVote(
-        uint256 stakerId,
-        uint256 assetId
-    ) external view returns (Structs.Vote memory vote) {
+    function getVote(uint256 stakerId, uint256 assetId) external view returns (Structs.Vote memory vote) {
         //epoch -> stakerid -> assetid -> vote
         return (votes[stakerId][assetId]);
     }

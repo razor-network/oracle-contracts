@@ -8,7 +8,7 @@ library Structs {
         uint256 weight;
     }
 
-    struct Commitment  {
+    struct Commitment {
         uint32 epoch;
         bytes32 commitmentHash;
     }

@@ -261,33 +261,28 @@ describe('BlockManager', function () {
       }
     });
 
-
-
     it('should show correct getTotalInfluenceRevealed', async function () {
+      // const stakerIdAccount1 = await stakeManager.stakerIds(signers[5].address);
+      // const stakerIdAccount2 = await stakeManager.stakerIds(signers[6].address);
+      // const stakerIdAccount3 = await stakeManager.stakerIds(signers[8].address);
+      // const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
+      // const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
+      // const influence3 = await stakeManager.getInfluence(stakerIdAccount3);
+      const epoch = await getEpoch();
 
-            const stakerIdAccount1 = await stakeManager.stakerIds(signers[5].address);
-            const stakerIdAccount2 = await stakeManager.stakerIds(signers[6].address);
-            const stakerIdAccount3 = await stakeManager.stakerIds(signers[8].address);
-            const influence1 = await stakeManager.getInfluence(stakerIdAccount1);
-            const influence2 = await stakeManager.getInfluence(stakerIdAccount2);
-            const influence3 = await stakeManager.getInfluence(stakerIdAccount3);
-            const epoch = await getEpoch();
-
-//console.log('individua; influences' , influence1.toString(),influence2.toString(),influence3.toString());
-      const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, toBeDisputedAssetId-1);
+      // console.log('individua; influences' , influence1.toString(),influence2.toString(),influence3.toString());
+      const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, toBeDisputedAssetId - 1);
       let weights = tokenAmount('0');
       for (let i = 0; i < weightsPerRevealedAssets[toBeDisputedAssetId].length; i++) {
         weights = weights.add(weightsPerRevealedAssets[toBeDisputedAssetId][i]);
       }
 
-//console.log('weightsPerRevealedAssets[toBeDisputedAssetId]',weightsPerRevealedAssets[toBeDisputedAssetId].toString())
-//console.log('weights',weights.toString())
-//console.log('totalInfluenceRevealed',totalInfluenceRevealed.toString())
-assertBNEqual( weights, totalInfluenceRevealed, 'total influence mismatch');
-// assertBNEqual(influence1.add(influence2.add(influence3)), totalInfluenceRevealed, 'total influence mismatch')
-
-})
-
+      // console.log('weightsPerRevealedAssets[toBeDisputedAssetId]',weightsPerRevealedAssets[toBeDisputedAssetId].toString())
+      // console.log('weights',weights.toString())
+      // console.log('totalInfluenceRevealed',totalInfluenceRevealed.toString())
+      assertBNEqual(weights, totalInfluenceRevealed, 'total influence mismatch');
+      // assertBNEqual(influence1.add(influence2.add(influence3)), totalInfluenceRevealed, 'total influence mismatch')
+    });
 
     it('should be able to propose', async function () {
       const epoch = await getEpoch();
@@ -449,7 +444,7 @@ assertBNEqual( weights, totalInfluenceRevealed, 'total influence mismatch');
       await voteManager.connect(signers[6]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[6].address);
-//console.log('assigneedAssetsVotes',assigneedAssetsVotes)
+      // console.log('assigneedAssetsVotes',assigneedAssetsVotes)
       // Staker 7
       const proof2 = [];
       for (let i = 0; i < votes2.length; i++) {
@@ -461,7 +456,7 @@ assertBNEqual( weights, totalInfluenceRevealed, 'total influence mismatch');
       await voteManager.connect(signers[7]).reveal(epoch, tree2.root(), assigneedAssetsVotes2, assigneedAssetsProofs2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[7].address);
-        //console.log('assigneedAssetsVotes2',assigneedAssetsVotes2)
+      // console.log('assigneedAssetsVotes2',assigneedAssetsVotes2)
 
       blockThisEpoch = {
         ids: [], medians: [],
@@ -517,7 +512,7 @@ assertBNEqual( weights, totalInfluenceRevealed, 'total influence mismatch');
           } else blockThisEpoch.medians.push(i * 1000);
         }
       }
-      //console.log('blockThisEpoch',blockThisEpoch)
+      // console.log('blockThisEpoch',blockThisEpoch)
     });
 
     it('all blocks being disputed', async function () {
@@ -570,7 +565,7 @@ assertBNEqual( weights, totalInfluenceRevealed, 'total influence mismatch');
         weights = [influence2];
       }
 
-//console.log(sortedVotes1.toString(), weights.toString(), (toBeDisputedAssetId - 1).toString() )
+      // console.log(sortedVotes1.toString(), weights.toString(), (toBeDisputedAssetId - 1).toString() )
       const {
         median: median1,
         totalInfluenceRevealed: totalInfluenceRevealed1,

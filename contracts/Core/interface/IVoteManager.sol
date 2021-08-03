@@ -18,17 +18,13 @@ interface IVoteManager {
 
     function getCommitment(uint256 stakerId) external view returns (bytes32);
 
-    function getVote(
-        uint256 stakerId,
-        uint256 assetId
-    ) external view returns (Structs.Vote memory vote);
+    function getVote(uint256 stakerId, uint256 assetId) external view returns (Structs.Vote memory vote);
 
     function getVoteWeight(
-      uint32 epoch,
+        uint32 epoch,
         uint256 assetId,
         uint256 voteValue
     ) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint32 epoch, uint256 assetId) external view returns (uint256);
-
-  }
+}

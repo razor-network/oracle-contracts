@@ -120,9 +120,9 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         _giveInactivityPenalties(stakerId, epoch);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastRevealed = thisStaker.epochLastRevealed;
-        if ( epochLastRevealed < epoch - 1) {
-          stakeManager.setStakerAge(thisStaker.id, 0, epoch);
-          return;
+        if (epochLastRevealed < epoch - 1) {
+            stakeManager.setStakerAge(thisStaker.id, 0, epoch);
+            return;
         }
         uint256 previousAge = thisStaker.age;
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
