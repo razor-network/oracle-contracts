@@ -22,6 +22,7 @@ contract Parameters is ACL {
     uint256 public withdrawReleasePeriod = 5;
     uint256 public resetLockPenalty = 1;
     uint256 public maxAge = 100 * 10000;
+    uint256 public maxAssetsCreatedPerEpoch = 20;
     // Note : maxAssetsPerStaker should be less than total no of jobs
     uint256 public maxAssetsPerStaker = 2;
     bool public escapeHatchEnabled = true;
@@ -114,6 +115,10 @@ contract Parameters is ACL {
 
     function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxAge = _maxAge;
+    }
+
+    function setMaxAssetsCreatedPerEpoch(uint256 _maxAssetsCreatedPerEpoch) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxAssetsCreatedPerEpoch = _maxAssetsCreatedPerEpoch;
     }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {

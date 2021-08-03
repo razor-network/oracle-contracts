@@ -252,6 +252,26 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Job exists in this collection');
     });
 
+    it('should not be able to create an asset more than maximum limit', async function () {
+      await mineToNextEpoch();
+      const url = 'http://testurl.com';
+      const selector = 'selector';
+      const name = 'test';
+      let i = 0;
+      let j = 0;
+      while (i < 20) { await assetManager.createJob(url, selector, name); i++; }
+      const tx = assetManager.createJob(url, selector, name);
+      await assertRevert(tx, 'Asset Creation Limit Reached');
+      await mineToNextEpoch();
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      const Cname = 'Test Collection';
+      while (j < 20) { await assetManager.createCollection(Cname, [1, 2], 1, true); j++; }
+      const tx1 = assetManager.createCollection(Cname, [1, 2], 1, true);
+      await assertRevert(tx1, 'Asset Creation Limit Reached');
+    });
+
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);

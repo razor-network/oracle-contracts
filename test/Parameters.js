@@ -33,6 +33,7 @@ describe('Parameters contract Tests', async () => {
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('100');
   const aggregationRange = toBigNumber('3');
+  const maxAssetsCreatedPerEpoch = toBigNumber('20');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
   const assetConfirmerHash = utils.solidityKeccak256(['string'], ['ASSET_CONFIRMER_ROLE']);
@@ -102,6 +103,9 @@ describe('Parameters contract Tests', async () => {
 
     tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setMaxAssetsCreatedPerEpoch(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
   });
 
   it('parameters should be able to modify with admin role access', async () => {
@@ -144,6 +148,10 @@ describe('Parameters contract Tests', async () => {
     await parameters.setAggregationRange(toBigNumber('15'));
     const aggregationRange = await parameters.aggregationRange();
     assertBNEqual(aggregationRange, toBigNumber('15'));
+
+    await parameters.setMaxAssetsCreatedPerEpoch(toBigNumber('15'));
+    const maxAssetsCreatedPerEpoch = await parameters.maxAssetsCreatedPerEpoch();
+    assertBNEqual(maxAssetsCreatedPerEpoch, toBigNumber('15'));
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -206,5 +214,8 @@ describe('Parameters contract Tests', async () => {
 
     const aggregationRangeValue = await parameters.aggregationRange();
     assertBNEqual(aggregationRange, aggregationRangeValue);
+
+    const maxAssetsCreatedPerEpochValue = await parameters.maxAssetsCreatedPerEpoch();
+    assertBNEqual(maxAssetsCreatedPerEpoch, maxAssetsCreatedPerEpochValue);
   });
 });

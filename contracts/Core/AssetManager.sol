@@ -91,8 +91,10 @@ contract AssetManager is ACL, AssetStorage {
         onlyRole(parameters.getAssetModifierHash()) 
     {
         uint256 epoch = parameters.getEpoch();
-        
+        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(),"Asset Creation Limit Reached");
+
         numAssets = numAssets + 1;
+        numAssetsCreated[epoch]++;
 
         Structs.Job memory job = Structs.Job(
             numAssets, 
@@ -209,8 +211,10 @@ contract AssetManager is ACL, AssetStorage {
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         uint256 epoch = parameters.getEpoch();
-
+        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(),"Asset Creation Limit Reached");
+        
         numAssets = numAssets + 1;
+        numAssetsCreated[epoch]++;
         collections[numAssets].id = numAssets;
         collections[numAssets].name = name;
         collections[numAssets].aggregationMethod = aggregationMethod;
