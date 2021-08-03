@@ -153,11 +153,26 @@ contract AssetManager is ACL, AssetStorage {
             emit JobActivityStatus(id, epoch, jobs[id].active, block.timestamp);
         } else {
             collections[id].active = assetStatus;
+            if(assetStatus) {
+                activeAssets.push(id);
+            }
+            else {
+                for(uint j = 0; j < activeAssets.length; j++){
+                    if(id == activeAssets[j]){
+                        activeAssets[j] = activeAssets[activeAssets.length - 1];
+                        activeAssets.pop();
+                        break;
+                    }
+                }
+            }
 
             emit CollectionActivityStatus(id, epoch, collections[id].active, block.timestamp);
         }
     }
 
+    // fulfills a collection by assigning a value to each collection.
+    // if repeat is false, a value is assigned to it and the collection will be deactivated.
+    // if repeat is true, the collection will never be deactivated unless it is manually deactivated.
     function fulfillAsset(
         uint256 id,
         uint256 value
@@ -212,7 +227,7 @@ contract AssetManager is ACL, AssetStorage {
 
         uint256 epoch = parameters.getEpoch();
         require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(),"Asset Creation Limit Reached");
-        
+
         numAssets = numAssets + 1;
         numAssetsCreated[epoch]++;
         collections[numAssets].id = numAssets;

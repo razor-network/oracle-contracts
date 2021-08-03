@@ -10,6 +10,7 @@ const {
   assertRevert,
   mineToNextEpoch,
   mineToNextState,
+  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 
 const {
@@ -149,12 +150,14 @@ describe('AssetManager', function () {
       await assetManager.setAssetStatus(6, false);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === false);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('1'));
     });
 
     it('should be able to reactivate collection', async function () {
       await assetManager.setAssetStatus(6, true);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === true);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('2'));
       await assetManager.setAssetStatus(6, false);
     });
 

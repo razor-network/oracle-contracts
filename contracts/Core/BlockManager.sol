@@ -123,12 +123,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
         for (uint8 i = 0; i < proposedBlocks[epoch].length; i++) {
-            if (proposedBlocks[epoch][i].valid) {
-                require(proposedBlocks[epoch][i].proposerId == stakerId, "Block can be confirmed by proposer of the block");
-                _confirmBlock(epoch, i);
-                rewardManager.giveBlockReward(stakerId, epoch);
-                return;
+            if (!proposedBlocks[epoch][i].valid) {
+                continue;
             }
+            require(proposedBlocks[epoch][i].proposerId == stakerId, "Block can be confirmed by proposer of the block");
+            _confirmBlock(epoch, i);
+            rewardManager.giveBlockReward(stakerId, epoch);
+            return;
         }
     }
 
@@ -136,11 +137,12 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 epoch = parameters.getEpoch();
 
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
-            if (proposedBlocks[epoch - 1][i].valid) {
-                _confirmBlock(epoch - 1, i);
-                rewardManager.giveBlockReward(stakerId, epoch);
-                return;
+            if (!proposedBlocks[epoch - 1][i].valid) {
+                continue;
             }
+            _confirmBlock(epoch - 1, i);
+            rewardManager.giveBlockReward(stakerId, epoch);
+            return;
         }
     }
 
