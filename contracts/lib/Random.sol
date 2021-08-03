@@ -7,7 +7,7 @@ library Random {
         uint8 numBlocks,
         uint256 max,
         bytes32 seed,
-        uint256 epochLength
+        uint32 epochLength
     ) public view returns (uint256) {
         bytes32 hash = prngHash(numBlocks, seed, epochLength);
         uint256 sum = uint256(hash);
@@ -18,14 +18,14 @@ library Random {
     function prngHash(
         uint8 numBlocks,
         bytes32 seed,
-        uint256 epochLength
+        uint32 epochLength
     ) public view returns (bytes32) {
         bytes32 sum = blockHashes(numBlocks, epochLength);
         sum = keccak256(abi.encodePacked(sum, seed));
         return (sum);
     }
 
-    function blockHashes(uint8 numBlocks, uint256 epochLength) public view returns (bytes32) {
+    function blockHashes(uint8 numBlocks, uint32 epochLength) public view returns (bytes32) {
         bytes32 sum;
         // start from the start of the epoch
         uint256 blockNumberEpochStart = (block.number / (epochLength)) * (epochLength);

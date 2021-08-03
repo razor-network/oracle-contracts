@@ -4,21 +4,21 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IStakeManager {
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
+    function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed) external;
 
     function updateCommitmentEpoch(uint256 stakerId) external;
 
-    function stake(uint256 epoch, uint256 amount) external;
+    function stake(uint32 epoch, uint256 amount) external;
 
     function delegate(
-        uint256 epoch,
+        uint32 epoch,
         uint256 amount,
         uint256 stakerId
     ) external;
 
-    function unstake(uint256 epoch) external;
+    function unstake(uint32 epoch) external;
 
-    function withdraw(uint256 epoch) external;
+    function withdraw(uint32 epoch) external;
 
     function setDelegationAcceptance(bool status) external;
 
@@ -32,19 +32,19 @@ interface IStakeManager {
         uint256 _id,
         uint256 _stake,
         string memory _reason,
-        uint256 _epoch
+        uint32 _epoch
     ) external;
 
     function slash(
         uint256 id,
         address bountyHunter,
-        uint256 epoch
+        uint32 epoch
     ) external;
 
     function setStakerAge(
         uint256 _id,
         uint256 _age,
-        uint256 _epoch
+        uint32 _epoch
     ) external;
 
     function escape(address _address) external;
@@ -58,4 +58,7 @@ interface IStakeManager {
     function getAge() external view returns (uint256);
 
     function getInfluence(uint256 stakerId) external view returns (uint256);
+
+    function getStake(uint256 stakerId) external view returns (uint256);
+
 }

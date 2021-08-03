@@ -323,7 +323,10 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
 
       // Commit
-      const commitment1 = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
       await mineToNextState();
 
@@ -369,7 +372,11 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
-      const commitment = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
       await voteManager.connect(signers[3]).commit(epoch, commitment);
 
       // reveal
@@ -411,7 +418,10 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
-      const commitment = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
       await voteManager.connect(signers[3]).commit(epoch, commitment);
 
       // reveal
@@ -463,7 +473,10 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree = merkle('keccak256').sync(votes);
       const root = tree.root();
-      const commitment = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
 
       await voteManager.connect(signers[3]).commit(epoch, commitment);
       staker = await stakeManager.getStaker(3);
@@ -616,7 +629,7 @@ describe('StakeManager', function () {
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
         const commitment = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         await voteManager.connect(signers[4]).commit(epoch, commitment);
@@ -673,7 +686,7 @@ describe('StakeManager', function () {
         const tree1 = merkle('keccak256').sync(votes1);
         const root1 = tree1.root();
         const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -738,7 +751,10 @@ describe('StakeManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
-        const commitment = web3.utils.soliditySha3(epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
         await voteManager.connect(signers[4]).commit(epoch, commitment);
 
         // reveal

@@ -122,19 +122,19 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         494,
         497
     ];
-    event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint256 epoch, uint256 timestamp);
+    event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
 
-    event AgeChange(uint256 indexed stakerId, uint256 previousAge, uint256 newAge, uint256 epoch, uint256 timestamp);
+    event AgeChange(uint256 indexed stakerId, uint256 previousAge, uint256 newAge, uint32 epoch, uint256 timestamp);
 
-    event Staked(uint256 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Staked(uint32 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address unstaker);
+    event Unstaked(uint32 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address unstaker);
 
-    event Withdrew(uint256 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address withdrawer);
+    event Withdrew(uint32 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address withdrawer);
 
-    event Delegated(uint256 epoch, uint256 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Delegated(uint32 epoch, uint256 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
-    modifier checkEpoch(uint256 epoch) {
+    modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
@@ -162,7 +162,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     /// @param _id The ID of the staker
     /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed)
+    function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed)
         external
         initialized
         onlyRole(parameters.getStakerActivityUpdaterHash())
@@ -179,7 +179,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint256 epoch, uint256 amount) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint256 stakerId = stakerIds[msg.sender];
@@ -212,7 +212,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
     function delegate(
-        uint256 epoch,
+        uint32 epoch,
         uint256 amount,
         uint256 stakerId
     ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
@@ -244,7 +244,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
     function unstake(
-        uint256 epoch,
+        uint32 epoch,
         uint256 stakerId,
         uint256 sAmount
     ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
@@ -271,7 +271,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint256 epoch, uint256 stakerId)
+    function withdraw(uint32 epoch, uint256 stakerId)
         external
         initialized
         checkEpoch(epoch)
@@ -289,7 +289,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         if (stakerIds[msg.sender] == stakerId) {
             // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
             require((lock.withdrawAfter - parameters.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Lock Period");
-            require(voteManager.getCommitment(epoch, stakerId) == 0x0, "Already commited");
+            // require((voteManager.getCommitment(stakerId)).epoch != epoch, "Already commited");
         }
 
         StakedToken sToken = StakedToken(staker.tokenAddress);
@@ -382,7 +382,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 _id,
         uint256 _stake,
         string memory _reason,
-        uint256 _epoch
+        uint32 _epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
         _setStakerStake(_id, _stake, _reason, _epoch);
     }
@@ -395,7 +395,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     function slash(
         uint256 id,
         address bountyHunter,
-        uint256 epoch
+        uint32 epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
         uint256 slashPenaltyAmount = (stakers[id].stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         uint256 newStake = stakers[id].stake - slashPenaltyAmount;
@@ -416,7 +416,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     function setStakerAge(
         uint256 _id,
         uint256 _age,
-        uint256 _epoch
+        uint32 _epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
         uint256 previousAge = stakers[_id].age;
         stakers[_id].age = _age;
@@ -462,7 +462,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 _id,
         uint256 _stake,
         string memory _reason,
-        uint256 _epoch
+        uint32 _epoch
     ) internal {
         uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;

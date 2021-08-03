@@ -10,7 +10,7 @@ contract AssetManager is ACL, AssetStorage {
 
     event JobCreated(
         uint256 id,
-        uint256 epoch,
+        uint32 epoch,
         string url,
         string selector,
         string name,
@@ -23,7 +23,7 @@ contract AssetManager is ACL, AssetStorage {
     event JobReported(
         uint256 id,
         uint256 value,
-        uint256 epoch,
+        uint32 epoch,
         string url,
         string selector,
         string name,
@@ -33,13 +33,13 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    event JobUpdated(uint256 id, uint256 epoch, string url, string selector, uint256 timestamp);
+    event JobUpdated(uint256 id, uint32 epoch, string url, string selector, uint256 timestamp);
 
-    event JobActivityStatus(uint256 id, uint256 epoch, bool active, uint256 timestamp);
+    event JobActivityStatus(uint256 id, uint32 epoch, bool active, uint256 timestamp);
 
     event CollectionCreated(
         uint256 id,
-        uint256 epoch,
+        uint32 epoch,
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
@@ -52,7 +52,7 @@ contract AssetManager is ACL, AssetStorage {
     event CollectionReported(
         uint256 id,
         uint256 value,
-        uint256 epoch,
+        uint32 epoch,
         string name,
         uint32 aggregationMethod,
         uint256[] jobIDs,
@@ -60,9 +60,9 @@ contract AssetManager is ACL, AssetStorage {
         uint256 timestamp
     );
 
-    event CollectionUpdated(uint256 id, uint256 epoch, string name, uint256[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(uint256 id, uint32 epoch, string name, uint256[] updatedJobIDs, uint256 timestamp);
 
-    event CollectionActivityStatus(uint256 id, uint256 epoch, bool active, uint256 timestamp);
+    event CollectionActivityStatus(uint256 id, uint32 epoch, bool active, uint256 timestamp);
 
     constructor(address parametersAddress) {
         parameters = IParameters(parametersAddress);
@@ -75,7 +75,7 @@ contract AssetManager is ACL, AssetStorage {
         bool repeat
     ) external onlyRole(parameters.getAssetModifierHash()) {
         numAssets = numAssets + 1;
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
         Structs.Job memory job = Structs.Job(numAssets, epoch, url, selector, name, repeat, true, msg.sender, 0, uint256(assetTypes.Job));
         jobs[numAssets] = job;
 
@@ -89,7 +89,7 @@ contract AssetManager is ACL, AssetStorage {
     ) external onlyRole(parameters.getAssetModifierHash()) {
         require(jobs[jobID].assetType == uint256(assetTypes.Job), "Job ID not present");
 
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -101,7 +101,7 @@ contract AssetManager is ACL, AssetStorage {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
 
         if (jobs[id].assetType == uint256(assetTypes.Job)) {
             jobs[id].active = assetStatus;
@@ -115,7 +115,7 @@ contract AssetManager is ACL, AssetStorage {
     }
 
     function fulfillAsset(uint256 id, uint256 value) external onlyRole(parameters.getAssetConfirmerHash()) {
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
         if (jobs[id].assetType == uint256(assetTypes.Job)) {
             Structs.Job storage job = jobs[id];
 
@@ -152,7 +152,7 @@ contract AssetManager is ACL, AssetStorage {
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
         collections[numAssets].id = numAssets;
         collections[numAssets].name = name;
         collections[numAssets].aggregationMethod = aggregationMethod;
@@ -178,7 +178,7 @@ contract AssetManager is ACL, AssetStorage {
         require(jobs[jobID].active, "Job ID not active");
         require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
 
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
         collections[collectionID].jobIDs.push(jobID);
         collections[collectionID].jobIDExist[jobID] = true;
 
@@ -189,7 +189,7 @@ contract AssetManager is ACL, AssetStorage {
         require(collections[collectionID].assetType == uint256(assetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
 
-        uint256 epoch = parameters.getEpoch();
+        uint32 epoch = parameters.getEpoch();
 
         for (uint256 i = jobIDIndex; i < collections[collectionID].jobIDs.length - 1; i++) {
             collections[collectionID].jobIDs[i] = collections[collectionID].jobIDs[i + 1];

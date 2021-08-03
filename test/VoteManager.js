@@ -60,7 +60,7 @@ describe('VoteManager', function () {
 
         const root = tree.root();
         const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
@@ -108,21 +108,21 @@ describe('VoteManager', function () {
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
         const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
-        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc3);
+        const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
 
-        assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
+        assertBNEqual(commitment1, commitment2.commitmentHash, 'commitment1, commitment2 not equal');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
         const commitment3 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -173,7 +173,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
+        assertBNEqual((await voteManager.getVote(stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
           'Vote Stored not equal to submitted one');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
@@ -231,7 +231,7 @@ describe('VoteManager', function () {
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
         const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -241,14 +241,14 @@ describe('VoteManager', function () {
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
         const commitment2 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[4]).commit(epoch, commitment2);
-        const commitment3 = await voteManager.getCommitment(epoch, stakerIdAcc3);
+        const commitment3 = await voteManager.getCommitment(stakerIdAcc3);
 
-        assertBNEqual(commitment1, commitment3, 'commitment1, commitment3 not equal');
+        assertBNEqual(commitment1, commitment3.commitmentHash, 'commitment1, commitment3 not equal');
 
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         const expectedAgeDifference = toBigNumber(10000);
@@ -295,7 +295,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
+        assertBNEqual((await voteManager.getVote(stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
           'Vote Stored not equal to submitted one');
 
         const assignedAssets2 = await getAssignedAssets(numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
@@ -356,16 +356,16 @@ describe('VoteManager', function () {
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
         const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
         await voteManager.connect(signers[4]).commit(epoch, commitment1);
 
-        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc3);
+        const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
 
-        assert(commitment1 === commitment2, 'commitment1, commitment2 not equal');
+        assert(commitment1 === commitment2.commitmentHash, 'commitment1, commitment2 not equal');
 
         // const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
@@ -442,7 +442,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
+        assertBNEqual((await voteManager.getVote(stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
           'Vote Stored not equal to submitted one');
       });
 
@@ -459,7 +459,7 @@ describe('VoteManager', function () {
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
         const commitment3 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -502,7 +502,7 @@ describe('VoteManager', function () {
         const tree2 = merkle('keccak256').sync(votes2);
         const root2 = tree2.root();
         const commitment3 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
+          ['uint32', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 

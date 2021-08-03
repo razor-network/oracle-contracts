@@ -3,18 +3,23 @@ pragma solidity ^0.8.0;
 
 library Structs {
     struct Vote {
+        uint32 epoch;
         uint256 value;
         uint256 weight;
     }
 
+    struct Commitment  {
+        uint32 epoch;
+        bytes32 commitmentHash;
+    }
     struct Staker {
         uint256 id;
         address _address;
         uint256 stake;
         uint256 age;
-        uint256 epochStaked;
-        uint256 epochLastCommitted;
-        uint256 epochLastRevealed;
+        uint32 epochStaked;
+        uint32 epochLastCommitted;
+        uint32 epochLastRevealed;
         bool acceptDelegation;
         uint256 commission;
         address tokenAddress;
@@ -43,7 +48,7 @@ library Structs {
 
     struct Job {
         uint256 id;
-        uint256 epoch;
+        uint32 epoch;
         string url;
         string selector;
         string name;
@@ -60,7 +65,7 @@ library Structs {
         uint32 aggregationMethod;
         uint256[] jobIDs;
         mapping(uint256 => bool) jobIDExist;
-        uint256 epoch;
+        uint32 epoch;
         bool active;
         address creator;
         uint256 result;

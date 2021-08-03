@@ -13,9 +13,9 @@ contract Parameters is ACL {
 
     uint256 public minStake = 100 * (10**18);
     uint256 public withdrawLockPeriod = 1;
-    uint256 public maxAltBlocks = 5;
-    uint256 public epochLength = 300;
-    uint256 public numStates = 4;
+    uint8 public maxAltBlocks = 5;
+    uint32 public epochLength = 300;
+    uint32 public numStates = 4;
     uint256 public exposureDenominator = 1000;
     uint256 public gracePeriod = 8;
     uint256 public aggregationRange = 3;
@@ -26,10 +26,10 @@ contract Parameters is ACL {
     uint256 public maxAssetsPerStaker = 2;
     bool public escapeHatchEnabled = true;
 
-    uint32 private constant _COMMIT = 0;
-    uint32 private constant _REVEAL = 1;
-    uint32 private constant _PROPOSE = 2;
-    uint32 private constant _DISPUTE = 3;
+    uint8 private constant _COMMIT = 0;
+    uint8 private constant _REVEAL = 1;
+    uint8 private constant _PROPOSE = 2;
+    uint8 private constant _DISPUTE = 3;
 
     address public burnAddress = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -50,6 +50,9 @@ contract Parameters is ACL {
 
     // keccak256("ASSET_MODIFIER_ROLE")
     bytes32 private constant _ASSET_MODIFIER_HASH = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe4;
+
+    // keccak256("VOTE_MODIFIER_ROLE")
+    bytes32 private constant _VOTE_MODIFIER_HASH = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5;
 
     function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
@@ -79,15 +82,15 @@ contract Parameters is ACL {
         resetLockPenalty = _resetLockPenalty;
     }
 
-    function setMaxAltBlocks(uint256 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMaxAltBlocks(uint8 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxAltBlocks = _maxAltBlocks;
     }
 
-    function setEpochLength(uint256 _epochLength) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setEpochLength(uint8 _epochLength) external onlyRole(DEFAULT_ADMIN_ROLE) {
         epochLength = _epochLength;
     }
 
-    function setNumStates(uint256 _numStates) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setNumStates(uint32 _numStates) external onlyRole(DEFAULT_ADMIN_ROLE) {
         numStates = _numStates;
     }
 
@@ -119,29 +122,28 @@ contract Parameters is ACL {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view returns (uint256) {
-        return (block.number / (epochLength));
+    function getEpoch() external view returns (uint32) {
+        return (uint32(block.number)/ (epochLength));
     }
 
-    function getState() external view returns (uint256) {
-        uint256 _numStates = numStates;
-        uint256 state = (block.number / (epochLength / _numStates));
-        return (state % (_numStates));
+    function getState() external view returns (uint32) {
+        uint32 state = (uint32(block.number) / (epochLength / numStates));
+        return (state % (numStates));
     }
 
-    function commit() external pure returns (uint32) {
+    function commit() external pure returns (uint8) {
         return _COMMIT;
     }
 
-    function reveal() external pure returns (uint32) {
+    function reveal() external pure returns (uint8) {
         return _REVEAL;
     }
 
-    function propose() external pure returns (uint32) {
+    function propose() external pure returns (uint8) {
         return _PROPOSE;
     }
 
-    function dispute() external pure returns (uint32) {
+    function dispute() external pure returns (uint8) {
         return _DISPUTE;
     }
 
@@ -171,5 +173,9 @@ contract Parameters is ACL {
 
     function getAssetModifierHash() external pure returns (bytes32) {
         return _ASSET_MODIFIER_HASH;
+    }
+    
+    function getVoteModifierHash() external pure returns (bytes32) {
+        return _VOTE_MODIFIER_HASH;
     }
 }
