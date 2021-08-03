@@ -330,10 +330,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @notice Used by staker to set delegation acceptance, its set as False by default
     function setDelegationAcceptance(bool status) external {
         uint256 stakerId = stakerIds[msg.sender];
-        address stakerAddress = stakers[stakerId]._address;
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
-        emit DelegationEnabled(stakerId, stakerAddress, status);
+        emit DelegationEnabled(stakerId, msg.sender, status);
     }
 
     /// @notice Used by staker to set commision for delegation
