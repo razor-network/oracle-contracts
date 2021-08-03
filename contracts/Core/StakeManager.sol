@@ -333,7 +333,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         address stakerAddress = stakers[stakerId]._address;
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
-        emit DelegationEnabled( stakerId, stakerAddress, status );
+        emit DelegationEnabled(stakerId, stakerAddress, status);
     }
 
     /// @notice Used by staker to set commision for delegation
