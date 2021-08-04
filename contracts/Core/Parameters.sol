@@ -51,71 +51,94 @@ contract Parameters is ACL {
     // keccak256("ASSET_MODIFIER_ROLE")
     bytes32 private constant _ASSET_MODIFIER_HASH = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe4;
 
+    //event to be emitted when any governance parameter value changes.
+    event ParameterChanged(address admin, string parameterName, uint256 valueChangedFrom, uint256 valueChangedTo, uint256 timestamp);
+
+    //event to be emitted when escape hatch is disabled
+    event EscapeHatchDisabled(address admin, string message, bool status, uint256 timestamp);
+
     function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Penalty Not Reveal Numerator", penaltyNotRevealNum, _penaltyNotRevealNumerator, block.timestamp);
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
     function setPenaltyNotRevealDeom(uint256 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Penalty Not Reveal Denominator", penaltyNotRevealDenom, _penaltyNotRevealDenom, block.timestamp);
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
     }
 
     function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Slash Penalty Numerator", slashPenaltyNum, _slashPenaltyNumerator, block.timestamp);
         slashPenaltyNum = _slashPenaltyNumerator;
     }
 
     function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Penalty Not Reveal Numerator", slashPenaltyDenom, _slashPenaltyDenominator, block.timestamp);
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
     function setWithdrawLockPeriod(uint256 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Withdraw Lock Period", withdrawLockPeriod, _withdrawLockPeriod, block.timestamp);
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
     function setWithdrawReleasePeriod(uint256 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Withdraw Release Period", withdrawReleasePeriod, _withdrawReleasePeriod, block.timestamp);
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
     function setResetLockPenalty(uint256 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Reset Lock Period", resetLockPenalty, _resetLockPenalty, block.timestamp);
         resetLockPenalty = _resetLockPenalty;
     }
 
     function setMaxAltBlocks(uint256 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Maximum Alt Blocks", maxAltBlocks, _maxAltBlocks, block.timestamp);
         maxAltBlocks = _maxAltBlocks;
     }
 
     function setEpochLength(uint256 _epochLength) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Epoch Length", epochLength, _epochLength, block.timestamp);
         epochLength = _epochLength;
     }
 
     function setNumStates(uint256 _numStates) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Number of States", numStates, _numStates, block.timestamp);
         numStates = _numStates;
     }
 
     function setExposureDenominator(uint256 _exposureDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Exposure Denominator", exposureDenominator, _exposureDenominator, block.timestamp);
         exposureDenominator = _exposureDenominator;
     }
 
     function setMinStake(uint256 _minStake) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Minimum Stake", minStake, _minStake, block.timestamp);
         minStake = _minStake;
     }
 
     function setGracePeriod(uint256 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Grace Period", gracePeriod, _gracePeriod, block.timestamp);
         gracePeriod = _gracePeriod;
     }
 
     function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Aggregation Range", aggregationRange, _aggregationRange, block.timestamp);
         aggregationRange = _aggregationRange;
     }
 
     function setmaxAssetsPerStaker(uint256 _maxAssetsPerStaker) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Grace Period", maxAssetsPerStaker, _maxAssetsPerStaker, block.timestamp);
         maxAssetsPerStaker = _maxAssetsPerStaker;
     }
 
     function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "Grace Period", maxAge, _maxAge, block.timestamp);
         maxAge = _maxAge;
     }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit EscapeHatchDisabled(msg.sender, "Escape Hatch Disabled", false, block.timestamp);
         escapeHatchEnabled = false;
     }
 
