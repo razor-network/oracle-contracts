@@ -36,7 +36,7 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 1500,
+        runs: 2000,
       },
     },
   },
@@ -68,6 +68,7 @@ module.exports = {
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
+    currency: 'USD',
   },
   abiExporter: {
     path: './abi',
