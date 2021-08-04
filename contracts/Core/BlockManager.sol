@@ -71,9 +71,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 iteration,
         uint256 biggestInfluencerId
     ) external initialized checkEpoch(epoch) checkState(parameters.propose()) {
-        for (uint256 i = 0; i < medians.length; i++) {
-          require(medians[i] > 0, 'Median should not be zero');
-        }
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
