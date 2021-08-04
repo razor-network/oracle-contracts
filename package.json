@@ -22,7 +22,7 @@
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
-    "test": "npx hardhat test"
+    "test": "hardhat test"
   },
   "repository": {
     "type": "git",
