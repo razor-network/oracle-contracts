@@ -27,11 +27,11 @@ const GWEI = 1000000000;
 const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
-  matic_mumbai_testnet: 80001,
+  mumbai: 80001,
 };
 
 module.exports = {
-  defaultNetwork: 'hardhat',
+  defaultNetwork: 'local',
   solidity: {
     version: '0.8.4',
     settings: {
@@ -47,8 +47,6 @@ module.exports = {
       chainId: 31337,
       logger: console,
     },
-    // More about networks config:
-    // https://hardhat.org/config/#json-rpc-based-networks
     goerli: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
