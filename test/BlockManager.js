@@ -27,7 +27,6 @@ describe('BlockManager', function () {
   let blockManager;
   let assetManager;
   let voteManager;
-  let random;
   let razor;
   let stakeManager;
   let rewardManager;
@@ -39,7 +38,6 @@ describe('BlockManager', function () {
       blockManager,
       parameters,
       assetManager,
-      random,
       razor,
       stakeManager,
       rewardManager,

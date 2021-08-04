@@ -26,7 +26,6 @@ describe('VoteManager', function () {
     let signers;
     let blockManager;
     let parameters;
-    let random;
     let razor;
     let stakeManager;
     let rewardManager;
@@ -35,7 +34,7 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, random, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, parameters, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });

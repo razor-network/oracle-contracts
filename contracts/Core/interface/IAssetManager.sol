@@ -34,5 +34,4 @@ interface IAssetManager {
             uint256[] memory jobIDs,
             uint256 result
         );
-
 }

@@ -1,6 +1,6 @@
 const { BigNumber } = ethers;
 const {
-  ONE_ETHER, EPOCH_LENGTH, NUM_BLOCKS, NUM_STATES, MATURITIES,
+  ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
 
 const toBigNumber = (value) => BigNumber.from(value);
