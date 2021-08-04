@@ -1,6 +1,6 @@
 const { BigNumber } = ethers;
 const {
-  ONE_ETHER, EPOCH_LENGTH, NUM_BLOCKS, NUM_STATES, MATURITIES,
+  ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
 
 const toBigNumber = (value) => BigNumber.from(value);
@@ -26,9 +26,15 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   };
 };
 
+const prng = async (max, prngHashes) => {
+  const sum = toBigNumber(prngHashes);
+  max = toBigNumber(max);
+  return (sum.mod(max));
+};
+
 // pseudo random hash generator based on block hashes.
-const prngHash = async (seed, blockHashes) => {
-  const sum = await web3.utils.soliditySha3(blockHashes, seed);
+const prngHash = async (seed, salt) => {
+  const sum = await web3.utils.soliditySha3(seed, salt);
   return (sum);
 };
 
@@ -37,25 +43,19 @@ const maturity = async (age) => {
   return MATURITIES[index];
 };
 
-const prng = async (seed, max, blockHashes) => {
-  const hash = await prngHash(seed, blockHashes);
-  const sum = toBigNumber(hash);
-  max = toBigNumber(max);
-  return (sum.mod(max));
-};
-
-const isElectedProposer = async (iteration, biggestInfluence, influence, stakerId, numStakers, blockHashes) => {
+const isElectedProposer = async (iteration, biggestInfluence, influence, stakerId, numStakers, randaoHash) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
-  const seed = await web3.utils.soliditySha3(iteration);
+  const salt1 = await web3.utils.soliditySha3(iteration);
+  const seed1 = await prngHash(randaoHash, salt1);
+  const rand1 = await prng(numStakers, seed1);
+  if (!(toBigNumber(rand1).add(1).eq(stakerId))) return false;
 
-  if (!((await prng(seed, numStakers, blockHashes)).add('1')).eq(stakerId)) return false;
+  const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
+  const seed2 = await prngHash(randaoHash, salt2);
+  const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
+  if ((rand2.mul(biggestInfluence)).lt(influence.mul(toBigNumber(2).pow(32)))) return true;
 
-  const seed2 = await web3.utils.soliditySha3(stakerId, iteration);
-  const randHash = await prngHash(seed2, blockHashes);
-  const rand = (toBigNumber(randHash).mod(toBigNumber(2).pow(toBigNumber(32))));
-  if ((rand.mul(biggestInfluence)).gt(influence.mul(toBigNumber('2').pow('32')))) return false;
-
-  return true;
+  return false;
 };
 
 const getBiggestInfluenceAndId = async (stakeManager) => {
@@ -78,15 +78,15 @@ const getEpoch = async () => {
   return blockNumber.div(EPOCH_LENGTH).toNumber();
 };
 
-const getIteration = async (stakeManager, random, staker) => {
+const getIteration = async (voteManager, stakeManager, staker) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const influence = await stakeManager.getInfluence(stakerId);
 
   const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
-  const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
+  const randaoHash = await voteManager.getRandaoHash();
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, blockHashes);
+    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
     if (isElected) return (i);
   }
   return 0;

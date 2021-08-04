@@ -599,7 +599,7 @@ describe('StakeManager', function () {
         // propose
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],

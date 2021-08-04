@@ -66,6 +66,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
 
+        //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
+        //following line is to prevent that
+        require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
@@ -176,14 +180,19 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     ) public view initialized returns (bool) {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
-        if ((Random.prng(10, stakeManager.getNumStakers(), keccak256(abi.encode(iteration)), parameters.epochLength()) + (1)) != stakerId) {
+
+        bytes32 randaoHashes = voteManager.getRandaoHash();
+        bytes32 seed1 = Random.prngHash(randaoHashes, keccak256(abi.encode(iteration)));
+        uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
+        if ((rand1 + 1) != stakerId) {
             return false;
         }
-        bytes32 randHash = Random.prngHash(10, keccak256(abi.encode(stakerId, iteration)), parameters.epochLength());
-        uint256 rand = uint256(randHash) % (2**32);
+        bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
+        uint256 rand2 = Random.prng(2**32, seed2);
+
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint256 influence = stakeManager.getInfluence(stakerId);
-        if (rand * (biggestInfluence) > influence * (2**32)) return (false);
+        if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
         return true;
     }
 

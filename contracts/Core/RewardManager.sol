@@ -5,14 +5,13 @@ import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
-import "./storage/RewardStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL, RewardStorage {
+contract RewardManager is Initializable, ACL {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
@@ -26,10 +25,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     modifier checkState(uint256 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
-    }
-
-    constructor(uint256 _blockReward) {
-        blockReward = _blockReward;
     }
 
     /// @param stakeManagerAddress The address of the VoteManager contract
@@ -48,10 +43,6 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function updateBlockReward(uint256 _blockReward) external onlyRole(parameters.getDefaultAdminHash()) {
-        blockReward = _blockReward;
-    }
-
     /// @notice gives penalty to stakers for failing to reveal or
     /// reveal value deviations
     /// @param stakerId The id of staker currently in consideration
@@ -66,7 +57,8 @@ contract RewardManager is Initializable, ACL, RewardStorage {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(parameters.getRewardModifierHash()) {
-        if (blockReward > 0) {
+        uint256 blockReward = parameters.blockReward();
+        if (parameters.blockReward() > 0) {
             uint256 newStake = stakeManager.getStaker(stakerId).stake + (blockReward);
             stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
         }
@@ -104,9 +96,18 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             return;
         }
         uint256 previousStake = thisStaker.stake;
+        uint256 newStake = thisStaker.stake;
         uint256 previousAge = thisStaker.age;
+        uint256 newAge = thisStaker.age;
+        uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
+
+        // Not reveal penalty due to Randao
+        if (epochLastRevealed < epochLastCommitted) {
+            uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
+            newStake = newStake - randaoPenalty;
+        }
         // uint256 currentStake = previousStake;
-        (uint256 newStake, uint256 newAge) = calculateInactivityPenalties(inactiveEpochs, previousStake, previousAge);
+        (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         if (newStake < previousStake) {
             stakeManager.setStakerStake(thisStaker.id, newStake, "Inactivity Penalty", epoch);
         }
@@ -142,12 +143,11 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             } else {
                 penalty = penalty + (previousAge - prod / medianLastEpoch);
             }
-            // }
-        }
 
         uint256 newAge = (previousAge + 10000 - (penalty));
         newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
 
         stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
     }
+}
 }

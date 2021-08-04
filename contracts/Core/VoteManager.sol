@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
@@ -75,7 +74,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
             "incorrect secret/value"
         );
-        //if revealing self
+        //bounty hunter
         if (msg.sender != stakerAddress) {
             //bounty hunter revealing someone else's secret in commit state
             require(parameters.getState() == parameters.commit(), "Not commit state");
@@ -83,7 +82,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             stakeManager.slash(thisStakerId, msg.sender, epoch);
             return;
         }
-
+        //revealing self
         require(parameters.getState() == parameters.reveal(), "Not reveal state");
         require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
         require(stakeManager.getStake(thisStakerId) > 0, "nonpositive stake");
@@ -95,6 +94,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         for (uint8 i = 0; i < values.length; i++) {
             voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
         }
+        secrets = keccak256(abi.encodePacked(secrets, secret));
 
         emit Revealed(epoch, thisStakerId, values, block.timestamp);
     }
@@ -129,5 +129,9 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     function getEpochLastRevealed(uint32 stakerId) external view returns (uint32) {
         return votes[stakerId].epoch;
+    }
+
+    function getRandaoHash() public view returns (bytes32) {
+        return (secrets);
     }
 }
