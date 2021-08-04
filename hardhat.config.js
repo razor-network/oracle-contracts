@@ -66,6 +66,6 @@ module.exports = {
   },
   tenderly: {
     username: 'razor',
-    project: 'mumbai',
+    project: 'razor-network',
   },
 };
