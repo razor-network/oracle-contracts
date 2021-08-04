@@ -100,6 +100,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
             accWeight = accWeight + (voteManager.getVoteWeight(epoch, assetId, sorted[i]));
+
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sorted[i];
             }
@@ -163,11 +164,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function finalizeDispute(
-        uint256 epoch,
-        uint256 blockId,
-        uint256 assetPosInBlock
-    ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    function finalizeDispute(uint256 epoch, uint256 blockId) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
@@ -176,7 +173,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 median = disputes[epoch][msg.sender].median;
         uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(median > 0, "median can not be zero");
-        if (proposedBlocks[epoch][blockId].medians[assetPosInBlock] != median) {
+        if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
             proposedBlocks[epoch][blockId].valid = false;
             stakeManager.slash(proposerId, msg.sender, epoch);
         } else {
