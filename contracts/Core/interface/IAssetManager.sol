@@ -2,11 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IAssetManager {
-    function createJob(
-        string calldata url,
-        string calldata selector,
-        bool repeat
-    ) external;
 
     function createJob (string calldata url, string calldata selector) external;
 
@@ -37,10 +32,6 @@ interface IAssetManager {
             bool active,
             bool repeat
         );
-
-    function getPendingJobs() external view returns(uint256);
-
-    function getPendingCollections() external view returns(uint256);
 
     function getNumActiveAssets() external view returns(uint256);
     

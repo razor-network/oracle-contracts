@@ -12,6 +12,4 @@ contract VoteStorage {
     mapping(uint256 => mapping(uint256 => uint256)) public totalInfluenceRevealed;
     //epoch - >assetid -> voteValue -> weight
     mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) public voteWeights;
-    //epoch - > numRevealedAssetsThisEpoch
-    mapping(uint256 => uint256) public numRevealedAssets;
 }

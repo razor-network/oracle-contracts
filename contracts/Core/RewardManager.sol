@@ -129,15 +129,13 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         if (mediansLastEpoch.length > 0) {
             uint256 penalty = 0;
             for (uint256 i = 0; i < mediansLastEpoch.length; i++) {
-                Structs.Vote memory voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, _block.ids[i] - 1);
+                uint256 voteLastEpoch = voteManager.getVote(epochLastRevealed, thisStaker.id, i).value;
                 uint256 medianLastEpoch = mediansLastEpoch[i];
 
-                if (voteLastEpoch.weight > 0) {
-                    if (voteLastEpoch.value > medianLastEpoch) {
-                        penalty = penalty + (previousAge * (voteLastEpoch.value - medianLastEpoch)**2) / medianLastEpoch**2;
-                    } else {
-                        penalty = penalty + (previousAge * (medianLastEpoch - voteLastEpoch.value)**2) / medianLastEpoch**2;
-                    }
+                if (voteLastEpoch > medianLastEpoch) {
+                    penalty = penalty + (previousAge * (voteLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
+                } else {
+                    penalty = penalty + (previousAge * (medianLastEpoch - voteLastEpoch)**2) / medianLastEpoch**2;
                 }
             }
 

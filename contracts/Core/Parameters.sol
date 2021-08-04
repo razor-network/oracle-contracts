@@ -6,6 +6,7 @@ import "./ACL.sol";
 contract Parameters is ACL {
     // constant type can be readjusted to some smaller type than uint256 for saving gas (storage variable packing).
     // penalty not reveal = 0.01% per epch
+
     uint256 public penaltyNotRevealNum = 1;
     uint256 public penaltyNotRevealDenom = 10000;
     uint256 public slashPenaltyNum = 10000;
@@ -23,8 +24,6 @@ contract Parameters is ACL {
     uint256 public resetLockPenalty = 1;
     uint256 public maxAge = 100 * 10000;
     uint256 public maxAssetsCreatedPerEpoch = 20;
-    // Note : maxAssetsPerStaker should be less than total no of jobs
-    uint256 public maxAssetsPerStaker = 2;
     bool public escapeHatchEnabled = true;
 
     uint32 private constant _COMMIT = 0;
@@ -107,10 +106,6 @@ contract Parameters is ACL {
 
     function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
         aggregationRange = _aggregationRange;
-    }
-
-    function setmaxAssetsPerStaker(uint256 _maxAssetsPerStaker) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        maxAssetsPerStaker = _maxAssetsPerStaker;
     }
 
     function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {

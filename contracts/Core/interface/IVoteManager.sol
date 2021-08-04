@@ -9,7 +9,6 @@ interface IVoteManager {
     function reveal(
         uint256 epoch,
         bytes32 root,
-        uint256[] calldata assetIds,
         uint256[] calldata values,
         bytes32[][] calldata proofs,
         bytes32 secret,
@@ -31,5 +30,4 @@ interface IVoteManager {
     ) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) external view returns (uint256);
-    function getNumRevealedAssets(uint256 epoch) external view returns (uint256);
 }
