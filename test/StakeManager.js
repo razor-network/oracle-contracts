@@ -35,7 +35,6 @@ describe('StakeManager', function () {
     let voteManager;
     let initializeContracts;
     let stakedToken;
-    let random;
 
     before(async () => {
       ({
@@ -47,7 +46,6 @@ describe('StakeManager', function () {
         voteManager,
         initializeContracts,
         stakedToken,
-        random,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -597,7 +595,7 @@ describe('StakeManager', function () {
         // propose
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
 
         await blockManager.connect(signers[4]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
