@@ -3,7 +3,6 @@ build/
 coverage/
 coverage.json
 cache/
-deployed/localhost
 deployed/mumbai/abi
 abi
 .env
@@ -13,6 +12,5 @@ node_modules/
 .previous-deployment-addresses
 .contract-deployment.tmp.json
 deployments
-deployed/local
 deployed/local
 deployments
