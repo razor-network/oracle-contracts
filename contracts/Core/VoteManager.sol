@@ -44,7 +44,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[stakerId].epoch != epoch, "already commited");
-        uint256 thisStakerStake = stakeManager.getStake(stakerId);
 
 
         // Switch to call confirm block only when block in previous epoch has not been confirmed
@@ -55,9 +54,10 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
         rewardManager.givePenalties(stakerId, epoch);
 
-        if (thisStaker.stake >= parameters.minStake()) {
-            commitments[epoch][stakerId] = commitment;
-            stakeManager.updateCommitmentEpoch(stakerId);
+        uint256 thisStakerStake = stakeManager.getStake(stakerId);
+        if (thisStakerStake >= parameters.minStake()) {
+            commitments[stakerId].commitmentHash = commitment;
+            commitments[stakerId].epoch = epoch;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
         }
     }
@@ -107,8 +107,8 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     }
 
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint256) {
-        //epoch -> stakerid -> assetid -> vote
-        return (votes[epoch][stakerId][assetId]);
+        //stakerid -> assetid -> vote
+        return (votes[stakerId].values[assetId]);
     }
 
     // function getVoteWeight(uint32 stakerId, uint8 assetId) external view returns (uint256) {

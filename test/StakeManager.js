@@ -309,7 +309,7 @@ describe('StakeManager', function () {
       await mineToNextState();
 
       // Reveal
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -343,8 +343,8 @@ describe('StakeManager', function () {
       // commit
       epoch = await getEpoch();
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
-      const root = tree.root();
+      
+      
 
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
@@ -354,7 +354,7 @@ describe('StakeManager', function () {
 
       // reveal
       await mineToNextState();
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -384,8 +384,8 @@ describe('StakeManager', function () {
       // commit
       epoch = await getEpoch();
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
-      const root = tree.root();
+      
+      
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -394,7 +394,7 @@ describe('StakeManager', function () {
 
       // reveal
       await mineToNextState();
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -434,8 +434,8 @@ describe('StakeManager', function () {
 
       // commit in epoch 42 , outside grace_period
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
-      const root = tree.root();
+      
+      
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -589,8 +589,8 @@ describe('StakeManager', function () {
         // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
+        
+        
         const commitment = utils.solidityKeccak256(
           ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -599,7 +599,7 @@ describe('StakeManager', function () {
 
         // reveal
         await mineToNextState();
-        const proof = [];
+        
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
@@ -692,8 +692,8 @@ describe('StakeManager', function () {
         // commit
         let epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
+        
+        
         const commitment = utils.solidityKeccak256(
           ['uint32', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -702,7 +702,7 @@ describe('StakeManager', function () {
 
         // reveal
         await mineToNextState();
-        const proof = [];
+        
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }

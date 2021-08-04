@@ -62,9 +62,9 @@ describe('BlockManager', function () {
       await assertRevert(tx1, 'Contract should be initialized');
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -104,9 +104,9 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -115,7 +115,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[5]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree2 = merkle('keccak256').sync(votes2);
+      
 
       const root2 = tree2.root();
       const commitment2 = utils.solidityKeccak256(
@@ -138,7 +138,7 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -283,9 +283,9 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -293,7 +293,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[6]).commit(epoch, commitment1);
 
       const votes2 = [1010, 2010, 3010, 4010, 5010, 6010, 7010, 8010, 9010];
-      const tree2 = merkle('keccak256').sync(votes2);
+      
 
       const root2 = tree2.root();
       const commitment2 = utils.solidityKeccak256(
@@ -312,7 +312,7 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       // Staker 6
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -416,9 +416,9 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc8);
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -434,7 +434,7 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -453,9 +453,9 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -465,7 +465,7 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
@@ -520,9 +520,9 @@ describe('BlockManager', function () {
       await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
+      
 
-      const root = tree.root();
+      
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256', 'bytes32'],
         [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -531,7 +531,7 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree2 = merkle('keccak256').sync(votes2);
+      
 
       const root2 = tree2.root();
       const commitment2 = utils.solidityKeccak256(
@@ -543,7 +543,7 @@ describe('BlockManager', function () {
 
       // Reveal
       await mineToNextState();
-      const proof = [];
+      
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }

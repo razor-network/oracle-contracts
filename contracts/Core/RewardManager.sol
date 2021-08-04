@@ -132,18 +132,18 @@ contract RewardManager is Initializable, ACL, RewardStorage {
 
         if (mediansLastEpoch.length > 0) {
             uint256 penalty = 0;
-            for (uint32 i = 0; i < mediansLastEpoch.length; i++) {
+            for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
                 uint256 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
-                uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
+                // uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
                 uint256 medianLastEpoch = mediansLastEpoch[i];
 
-                if (voteWeightLastEpoch > 0) {
+                // if (voteWeightLastEpoch > 0) {
                     if (voteValueLastEpoch > medianLastEpoch) {
                         penalty = penalty + (previousAge * (voteValueLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
                     } else {
                         penalty = penalty + (previousAge * (medianLastEpoch - voteValueLastEpoch)**2) / medianLastEpoch**2;
                     }
-                }
+                // }
             }
 
             uint256 newAge = (previousAge + 10000 - (penalty));

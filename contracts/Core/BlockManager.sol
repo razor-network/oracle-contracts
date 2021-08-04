@@ -140,7 +140,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (proposedBlocks[epoch].length);
     }
 
-    function confirmBlock() public initialized onlyRole(parameters.getBlockConfirmerHash()) {
+    function confirmBlock() external initialized onlyRole(parameters.getBlockConfirmerHash()) {
         uint32 epoch = parameters.getEpoch();
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {

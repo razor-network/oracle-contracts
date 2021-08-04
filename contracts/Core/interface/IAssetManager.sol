@@ -8,13 +8,13 @@ interface IAssetManager {
         bool repeat
     ) external;
 
-    function fulfillAsset(uint256 id, uint256 value) external;
+    function fulfillAsset(uint8 id, uint256 value) external;
 
-    function getResult(uint256 id) external view returns (uint256);
+    function getResult(uint8 id) external view returns (uint256);
 
-    function getAssetType(uint256 id) external view returns (uint256);
+    function getAssetType(uint8 id) external view returns (uint8);
 
-    function getJob(uint256 id)
+    function getJob(uint8 id)
         external
         view
         returns (
@@ -25,7 +25,7 @@ interface IAssetManager {
             uint256 result
         );
 
-    function getCollection(uint256 id)
+    function getCollection(uint8 id)
         external
         view
         returns (
