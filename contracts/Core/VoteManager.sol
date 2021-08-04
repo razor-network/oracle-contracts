@@ -6,19 +6,15 @@ import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
-import "./interface/IAssetManager.sol";
 import "./storage/VoteStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "../lib/Random.sol";
-import "hardhat/console.sol";
 
 contract VoteManager is Initializable, ACL, VoteStorage {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
-    IAssetManager public assetManager;
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint32 epoch, uint32 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
@@ -37,21 +33,19 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         address stakeManagerAddress,
         address rewardManagerAddress,
         address blockManagerAddress,
-        address parametersAddress,
-        address assetManagerAddress
+        address parametersAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
         parameters = IParameters(parametersAddress);
-        assetManager = IAssetManager(assetManagerAddress);
     }
 
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[stakerId].epoch != epoch, "already commited");
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
-        require(thisStakerStake >= parameters.minStake());
+
 
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
@@ -61,8 +55,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
         rewardManager.givePenalties(stakerId, epoch);
 
-        commitments[stakerId] = Structs.Commitment({epoch: epoch, commitmentHash: commitment});
-        emit Committed(epoch, stakerId, commitment, block.timestamp);
+        if (thisStaker.stake >= parameters.minStake()) {
+            commitments[epoch][stakerId] = commitment;
+            stakeManager.updateCommitmentEpoch(stakerId);
+            emit Committed(epoch, stakerId, commitment, block.timestamp);
+        }
     }
 
     function reveal(
@@ -77,7 +74,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
         bytes memory valuesPacked = abi.encodePacked(values);
         require(keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
-        // require(values.length == parameters.maxAssetsPerStaker(), "Revealed assets not equal to required assets per staker");
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
@@ -105,19 +101,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
-    function isAssetAllotedToStaker(
-        uint32 stakerId,
-        uint256 iteration,
-        uint8 assetId
-    ) public view initialized returns (bool) {
-        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
-        if (
-            (Random.prng(10, assetManager.getNumAssets(), keccak256(abi.encode(iteration + stakerId)), parameters.epochLength()) + (1)) ==
-            assetId
-        ) return true;
-        return false;
-    }
-
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);
@@ -125,11 +108,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint256) {
         //epoch -> stakerid -> assetid -> vote
-        return (votes[stakerId].values[assetId]);
-    }
-    function getEpochLastRevealed(uint32 stakerId, uint8 assetId) external view returns (uint256) {
-        //epoch -> stakerid -> assetid -> vote
-        return (votes[stakerId].values[assetId]);
+        return (votes[epoch][stakerId][assetId]);
     }
 
     // function getVoteWeight(uint32 stakerId, uint8 assetId) external view returns (uint256) {

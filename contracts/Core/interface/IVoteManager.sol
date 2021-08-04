@@ -8,7 +8,6 @@ interface IVoteManager {
 
     function reveal(
         uint32 epoch,
-        uint8[] calldata ids,
         uint256[] calldata values,
         bytes32 secret,
         address stakerAddress) external;

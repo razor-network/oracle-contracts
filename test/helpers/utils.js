@@ -6,15 +6,16 @@ const {
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
 
-const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights, assetId) => {
+const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
+  const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint256,uint256)'](epoch, 1);
 
-  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, assetId);
   const medianWeight = totalInfluenceRevealed.div(2);
 
   let median = toBigNumber('0');
   let weight = toBigNumber('0');
+
   for (let i = 0; i < sortedVotes.length; i++) {
     weight = weight.add(weights[i]);
     if (weight.gt(medianWeight) && median.eq('0')) median = sortedVotes[i];
@@ -97,47 +98,6 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
-const getAssignedAssets = async (numAssets, stakerId, votes, maxAssetsPerStaker, random) => {
-  const assignedAssetsVotes = [];
-
-  // const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
-  let assetId;
-  let seed;
-  let ids=[];
-  let values=[];
-  for (let i = 0; i < maxAssetsPerStaker; i++) {
-    seed = await web3.utils.soliditySha3(+stakerId + i);
-    assetId = +(await prng(seed, numAssets, blockHashes)) + 1;
-    assignedAssetsVotes.push({ id: assetId, value: votes[assetId - 1] });
-    ids.push(assetId);
-    values.push(votes[assetId - 1]);
-  }
-  return [assignedAssetsVotes, ids, values];
-};
-
-const getNumRevealedAssets = async (assignedAssetsVotes) => {
-  const isExist = {};
-  let numRevealedAssetsForStaker = 0;
-  for (let i = 0; i < assignedAssetsVotes.length; i++) {
-    if (typeof isExist[assignedAssetsVotes[i].id] === 'undefined') {
-      isExist[assignedAssetsVotes[i].id] = true;
-      numRevealedAssetsForStaker++;
-    }
-  }
-  return numRevealedAssetsForStaker;
-};
-
-const findAssetNotAlloted = async (assignedAssetsVotes, numAssets) => {
-  const map = {};
-  for (let i = 0; i < assignedAssetsVotes.length; i++) {
-    map[assignedAssetsVotes[i].id] = true;
-  }
-  for (let i = 1; i <= numAssets; i++) {
-    if (!map[i]) return i;
-  }
-  return 1000;
-};
-
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
@@ -150,8 +110,5 @@ module.exports = {
   prngHash,
   toBigNumber,
   tokenAmount,
-  getAssignedAssets,
-  getNumRevealedAssets,
-  findAssetNotAlloted,
   maturity,
 };
