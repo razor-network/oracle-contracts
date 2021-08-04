@@ -30,7 +30,7 @@ const ENV_CHAIN_IDS = {
 };
 
 module.exports = {
-  defaultNetwork: 'local',
+  defaultNetwork: 'hardhat',
   solidity: {
     version: '0.8.4',
     settings: {
