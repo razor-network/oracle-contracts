@@ -9,21 +9,20 @@
     "contracts/**/*"
   ],
   "scripts": {
-    "cp-ganache-env": "cp .env.ganache .env",
-    "pretest": "npm run cp-ganache-env",
-    "compile": "npm run cp-ganache-env && npx hardhat compile",
-    "coverage": "npm run cp-ganache-env && hardhat coverage && npm run coverage:check",
+    "cp-local-env": "cp .env.local .env",
+    "pretest": "npm run cp-local-env",
+    "compile": "npm run cp-local-env && npx hardhat compile",
+    "coverage": "npm run cp-local-env && hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
-    "deploy:ganache": "./scripts/deploy.sh ganache",
-    "deploy:goerli": "./scripts/deploy.sh goerli",
-    "deploy:matic_mumbai_testnet": "./scripts/deploy.sh matic_mumbai_testnet",
-    "lint": "npm run cp-ganache-env && npm run lint:sol && npm run lint:js",
+    "deploy:local": "./scripts/deploy.sh local",
+    "deploy:mumbai": "./scripts/deploy.sh mumbai",
+    "lint": "npm run cp-local-env && npm run lint:sol && npm run lint:js",
     "lint:fix": "npm run lint:js:fix",
     "lint:js": "eslint \"**/*.js\"",
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
-    "test": "hardhat test"
+    "test": "npx hardhat test"
   },
   "repository": {
     "type": "git",
@@ -44,6 +43,7 @@
     "@nomiclabs/hardhat-ethers": "2.0.2",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
+    "@tenderly/hardhat-tenderly": "^1.0.12",
     "chai": "^4.3.0",
     "coveralls": "^3.1.1",
     "dotenv": "8.2.0",

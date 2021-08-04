@@ -12,6 +12,7 @@ require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
+require('@tenderly/hardhat-tenderly');
 
 const {
   PROVIDER_HOST,
@@ -41,12 +42,9 @@ module.exports = {
     },
   },
   networks: {
-    hardhat: {
-      chainId: 31337,
-    },
-    ganache: {
+    local: {
       url: `http://${PROVIDER_HOST}:${PROVIDER_PORT}`,
-      network_id: 31337,
+      chainId: 31337,
       logger: console,
     },
     // More about networks config:
@@ -58,7 +56,7 @@ module.exports = {
       gas: 7700000,
       gasPrice: 1 * GWEI,
     },
-    matic_mumbai_testnet: {
+    mumbai: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
@@ -74,5 +72,9 @@ module.exports = {
     clear: true,
     flat: true,
     spacing: 2,
+  },
+  tenderly: {
+    username: 'skanda',
+    project: 'razor',
   },
 };
