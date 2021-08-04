@@ -4,6 +4,9 @@ const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
+const {
+  getEpoch,
+} = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
   let signers;
@@ -64,29 +67,32 @@ describe('Access Control Test', async () => {
 
   it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
     // Checking if Anyone can access it
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    const epoch = getEpoch();
+    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await blockManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await blockManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await blockManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
   });
 
   it('confirmBlock() should be accessable by BlockConfirmer', async () => {
     // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
     await waitNBlocks(300);
+    const epoch = getEpoch();
+
     const blockConfirmerHash = await parameters.getBlockConfirmerHash();
     await blockManager.grantRole(blockConfirmerHash, signers[0].address);
-    await blockManager.confirmBlock();
+    await blockManager.confirmBlock(epoch);
     await blockManager.revokeRole(blockConfirmerHash, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(), expectedRevertMessage);
+    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
   });
 
   it('slash() should not be accessable by anyone besides StakeModifier', async () => {

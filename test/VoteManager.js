@@ -291,17 +291,24 @@ describe('VoteManager', function () {
         let denom = toBigNumber(0);
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         for (let i = 0; i < votes2.length; i++) {
-          num = (toBigNumber(votes2[i]).sub(medians[i])).pow(2);
-          denom = toBigNumber(medians[i]).pow(2);
-          toAdd = (ageBefore2.mul(num).div(denom));
+          prod = toBigNumber(votes2[i]).mul(ageBefore2);
+          if (votes2[i] > medians[i]) {
+
+            toAdd = (prod.div(medians[i])).sub(ageBefore2)
+          }
+          else {
+          toAdd = ageBefore2.sub(prod.div(medians[i]));
+        }
           penalty = penalty.add(toAdd);
         }
+        console.log('penalty',penalty.toString());
         const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
 
+console.log('ageBefore2',ageBefore2.toString())
         assertBNLessThan(ageBefore, ageAfter, 'Not rewarded');
-        assertBNEqual(expectedAgeAfter2, ageAfter2, 'Age Penalty should be applied');
+        assertBNEqual(ageAfter2,expectedAgeAfter2, 'Age Penalty should be applied');
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {

@@ -130,26 +130,27 @@ contract RewardManager is Initializable, ACL, RewardStorage {
 
         uint256[] memory mediansLastEpoch = _block.medians;
 
-        if (mediansLastEpoch.length > 0) {
-            uint256 penalty = 0;
-            for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-                uint256 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
-                // uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
-                uint256 medianLastEpoch = mediansLastEpoch[i];
-
-                // if (voteWeightLastEpoch > 0) {
-                    if (voteValueLastEpoch > medianLastEpoch) {
-                        penalty = penalty + (previousAge * (voteValueLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
-                    } else {
-                        penalty = penalty + (previousAge * (medianLastEpoch - voteValueLastEpoch)**2) / medianLastEpoch**2;
-                    }
-                // }
+        if (mediansLastEpoch.length == 0) return;
+        uint256 penalty = 0;
+        for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
+            uint256 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
+            // uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
+            uint256 medianLastEpoch = mediansLastEpoch[i];
+            uint256 prod = previousAge*voteValueLastEpoch;
+            // if (voteWeightLastEpoch > 0) {
+            if (voteValueLastEpoch > medianLastEpoch) {
+                penalty = penalty  + (prod / medianLastEpoch - previousAge);
+                // penalty = penalty + (previousAge * (voteValueLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
+            } else {
+              penalty = penalty + (previousAge - prod / medianLastEpoch) ;
             }
-
-            uint256 newAge = (previousAge + 10000 - (penalty));
-            newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
-
-            stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
+            // }
         }
+
+        uint256 newAge = (previousAge + 10000 - (penalty));
+        newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
+
+        stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
+
     }
 }

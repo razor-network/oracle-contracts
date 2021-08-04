@@ -38,7 +38,7 @@ interface IBlockManager {
         uint32 stakerId
     ) external;
 
-    function confirmBlock() external;
+    function confirmBlock(uint32 epoch) external;
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 

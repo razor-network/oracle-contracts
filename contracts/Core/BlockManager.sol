@@ -140,23 +140,24 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (proposedBlocks[epoch].length);
     }
 
-    function confirmBlock() external initialized onlyRole(parameters.getBlockConfirmerHash()) {
-        uint32 epoch = parameters.getEpoch();
+    function confirmBlock(uint32 epoch) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
                 blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
                 uint32 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+
                 emit BlockConfirmed(
                     epoch - 1,
                     proposerId,
                     proposedBlocks[epoch - 1][i].medians,
                     block.timestamp
                 );
-                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
-                    assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
-                }
                 rewardManager.giveBlockReward(proposerId, epoch);
                 return;
+                // for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
+                //     assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
+                // }
+
             }
         }
     }

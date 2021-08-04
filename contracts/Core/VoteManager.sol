@@ -17,7 +17,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     IBlockManager public blockManager;
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
-    event Revealed(uint32 epoch, uint32 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, uint256[] values, uint256 timestamp);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -50,7 +50,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch - 1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch - 1) > 0) {
-            blockManager.confirmBlock();
+            blockManager.confirmBlock(epoch);
         }
         rewardManager.givePenalties(stakerId, epoch);
 
@@ -70,8 +70,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     ) external initialized checkEpoch(epoch) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
-        Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
-        require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
+        // Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         bytes memory valuesPacked = abi.encodePacked(values);
         require(keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
          "incorrect secret/value");
@@ -85,7 +84,8 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
 
         require(parameters.getState() == parameters.reveal(), "Not reveal state");
-        require(thisStaker.stake > 0, "nonpositive stake");
+        require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
+        require(stakeManager.getStake(thisStakerId) > 0, "nonpositive stake");
 
         votes[thisStakerId].epoch = epoch;
         votes[thisStakerId].values = values;
@@ -100,7 +100,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // commitments[thisStakerId].commitmentHash = 0x0;
         // stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
-        emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
+        emit Revealed(epoch, thisStakerId, values, block.timestamp);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
