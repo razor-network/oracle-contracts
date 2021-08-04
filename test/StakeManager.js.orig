@@ -310,7 +310,16 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
+<<<<<<< HEAD
+
+      const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[2].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
       await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[2].address);
 
@@ -351,7 +360,16 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
+<<<<<<< HEAD
+
+      const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[3].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
       await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[3].address);
       // Staker 3 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
@@ -388,7 +406,16 @@ describe('StakeManager', function () {
       for (let i = 0; i < votes.length; i++) {
         proof.push(tree.getProofPath(i, true, true));
       }
+<<<<<<< HEAD
+
+      const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[3].address), votes, proof, maxAssetsPerStaker, random);
+      const assigneedAssetsVotes = assignedAssets[0];
+      const assigneedAssetsProofs = assignedAssets[1];
+
+      await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
       await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[3].address);
       // Staker is not penalised because no. of inactive epochs (8) <= max allowed inactive epochs i.e grace_period (8)
@@ -590,7 +617,16 @@ describe('StakeManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
+<<<<<<< HEAD
+
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
@@ -690,7 +726,16 @@ describe('StakeManager', function () {
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
+<<<<<<< HEAD
+
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, await stakeManager.stakerIds(signers[4].address), votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[4]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 

@@ -22,12 +22,7 @@ const setupContracts = async () => {
   const RAZOR = await ethers.getContractFactory('RAZOR');
   const StakeManager = await ethers.getContractFactory('StakeManager');
   const RewardManager = await ethers.getContractFactory('RewardManager');
-
-  const VoteManager = await ethers.getContractFactory('VoteManager', {
-    libraries: {
-      Random: random.address,
-    },
-  });
+  const VoteManager = await ethers.getContractFactory('VoteManager');
 
   const parameters = await Parameters.deploy();
   const blockManager = await BlockManager.deploy();
@@ -52,7 +47,7 @@ const setupContracts = async () => {
 
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
-    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address, assetManager.address),
+    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 

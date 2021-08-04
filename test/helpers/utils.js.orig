@@ -1,6 +1,6 @@
 const { BigNumber } = ethers;
 const {
-  ONE_ETHER, EPOCH_LENGTH, NUM_BLOCKS, NUM_STATES, MATURITIES,
+  ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
 
 const toBigNumber = (value) => BigNumber.from(value);
@@ -10,8 +10,8 @@ const calculateDisputesData = async (voteManager, epoch, sortedVotes, weights) =
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint256,uint256)'](epoch, 1);
-  const medianWeight = totalInfluenceRevealed.div(2);
 
+  const medianWeight = totalInfluenceRevealed.div(2);
   let median = toBigNumber('0');
   let weight = toBigNumber('0');
 
@@ -97,6 +97,50 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
+<<<<<<< HEAD
+const getAssignedAssets = async (voteManager, numAssets, stakerId, votes, proofs, maxAssetsPerStaker) => {
+  const assignedAssetsVotes = [];
+  const assignedAssetsProofs = [];
+
+  const randaoHash = await voteManager.getRandaoHash();
+  let assetId;
+  let salt;
+  let hash;
+  for (let i = 0; i < maxAssetsPerStaker; i++) {
+    salt = await web3.utils.soliditySha3(+stakerId + i);
+    hash = await prngHash(randaoHash, salt);
+    assetId = +(await prng(numAssets, hash)) + 1;
+    assignedAssetsVotes.push({ id: assetId, value: votes[assetId - 1] });
+    assignedAssetsProofs.push(proofs[assetId - 1]);
+  }
+  return [assignedAssetsVotes, assignedAssetsProofs];
+};
+
+const getNumRevealedAssets = async (assignedAssetsVotes) => {
+  const isExist = {};
+  let numRevealedAssetsForStaker = 0;
+  for (let i = 0; i < assignedAssetsVotes.length; i++) {
+    if (typeof isExist[assignedAssetsVotes[i].id] === 'undefined') {
+      isExist[assignedAssetsVotes[i].id] = true;
+      numRevealedAssetsForStaker++;
+    }
+  }
+  return numRevealedAssetsForStaker;
+};
+
+const findAssetNotAlloted = async (assignedAssetsVotes, numAssets) => {
+  const map = {};
+  for (let i = 0; i < assignedAssetsVotes.length; i++) {
+    map[assignedAssetsVotes[i].id] = true;
+  }
+  for (let i = 1; i <= numAssets; i++) {
+    if (!map[i]) return i;
+  }
+  return 1000;
+};
+
+=======
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
 module.exports = {
   calculateDisputesData,
   isElectedProposer,

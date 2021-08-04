@@ -126,7 +126,33 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        // Revealed assets not equal to required assets per staker
+        const assignedAssetsVotesCopy = JSON.parse(JSON.stringify(assigneedAssetsVotes)); // Deep Clone
+        assignedAssetsVotesCopy.push({ id: 5, value: 500 });
+        let tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+        await assertRevert(tx, 'Revealed assets not equal to required assets per staker');
+
+        // Incorrect Reveal
+        assignedAssetsVotesCopy.splice(0, 1);
+        const assetId = await findAssetNotAlloted(assignedAssetsVotesCopy, votes.length);
+        assignedAssetsVotesCopy[0].id = assetId;
+        tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+        await assertRevert(tx, 'Revealed asset not alloted');
+
+        // Correct Reveal
+        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
@@ -139,8 +165,15 @@ describe('VoteManager', function () {
         for (let i = 0; i < votes2.length; i++) {
           proof2.push(tree2.getProofPath(i, true, true));
         }
+<<<<<<< HEAD
+        const assignedAssets2 = await getAssignedAssets(voteManager, numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes2 = assignedAssets2[0];
+        const assigneedAssetsProofs2 = assignedAssets2[1];
+        await voteManager.connect(signers[4]).reveal(epoch, root2, assigneedAssetsVotes2, assigneedAssetsProofs2,
+=======
 
         await voteManager.connect(signers[4]).reveal(epoch, root2, votes2, proof2,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
@@ -227,13 +260,30 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVote(epoch, stakerIdAcc3, 0)).value, toBigNumber('100'), 'Vote not equal to 100');
 
+<<<<<<< HEAD
+        const assignedAssets2 = await getAssignedAssets(voteManager, numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes2 = assignedAssets2[0];
+        revealedVotesForStaker = assigneedAssetsVotes2;
+        const assigneedAssetsProofs2 = assignedAssets2[1];
+
+        await voteManager.connect(signers[4]).reveal(epoch, tree2.root(), assigneedAssetsVotes2, assigneedAssetsProofs2,
+=======
         await voteManager.connect(signers[4]).reveal(epoch, tree2.root(), votes2, proof2,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
@@ -316,7 +366,14 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc10, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+        await voteManager.connect(signers[10]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
@@ -341,7 +398,15 @@ describe('VoteManager', function () {
         }
         await mineToNextState(); // reveal
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
         // arguments getvVote => epoch, stakerId, assetId
@@ -378,7 +443,15 @@ describe('VoteManager', function () {
         }
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc6, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[10]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[6].address);
 
@@ -414,7 +487,15 @@ describe('VoteManager', function () {
         }
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
+<<<<<<< HEAD
+        const assignedAssets = await getAssignedAssets(voteManager, numAssets, stakerIdAcc5, votes, proof, maxAssetsPerStaker, random);
+        const assigneedAssetsVotes = assignedAssets[0];
+        const assigneedAssetsProofs = assignedAssets[1];
+
+        await voteManager.connect(signers[10]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+=======
         await voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 

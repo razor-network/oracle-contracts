@@ -34,5 +34,9 @@ interface IAssetManager {
             uint256[] memory jobIDs,
             uint256 result
         );
+<<<<<<< HEAD
 
+    function getNumAssets() external view returns (uint256);
+=======
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
 }

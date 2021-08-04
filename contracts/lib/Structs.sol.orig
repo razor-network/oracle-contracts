@@ -66,4 +66,12 @@ library Structs {
         uint256 result;
         uint256 assetType;
     }
+<<<<<<< HEAD
+
+    struct AssignedAsset {
+        uint256 id;
+        uint256 value;
+    }
+=======
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
 }

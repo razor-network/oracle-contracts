@@ -64,7 +64,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function reveal(
         uint256 epoch,
         bytes32 root,
+<<<<<<< HEAD
+        Structs.AssignedAsset[] memory values,
+=======
         uint256[] memory values,
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
         bytes32[][] memory proofs,
         bytes32 secret,
         address stakerAddress
@@ -74,17 +78,35 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
         require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId], "incorrect secret/value");
+<<<<<<< HEAD
+        require(values.length == parameters.maxAssetsPerStaker(), "Revealed assets not equal to required assets per staker");
+=======
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
 
         //if revealing self
         if (msg.sender == stakerAddress) {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
+<<<<<<< HEAD
+                if (votes[epoch][thisStakerId][values[i].id - 1].weight == 0) {
+                    // If Job Not Revealed before
+                    require(isAssetAllotedToStaker(thisStakerId, i, values[i].id), "Revealed asset not alloted");
+                    require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
+                    uint256 influence = stakeManager.getInfluence(thisStakerId);
+                    votes[epoch][thisStakerId][values[i].id - 1] = Structs.Vote(values[i].value, thisStaker.stake);
+                    voteWeights[epoch][values[i].id - 1][values[i].value] =
+                        voteWeights[epoch][values[i].id - 1][values[i].value] +
+                        influence;
+                    totalInfluenceRevealed[epoch][values[i].id - 1] = totalInfluenceRevealed[epoch][values[i].id - 1] + influence;
+                }
+=======
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))), "invalid merkle proof");
                 uint256 influence = stakeManager.getInfluence(thisStakerId);
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
                 voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
                 totalInfluenceRevealed[epoch][i] = totalInfluenceRevealed[epoch][i] + influence;
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
             }
 
             commitments[epoch][thisStakerId] = 0x0;
@@ -99,6 +121,24 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
     }
 
+<<<<<<< HEAD
+    function isAssetAllotedToStaker(
+        uint256 stakerId,
+        uint256 iteration,
+        uint256 assetId
+    ) public view returns (bool) {
+        // bytes32 blockHashes = Random.blockHashes(10,parameters.epochLength());
+        bytes32 randaoHash = getRandaoHash();
+        bytes32 salt = keccak256(abi.encode(iteration + stakerId));
+        bytes32 seed = Random.prngHash(randaoHash, salt);
+        uint256 prng = Random.prng(assetManager.getNumAssets(), seed);
+        // numBlocks = 10, max= numAssets, seed = iteration+stakerId, epochLength
+        if ((prng + (1)) == assetId) return true;
+        return false;
+    }
+
+=======
+>>>>>>> fa6723e3c46ff9cf224f996bb1948112927e183c
     function getCommitment(uint256 epoch, uint256 stakerId) public view returns (bytes32) {
         //epoch -> stakerid -> commitment
         return (commitments[epoch][stakerId]);
