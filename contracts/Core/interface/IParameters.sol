@@ -39,11 +39,6 @@ interface IParameters {
     function slashPenaltyNum() external view returns (uint256);
 
     function slashPenaltyDenom() external view returns (uint256);
-<<<<<<< HEAD
-
-    function maxAssetsPerStaker() external view returns (uint256);
-=======
->>>>>>> parent of 034b303... Assign Assets Randomly (#206)
 
     function getEpoch() external view returns (uint256);
 
