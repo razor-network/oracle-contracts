@@ -58,7 +58,7 @@ describe('VoteManager', function () {
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
-        assertRevert(tx, 'Contract should be initialized');
+        await assertRevert(tx, 'Contract should be initialized');
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
@@ -152,10 +152,6 @@ describe('VoteManager', function () {
 
       it('should not be able to reveal more than once in a particular epoch', async function () {
         const epoch = await getEpoch();
-        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
 
@@ -164,15 +160,11 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-
-        const tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
 
-        assertRevert(tx, 'not commited or already revealed');
+        await assertRevert(tx, 'not commited or already revealed');
       });
 
       it('should be able to commit again with correct influence', async function () {
@@ -380,10 +372,6 @@ describe('VoteManager', function () {
 
       it('should not be able to reveal if staker does not exists', async function () {
         const epoch = await getEpoch();
-        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
 
@@ -392,15 +380,11 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc7, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'Structs.Staker does not exist');
+        await assertRevert(tx, 'Structs.Staker does not exist');
       });
 
       it('should not be able to commit if stake is below minstake', async function () {
@@ -428,10 +412,6 @@ describe('VoteManager', function () {
 
       it('Staker should not be able to reveal if not committed', async function () {
         const epoch = await getEpoch();
-        const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
 
@@ -440,17 +420,13 @@ describe('VoteManager', function () {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc7, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-
         await mineToNextState(); // reveal
 
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'not commited or already revealed');
+        await assertRevert(tx, 'not commited or already revealed');
       });
 
       it('should not be able to commit other than in commit state', async function () {
@@ -464,14 +440,13 @@ describe('VoteManager', function () {
         );
 
         const tx = voteManager.connect(signers[7]).commit(epoch, commitment1);
-        assertRevert(tx, 'incorrect state');
+        await assertRevert(tx, 'incorrect state');
       });
 
       it('Staker should not be able to reveal other than in reveal state', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('325'));
-        const stakerId = await stakeManager.stakerIds(signers[7].address);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
@@ -482,120 +457,81 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'Not reveal state');
+        await assertRevert(tx, 'Not reveal state');
       });
 
       it('Should not be able to reveal others secret if not in commit state', async function () {
         const epoch = await getEpoch();
-        const stakerId = await stakeManager.stakerIds(signers[7].address);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
-
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
         await mineToNextState(); // reveal
-        const tx = voteManager.connect(signers[10]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'Not commit state');
+        await assertRevert(tx, 'Not commit state');
       });
 
       it('Should not be able to reveal with incorrect value', async function () {
         const epoch = await getEpoch();
-        const stakerId = await stakeManager.stakerIds(signers[7].address);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const tree = merkle('keccak256').sync(votes);
-
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'incorrect secret/value');
+        await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('Should not be able to reveal with incorrect secret', async function () {
         const epoch = await getEpoch();
-        const stakerId = await stakeManager.stakerIds(signers[7].address);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
-
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc',
           signers[7].address); // last digit 'd' changed to 'c' for having incorrect secret
 
-        assertRevert(tx, 'incorrect secret/value');
+        await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('Should not be able to reveal with invalid MerkleProof', async function () {
         const epoch = await getEpoch();
-        const stakerId = await stakeManager.stakerIds(signers[7].address);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]; // 900 changed to 950 for having incorrect value
         const tree = merkle('keccak256').sync(votes);
-
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = votes.length - 1; i >= 0; i--) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'invalid merkle proof');
+        await assertRevert(tx, 'invalid merkle proof');
       });
 
       it('Staker should not be able to commit in present epoch for commitment of next epoch', async function () {
@@ -610,7 +546,7 @@ describe('VoteManager', function () {
         );
 
         const tx = voteManager.connect(signers[7]).commit(epoch + 1, commitment);
-        assertRevert(tx, 'incorrect epoch');
+        await assertRevert(tx, 'incorrect epoch');
       });
 
       it('Staker should not be able to reveal if stake is zero', async function () {
@@ -630,23 +566,17 @@ describe('VoteManager', function () {
         await parameters.setSlashPenaltyNum(10000);
         await stakeManager.slash(stakerId, signers[10].address, epoch); // slashing signers[7] 100% making his stake zero
 
-        const maxAssetsPerStaker = Number(await parameters.maxAssetsPerStaker());
-        const numAssets = Number(await assetManager.getNumAssets());
-
         const proof = [];
         for (let i = 0; i < votes.length; i++) {
           proof.push(tree.getProofPath(i, true, true));
         }
 
-        const assignedAssets = await getAssignedAssets(numAssets, stakerId, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
         await mineToNextState(); // reveal
-        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        assertRevert(tx, 'nonpositive stake');
+        await assertRevert(tx, 'nonpositive stake');
       });
 
       it('Should be able to slash if stake is zero', async function () {
