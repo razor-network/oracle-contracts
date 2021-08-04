@@ -34,6 +34,9 @@ interface IAssetManager {
             uint256[] memory jobIDs,
             uint256 result
         );
+<<<<<<< HEAD
 
     function getNumAssets() external view returns (uint256);
+=======
+>>>>>>> parent of 034b303... Assign Assets Randomly (#206)
 }
