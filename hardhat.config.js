@@ -21,7 +21,6 @@ const {
   NETWORK,
   MNEMONIC,
 } = process.env;
-const GWEI = 1000000000;
 
 // Ref - https://chainid.network/chains.json
 const ENV_CHAIN_IDS = {
@@ -51,8 +50,6 @@ module.exports = {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
-      gas: 7700000,
-      gasPrice: 30 * GWEI,
     },
   },
   gasReporter: {
