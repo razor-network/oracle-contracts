@@ -74,8 +74,10 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
+        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        proposedBlocks[epoch][numProposedBlocks]= Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
 
-        _insertAppropriately(epoch, Structs.Block(proposerId, medians, iteration, biggestInfluence, true));
+        _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
@@ -122,7 +124,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (_blockMedians);
     }
 
-    function getProposedBlock(uint32 epoch, uint256 proposedBlock)
+    function getProposedBlock(uint32 epoch, uint8 proposedBlock)
         external
         view
         returns (Structs.Block memory _block, uint256[] memory _blockMedians)
@@ -131,20 +133,21 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (_block, _block.medians);
     }
 
-    function getProposedBlockMedians(uint32 epoch, uint256 proposedBlock) external view returns (uint256[] memory _blockMedians) {
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint256[] memory _blockMedians) {
         _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
         return (_blockMedians);
     }
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint256) {
-        return (proposedBlocks[epoch].length);
+        return (sortedProposedBlockIds[epoch].length);
     }
 
     function confirmBlock(uint32 epoch) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
-        for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
-            if (proposedBlocks[epoch - 1][i].valid) {
-                blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
-                uint32 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+        for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
+          uint8 blockId = sortedProposedBlockIds[epoch-1][i];
+            if (proposedBlocks[epoch - 1][blockId].valid) {
+                blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
+                uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
 
                 emit BlockConfirmed(
                     epoch - 1,
@@ -164,7 +167,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     function finalizeDispute(
         uint32 epoch,
-        uint256 blockId
+        uint8 blockId
     ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
@@ -200,33 +203,33 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return true;
     }
 
-    function _insertAppropriately(uint32 epoch, Structs.Block memory _block) internal {
-        if (proposedBlocks[epoch].length == 0) {
-            proposedBlocks[epoch].push(_block);
+    function _insertAppropriately(uint32 epoch, uint8 blockId, uint256 iteration, uint256 biggestInfluence) internal {
+        if (sortedProposedBlockIds[epoch].length == 0) {
+            sortedProposedBlockIds[epoch].push(0);
             return;
         }
 
-        uint256 pushAt = proposedBlocks[epoch].length;
-        for (uint256 i = 0; i < proposedBlocks[epoch].length; i++) {
-            if (proposedBlocks[epoch][i].biggestInfluence < _block.biggestInfluence) {
+        uint8 pushAt = uint8(sortedProposedBlockIds[epoch].length);
+        for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
+            if (proposedBlocks[epoch][i].biggestInfluence < biggestInfluence) {
                 pushAt = i;
                 break;
             }
-            if (proposedBlocks[epoch][i].iteration > _block.iteration) {
+            if (proposedBlocks[epoch][i].iteration > iteration) {
                 pushAt = i;
                 break;
             }
         }
 
-        proposedBlocks[epoch].push(_block);
-        for (uint256 j = proposedBlocks[epoch].length - 1; j > (pushAt); j--) {
-            proposedBlocks[epoch][j] = proposedBlocks[epoch][j - 1];
+        sortedProposedBlockIds[epoch].push(blockId);
+        for (uint256 j = sortedProposedBlockIds[epoch].length - 1; j > (pushAt); j--) {
+            sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
         }
 
-        proposedBlocks[epoch][pushAt] = _block;
+        sortedProposedBlockIds[epoch][pushAt] = blockId;
 
-        if (proposedBlocks[epoch].length > parameters.maxAltBlocks()) {
-            delete (proposedBlocks[epoch][proposedBlocks[epoch].length - 1]);
+        if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
+            sortedProposedBlockIds[epoch].pop();
         }
     }
 }

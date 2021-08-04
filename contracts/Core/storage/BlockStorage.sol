@@ -7,6 +7,10 @@ contract BlockStorage {
     //epoch -> address -> dispute -> assetid
     mapping(uint32 => mapping(address => Structs.Dispute)) public disputes;
     //epoch -> proposalNumber -> block
-    mapping(uint32 => Structs.Block[]) public proposedBlocks;
+    mapping(uint32 => mapping(uint8 => Structs.Block)) public proposedBlocks;
+    //epoch->blockId
+    mapping(uint32 => uint8[]) public sortedProposedBlockIds;
+    // epoch -> blocks
     mapping(uint32 => Structs.Block) public blocks;
+    uint8 numProposedBlocks;
 }
