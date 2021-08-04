@@ -36,7 +36,6 @@
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
-    "@razor-network/merkle": "^0.6.0",
     "hardhat-abi-exporter": "^2.2.1",
     "jsonfile": "^6.1.0"
   },
