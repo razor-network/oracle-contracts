@@ -56,12 +56,11 @@ describe('VoteManager', function () {
       it('should not be able to commit without initialization', async () => {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
 
-        const root = tree.root();
+        const encodedValues = await random.encodePacked(votes);
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'bytes', 'bytes32'],
+          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
@@ -105,31 +104,40 @@ describe('VoteManager', function () {
       it('should be able to commit', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
+        const encodedValues = await random.encodePacked(votes);
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'bytes', 'bytes32'],
+          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
+
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
 
         assertBNEqual(commitment1, commitment2.commitmentHash, 'commitment1, commitment2 not equal');
 
+        const age1 = 10000;
+        const age2 = await stakeManager.getAge(stakerIdAcc3)
+        assertBNEqual(age1, age2, 'age1, age2 not equal');
+
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const tree2 = merkle('keccak256').sync(votes2);
-        const root2 = tree2.root();
+        const encodedValues2 = await random.encodePacked(votes2);
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'uint256', 'bytes32'],
-          [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'bytes', 'bytes32'],
+          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[4]).commit(epoch, commitment3);
+
+        const age3 = 10000;
+        const age4 = await stakeManager.getAge(stakerIdAcc4)
+        assertBNEqual(age3, age4, 'age1, age2 not equal');
+
       });
 
-      it('should be able to reveal assigned assets', async function () {
+      it('should be able to reveal', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -138,66 +146,30 @@ describe('VoteManager', function () {
         const numAssets = Number(await assetManager.getNumAssets());
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-
+        //
         await mineToNextState(); // reveal
-
-        const proof = [];
-        for (let i = 0; i < votes.length; i++) {
-          proof.push(tree.getProofPath(i, true, true));
-        }
-
-        const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, proof, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes = assignedAssets[0];
-        const assigneedAssetsProofs = assignedAssets[1];
-
-        // Revealed assets not equal to required assets per staker
-        const assignedAssetsVotesCopy = JSON.parse(JSON.stringify(assigneedAssetsVotes)); // Deep Clone
-        assignedAssetsVotesCopy.push({ id: 5, value: 500 });
-        let tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
+        //
+        // // const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, maxAssetsPerStaker, random);
+        // const ids = [1,2,3,4,5,6,7,8,9];
+        //
+        //
+        // // Correct Reveal
+        await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[3].address);
-        await assertRevert(tx, 'Revealed assets not equal to required assets per staker');
-
-        // Incorrect Reveal
-        assignedAssetsVotesCopy.splice(0, 1);
-        const assetId = await findAssetNotAlloted(assignedAssetsVotesCopy, votes.length);
-        assignedAssetsVotesCopy[0].id = assetId;
-        tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), assignedAssetsVotesCopy, proof,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        await assertRevert(tx, 'Revealed asset not alloted');
-
-        // Correct Reveal
-        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), assigneedAssetsVotes, assigneedAssetsProofs,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVote(stakerIdAcc3, assigneedAssetsVotes[0].id - 1)).value, toBigNumber(assigneedAssetsVotes[0].value),
+        // // arguments getvVote => epoch, stakerId, assetId
+        assertBNEqual(await voteManager.getVoteValue(stakerIdAcc3,0), votes[0],
           'Vote Stored not equal to submitted one');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const tree2 = merkle('keccak256').sync(votes2);
-        const root2 = tree2.root();
-        const proof2 = [];
-        for (let i = 0; i < votes2.length; i++) {
-          proof2.push(tree2.getProofPath(i, true, true));
-        }
-        const assignedAssets2 = await getAssignedAssets(numAssets, stakerIdAcc4, votes2, proof2, maxAssetsPerStaker, random);
-        const assigneedAssetsVotes2 = assignedAssets2[0];
-        const assigneedAssetsProofs2 = assignedAssets2[1];
-        await voteManager.connect(signers[4]).reveal(epoch, root2, assigneedAssetsVotes2, assigneedAssetsProofs2,
+        //
+        await voteManager.connect(signers[4]).reveal(epoch, votes2,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
-
-        // To Form Block Proposal On basis of revealed assets this epoch
-        for (let i = 0; i < maxAssetsPerStaker; i++) {
-          revealedAssetsThisEpoch[assigneedAssetsVotes[i].id] = true;
-          revealedAssetsThisEpoch[assigneedAssetsVotes2[i].id] = true;
-        }
-
+        //
+        //
         for (let i = 1; i <= numAssets; i++) {
           if (revealedAssetsThisEpoch[i]) {
             blockThisEpoch.ids.push(i);
@@ -216,34 +188,35 @@ describe('VoteManager', function () {
         const iteration = await getIteration(stakeManager, random, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
-          blockThisEpoch.ids,
           blockThisEpoch.medians,
           iteration,
           biggestInfluencerId);
 
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
+        console.log('influenceBefore',influenceBefore.toString())
         const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
+        console.log('ageBefore',ageBefore.toString())
 
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
+        const encodedValues = await random.encodePacked(votes);
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'bytes', 'bytes32'],
+          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
+
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const tree2 = merkle('keccak256').sync(votes2);
-        const root2 = tree2.root();
+        const encodedValues2 = await random.encodePacked(votes2);
         const commitment2 = utils.solidityKeccak256(
-          ['uint32', 'uint256', 'bytes32'],
-          [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'bytes', 'bytes32'],
+          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
+
 
         await voteManager.connect(signers[4]).commit(epoch, commitment2);
         const commitment3 = await voteManager.getCommitment(stakerIdAcc3);
@@ -251,8 +224,10 @@ describe('VoteManager', function () {
         assertBNEqual(commitment1, commitment3.commitmentHash, 'commitment1, commitment3 not equal');
 
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        console.log('ageAfter',ageAfter.toString())
         const expectedAgeDifference = toBigNumber(10000);
         const influenceAfter = (await stakeManager.getInfluence(stakerIdAcc3));
+        console.log('influenceAfter',influenceAfter.toString())
 
         assertBNEqual(ageAfter.sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
         assertBNLessThan(influenceBefore, influenceAfter, 'Not rewarded');
@@ -456,8 +431,7 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree2 = merkle('keccak256').sync(votes2);
-        const root2 = tree2.root();
+
         const commitment3 = utils.solidityKeccak256(
           ['uint32', 'uint256', 'bytes32'],
           [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']

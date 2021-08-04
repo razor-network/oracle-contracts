@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 library Structs {
     struct Vote {
         uint32 epoch;
-        uint256 value;
-        uint256 weight;
+        uint256[] values;
+        // mapping(uint8 => uint256) weights;
     }
 
     struct Commitment {
@@ -13,13 +13,11 @@ library Structs {
         bytes32 commitmentHash;
     }
     struct Staker {
-        uint256 id;
+        uint32 id;
         address _address;
         uint256 stake;
         uint256 age;
         uint32 epochStaked;
-        uint32 epochLastCommitted;
-        uint32 epochLastRevealed;
         bool acceptDelegation;
         uint256 commission;
         address tokenAddress;
@@ -31,8 +29,7 @@ library Structs {
     }
 
     struct Block {
-        uint256 proposerId;
-        uint256[] ids;
+        uint32 proposerId;
         uint256[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
@@ -43,11 +40,11 @@ library Structs {
         uint256 accWeight;
         uint256 median;
         uint256 lastVisited;
-        uint256 assetId;
+        uint8 assetId;
     }
 
     struct Job {
-        uint256 id;
+        uint8 id;
         uint32 epoch;
         string url;
         string selector;
@@ -56,24 +53,24 @@ library Structs {
         bool active;
         address creator;
         uint256 result;
-        uint256 assetType;
+        uint8 assetType;
     }
 
     struct Collection {
-        uint256 id;
+        uint8 id;
         string name;
         uint32 aggregationMethod;
-        uint256[] jobIDs;
-        mapping(uint256 => bool) jobIDExist;
+        uint8[] jobIDs;
+        mapping(uint8 => bool) jobIDExist;
         uint32 epoch;
         bool active;
         address creator;
         uint256 result;
-        uint256 assetType;
+        uint8 assetType;
     }
 
     struct AssignedAsset {
-        uint256 id;
+        uint8 id;
         uint256 value;
     }
 }

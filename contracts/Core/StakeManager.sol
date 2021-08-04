@@ -160,20 +160,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         parameters = IParameters(parametersAddress);
     }
 
-    /// @param _id The ID of the staker
-    /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed)
-        external
-        initialized
-        onlyRole(parameters.getStakerActivityUpdaterHash())
-    {
-        stakers[_id].epochLastRevealed = _epochLastRevealed;
-    }
+    // /// @param _id The ID of the staker
+    // /// @param _epochLastRevealed The number of epoch that staker revealed asset values
+    // function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed)
+    //     external
+    //     initialized
+    //     onlyRole(parameters.getStakerActivityUpdaterHash())
+    // {
+    //     stakers[_id].epochLastRevealed = _epochLastRevealed;
+    // }
 
     /// @param stakerId The ID of the staker
-    function updateCommitmentEpoch(uint256 stakerId) external initialized onlyRole(parameters.getStakerActivityUpdaterHash()) {
-        stakers[stakerId].epochLastCommitted = parameters.getEpoch();
-    }
+    // function updateCommitmentEpoch(uint32 stakerId) external initialized onlyRole(parameters.getStakerActivityUpdaterHash()) {
+    //     stakers[stakerId].epochLastCommitted = parameters.getEpoch();
+    // }
 
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
@@ -182,12 +182,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
-        uint256 stakerId = stakerIds[msg.sender];
+        uint32 stakerId = stakerIds[msg.sender];
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             StakedToken sToken = new StakedToken();
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, 0, 0, false, 0, address(sToken));
+            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -214,7 +214,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     function delegate(
         uint32 epoch,
         uint256 amount,
-        uint256 stakerId
+        uint32 stakerId
     ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
@@ -245,7 +245,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @param sAmount The Amount in sRZR
     function unstake(
         uint32 epoch,
-        uint256 stakerId,
+        uint32 stakerId,
         uint256 sAmount
     ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
@@ -271,7 +271,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint256 stakerId) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
@@ -282,7 +282,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(staker.stake > 0, "Nonpositive Stake");
         if (stakerIds[msg.sender] == stakerId) {
             // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-            require((lock.withdrawAfter - parameters.withdrawLockPeriod()) >= staker.epochLastRevealed, "Participated in Lock Period");
+            require((lock.withdrawAfter - parameters.withdrawLockPeriod()) >= voteManager.getEpochLastCommitted(stakerId), "Participated in Lock Period");
             // require((voteManager.getCommitment(stakerId)).epoch != epoch, "Already commited");
         }
 
@@ -321,14 +321,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
     function setDelegationAcceptance(bool status) external {
-        uint256 stakerId = stakerIds[msg.sender];
+        uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
     }
 
     /// @notice Used by staker to set commision for delegation
     function setCommission(uint256 commission) external {
-        uint256 stakerId = stakerIds[msg.sender];
+        uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
@@ -337,7 +337,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
     function decreaseCommission(uint256 commission) external {
-        uint256 stakerId = stakerIds[msg.sender];
+        uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");
         require(stakers[stakerId].commission > commission, "Invalid Commission Update");
@@ -346,7 +346,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-    function resetLock(uint256 stakerId) external initialized whenNotPaused {
+    function resetLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to reset
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
         require(stakers[stakerId].id != 0, "staker.id = 0");
@@ -373,7 +373,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
-        uint256 _id,
+        uint32 _id,
         uint256 _stake,
         string memory _reason,
         uint32 _epoch
@@ -384,20 +384,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @notice The function is used by the Votemanager reveal function
     /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
     /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
-    /// @param id The ID of the staker who is penalised
+    /// @param stakerId The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash(
-        uint256 id,
+        uint32 stakerId,
         address bountyHunter,
         uint32 epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 slashPenaltyAmount = (stakers[id].stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
-        uint256 newStake = stakers[id].stake - slashPenaltyAmount;
+        uint256 slashPenaltyAmount = (stakers[stakerId].stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        uint256 newStake = stakers[stakerId].stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
 
         if (halfPenalty == 0) return;
 
-        _setStakerStake(id, newStake, "Slashed", epoch);
+        _setStakerStake(stakerId, newStake, "Slashed", epoch);
         //reward half the amount to bounty hunter
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
@@ -408,7 +408,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     }
 
     function setStakerAge(
-        uint256 _id,
+        uint32 _id,
         uint256 _age,
         uint32 _epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
@@ -419,33 +419,33 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     /// @param _address Address of the staker
     /// @return The staker ID
-    function getStakerId(address _address) external view returns (uint256) {
+    function getStakerId(address _address) external view returns (uint32) {
         return (stakerIds[_address]);
     }
 
     /// @param _id The staker ID
     /// @return staker The Struct of staker information
-    function getStaker(uint256 _id) external view returns (Structs.Staker memory staker) {
+    function getStaker(uint32 _id) external view returns (Structs.Staker memory staker) {
         return (stakers[_id]);
     }
 
     /// @return The number of stakers in the razor network
-    function getNumStakers() external view returns (uint256) {
+    function getNumStakers() external view returns (uint32) {
         return (numStakers);
     }
 
     /// @return age of staker
-    function getAge(uint256 stakerId) external view returns (uint256) {
+    function getAge(uint32 stakerId) external view returns (uint256) {
         return stakers[stakerId].age;
     }
 
     /// @return influence of staker
-    function getInfluence(uint256 stakerId) external view returns (uint256) {
+    function getInfluence(uint32 stakerId) external view returns (uint256) {
         return _getMaturity(stakerId) * stakers[stakerId].stake;
     }
 
     /// @return stake of staker
-    function getStake(uint256 stakerId) external view returns (uint256) {
+    function getStake(uint32 stakerId) external view returns (uint256) {
         return stakers[stakerId].stake;
     }
 
@@ -453,7 +453,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function _setStakerStake(
-        uint256 _id,
+        uint32 _id,
         uint256 _stake,
         string memory _reason,
         uint32 _epoch
@@ -464,7 +464,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     }
 
     /// @return maturity of staker
-    function _getMaturity(uint256 stakerId) internal view returns (uint256) {
+    function _getMaturity(uint32 stakerId) internal view returns (uint256) {
         uint256 index = stakers[stakerId].age / 10000;
 
         return maturities[index];
@@ -499,7 +499,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         return ((_amount * _totalSupply) / _currentStake);
     }
 
-    function _resetLock(uint256 stakerId) private {
+    function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, withdrawAfter: 0});
     }
 }

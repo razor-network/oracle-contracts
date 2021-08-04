@@ -26,7 +26,7 @@ interface IBlockManager {
 
     function giveSorted(
         uint32 epoch,
-        uint256 assetId,
+        uint8 assetId,
         uint256[] calldata sorted
     ) external;
 
@@ -35,7 +35,7 @@ interface IBlockManager {
     function isElectedProposer(
         uint256 iteration,
         uint256 biggestInfluencerId,
-        uint256 stakerId
+        uint32 stakerId
     ) external;
 
     function confirmBlock() external;

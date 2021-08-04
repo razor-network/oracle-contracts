@@ -18,12 +18,11 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
-    event BlockConfirmed(uint32 epoch, uint256 stakerId, uint256[] medians, uint256[] ids, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint256[] medians, uint256 timestamp);
 
     event Proposed(
         uint32 epoch,
-        uint256 stakerId,
-        uint256[] ids,
+        uint32 stakerId,
         uint256[] medians,
         uint256 iteration,
         uint256 biggestInfluencerId,
@@ -66,26 +65,25 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
-        uint256[] memory ids,
         uint256[] memory medians,
         uint256 iteration,
-        uint256 biggestInfluencerId
+        uint32 biggestInfluencerId
     ) external initialized checkEpoch(epoch) checkState(parameters.propose()) {
-        uint256 proposerId = stakeManager.getStakerId(msg.sender);
+        uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
 
-        _insertAppropriately(epoch, Structs.Block(proposerId, ids, medians, iteration, biggestInfluence, true));
+        _insertAppropriately(epoch, Structs.Block(proposerId, medians, iteration, biggestInfluence, true));
 
-        emit Proposed(epoch, proposerId, ids, medians, iteration, biggestInfluencerId, block.timestamp);
+        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted(
         uint32 epoch,
-        uint256 assetId,
+        uint8 assetId,
         uint256[] memory sorted
     ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         // require(disputes[epoch][msg.sender].median == 0, "median already found");
@@ -100,7 +98,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
             lastVisited = sorted[i];
-            accWeight = accWeight + (voteManager.getVoteWeight(epoch, assetId, sorted[i]));
+            accWeight = accWeight + (voteManager.getVoteWeights(epoch, assetId, sorted[i]));
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sorted[i];
                 // break;
@@ -147,16 +145,15 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
             if (proposedBlocks[epoch - 1][i].valid) {
                 blocks[epoch - 1] = proposedBlocks[epoch - 1][i];
-                uint256 proposerId = proposedBlocks[epoch - 1][i].proposerId;
+                uint32 proposerId = proposedBlocks[epoch - 1][i].proposerId;
                 emit BlockConfirmed(
                     epoch - 1,
                     proposerId,
                     proposedBlocks[epoch - 1][i].medians,
-                    proposedBlocks[epoch - 1][i].ids,
                     block.timestamp
                 );
-                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].ids.length; j++) {
-                    assetManager.fulfillAsset(proposedBlocks[epoch - 1][i].ids[j], proposedBlocks[epoch - 1][i].medians[j]);
+                for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
+                    assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
                 }
                 rewardManager.giveBlockReward(proposerId, epoch);
                 return;
@@ -169,13 +166,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint256 blockId,
         uint256 assetPosInBlock
     ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
-        uint256 assetId = disputes[epoch][msg.sender].assetId;
+        uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, assetId),
             "Total influence revealed doesnt match"
         );
         uint256 median = disputes[epoch][msg.sender].median;
-        uint256 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(median > 0, "median can not be zero");
         if (proposedBlocks[epoch][blockId].medians[assetPosInBlock] != median) {
             proposedBlocks[epoch][blockId].valid = false;
@@ -187,8 +184,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     function isElectedProposer(
         uint256 iteration,
-        uint256 biggestInfluencerId,
-        uint256 stakerId
+        uint32 biggestInfluencerId,
+        uint32 stakerId
     ) public view initialized returns (bool) {
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1

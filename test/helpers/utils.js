@@ -97,20 +97,22 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
-const getAssignedAssets = async (numAssets, stakerId, votes, proofs, maxAssetsPerStaker, random) => {
+const getAssignedAssets = async (numAssets, stakerId, votes, maxAssetsPerStaker, random) => {
   const assignedAssetsVotes = [];
-  const assignedAssetsProofs = [];
 
-  const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
+  // const blockHashes = await random.blockHashes(NUM_BLOCKS, EPOCH_LENGTH);
   let assetId;
   let seed;
+  let ids=[];
+  let values=[];
   for (let i = 0; i < maxAssetsPerStaker; i++) {
     seed = await web3.utils.soliditySha3(+stakerId + i);
     assetId = +(await prng(seed, numAssets, blockHashes)) + 1;
     assignedAssetsVotes.push({ id: assetId, value: votes[assetId - 1] });
-    assignedAssetsProofs.push(proofs[assetId - 1]);
+    ids.push(assetId);
+    values.push(votes[assetId - 1]);
   }
-  return [assignedAssetsVotes, assignedAssetsProofs];
+  return [assignedAssetsVotes, ids, values];
 };
 
 const getNumRevealedAssets = async (assignedAssetsVotes) => {

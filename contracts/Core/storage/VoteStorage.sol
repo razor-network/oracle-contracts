@@ -5,11 +5,11 @@ import "../../lib/Structs.sol";
 
 contract VoteStorage {
     //stakerid -> commitment
-    mapping(uint256 => Structs.Commitment) public commitments;
-    //stakerid -> assetid -> vote
-    mapping(uint256 => mapping(uint256 => Structs.Vote)) public votes;
+    mapping(uint32 => Structs.Commitment) public commitments;
+    //stakerid  -> vote
+    mapping(uint32 => Structs.Vote) public votes;
     //epoch -> asset -> stakeWeight
-    mapping(uint32 => mapping(uint256 => uint256)) public totalInfluenceRevealed;
+    mapping(uint32 => mapping(uint8 => uint256)) public totalInfluenceRevealed;
     //epoch -> assetid -> voteValue -> weight
-    mapping(uint32 => mapping(uint256 => mapping(uint256 => uint256))) public voteWeights;
+    mapping(uint32 => mapping(uint8 => mapping(uint256 => uint256))) public voteWeights;
 }

@@ -318,15 +318,15 @@ describe('StakeManager', function () {
 
       // Participation In Epoch
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const tree = merkle('keccak256').sync(votes);
-      const root = tree.root();
+      const encodedValues = await random.encodePacked(votes);
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
       epoch = await getEpoch();
 
       // Commit
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
+
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
       await mineToNextState();
 
