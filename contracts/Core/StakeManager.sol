@@ -284,7 +284,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(staker.stake > 0, "Nonpositive Stake");
         if (stakerIds[msg.sender] == stakerId) {
             // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-            require((lock.withdrawAfter - parameters.withdrawLockPeriod()) >= voteManager.getEpochLastCommitted(stakerId), "Participated in Lock Period");
+            require(
+                (lock.withdrawAfter - parameters.withdrawLockPeriod()) >= voteManager.getEpochLastCommitted(stakerId),
+                "Participated in Lock Period"
+            );
             // require((voteManager.getCommitment(stakerId)).epoch != epoch, "Already commited");
         }
 

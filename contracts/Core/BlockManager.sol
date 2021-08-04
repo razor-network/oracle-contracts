@@ -20,14 +20,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint256[] medians, uint256 timestamp);
 
-    event Proposed(
-        uint32 epoch,
-        uint32 stakerId,
-        uint256[] medians,
-        uint256 iteration,
-        uint256 biggestInfluencerId,
-        uint256 timestamp
-    );
+    event Proposed(uint32 epoch, uint32 stakerId, uint256[] medians, uint256 iteration, uint256 biggestInfluencerId, uint256 timestamp);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -75,7 +68,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        proposedBlocks[epoch][numProposedBlocks]= Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
 
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
@@ -88,7 +81,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint8 assetId,
         uint256[] memory sorted
     ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
-        // require(disputes[epoch][msg.sender].median == 0, "median already found");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch) / (2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
@@ -96,6 +88,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
             disputes[epoch][msg.sender].assetId = assetId;
         } else {
             require(disputes[epoch][msg.sender].assetId == assetId, "AssetId not matching");
+            // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint256 i = 0; i < sorted.length; i++) {
             require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
@@ -113,6 +106,23 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(uint32 epoch) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
+    }
+
+    function confirmBlock(uint32 epoch) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
+        for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
+            uint8 blockId = sortedProposedBlockIds[epoch - 1][i];
+            if (proposedBlocks[epoch - 1][blockId].valid) {
+                blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
+                uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
+
+                emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians, block.timestamp);
+                rewardManager.giveBlockReward(proposerId, epoch);
+                return;
+                // for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
+                //     assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
+                // }
+            }
+        }
     }
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {
@@ -142,33 +152,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (sortedProposedBlockIds[epoch].length);
     }
 
-    function confirmBlock(uint32 epoch) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
-        for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
-          uint8 blockId = sortedProposedBlockIds[epoch-1][i];
-            if (proposedBlocks[epoch - 1][blockId].valid) {
-                blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
-                uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
-
-                emit BlockConfirmed(
-                    epoch - 1,
-                    proposerId,
-                    proposedBlocks[epoch - 1][i].medians,
-                    block.timestamp
-                );
-                rewardManager.giveBlockReward(proposerId, epoch);
-                return;
-                // for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
-                //     assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
-                // }
-
-            }
-        }
-    }
-
-    function finalizeDispute(
-        uint32 epoch,
-        uint8 blockId
-    ) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    function finalizeDispute(uint32 epoch, uint8 blockId) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -203,7 +187,12 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return true;
     }
 
-    function _insertAppropriately(uint32 epoch, uint8 blockId, uint256 iteration, uint256 biggestInfluence) internal {
+    function _insertAppropriately(
+        uint32 epoch,
+        uint8 blockId,
+        uint256 iteration,
+        uint256 biggestInfluence
+    ) internal {
         if (sortedProposedBlockIds[epoch].length == 0) {
             sortedProposedBlockIds[epoch].push(0);
             return;

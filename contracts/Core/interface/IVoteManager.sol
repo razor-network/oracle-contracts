@@ -10,7 +10,8 @@ interface IVoteManager {
         uint32 epoch,
         uint256[] calldata values,
         bytes32 secret,
-        address stakerAddress) external;
+        address stakerAddress
+    ) external;
 
     function getCommitment(uint32 stakerId) external view returns (bytes32);
 
@@ -25,7 +26,8 @@ interface IVoteManager {
     ) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256);
-    function getEpochLastRevealed(uint32 stakerId) external view returns (uint32);
-    function getEpochLastCommitted(uint32 stakerId) external view returns (uint32);
 
+    function getEpochLastRevealed(uint32 stakerId) external view returns (uint32);
+
+    function getEpochLastCommitted(uint32 stakerId) external view returns (uint32);
 }

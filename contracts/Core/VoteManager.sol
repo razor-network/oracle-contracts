@@ -45,7 +45,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[stakerId].epoch != epoch, "already commited");
 
-
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
@@ -72,15 +71,17 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         require(thisStakerId > 0, "Structs.Staker does not exist");
         // Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         bytes memory valuesPacked = abi.encodePacked(values);
-        require(keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
-         "incorrect secret/value");
+        require(
+            keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
+            "incorrect secret/value"
+        );
         //if revealing self
         if (msg.sender != stakerAddress) {
-          //bounty hunter revealing someone else's secret in commit state
-          require(parameters.getState() == parameters.commit(), "Not commit state");
-          commitments[thisStakerId].commitmentHash = 0x0;
-          stakeManager.slash(thisStakerId, msg.sender, epoch);
-          return;
+            //bounty hunter revealing someone else's secret in commit state
+            require(parameters.getState() == parameters.commit(), "Not commit state");
+            commitments[thisStakerId].commitmentHash = 0x0;
+            stakeManager.slash(thisStakerId, msg.sender, epoch);
+            return;
         }
 
         require(parameters.getState() == parameters.reveal(), "Not reveal state");
@@ -90,13 +91,10 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         votes[thisStakerId].epoch = epoch;
         votes[thisStakerId].values = values;
         uint256 influence = stakeManager.getInfluence(thisStakerId);
-        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] +
-        influence;
+        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
         for (uint8 i = 0; i < values.length; i++) {
-                voteWeights[epoch][i][values[i]] =
-                    voteWeights[epoch][i][values[i]] +
-                    influence;
-            }
+            voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
+        }
         // commitments[thisStakerId].commitmentHash = 0x0;
         // stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
@@ -113,16 +111,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return (votes[stakerId].values[assetId]);
     }
 
-    // function getVoteWeight(uint32 stakerId, uint8 assetId) external view returns (uint256) {
-    //     //epoch -> stakerid -> assetid -> vote
-    //     return (votes[stakerId].weights[assetId]);
-    // }
-
     function getVoteWeights(
         uint32 epoch,
         uint8 assetId,
         uint256 voteValue
-    ) public view returns (uint256) {
+    ) external view returns (uint256) {
         //epoch -> assetid -> voteValue -> weight
         return (voteWeights[epoch][assetId][voteValue]);
     }
@@ -133,10 +126,11 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     }
 
     function getEpochLastCommitted(uint32 stakerId) external view returns (uint32) {
-      return commitments[stakerId].epoch;
+        return commitments[stakerId].epoch;
     }
+
     function getEpochLastRevealed(uint32 stakerId) external view returns (uint32) {
-      return votes[stakerId].epoch;
+        return votes[stakerId].epoch;
     }
 
     // function resetTotalInfluenceRevealed() public initialized onlyRole(parameters.getVoteModifierHash()) {

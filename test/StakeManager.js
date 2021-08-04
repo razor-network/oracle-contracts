@@ -2,7 +2,6 @@
 test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
-const merkle = require('@razor-network/merkle');
 const { utils } = require('ethers');
 const { assert } = require('chai');
 const { DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD } = require('./helpers/constants');
@@ -343,7 +342,6 @@ describe('StakeManager', function () {
 
       const encodedValues1 = await random.encodePacked(votes1);
 
-
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'bytes', 'bytes32'],
         [epoch, encodedValues1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -428,7 +426,6 @@ describe('StakeManager', function () {
       // commit in epoch 42 , outside grace_period
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const encodedValues = await random.encodePacked(votes);
-
 
       const commitment = utils.solidityKeccak256(
         ['uint32', 'bytes', 'bytes32'],
@@ -694,7 +691,6 @@ describe('StakeManager', function () {
 
         // reveal
         await mineToNextState();
-
 
         await voteManager.connect(signers[4]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',

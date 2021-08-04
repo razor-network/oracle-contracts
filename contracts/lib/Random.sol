@@ -36,6 +36,6 @@ library Random {
     }
 
     function encodePacked(uint256[] calldata values) public pure returns (bytes memory returnValue) {
-      return abi.encodePacked(values);
+        return abi.encodePacked(values);
     }
 }

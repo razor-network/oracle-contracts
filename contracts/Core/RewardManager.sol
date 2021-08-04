@@ -96,9 +96,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed
-            ? epochLastRevealed
-            : thisStaker.epochStaked;
+        uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochStaked;
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
 
@@ -121,7 +119,7 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         _giveInactivityPenalties(stakerId, epoch);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        if (epochLastRevealed!=0 && epochLastRevealed < epoch - 1) {
+        if (epochLastRevealed != 0 && epochLastRevealed < epoch - 1) {
             stakeManager.setStakerAge(thisStaker.id, 0, epoch);
             return;
         }
@@ -136,13 +134,13 @@ contract RewardManager is Initializable, ACL, RewardStorage {
             uint256 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
             // uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint256 medianLastEpoch = mediansLastEpoch[i];
-            uint256 prod = previousAge*voteValueLastEpoch;
+            uint256 prod = previousAge * voteValueLastEpoch;
             // if (voteWeightLastEpoch > 0) {
             if (voteValueLastEpoch > medianLastEpoch) {
-                penalty = penalty  + (prod / medianLastEpoch - previousAge);
+                penalty = penalty + (prod / medianLastEpoch - previousAge);
                 // penalty = penalty + (previousAge * (voteValueLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
             } else {
-              penalty = penalty + (previousAge - prod / medianLastEpoch) ;
+                penalty = penalty + (previousAge - prod / medianLastEpoch);
             }
             // }
         }
@@ -151,6 +149,5 @@ contract RewardManager is Initializable, ACL, RewardStorage {
         newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
 
         stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
-
     }
 }

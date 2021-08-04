@@ -2,7 +2,6 @@
 test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
-const merkle = require('@razor-network/merkle');
 const { utils } = require('ethers');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
@@ -91,7 +90,6 @@ describe('VoteManager', function () {
           [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
-
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -100,7 +98,7 @@ describe('VoteManager', function () {
         assertBNEqual(commitment1, commitment2.commitmentHash, 'commitment1, commitment2 not equal');
 
         const age1 = 10000;
-        const age2 = await stakeManager.getAge(stakerIdAcc3)
+        const age2 = await stakeManager.getAge(stakerIdAcc3);
         assertBNEqual(age1, age2, 'age1, age2 not equal');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
@@ -113,9 +111,8 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[4]).commit(epoch, commitment3);
 
         const age3 = 10000;
-        const age4 = await stakeManager.getAge(stakerIdAcc4)
+        const age4 = await stakeManager.getAge(stakerIdAcc4);
         assertBNEqual(age3, age4, 'age1, age2 not equal');
-
       });
 
       it('should be able to reveal', async function () {
@@ -164,9 +161,7 @@ describe('VoteManager', function () {
           biggestInfluencerId);
 
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
-        console.log('influenceBefore',influenceBefore.toString())
         const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
-        console.log('ageBefore',ageBefore.toString())
 
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
@@ -178,7 +173,6 @@ describe('VoteManager', function () {
           [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
-        console.log(epoch, commitment1);
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
@@ -188,17 +182,14 @@ describe('VoteManager', function () {
           [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
-
         await voteManager.connect(signers[4]).commit(epoch, commitment2);
         const commitment3 = await voteManager.getCommitment(stakerIdAcc3);
 
         assertBNEqual(commitment1, commitment3.commitmentHash, 'commitment1, commitment3 not equal');
 
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
-        console.log('ageAfter',ageAfter.toString())
         const expectedAgeDifference = toBigNumber(10000);
         const influenceAfter = (await stakeManager.getInfluence(stakerIdAcc3));
-        console.log('influenceAfter',influenceAfter.toString())
 
         assertBNEqual(ageAfter.sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
         assertBNLessThan(influenceBefore, influenceAfter, 'Not rewarded');
@@ -214,17 +205,8 @@ describe('VoteManager', function () {
         const stakeBefore2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues = await random.encodePacked(votes);
-        const commitment = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
+
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const encodedValues2 = await random.encodePacked(votes2);
-        const commitment2 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
 
         await mineToNextState(); // reveal
 
@@ -285,30 +267,25 @@ describe('VoteManager', function () {
 
         // const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        let penalty = toBigNumber('0');
+        let penalty = toBigNumber(0);
         let toAdd = toBigNumber(0);
-        let num = toBigNumber(0);
-        let denom = toBigNumber(0);
+        let prod = toBigNumber(0);
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         for (let i = 0; i < votes2.length; i++) {
           prod = toBigNumber(votes2[i]).mul(ageBefore2);
           if (votes2[i] > medians[i]) {
-
-            toAdd = (prod.div(medians[i])).sub(ageBefore2)
+            toAdd = (prod.div(medians[i])).sub(ageBefore2);
+          } else {
+            toAdd = ageBefore2.sub(prod.div(medians[i]));
           }
-          else {
-          toAdd = ageBefore2.sub(prod.div(medians[i]));
-        }
           penalty = penalty.add(toAdd);
         }
-        console.log('penalty',penalty.toString());
         const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
         const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
 
-console.log('ageBefore2',ageBefore2.toString())
         assertBNLessThan(ageBefore, ageAfter, 'Not rewarded');
-        assertBNEqual(ageAfter2,expectedAgeAfter2, 'Age Penalty should be applied');
+        assertBNEqual(ageAfter2, expectedAgeAfter2, 'Age Penalty should be applied');
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {
