@@ -13,5 +13,4 @@ contract VoteStorage {
     //epoch -> assetid -> voteValue -> weight
     mapping(uint32 => mapping(uint8 => mapping(uint256 => uint256))) public voteWeights;
     bytes32 public secrets;
-
 }

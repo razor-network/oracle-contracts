@@ -56,9 +56,13 @@ contract RewardManager is Initializable, ACL {
     /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
+<<<<<<< HEAD
     function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(parameters.getRewardModifierHash()) {
+=======
+    function giveBlockReward(uint256 stakerId, uint256 epoch) external onlyRole(parameters.getRewardModifierHash()) {
         uint256 blockReward = parameters.blockReward();
-        if (parameters.blockReward() > 0) {
+>>>>>>> 503998d19611ef2ae6d15aa806e14fac5a8f922f
+        if (blockReward > 0) {
             uint256 newStake = stakeManager.getStaker(stakerId).stake + (blockReward);
             stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
         }
@@ -87,8 +91,15 @@ contract RewardManager is Initializable, ACL {
     function _giveInactivityPenalties(uint32 stakerId, uint32 epoch) internal {
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
 
+<<<<<<< HEAD
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochStaked;
+=======
+        uint256 epochLastActive = thisStaker.epochStaked < thisStaker.epochLastRevealed
+            ? thisStaker.epochLastRevealed
+            : thisStaker.epochStaked;
+
+>>>>>>> 503998d19611ef2ae6d15aa806e14fac5a8f922f
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
 
@@ -99,10 +110,9 @@ contract RewardManager is Initializable, ACL {
         uint256 newStake = thisStaker.stake;
         uint256 previousAge = thisStaker.age;
         uint256 newAge = thisStaker.age;
-        uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
         // Not reveal penalty due to Randao
-        if (epochLastRevealed < epochLastCommitted) {
+        if (thisStaker.epochLastRevealed < thisStaker.epochLastCommitted) {
             uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
             newStake = newStake - randaoPenalty;
         }
@@ -143,11 +153,12 @@ contract RewardManager is Initializable, ACL {
             } else {
                 penalty = penalty + (previousAge - prod / medianLastEpoch);
             }
-
-            uint256 newAge = (previousAge + 10000 - (penalty));
-            newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
-
-            stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
+            // }
         }
+
+        uint256 newAge = (previousAge + 10000 - (penalty));
+        newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
+
+        stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
     }
 }

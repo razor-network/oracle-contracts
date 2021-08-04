@@ -1,0 +1,28 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+
+import "../../lib/Structs.sol";
+
+contract VoteStorage {
+<<<<<<< HEAD
+    //stakerid -> commitment
+    mapping(uint32 => Structs.Commitment) public commitments;
+    //stakerid  -> vote
+    mapping(uint32 => Structs.Vote) public votes;
+    //epoch -> asset -> stakeWeight
+    mapping(uint32 => uint256) public totalInfluenceRevealed;
+    //epoch -> assetid -> voteValue -> weight
+    mapping(uint32 => mapping(uint8 => mapping(uint256 => uint256))) public voteWeights;
+=======
+    //epoch -> stakerid -> commitment
+    mapping(uint256 => mapping(uint256 => bytes32)) public commitments;
+    //stakerid -> secret
+    bytes32 public secrets;
+    //epoch -> stakerid -> assetid -> vote
+    mapping(uint256 => mapping(uint256 => mapping(uint256 => Structs.Vote))) public votes;
+    // epoch -> asset -> stakeWeight
+    mapping(uint256 => mapping(uint256 => uint256)) public totalInfluenceRevealed;
+    //epoch - >assetid -> voteValue -> weight
+    mapping(uint256 => mapping(uint256 => mapping(uint256 => uint256))) public voteWeights;
+>>>>>>> 503998d19611ef2ae6d15aa806e14fac5a8f922f
+}
