@@ -79,49 +79,49 @@ describe('Parameters contract Tests', async () => {
 
   it('parameters should not be modified without admin role access', async () => {
     let tx = parameters.connect(signers[1]).setPenaltyNotRevealNum(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setPenaltyNotRevealDeom(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setSlashPenaltyNum(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setSlashPenaltyDenom(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setWithdrawLockPeriod(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setWithdrawReleasePeriod(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setResetLockPenalty(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setEpochLength(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setNumStates(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setExposureDenominator(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMinStake(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setGracePeriod(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAge(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
+    await assertRevert(tx, expectedRevertMessage);
   });
 
   it('parameters should be able to modify with admin role access', async () => {
