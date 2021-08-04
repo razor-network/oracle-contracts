@@ -85,20 +85,18 @@ contract RewardManager is Initializable, ACL {
     /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
     function _giveInactivityPenalties(uint32 stakerId, uint32 epoch) internal {
-        Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
+        Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochStaked;
+
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
 
-        if (inactiveEpochs <= parameters.gracePeriod()) {
-            return;
-        }
         uint256 previousStake = thisStaker.stake;
         uint256 newStake = thisStaker.stake;
         uint256 previousAge = thisStaker.age;
         uint256 newAge = thisStaker.age;
+
         uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
         // Not reveal penalty due to Randao
@@ -106,13 +104,16 @@ contract RewardManager is Initializable, ACL {
             uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
             newStake = newStake - randaoPenalty;
         }
+
+        if (inactiveEpochs > parameters.gracePeriod()) {
+            (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
+        }
         // uint256 currentStake = previousStake;
-        (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         if (newStake < previousStake) {
-            stakeManager.setStakerStake(thisStaker.id, newStake, "Inactivity Penalty", epoch);
+            stakeManager.setStakerStake(stakerId, newStake, "Inactivity Penalty", epoch);
         }
         if (newAge < previousAge) {
-            stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
+            stakeManager.setStakerAge(stakerId, newAge, epoch);
         }
     }
 

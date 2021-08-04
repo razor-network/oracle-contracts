@@ -47,8 +47,10 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
-        if (blockManager.getBlock(epoch - 1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch - 1) > 0) {
-            blockManager.confirmBlock(epoch);
+        if (blockManager.getBlock(epoch - 1).proposerId == 0) {
+            if (blockManager.getNumProposedBlocks(epoch - 1) > 0) {
+                blockManager.confirmBlock(epoch);
+            }
         }
         rewardManager.givePenalties(stakerId, epoch);
 
@@ -68,12 +70,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     ) external initialized checkEpoch(epoch) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Structs.Staker does not exist");
-        // Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
-        bytes memory valuesPacked = abi.encodePacked(values);
-        require(
-            keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
-            "incorrect secret/value"
-        );
+        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //bounty hunter
         if (msg.sender != stakerAddress) {
             //bounty hunter revealing someone else's secret in commit state

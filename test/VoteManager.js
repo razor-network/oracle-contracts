@@ -354,7 +354,7 @@ describe('VoteManager', function () {
           signers[6].address);
 
         const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
-        const slashPenaltyAmount = stakeBeforeAcc6.mul(((await parameters.slashPenaltyNum())).div(await parameters.slashPenaltyDenom()));
+        const slashPenaltyAmount = stakeBeforeAcc6.mul(await parameters.slashPenaltyNum()).div(await parameters.slashPenaltyDenom());
         const stakeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
         assertBNEqual(stakeAcc6, toBigNumber('0'), 'Stake of account 6 should be zero');
         assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),

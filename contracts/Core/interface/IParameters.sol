@@ -46,7 +46,7 @@ interface IParameters {
 
     function getState() external view returns (uint8);
 
-    function maxAge() external view returns (uint256);
+    function maxAge() external view returns (uint32);
 
     function escapeHatchEnabled() external view returns (bool);
 

@@ -7,23 +7,23 @@ contract Parameters is ACL {
     // constant type can be readjusted to some smaller type than uint256 for saving gas (storage variable packing).
     // penalty not reveal = 0.01% per epch
 
-    uint256 public penaltyNotRevealNum = 1;
-    uint256 public penaltyNotRevealDenom = 10000;
-    uint256 public slashPenaltyNum = 10000;
-    uint256 public slashPenaltyDenom = 10000;
+    uint16 public penaltyNotRevealNum = 1;
+    uint16 public penaltyNotRevealDenom = 10000;
+    uint16 public slashPenaltyNum = 10000;
+    uint16 public slashPenaltyDenom = 10000;
 
     uint256 public minStake = 1000 * (10**18);
     uint256 public blockReward = 100 * (10**18);
     uint256 public withdrawLockPeriod = 1;
     uint8 public maxAltBlocks = 5;
-    uint32 public epochLength = 300;
-    uint32 public numStates = 4;
-    uint256 public exposureDenominator = 1000;
-    uint256 public gracePeriod = 8;
+    uint16 public epochLength = 300;
+    uint8 public numStates = 4;
+    uint16 public exposureDenominator = 1000;
+    uint16 public gracePeriod = 8;
     uint256 public aggregationRange = 3;
     uint256 public withdrawReleasePeriod = 5;
     uint256 public resetLockPenalty = 1;
-    uint256 public maxAge = 100 * 10000;
+    uint32 public maxAge = 100 * 10000;
 
     bool public escapeHatchEnabled = true;
 
@@ -58,22 +58,22 @@ contract Parameters is ACL {
     //event to be emitted when any governance parameter value changes.
     event ParameterChanged(address admin, string parameterName, uint256 valueChangedFrom, uint256 valueChangedTo, uint256 timestamp);
 
-    function setPenaltyNotRevealNum(uint256 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", penaltyNotRevealNum, _penaltyNotRevealNumerator, block.timestamp);
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
-    function setPenaltyNotRevealDeom(uint256 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPenaltyNotRevealDeom(uint16 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealDenom", penaltyNotRevealDenom, _penaltyNotRevealDenom, block.timestamp);
         penaltyNotRevealDenom = _penaltyNotRevealDenom;
     }
 
-    function setSlashPenaltyNum(uint256 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setSlashPenaltyNum(uint16 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "slashPenaltyNum", slashPenaltyNum, _slashPenaltyNumerator, block.timestamp);
         slashPenaltyNum = _slashPenaltyNumerator;
     }
 
-    function setSlashPenaltyDenom(uint256 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setSlashPenaltyDenom(uint16 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "slashPenaltyDenom", slashPenaltyDenom, _slashPenaltyDenominator, block.timestamp);
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
@@ -98,17 +98,17 @@ contract Parameters is ACL {
         maxAltBlocks = _maxAltBlocks;
     }
 
-    function setEpochLength(uint8 _epochLength) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setEpochLength(uint16 _epochLength) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "epochLength", epochLength, _epochLength, block.timestamp);
         epochLength = _epochLength;
     }
 
-    function setNumStates(uint32 _numStates) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setNumStates(uint8 _numStates) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "numStates", numStates, _numStates, block.timestamp);
         numStates = _numStates;
     }
 
-    function setExposureDenominator(uint256 _exposureDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setExposureDenominator(uint16 _exposureDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "exposureDenominator", exposureDenominator, _exposureDenominator, block.timestamp);
         exposureDenominator = _exposureDenominator;
     }
@@ -122,7 +122,7 @@ contract Parameters is ACL {
         blockReward = _blockReward;
     }
 
-    function setGracePeriod(uint256 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setGracePeriod(uint16 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "gracePeriod", gracePeriod, _gracePeriod, block.timestamp);
         gracePeriod = _gracePeriod;
     }
@@ -132,7 +132,7 @@ contract Parameters is ACL {
         aggregationRange = _aggregationRange;
     }
 
-    function setMaxAge(uint256 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMaxAge(uint32 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "maxAge", maxAge, _maxAge, block.timestamp);
         maxAge = _maxAge;
     }
@@ -146,8 +146,8 @@ contract Parameters is ACL {
         return (uint32(block.number) / (epochLength));
     }
 
-    function getState() external view returns (uint32) {
-        uint32 state = (uint32(block.number) / (epochLength / numStates));
+    function getState() external view returns (uint8) {
+        uint8 state = uint8(((block.number) / (epochLength / numStates)));
         return (state % (numStates));
     }
 

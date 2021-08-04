@@ -440,6 +440,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         return stakers[stakerId].stake;
     }
 
+    function getEpochStaked(uint32 stakerId) external view returns (uint32) {
+        return stakers[stakerId].epochStaked;
+    }
+
     /// @notice Internal function for setting stake of the staker
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
