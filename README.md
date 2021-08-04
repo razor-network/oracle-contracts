@@ -38,4 +38,6 @@ Run `npm run lint`
 Run `npm run lint:sol:fix`
 
 # Addresses
-Deployed contract addresses can be found [here](deployed/goerli/addresses.json)
+We are currently live on Polygon Mumbai Testnet.
+
+Deployed contract addresses can be found [here](deployed/mumbai/addresses.json)
