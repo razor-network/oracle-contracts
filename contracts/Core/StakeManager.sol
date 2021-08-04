@@ -162,21 +162,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         parameters = IParameters(parametersAddress);
     }
 
-    // /// @param _id The ID of the staker
-    // /// @param _epochLastRevealed The number of epoch that staker revealed asset values
-    // function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed)
-    //     external
-    //     initialized
-    //     onlyRole(parameters.getStakerActivityUpdaterHash())
-    // {
-    //     stakers[_id].epochLastRevealed = _epochLastRevealed;
-    // }
-
-    /// @param stakerId The ID of the staker
-    // function updateCommitmentEpoch(uint32 stakerId) external initialized onlyRole(parameters.getStakerActivityUpdaterHash()) {
-    //     stakers[stakerId].epochLastCommitted = parameters.getEpoch();
-    // }
-
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake

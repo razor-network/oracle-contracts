@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IStakeManager {
-    // function setStakerEpochLastRevealed(uint256 _id, uint32 _epochLastRevealed) external;
-
     function updateCommitmentEpoch(uint32 stakerId) external;
 
     function stake(uint32 epoch, uint256 amount) external;
