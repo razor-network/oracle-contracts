@@ -38,7 +38,6 @@ describe('Parameters contract Tests', async () => {
   const withdrawReleasePeriod = toBigNumber('5');
   const resetLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
-  const maxAssetsPerStaker = toBigNumber('2');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
   const assetConfirmerHash = utils.solidityKeccak256(['string'], ['ASSET_CONFIRMER_ROLE']);
@@ -121,9 +120,6 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
     assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setmaxAssetsPerStaker(toBigNumber('1'));
-    assertRevert(tx, expectedRevertMessage);
-
     tx = parameters.connect(signers[1]).setMaxAge(toBigNumber('1'));
     assertRevert(tx, expectedRevertMessage);
   });
@@ -177,21 +173,17 @@ describe('Parameters contract Tests', async () => {
     const resetLockPenalty = await parameters.resetLockPenalty();
     assertBNEqual(resetLockPenalty, toBigNumber('17'));
 
-    await parameters.setmaxAssetsPerStaker(toBigNumber('17'));
-    const maxAssetsPerStaker = await parameters.maxAssetsPerStaker();
-    assertBNEqual(maxAssetsPerStaker, toBigNumber('17'));
-
-    await parameters.setMaxAge(toBigNumber('17'));
+    await parameters.setMaxAge(toBigNumber('18'));
     const maxAge = await parameters.maxAge();
-    assertBNEqual(maxAge, toBigNumber('17'));
+    assertBNEqual(maxAge, toBigNumber('18'));
 
-    await parameters.setSlashPenaltyNum(toBigNumber('17'));
+    await parameters.setSlashPenaltyNum(toBigNumber('19'));
     const slashPenaltyNum = await parameters.slashPenaltyNum();
-    assertBNEqual(slashPenaltyNum, toBigNumber('17'));
+    assertBNEqual(slashPenaltyNum, toBigNumber('19'));
 
-    await parameters.setSlashPenaltyDenom(toBigNumber('17'));
+    await parameters.setSlashPenaltyDenom(toBigNumber('20'));
     const slashPenaltyDenom = await parameters.slashPenaltyDenom();
-    assertBNEqual(slashPenaltyDenom, toBigNumber('17'));
+    assertBNEqual(slashPenaltyDenom, toBigNumber('20'));
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -239,9 +231,6 @@ describe('Parameters contract Tests', async () => {
 
     const numStatesValue = await parameters.numStates();
     assertBNEqual(totalStates, numStatesValue);
-
-    const maxAssetsPerStakerValue = await parameters.maxAssetsPerStaker();
-    assertBNEqual(maxAssetsPerStaker, maxAssetsPerStakerValue);
 
     const maxAgeValue = await parameters.maxAge();
     assertBNEqual(maxAge, maxAgeValue);
