@@ -47,19 +47,12 @@ module.exports = {
       chainId: 31337,
       logger: console,
     },
-    goerli: {
-      url: PROVIDER_URL || '',
-      accounts: { mnemonic: MNEMONIC },
-      chainId: ENV_CHAIN_IDS[NETWORK],
-      gas: 7700000,
-      gasPrice: 1 * GWEI,
-    },
     mumbai: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
       gas: 7700000,
-      gasPrice: 1 * GWEI,
+      gasPrice: 30 * GWEI,
     },
   },
   gasReporter: {
@@ -72,7 +65,7 @@ module.exports = {
     spacing: 2,
   },
   tenderly: {
-    username: 'skanda',
-    project: 'razor',
+    username: 'razor',
+    project: 'mumbai',
   },
 };
