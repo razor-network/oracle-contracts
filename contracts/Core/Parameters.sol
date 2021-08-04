@@ -130,7 +130,7 @@ contract Parameters is ACL {
     }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "escapeHatchEnabled", true, false, block.timestamp);
+        emit ParameterChanged(msg.sender, "escapeHatchEnabled", 1, 0, block.timestamp);
         escapeHatchEnabled = false;
     }
 
