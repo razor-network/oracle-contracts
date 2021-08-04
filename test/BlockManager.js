@@ -62,12 +62,13 @@ describe('BlockManager', function () {
       await assertRevert(tx1, 'Contract should be initialized');
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
+      const encodedValues = await random.encodePacked(votes);
 
-      
+
+
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       const tx2 = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
@@ -104,23 +105,24 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
 
-      
+      const encodedValues = await random.encodePacked(votes);
+
+
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[5]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
 
-      const root2 = tree2.root();
+      const encodedValues2 = await random.encodePacked(votes2);
+
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[6]).commit(epoch, commitment2);
@@ -128,37 +130,28 @@ describe('BlockManager', function () {
       const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const tree3 = merkle('keccak256').sync(votes3);
 
-      const root3 = tree3.root();
+      const encodedValues3 = await random.encodePacked(votes3);
       const commitment3 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[8]).commit(epoch, commitment3);
 
       await mineToNextState();
 
-      
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[5]).reveal(epoch, tree.root(), votes, proof,
+
+      await voteManager.connect(signers[5]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[5].address);
 
-      const proof2 = [];
-      for (let i = 0; i < votes2.length; i++) {
-        proof2.push(tree2.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[6]).reveal(epoch, tree2.root(), votes2, proof2,
+
+      await voteManager.connect(signers[6]).reveal(epoch,votes2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[6].address);
 
-      const proof3 = [];
-      for (let i = 0; i < votes3.length; i++) {
-        proof3.push(tree3.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[8]).reveal(epoch, tree3.root(), votes3, proof3,
+
+      await voteManager.connect(signers[8]).reveal(epoch, votes3,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[8].address);
     });
@@ -174,7 +167,6 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[5]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
@@ -199,7 +191,6 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[6]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
@@ -241,7 +232,6 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes);
 
       const dispute = await blockManager.disputes(epoch, signers[19].address);
-
       assertBNEqual(dispute.assetId, toBigNumber('1'), 'assetId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.median, median, 'median should match');
@@ -254,7 +244,7 @@ describe('BlockManager', function () {
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
       const secondProposedBlock = await blockManager.proposedBlocks(epoch, 1);
 
-      const firstProposedBlockIndex = (firstProposedBlock.proposerId.gt(secondProposedBlock.proposerId))
+      const firstProposedBlockIndex = (toBigNumber(firstProposedBlock.proposerId).gt(secondProposedBlock.proposerId))
         ? 1 : 0;
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
@@ -283,22 +273,23 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      
+      const encodedValues = await random.encodePacked(votes);
 
-      
+
+
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       await voteManager.connect(signers[6]).commit(epoch, commitment1);
 
       const votes2 = [1010, 2010, 3010, 4010, 5010, 6010, 7010, 8010, 9010];
-      
 
-      const root2 = tree2.root();
+
+      const encodedValues2 = await random.encodePacked(votes2);
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[7]).commit(epoch, commitment2);
@@ -312,20 +303,14 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       // Staker 6
-      
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[6]).reveal(epoch, tree.root(), votes, proof,
+
+      await voteManager.connect(signers[6]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[6].address);
 
       // Staker 7
-      const proof2 = [];
-      for (let i = 0; i < votes2.length; i++) {
-        proof2.push(tree2.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[7]).reveal(epoch, tree2.root(), votes2, proof2,
+
+      await voteManager.connect(signers[7]).reveal(epoch, votes2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[7].address);
     });
@@ -347,13 +332,11 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[6]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [1000, 2100, 3100, 4000, 5000, 6000, 7000, 8000, 9000],
         iteration6,
         biggestInfluencerId);
 
       await blockManager.connect(signers[7]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [1000, 2200, 3300, 4000, 5000, 6000, 7000, 8000, 9000],
         iteration7,
         biggestInfluencerId);
@@ -368,8 +351,8 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes1,
-        [await voteManager.getVoteWeight(epoch, 1, sortedVotes1[0]),
-          await voteManager.getVoteWeight(epoch, 1, sortedVotes1[1])] // initial weights
+        [await voteManager.getVoteWeights(epoch, 1, sortedVotes1[0]),
+          await voteManager.getVoteWeights(epoch, 1, sortedVotes1[1])] // initial weights
       );
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes1);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
@@ -390,8 +373,8 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes2,
-        [await voteManager.getVoteWeight(epoch, 2, sortedVotes2[0]),
-          await voteManager.getVoteWeight(epoch, 2, sortedVotes2[1])] // initial weights
+        [await voteManager.getVoteWeights(epoch, 2, sortedVotes2[0]),
+          await voteManager.getVoteWeights(epoch, 2, sortedVotes2[1])] // initial weights
       );
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 2, sortedVotes2);
@@ -416,12 +399,13 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc8);
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      
 
-      
+      const encodedValues = await random.encodePacked(votes);
+
+
       const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       const { stake } = staker;
@@ -434,11 +418,8 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[8]).reveal(epoch, tree.root(), votes, proof,
+
+      await voteManager.connect(signers[8]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[8].address);
 
@@ -453,23 +434,20 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      
 
-      
+      const encodedValues = await random.encodePacked(votes);
+
+
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[19]).commit(epoch, commitment1);
 
       await mineToNextState();
 
-      
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[19]).reveal(epoch, tree.root(), votes, proof,
+      await voteManager.connect(signers[19]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[19].address);
 
@@ -482,7 +460,6 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[19]).propose(epoch,
-        [10, 12, 13, 14, 15, 16, 17, 18, 19],
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
         iteration,
         biggestInfluencerId);
@@ -520,43 +497,39 @@ describe('BlockManager', function () {
       await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
 
-      
+      const encodedValues = await random.encodePacked(votes);
+
+
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[2]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
 
-      const root2 = tree2.root();
+
+      const encodedValues2 = await random.encodePacked(votes2);
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256', 'bytes32'],
-        [epoch, root2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        ['uint32', 'bytes', 'bytes32'],
+        [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
       await voteManager.connect(signers[3]).commit(epoch, commitment2);
 
       // Reveal
       await mineToNextState();
-      
-      for (let i = 0; i < votes.length; i++) {
-        proof.push(tree.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[2]).reveal(epoch, tree.root(), votes, proof,
+
+
+      await voteManager.connect(signers[2]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[2].address);
 
       // Staker 3
-      const proof2 = [];
-      for (let i = 0; i < votes2.length; i++) {
-        proof2.push(tree2.getProofPath(i, true, true));
-      }
-      await voteManager.connect(signers[3]).reveal(epoch, tree2.root(), votes2, proof2,
+
+      await voteManager.connect(signers[3]).reveal(epoch,  votes2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[3].address);
 
@@ -569,7 +542,6 @@ describe('BlockManager', function () {
       const iteration = await getIteration(stakeManager, random, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
-        [1, 2, 3, 4, 5, 6, 7, 8, 9],
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
@@ -586,7 +558,7 @@ describe('BlockManager', function () {
         voteManager,
         epoch,
         sortedVotes,
-        [await voteManager.getVoteWeight(epoch, 1, sortedVotes[0])] // initial weights
+        [await voteManager.getVoteWeights(epoch, 1, sortedVotes[0])] // initial weights
       );
 
       // Dispute in batches

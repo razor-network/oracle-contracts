@@ -73,32 +73,34 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
         require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
         bytes memory valuesPacked = abi.encodePacked(values);
-        require(keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+        require(keccak256(abi.encodePacked(epoch, valuesPacked, secret)) == commitments[thisStakerId].commitmentHash,
+         "incorrect secret/value");
         //if revealing self
-        if (msg.sender == stakerAddress) {
-            require(parameters.getState() == parameters.reveal(), "Not reveal state");
-            require(thisStaker.stake > 0, "nonpositive stake");
-
-            votes[thisStakerId].epoch = epoch;
-            votes[thisStakerId].values = values;
-            uint256 influence = stakeManager.getInfluence(thisStakerId);
-            // totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] +
-            // influence;
-            for (uint8 i = 0; i < values.length; i++) {
-                    voteWeights[epoch][i][values[i]] =
-                        voteWeights[epoch][i][values[i]] +
-                        influence;
-                }
-            // commitments[thisStakerId].commitmentHash = 0x0;
-            // stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
-
-            emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
-        } else {
-            //bounty hunter revealing someone else's secret in commit state
-            require(parameters.getState() == parameters.commit(), "Not commit state");
-            commitments[thisStakerId].commitmentHash = 0x0;
-            stakeManager.slash(thisStakerId, msg.sender, epoch);
+        if (msg.sender != stakerAddress) {
+          //bounty hunter revealing someone else's secret in commit state
+          require(parameters.getState() == parameters.commit(), "Not commit state");
+          commitments[thisStakerId].commitmentHash = 0x0;
+          stakeManager.slash(thisStakerId, msg.sender, epoch);
+          return;
         }
+
+        require(parameters.getState() == parameters.reveal(), "Not reveal state");
+        require(thisStaker.stake > 0, "nonpositive stake");
+
+        votes[thisStakerId].epoch = epoch;
+        votes[thisStakerId].values = values;
+        uint256 influence = stakeManager.getInfluence(thisStakerId);
+        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] +
+        influence;
+        for (uint8 i = 0; i < values.length; i++) {
+                voteWeights[epoch][i][values[i]] =
+                    voteWeights[epoch][i][values[i]] +
+                    influence;
+            }
+        // commitments[thisStakerId].commitmentHash = 0x0;
+        // stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
+
+        emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
@@ -125,9 +127,9 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return (voteWeights[epoch][assetId][voteValue]);
     }
 
-    function getTotalInfluenceRevealed(uint32 epoch, uint8 assetId) external view returns (uint256) {
+    function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256) {
         // epoch -> asset -> stakeWeight
-        return (totalInfluenceRevealed[epoch][assetId]);
+        return (totalInfluenceRevealed[epoch]);
     }
 
     function getEpochLastCommitted(uint32 stakerId) external view returns (uint32) {

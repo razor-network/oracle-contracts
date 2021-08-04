@@ -24,7 +24,7 @@ interface IVoteManager {
         uint256 voteValue
     ) external view returns (uint256);
 
-    function getTotalInfluenceRevealed(uint32 epoch, uint8 assetId) external view returns (uint256);
+    function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256);
     function getEpochLastRevealed(uint32 stakerId) external view returns (uint32);
     function getEpochLastCommitted(uint32 stakerId) external view returns (uint32);
 
