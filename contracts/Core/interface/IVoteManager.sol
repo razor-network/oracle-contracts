@@ -17,8 +17,6 @@ interface IVoteManager {
 
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint256);
 
-    // function getVoteWeight(uint32 stakerId, uint8 assetId) external view returns (uint256);
-
     function getVoteWeights(
         uint32 epoch,
         uint8 assetId,

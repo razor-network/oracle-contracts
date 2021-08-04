@@ -95,8 +95,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         for (uint8 i = 0; i < values.length; i++) {
             voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
         }
-        // commitments[thisStakerId].commitmentHash = 0x0;
-        // stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
 
         emit Revealed(epoch, thisStakerId, values, block.timestamp);
     }
@@ -132,9 +130,4 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function getEpochLastRevealed(uint32 stakerId) external view returns (uint32) {
         return votes[stakerId].epoch;
     }
-
-    // function resetTotalInfluenceRevealed() public initialized onlyRole(parameters.getVoteModifierHash()) {
-    //     // epoch -> asset -> stakeWeight
-    //     totalInfluenceRevealed[assetId]);
-    // }
 }
