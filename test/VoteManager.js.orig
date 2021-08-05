@@ -48,11 +48,11 @@ describe('VoteManager', function () {
       it('should not be able to commit without initialization', async () => {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues = await random.encodePacked(votes);
+        
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
 
@@ -92,10 +92,10 @@ describe('VoteManager', function () {
       it('should be able to commit', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues = await random.encodePacked(votes);
+        
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
@@ -110,10 +110,10 @@ describe('VoteManager', function () {
         assertBNEqual(age1, age2, 'age1, age2 not equal');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const encodedValues2 = await random.encodePacked(votes2);
+        
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[4]).commit(epoch, commitment3);
@@ -175,19 +175,19 @@ describe('VoteManager', function () {
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues = await random.encodePacked(votes);
+        
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const encodedValues2 = await random.encodePacked(votes2);
+        
         const commitment2 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[4]).commit(epoch, commitment2);
@@ -259,11 +259,11 @@ describe('VoteManager', function () {
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-        const encodedValues = await random.encodePacked(votes);
+        
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
@@ -554,11 +554,11 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues2 = await random.encodePacked(votes2);
+        
 
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[6]).commit(epoch, commitment3);
@@ -586,11 +586,11 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const encodedValues2 = await random.encodePacked(votes2);
+        
 
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'bytes', 'bytes32'],
-          [epoch, encodedValues2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint256[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
         await voteManager.connect(signers[5]).commit(epoch, commitment3);

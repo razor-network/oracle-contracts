@@ -13,8 +13,4 @@ library Random {
         bytes32 prngHashVal = keccak256(abi.encodePacked(seed, salt));
         return (prngHashVal);
     }
-
-    function encodePacked(uint256[] calldata values) public pure returns (bytes memory returnValue) {
-        return abi.encodePacked(values);
-    }
 }
