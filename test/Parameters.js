@@ -24,6 +24,8 @@ describe('Parameters contract Tests', async () => {
 
   const penaltyNotRevealNumerator = toBigNumber('1');
   const penaltyNotRevealDenominator = toBigNumber('10000');
+  const slashPenaltyNumerator = toBigNumber('10000');
+  const slashPenaltyDenominator = toBigNumber('10000');
 
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
@@ -31,8 +33,12 @@ describe('Parameters contract Tests', async () => {
   const totalStates = toBigNumber('5');
   const exposureDenominator = toBigNumber('1000');
   const gracePeriod = toBigNumber('8');
-  const minimumStake = tokenAmount('100');
+  const minimumStake = tokenAmount('1000');
+  const blockReward = tokenAmount('100');
   const aggregationRange = toBigNumber('3');
+  const withdrawReleasePeriod = toBigNumber('5');
+  const resetLockPenalty = toBigNumber('1');
+  const maxAge = toBigNumber('1000000');
   const maxAssetsCreatedPerEpoch = toBigNumber('20');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
@@ -80,7 +86,19 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setPenaltyNotRevealDeom(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = parameters.connect(signers[1]).setSlashPenaltyNum(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setSlashPenaltyDenom(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = parameters.connect(signers[1]).setWithdrawLockPeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setWithdrawReleasePeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setResetLockPenalty(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
@@ -102,6 +120,9 @@ describe('Parameters contract Tests', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setMaxAge(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAssetsCreatedPerEpoch(toBigNumber('1'));
@@ -149,6 +170,26 @@ describe('Parameters contract Tests', async () => {
     const aggregationRange = await parameters.aggregationRange();
     assertBNEqual(aggregationRange, toBigNumber('15'));
 
+    await parameters.setWithdrawReleasePeriod(toBigNumber('16'));
+    const withdrawReleasePeriod = await parameters.withdrawReleasePeriod();
+    assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
+
+    await parameters.setResetLockPenalty(toBigNumber('17'));
+    const resetLockPenalty = await parameters.resetLockPenalty();
+    assertBNEqual(resetLockPenalty, toBigNumber('17'));
+
+    await parameters.setMaxAge(toBigNumber('18'));
+    const maxAge = await parameters.maxAge();
+    assertBNEqual(maxAge, toBigNumber('18'));
+
+    await parameters.setSlashPenaltyNum(toBigNumber('19'));
+    const slashPenaltyNum = await parameters.slashPenaltyNum();
+    assertBNEqual(slashPenaltyNum, toBigNumber('19'));
+
+    await parameters.setSlashPenaltyDenom(toBigNumber('20'));
+    const slashPenaltyDenom = await parameters.slashPenaltyDenom();
+    assertBNEqual(slashPenaltyDenom, toBigNumber('20'));
+
     await parameters.setMaxAssetsCreatedPerEpoch(toBigNumber('15'));
     const maxAssetsCreatedPerEpoch = await parameters.maxAssetsCreatedPerEpoch();
     assertBNEqual(maxAssetsCreatedPerEpoch, toBigNumber('15'));
@@ -173,11 +214,26 @@ describe('Parameters contract Tests', async () => {
     const penaltyNotRevealDenomValue = await parameters.penaltyNotRevealDenom();
     assertBNEqual(penaltyNotRevealDenominator, penaltyNotRevealDenomValue);
 
+    const slashPenaltyNumValue = await parameters.slashPenaltyNum();
+    assertBNEqual(slashPenaltyNumerator, slashPenaltyNumValue);
+
+    const slashPenaltyDenomValue = await parameters.slashPenaltyDenom();
+    assertBNEqual(slashPenaltyDenominator, slashPenaltyDenomValue);
+
     const minStakeValue = await parameters.minStake();
     assertBNEqual(minimumStake, minStakeValue);
 
+    const blockRewardValue = await parameters.blockReward();
+    assertBNEqual(blockReward, blockRewardValue);
+
     const withdrawLockPeriodValue = await parameters.withdrawLockPeriod();
     assertBNEqual(withdrawLockPeriod, withdrawLockPeriodValue);
+
+    const withdrawReleasePeriodValue = await parameters.withdrawReleasePeriod();
+    assertBNEqual(withdrawReleasePeriod, withdrawReleasePeriodValue);
+
+    const resetLockPenaltyValue = await parameters.resetLockPenalty();
+    assertBNEqual(resetLockPenalty, resetLockPenaltyValue);
 
     const maxAltBlocksValue = await parameters.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
@@ -187,6 +243,9 @@ describe('Parameters contract Tests', async () => {
 
     const numStatesValue = await parameters.numStates();
     assertBNEqual(totalStates, numStatesValue);
+
+    const maxAgeValue = await parameters.maxAge();
+    assertBNEqual(maxAge, maxAgeValue);
 
     const exposureDenominatorValue = await parameters.exposureDenominator();
     assertBNEqual(exposureDenominator, exposureDenominatorValue);

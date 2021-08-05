@@ -7,7 +7,6 @@ const EPOCH_LENGTH = BigNumber.from(300);
 const NUM_BLOCKS = 10;
 const NUM_STATES = BigNumber.from(5);
 const STATE_LENGTH = BigNumber.from(60);
-const BLOCK_REWARD = BigNumber.from(40).mul(ONE_ETHER);
 const GRACE_PERIOD = 8;
 const WITHDRAW_LOCK_PERIOD = 1;
 const MATURITIES = [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,
@@ -28,7 +27,6 @@ module.exports = {
   NUM_STATES,
   ONE_ETHER,
   STATE_LENGTH,
-  BLOCK_REWARD,
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
   MATURITIES,

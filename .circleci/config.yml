@@ -50,8 +50,7 @@ jobs:
       - store_artifacts:
           path: test
           prefix: test
-      - store_test_results:
-          path: test-results
+
 
   lint:
     docker:
@@ -66,8 +65,7 @@ jobs:
       - store_artifacts:
           path: lint
           prefix: lint
-      - store_test_results:
-          path: test-results
+
 
   coverage:
     docker:
@@ -84,8 +82,7 @@ jobs:
       - store_artifacts:
           path: coverage
           prefix: coverage
-      - store_test_results:
-          path: test-results
+
 
   mythx:
     docker:

@@ -90,7 +90,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
             commitments[epoch][thisStakerId] = 0x0;
             stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
-
+            secrets = keccak256(abi.encodePacked(secrets, secret));
             emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
         } else {
             //bounty hunter revealing someone else's secret in commit state
@@ -126,5 +126,9 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns (uint256) {
         // epoch -> asset -> stakeWeight
         return (totalInfluenceRevealed[epoch][assetId]);
+    }
+
+    function getRandaoHash() public view returns (bytes32) {
+        return (secrets);
     }
 }
