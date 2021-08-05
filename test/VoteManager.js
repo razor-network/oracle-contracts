@@ -389,6 +389,7 @@ describe('VoteManager', function () {
       it('should not be able to commit if stake is below minstake', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
+        await parameters.setMinStake(tokenAmount('100'));
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('150'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
