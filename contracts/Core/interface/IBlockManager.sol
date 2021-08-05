@@ -16,8 +16,8 @@ interface IBlockManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
-        uint256[] memory ids,
-        uint256[] memory medians,
+        uint32[] memory ids,
+        uint32[] memory medians,
         uint256 iteration,
         uint256 biggestInfluencerId
     ) external;
@@ -27,7 +27,7 @@ interface IBlockManager {
     function giveSorted(
         uint32 epoch,
         uint8 assetId,
-        uint256[] calldata sorted
+        uint32[] calldata sorted
     ) external;
 
     function resetDispute(uint32 epoch) external;
@@ -42,13 +42,9 @@ interface IBlockManager {
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 
-    function getBlockMedians(uint32 epoch) external view returns (uint256[] memory _blockMedians);
+    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
 
-    function getLowerCutoffs(uint32 epoch) external view returns (uint256[] memory _lowerCutoffs);
-
-    function getHigherCutoffs(uint32 epoch) external view returns (uint256[] memory _higherCutoffs);
-
-    function getProposedBlockMedians(uint32 epoch, uint256 proposedBlock) external view returns (uint256[] memory _blockMedians);
+    function getProposedBlockMedians(uint32 epoch, uint256 proposedBlock) external view returns (uint32[] memory _blockMedians);
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint256);
 }

@@ -16,7 +16,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     IBlockManager public blockManager;
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
-    event Revealed(uint32 epoch, uint32 stakerId, uint256[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, uint32[] values, uint256 timestamp);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -64,7 +64,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     function reveal(
         uint32 epoch,
-        uint256[] calldata values,
+        uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
     ) external initialized checkEpoch(epoch) {
@@ -101,7 +101,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         return (commitments[stakerId]);
     }
 
-    function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint256) {
+    function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32) {
         //stakerid -> assetid -> vote
         return (votes[stakerId].values[assetId]);
     }
@@ -109,7 +109,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
     function getVoteWeights(
         uint32 epoch,
         uint8 assetId,
-        uint256 voteValue
+        uint32 voteValue
     ) external view returns (uint256) {
         //epoch -> assetid -> voteValue -> weight
         return (voteWeights[epoch][assetId][voteValue]);

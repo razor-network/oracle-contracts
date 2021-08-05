@@ -128,13 +128,13 @@ contract RewardManager is Initializable, ACL {
         uint256 previousAge = thisStaker.age;
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
 
-        uint256[] memory mediansLastEpoch = _block.medians;
+        uint32[] memory mediansLastEpoch = _block.medians;
 
         if (mediansLastEpoch.length == 0) return;
         uint256 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint256 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
-            // uint256 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
+            uint32 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
+            // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint256 medianLastEpoch = mediansLastEpoch[i];
             uint256 prod = previousAge * voteValueLastEpoch;
             // if (voteWeightLastEpoch > 0) {

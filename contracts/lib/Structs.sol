@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 library Structs {
     struct Vote {
         uint32 epoch;
-        uint256[] values;
+        uint32[] values;
         // mapping(uint8 => uint256) weights;
     }
 
@@ -30,7 +30,7 @@ library Structs {
 
     struct Block {
         uint32 proposerId;
-        uint256[] medians;
+        uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
         bool valid;
@@ -52,7 +52,7 @@ library Structs {
         bool repeat;
         bool active;
         address creator;
-        uint256 result;
+        uint32 result;
         uint8 assetType;
     }
 
@@ -65,7 +65,7 @@ library Structs {
         uint32 epoch;
         bool active;
         address creator;
-        uint256 result;
+        uint32 result;
         uint8 assetType;
     }
 }

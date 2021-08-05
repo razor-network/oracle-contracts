@@ -170,7 +170,7 @@ contract AssetManager is ACL, AssetStorage {
         emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
-    function getResult(uint8 id) external view returns (uint256 result) {
+    function getResult(uint8 id) external view returns (uint32 result) {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
@@ -189,7 +189,7 @@ contract AssetManager is ACL, AssetStorage {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result,
+            uint32 result,
             bool active
         )
     {
@@ -205,7 +205,7 @@ contract AssetManager is ACL, AssetStorage {
             string memory name,
             uint32 aggregationMethod,
             uint8[] memory jobIDs,
-            uint256 result,
+            uint32 result,
             bool active
         )
     {

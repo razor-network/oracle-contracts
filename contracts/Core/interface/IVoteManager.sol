@@ -8,19 +8,19 @@ interface IVoteManager {
 
     function reveal(
         uint32 epoch,
-        uint256[] calldata values,
+        uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
     ) external;
 
     function getCommitment(uint32 stakerId) external view returns (bytes32);
 
-    function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint256);
+    function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32);
 
     function getVoteWeights(
         uint32 epoch,
         uint8 assetId,
-        uint256 voteValue
+        uint32 voteValue
     ) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256);

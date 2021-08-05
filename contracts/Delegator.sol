@@ -22,7 +22,7 @@ contract Delegator {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result
+            uint32 result
         )
     {
         return assetManager.getJob(id);

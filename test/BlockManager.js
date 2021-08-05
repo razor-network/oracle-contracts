@@ -61,7 +61,7 @@ describe('BlockManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       const tx2 = voteManager.connect(signers[5]).commit(epoch, commitment1);
@@ -101,7 +101,7 @@ describe('BlockManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -110,7 +110,7 @@ describe('BlockManager', function () {
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -119,7 +119,7 @@ describe('BlockManager', function () {
       const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment3 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -259,7 +259,7 @@ describe('BlockManager', function () {
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       await voteManager.connect(signers[6]).commit(epoch, commitment1);
@@ -267,7 +267,7 @@ describe('BlockManager', function () {
       const votes2 = [1010, 2010, 3010, 4010, 5010, 6010, 7010, 8010, 9010];
 
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -380,7 +380,7 @@ describe('BlockManager', function () {
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
       const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -411,7 +411,7 @@ describe('BlockManager', function () {
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -471,7 +471,7 @@ describe('BlockManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -480,7 +480,7 @@ describe('BlockManager', function () {
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint256[]', 'bytes32'],
+        ['uint32', 'uint32[]', 'bytes32'],
         [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 

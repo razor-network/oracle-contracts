@@ -18,9 +18,9 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint256[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint256[] medians, uint256 iteration, uint256 biggestInfluencerId, uint256 timestamp);
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint256 biggestInfluencerId, uint256 timestamp);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
@@ -58,7 +58,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
-        uint256[] memory medians,
+        uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
     ) external initialized checkEpoch(epoch) checkState(parameters.propose()) {
@@ -83,7 +83,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     function giveSorted(
         uint32 epoch,
         uint8 assetId,
-        uint256[] memory sorted
+        uint32[] memory sorted
     ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch) / (2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
@@ -130,7 +130,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view returns (uint256[] memory _blockMedians) {
+    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians) {
         _blockMedians = blocks[epoch].medians;
         return (_blockMedians);
     }
@@ -138,13 +138,13 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     function getProposedBlock(uint32 epoch, uint8 proposedBlock)
         external
         view
-        returns (Structs.Block memory _block, uint256[] memory _blockMedians)
+        returns (Structs.Block memory _block, uint32[] memory _blockMedians)
     {
         _block = proposedBlocks[epoch][proposedBlock];
         return (_block, _block.medians);
     }
 
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint256[] memory _blockMedians) {
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians) {
         _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
         return (_blockMedians);
     }

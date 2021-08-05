@@ -14,6 +14,6 @@ interface IDelegator {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result
+            uint32 result
         );
 }

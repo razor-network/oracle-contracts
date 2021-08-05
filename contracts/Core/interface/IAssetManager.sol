@@ -8,7 +8,7 @@ interface IAssetManager {
         bool repeat
     ) external;
 
-    function getResult(uint8 id) external view returns (uint256);
+    function getResult(uint8 id) external view returns (uint32);
 
     function getAssetType(uint8 id) external view returns (uint8);
 
@@ -20,7 +20,7 @@ interface IAssetManager {
             string memory selector,
             string memory name,
             bool repeat,
-            uint256 result
+            uint32 result
         );
 
     function getCollection(uint8 id)
@@ -29,7 +29,7 @@ interface IAssetManager {
         returns (
             string memory name,
             uint32 aggregationMethod,
-            uint256[] memory jobIDs,
-            uint256 result
+            uint8[] memory jobIDs,
+            uint32 result
         );
 }
