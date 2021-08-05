@@ -23,7 +23,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         _;
     }
 
-    modifier checkState(uint256 state) {
+    modifier checkState(uint8 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }

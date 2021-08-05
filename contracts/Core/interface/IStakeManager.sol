@@ -51,7 +51,7 @@ interface IStakeManager {
 
     function getStaker(uint32 _id) external view returns (Structs.Staker memory staker);
 
-    function getNumStakers() external view returns (uint256);
+    function getNumStakers() external view returns (uint32);
 
     function getAge(uint32 stakerId) external view returns (uint256);
 

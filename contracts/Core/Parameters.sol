@@ -14,15 +14,15 @@ contract Parameters is ACL {
 
     uint256 public minStake = 1000 * (10**18);
     uint256 public blockReward = 100 * (10**18);
-    uint256 public withdrawLockPeriod = 1;
+    uint8 public withdrawLockPeriod = 1;
     uint8 public maxAltBlocks = 5;
     uint16 public epochLength = 300;
     uint8 public numStates = 4;
     uint16 public exposureDenominator = 1000;
     uint16 public gracePeriod = 8;
-    uint256 public aggregationRange = 3;
-    uint256 public withdrawReleasePeriod = 5;
-    uint256 public resetLockPenalty = 1;
+    uint8 public aggregationRange = 3;
+    uint8 public withdrawReleasePeriod = 5;
+    uint8 public resetLockPenalty = 1;
     uint32 public maxAge = 100 * 10000;
 
     bool public escapeHatchEnabled = true;
@@ -78,17 +78,17 @@ contract Parameters is ACL {
         slashPenaltyDenom = _slashPenaltyDenominator;
     }
 
-    function setWithdrawLockPeriod(uint256 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", withdrawLockPeriod, _withdrawLockPeriod, block.timestamp);
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
-    function setWithdrawReleasePeriod(uint256 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawReleasePeriod", withdrawReleasePeriod, _withdrawReleasePeriod, block.timestamp);
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
-    function setResetLockPenalty(uint256 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setResetLockPenalty(uint8 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "resetLockPenalty", resetLockPenalty, _resetLockPenalty, block.timestamp);
         resetLockPenalty = _resetLockPenalty;
     }
@@ -127,7 +127,7 @@ contract Parameters is ACL {
         gracePeriod = _gracePeriod;
     }
 
-    function setAggregationRange(uint256 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setAggregationRange(uint8 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "aggregationRange", aggregationRange, _aggregationRange, block.timestamp);
         aggregationRange = _aggregationRange;
     }

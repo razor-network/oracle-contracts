@@ -12,11 +12,11 @@ interface IParameters {
 
     function burnAddress() external view returns (address);
 
-    function penaltyNotRevealNum() external view returns (uint256);
+    function penaltyNotRevealNum() external view returns (uint16);
 
-    function penaltyNotRevealDenom() external view returns (uint256);
+    function penaltyNotRevealDenom() external view returns (uint16);
 
-    function resetLockPenalty() external view returns (uint256);
+    function resetLockPenalty() external view returns (uint16);
 
     function minStake() external view returns (uint256);
 
@@ -30,17 +30,17 @@ interface IParameters {
 
     function epochLength() external view returns (uint32);
 
-    function numStates() external view returns (uint256);
+    function numStates() external view returns (uint8);
 
     function gracePeriod() external view returns (uint256);
 
-    function aggregationRange() external view returns (uint256);
+    function aggregationRange() external view returns (uint8);
 
-    function exposureDenominator() external view returns (uint256);
+    function exposureDenominator() external view returns (uint16);
 
-    function slashPenaltyNum() external view returns (uint256);
+    function slashPenaltyNum() external view returns (uint16);
 
-    function slashPenaltyDenom() external view returns (uint256);
+    function slashPenaltyDenom() external view returns (uint16);
 
     function getEpoch() external view returns (uint32);
 

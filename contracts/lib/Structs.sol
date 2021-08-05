@@ -38,8 +38,8 @@ library Structs {
 
     struct Dispute {
         uint256 accWeight;
-        uint256 median;
-        uint256 lastVisited;
+        uint32 median;
+        uint32 lastVisited;
         uint8 assetId;
     }
 

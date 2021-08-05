@@ -20,14 +20,14 @@ contract BlockManager is Initializable, ACL, BlockStorage {
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint256 biggestInfluencerId, uint256 timestamp);
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
-    modifier checkState(uint256 state) {
+    modifier checkState(uint8 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }
@@ -87,7 +87,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch) / (2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-        uint256 lastVisited = disputes[epoch][msg.sender].lastVisited;
+        uint32 lastVisited = disputes[epoch][msg.sender].lastVisited;
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].assetId = assetId;
         } else {

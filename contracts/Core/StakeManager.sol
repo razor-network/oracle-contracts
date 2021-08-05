@@ -122,26 +122,26 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         494,
         497
     ];
-    event StakeChange(uint256 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
+    event StakeChange(uint32 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
 
-    event AgeChange(uint256 indexed stakerId, uint256 previousAge, uint256 newAge, uint32 epoch, uint256 timestamp);
+    event AgeChange(uint32 indexed stakerId, uint256 previousAge, uint256 newAge, uint32 epoch, uint256 timestamp);
 
-    event Staked(uint32 epoch, uint256 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address unstaker);
+    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address unstaker);
 
-    event Withdrew(uint32 epoch, uint256 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address withdrawer);
+    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address withdrawer);
 
-    event Delegated(uint32 epoch, uint256 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Delegated(uint32 epoch, uint32 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
-    event DelegationAcceptanceChanged(uint256 indexed stakerId, address staker, bool delegationEnabled);
+    event DelegationAcceptanceChanged(uint32 indexed stakerId, address staker, bool delegationEnabled);
 
     modifier checkEpoch(uint32 epoch) {
         require(epoch == parameters.getEpoch(), "incorrect epoch");
         _;
     }
 
-    modifier checkState(uint256 state) {
+    modifier checkState(uint8 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }
