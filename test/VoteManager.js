@@ -110,8 +110,8 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[4]).commit(epoch, commitment3);
       });
-      
-      it('should not be able to commit if already commited in a particular epoch', async function (){
+
+      it('should not be able to commit if already commited in a particular epoch', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
@@ -120,7 +120,7 @@ describe('VoteManager', function () {
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-        
+
         const tx = voteManager.connect(signers[3]).commit(epoch, commitment1);
         await assertRevert(tx, 'already commited');
       });
