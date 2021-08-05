@@ -26,7 +26,6 @@ describe('VoteManager', function () {
     let signers;
     let blockManager;
     let parameters;
-    let random;
     let razor;
     let stakeManager;
     let rewardManager;
@@ -35,7 +34,7 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, random, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, parameters, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -174,7 +173,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -270,7 +269,7 @@ describe('VoteManager', function () {
 
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[3]).propose(epoch,
