@@ -30,7 +30,6 @@ describe('BlockManager', function () {
   let stakeManager;
   let rewardManager;
   let parameters;
-  let random;
   let initializeContracts;
 
   before(async () => {
@@ -42,7 +41,6 @@ describe('BlockManager', function () {
       stakeManager,
       rewardManager,
       voteManager,
-      random,
       initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
@@ -61,7 +59,6 @@ describe('BlockManager', function () {
       await assertRevert(tx1, 'Contract should be initialized');
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      
 
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -103,8 +100,6 @@ describe('BlockManager', function () {
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-      
-
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -113,8 +108,6 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[5]).commit(epoch, commitment1);
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
-      
 
       const commitment2 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -125,7 +118,6 @@ describe('BlockManager', function () {
 
       const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-      
       const commitment3 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -265,7 +257,6 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-      
 
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -275,7 +266,6 @@ describe('BlockManager', function () {
 
       const votes2 = [1010, 2010, 3010, 4010, 5010, 6010, 7010, 8010, 9010];
 
-      
       const commitment2 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -389,8 +379,6 @@ describe('BlockManager', function () {
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
-      
-
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -421,8 +409,6 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
-
-      
 
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -484,8 +470,6 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-      
-
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -495,7 +479,6 @@ describe('BlockManager', function () {
 
       const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-      
       const commitment2 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']

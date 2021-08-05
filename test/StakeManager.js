@@ -34,7 +34,6 @@ describe('StakeManager', function () {
     let voteManager;
     let initializeContracts;
     let stakedToken;
-    let random;
 
     before(async () => {
       ({
@@ -46,7 +45,6 @@ describe('StakeManager', function () {
         voteManager,
         initializeContracts,
         stakedToken,
-        random,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -340,8 +338,6 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-
-
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
         [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -377,8 +373,6 @@ describe('StakeManager', function () {
       // commit
       epoch = await getEpoch();
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
-
 
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -425,7 +419,6 @@ describe('StakeManager', function () {
 
       // commit in epoch 42 , outside grace_period
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
 
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint256[]', 'bytes32'],
@@ -581,8 +574,6 @@ describe('StakeManager', function () {
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-
-
         const commitment = utils.solidityKeccak256(
           ['uint32', 'uint256[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -614,7 +605,6 @@ describe('StakeManager', function () {
         await mineToNextState(); // commit again in order to get block reward
         epoch = await getEpoch();
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
 
         const commitment2 = utils.solidityKeccak256(
           ['uint32', 'uint256[]', 'bytes32'],
@@ -680,7 +670,6 @@ describe('StakeManager', function () {
         // commit
         let epoch = await getEpoch();
         const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
 
         const commitment = utils.solidityKeccak256(
           ['uint32', 'uint256[]', 'bytes32'],

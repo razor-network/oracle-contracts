@@ -69,7 +69,8 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         address stakerAddress
     ) external initialized checkEpoch(epoch) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
-        require(thisStakerId > 0, "Structs.Staker does not exist");
+        require(thisStakerId > 0, "Staker does not exist");
+        require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //bounty hunter
         if (msg.sender != stakerAddress) {
@@ -81,8 +82,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         }
         //revealing self
         require(parameters.getState() == parameters.reveal(), "Not reveal state");
-        require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
-        require(stakeManager.getStake(thisStakerId) > 0, "nonpositive stake");
+        require(stakeManager.getStake(thisStakerId) > 0, "zero stake");
 
         votes[thisStakerId].epoch = epoch;
         votes[thisStakerId].values = values;
