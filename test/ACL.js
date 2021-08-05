@@ -424,8 +424,8 @@ describe('Access Control Test', async () => {
   });
 
   it('Only Default Admin should able to update Block Reward', async () => {
-    await assertRevert(rewardManager.connect(signers[1]).updateBlockReward(100), expectedRevertMessage);
-    assert(await rewardManager.updateBlockReward(100), 'Admin not able to update BlockReward');
+    await assertRevert(parameters.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
+    assert(await parameters.setBlockReward(5500), 'Admin not able to update BlockReward');
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {

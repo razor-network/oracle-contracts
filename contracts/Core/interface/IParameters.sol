@@ -20,6 +20,8 @@ interface IParameters {
 
     function minStake() external view returns (uint256);
 
+    function blockReward() external view returns (uint256);
+
     function withdrawLockPeriod() external view returns (uint256);
 
     function withdrawReleasePeriod() external view returns (uint256);
