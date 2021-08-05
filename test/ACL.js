@@ -40,31 +40,6 @@ describe('Access Control Test', async () => {
     assert(isAdminRoleGranted === true, 'Admin role was not Granted');
   });
 
-  it('fulFillAsset() should not be accessable by anyone besides AssetConfirmer', async () => {
-    // Checking if Anyone can access it
-    await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-
-    // Checking if BlockConfirmer can access it
-    await assetManager.grantRole(await parameters.getBlockConfirmerHash(), signers[0].address);
-    await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-
-    // Checking if StakeModifier can access it
-    await assetManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await assetManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-  });
-
-  it('fulFillAsset() should be accessable by only AssetConfirmer', async () => {
-    const assetConfirmerHash = await parameters.getAssetConfirmerHash();
-    await assetManager.grantRole(assetConfirmerHash, signers[0].address);
-    await assetManager.fulfillAsset(2, 222);
-    await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
-    await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
-  });
-
   it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
     // Checking if Anyone can access it
     const epoch = getEpoch();

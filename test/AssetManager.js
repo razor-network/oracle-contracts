@@ -83,22 +83,6 @@ describe('AssetManager', function () {
       }
     });
 
-    it('should fulfill result to the correct asset', async function () {
-      await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-      await assetManager.fulfillAsset(1, 111);
-      await assetManager.fulfillAsset(2, 222);
-      await assetManager.fulfillAsset(3, 333);
-      await assetManager.fulfillAsset(4, 444);
-      const j1 = await assetManager.getJob(1);
-      const j2 = await assetManager.getJob(2);
-      const c3 = await assetManager.getCollection(3);
-      const j4 = await assetManager.getJob(4);
-      assertBNEqual(j1.result, toBigNumber('111'));
-      assertBNEqual(j2.result, toBigNumber('222'));
-      assertBNEqual(c3.result, toBigNumber('333'));
-      assertBNEqual(j4.result, toBigNumber('444'));
-    });
-
     it('should be able to update Job', async function () {
       await assetManager.createJob('http://testurl.com/4', 'selector/4', 'test4', true);
       await assetManager.updateJob(5, 'http://testurl.com/5', 'selector/5');

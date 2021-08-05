@@ -8,8 +8,6 @@ interface IAssetManager {
         bool repeat
     ) external;
 
-    function fulfillAsset(uint8 id, uint256 value) external;
-
     function getResult(uint8 id) external view returns (uint256);
 
     function getAssetType(uint8 id) external view returns (uint8);

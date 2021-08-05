@@ -122,9 +122,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
                 emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians, block.timestamp);
                 rewardManager.giveBlockReward(proposerId, epoch);
                 return;
-                // for (uint8 j = 0; j < proposedBlocks[epoch - 1][i].medians.length; j++) {
-                //     assetManager.fulfillAsset(i, proposedBlocks[epoch - 1][i].medians[j]);
-                // }
             }
         }
     }

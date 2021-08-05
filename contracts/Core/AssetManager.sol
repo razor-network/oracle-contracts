@@ -114,35 +114,6 @@ contract AssetManager is ACL, AssetStorage {
         }
     }
 
-    function fulfillAsset(uint8 id, uint256 value) external onlyRole(parameters.getAssetConfirmerHash()) {
-        uint32 epoch = parameters.getEpoch();
-        if (jobs[id].assetType == uint256(assetTypes.Job)) {
-            Structs.Job storage job = jobs[id];
-
-            if (!job.repeat) {
-                job.active = false;
-            }
-
-            job.result = value;
-            emit JobReported(job.id, value, epoch, job.url, job.selector, job.name, job.repeat, job.creator, job.active, block.timestamp);
-        } else if (collections[id].assetType == uint256(assetTypes.Collection)) {
-            Structs.Collection storage collection = collections[id];
-
-            collection.result = value;
-
-            emit CollectionReported(
-                collection.id,
-                value,
-                epoch,
-                collection.name,
-                collection.aggregationMethod,
-                collection.jobIDs,
-                collection.creator,
-                block.timestamp
-            );
-        }
-    }
-
     function createCollection(
         string calldata name,
         uint8[] memory jobIDs,
