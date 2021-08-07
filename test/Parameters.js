@@ -1,6 +1,14 @@
 const { assert } = require('chai');
-const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
-const {
+const { DEFAULT_ADMIN_ROLE_HASH,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
+
+ } = require('./helpers/constants');const {
   assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
@@ -106,9 +114,6 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setEpochLength(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setNumStates(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
     tx = parameters.connect(signers[1]).setExposureDenominator(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -150,10 +155,6 @@ describe('Parameters contract Tests', async () => {
     const epochLength = await parameters.epochLength();
     assertBNEqual(epochLength, toBigNumber('11'));
 
-    await parameters.setNumStates(toBigNumber('12'));
-    const numStates = await parameters.numStates();
-    assertBNEqual(numStates, toBigNumber('12'));
-
     await parameters.setExposureDenominator(toBigNumber('13'));
     const exposureDenominator = await parameters.exposureDenominator();
     assertBNEqual(exposureDenominator, toBigNumber('13'));
@@ -188,17 +189,6 @@ describe('Parameters contract Tests', async () => {
   });
 
   it('parameters values should be initialized correctly', async () => {
-    const commitValue = await parameters.commit();
-    assertBNEqual(commit, commitValue);
-
-    const revealValue = await parameters.reveal();
-    assertBNEqual(reveal, revealValue);
-
-    const proposeValue = await parameters.propose();
-    assertBNEqual(propose, proposeValue);
-
-    const disputeValue = await parameters.dispute();
-    assertBNEqual(dispute, disputeValue);
 
     const penaltyNotRevealNumValue = await parameters.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
@@ -233,31 +223,28 @@ describe('Parameters contract Tests', async () => {
     const epochLengthValue = await parameters.epochLength();
     assertBNEqual(epochLength, epochLengthValue);
 
-    const numStatesValue = await parameters.numStates();
-    assertBNEqual(totalStates, numStatesValue);
-
     const maxAgeValue = await parameters.maxAge();
     assertBNEqual(maxAge, maxAgeValue);
 
     const exposureDenominatorValue = await parameters.exposureDenominator();
     assertBNEqual(exposureDenominator, exposureDenominatorValue);
 
-    const blockConfirmerHashValue = await parameters.getBlockConfirmerHash();
+    const blockConfirmerHashValue = await parameters.BLOCK_CONFIRMER_ROLE();
     assertBNEqual(blockConfirmerHash, blockConfirmerHashValue);
 
-    const defaultAdminHashValue = await parameters.getDefaultAdminHash();
+    const defaultAdminHashValue = await parameters.DEFAULT_ADMIN_ROLE();
     assertBNEqual(DEFAULT_ADMIN_ROLE_HASH, defaultAdminHashValue);
 
-    const assetConfirmerHashValue = await parameters.getAssetConfirmerHash();
+    const assetConfirmerHashValue = await parameters.ASSET_CONFIRMER_ROLE();
     assertBNEqual(assetConfirmerHash, assetConfirmerHashValue);
 
-    const stakerActivityUpdaterHashValue = await parameters.getStakerActivityUpdaterHash();
+    const stakerActivityUpdaterHashValue = await parameters.STAKER_ACTIVITY_UPDATER_ROLE();
     assertBNEqual(stakerActivityUpdaterHash, stakerActivityUpdaterHashValue);
 
-    const stakeModifierHashValue = await parameters.getStakeModifierHash();
+    const stakeModifierHashValue = await parameters.STAKE_MODIFIER_ROLE();
     assertBNEqual(stakeModifierHash, stakeModifierHashValue);
 
-    const assetModifierHashValue = await parameters.getAssetModifierHash();
+    const assetModifierHashValue = await parameters.ASSET_MODIFIER_ROLE();
     assertBNEqual(assetModifierHash, assetModifierHashValue);
 
     const gracePeriodValue = await parameters.gracePeriod();

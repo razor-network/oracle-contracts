@@ -1,5 +1,14 @@
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
+const { DEFAULT_ADMIN_ROLE_HASH,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
+} = require('./constants');
 const setupContracts = async () => {
   const Structs = await ethers.getContractFactory('Structs');
   const structs = await Structs.deploy();
@@ -50,16 +59,15 @@ const setupContracts = async () => {
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
-
-    assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
-    blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManager.address),
-    rewardManager.grantRole(await parameters.getRewardModifierHash(), blockManager.address),
-    rewardManager.grantRole(await parameters.getRewardModifierHash(), voteManager.address),
-    rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManager.address),
-    stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManager.address),
-    stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManager.address),
-    stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManager.address),
-    stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManager.address),
+    assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManager.address),
+    blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
+    rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManager.address),
+    rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManager.address),
+    rewardManager.grantRole(REWARD_MODIFIER_ROLE, stakeManager.address),
+    stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, voteManager.address),
+    stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManager.address),
+    stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
+    stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
 
     delegator.upgradeDelegate(assetManager.address),
   ];

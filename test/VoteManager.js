@@ -3,8 +3,16 @@ test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
 const { utils } = require('ethers');
-const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
-const {
+const { DEFAULT_ADMIN_ROLE_HASH,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
+
+ } = require('./helpers/constants');const {
   assertBNEqual,
   assertBNLessThan,
   assertRevert,
@@ -345,7 +353,7 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
-        await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+        await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         await parameters.setSlashPenaltyNum(5000);
         await stakeManager.slash(stakerId, signers[11].address, epoch);
 
@@ -467,7 +475,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
-        await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+        await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         await parameters.setSlashPenaltyNum(10000);
         await stakeManager.slash(stakerId, signers[10].address, epoch); // slashing signers[7] 100% making his stake zero
 

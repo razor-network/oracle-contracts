@@ -6,12 +6,13 @@ import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "../Initializable.sol";
+import "./storage/Constants.sol";
 import "./ACL.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL {
+contract RewardManager is Initializable, ACL, Constants {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
@@ -48,7 +49,7 @@ contract RewardManager is Initializable, ACL {
     /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties(uint32 stakerId, uint32 epoch) external initialized onlyRole(parameters.getRewardModifierHash()) {
+    function givePenalties(uint32 stakerId, uint32 epoch) external initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _givePenalties(stakerId, epoch);
     }
 
@@ -56,7 +57,7 @@ contract RewardManager is Initializable, ACL {
     /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
-    function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(parameters.getRewardModifierHash()) {
+    function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         if (parameters.blockReward() > 0) {
             uint256 newStake = stakeManager.getStaker(stakerId).stake + (blockReward);

@@ -9,8 +9,17 @@ const {
   assertRevert,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
-const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
-const {
+const { DEFAULT_ADMIN_ROLE_HASH,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
+  BURN_ADDRESS,
+
+ } = require('./helpers/constants');const {
   calculateDisputesData,
   getEpoch,
   getBiggestInfluenceAndId,
@@ -233,7 +242,7 @@ describe('BlockManager', function () {
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
-      const balanceBeforeBurn = await razor.balanceOf(parameters.burnAddress());
+      const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
       const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
@@ -243,7 +252,7 @@ describe('BlockManager', function () {
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
-      assertBNEqual(await razor.balanceOf(parameters.burnAddress()), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
+      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
       assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
     });
 

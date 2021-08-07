@@ -6,10 +6,11 @@ import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
+import "./StateManager.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract VoteManager is Initializable, ACL, VoteStorage {
+contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -17,16 +18,6 @@ contract VoteManager is Initializable, ACL, VoteStorage {
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint32 epoch, uint32 stakerId, uint32[] values, uint256 timestamp);
-
-    modifier checkEpoch(uint32 epoch) {
-        require(epoch == parameters.getEpoch(), "incorrect epoch");
-        _;
-    }
-
-    modifier checkState(uint8 state) {
-        require(state == parameters.getState(), "incorrect state");
-        _;
-    }
 
     function initialize(
         address stakeManagerAddress,
@@ -40,7 +31,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
+    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit)  {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[stakerId].epoch != epoch, "already commited");
 
@@ -67,7 +58,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpoch(epoch) {
+    ) external initialized checkEpoch(parameters.epochLength(), epoch) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
         require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
@@ -75,13 +66,13 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         //bounty hunter
         if (msg.sender != stakerAddress) {
             //bounty hunter revealing someone else's secret in commit state
-            require(parameters.getState() == parameters.commit(), "Not commit state");
+            require(getState(parameters.epochLength()) == State.Commit, "Not commit state");
             commitments[thisStakerId].commitmentHash = 0x0;
             stakeManager.slash(thisStakerId, msg.sender, epoch);
             return;
         }
         //revealing self
-        require(parameters.getState() == parameters.reveal(), "Not reveal state");
+        require(getState(parameters.epochLength()) == State.Reveal, "Not reveal state");
         require(stakeManager.getStake(thisStakerId) > 0, "zero stake");
 
         votes[thisStakerId].epoch = epoch;

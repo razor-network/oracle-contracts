@@ -30,8 +30,6 @@ interface IParameters {
 
     function epochLength() external view returns (uint32);
 
-    function numStates() external view returns (uint8);
-
     function gracePeriod() external view returns (uint256);
 
     function aggregationRange() external view returns (uint8);

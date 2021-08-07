@@ -4,8 +4,16 @@ test penalizeEpochs */
 
 const { assert } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
-const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
+const { DEFAULT_ADMIN_ROLE_HASH,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
 
+ } = require('./helpers/constants');
 const {
   assertBNEqual,
   assertRevert,
@@ -28,7 +36,7 @@ describe('AssetManager', function () {
       assert(await assetManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
     it('should be able to create Job', async function () {
-      await assetManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address);
+      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       const name = 'test';

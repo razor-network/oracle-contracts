@@ -8,7 +8,6 @@ contract VoteStorage {
   struct Vote {
       uint32 epoch;
       uint32[] values;
-      // mapping(uint8 => uint256) weights;
   }
 
   struct Commitment {

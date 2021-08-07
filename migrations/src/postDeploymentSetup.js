@@ -61,17 +61,17 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
-  pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));
-  pendingTransactions.push(await blockManager.grantRole(await parameters.getBlockConfirmerHash(), voteManagerAddress));
-  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), blockManagerAddress));
-  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), voteManagerAddress));
-  pendingTransactions.push(await rewardManager.grantRole(await parameters.getRewardModifierHash(), stakeManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakerActivityUpdaterHash(), voteManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), rewardManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), blockManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getStakeModifierHash(), voteManagerAddress));
+  pendingTransactions.push(await assetManager.grantRole(await constants.ASSET_CONFIRMER_ROLE(), blockManagerAddress));
+  pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, stakeManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(await parameters.getVoteModifierHash(), blockManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(await parameters.getAssetModifierHash(), signers[0].address));
+  pendingTransactions.push(await stakeManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 
   // eslint-disable-next-line no-console

@@ -3,9 +3,10 @@ pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
 import "./storage/AssetStorage.sol";
+import "./storage/Constants.sol";
 import "./ACL.sol";
 
-contract AssetManager is ACL, AssetStorage {
+contract AssetManager is ACL, AssetStorage, Constants {
     IParameters public parameters;
 
     event JobCreated(
@@ -73,7 +74,7 @@ contract AssetManager is ACL, AssetStorage {
         string calldata selector,
         string calldata name,
         bool repeat
-    ) external onlyRole(parameters.getAssetModifierHash()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
         Structs.Job memory job = Structs.Job(numAssets, epoch, url, selector, name, repeat, true, msg.sender, 0, uint8(assetTypes.Job));
@@ -86,7 +87,7 @@ contract AssetManager is ACL, AssetStorage {
         uint8 jobID,
         string calldata url,
         string calldata selector
-    ) external onlyRole(parameters.getAssetModifierHash()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
 
         uint32 epoch = parameters.getEpoch();
@@ -97,7 +98,7 @@ contract AssetManager is ACL, AssetStorage {
         emit JobUpdated(jobID, epoch, url, selector, block.timestamp);
     }
 
-    function setAssetStatus(uint8 id, bool assetStatus) external onlyRole(parameters.getAssetModifierHash()) {
+    function setAssetStatus(uint8 id, bool assetStatus) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
@@ -118,7 +119,7 @@ contract AssetManager is ACL, AssetStorage {
         string calldata name,
         uint8[] memory jobIDs,
         uint32 aggregationMethod
-    ) external onlyRole(parameters.getAssetModifierHash()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
@@ -142,7 +143,7 @@ contract AssetManager is ACL, AssetStorage {
         emit CollectionCreated(numAssets, epoch, name, aggregationMethod, jobIDs, true, msg.sender, block.timestamp, assetTypes.Collection);
     }
 
-    function addJobToCollection(uint8 collectionID, uint8 jobID) external onlyRole(parameters.getAssetModifierHash()) {
+    function addJobToCollection(uint8 collectionID, uint8 jobID) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
@@ -156,7 +157,7 @@ contract AssetManager is ACL, AssetStorage {
         emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
-    function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex) external onlyRole(parameters.getAssetModifierHash()) {
+    function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
 

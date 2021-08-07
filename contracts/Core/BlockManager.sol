@@ -7,11 +7,12 @@ import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
 import "./storage/BlockStorage.sol";
+import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract BlockManager is Initializable, ACL, BlockStorage {
+contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -21,16 +22,6 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
     event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
-
-    modifier checkEpoch(uint32 epoch) {
-        require(epoch == parameters.getEpoch(), "incorrect epoch");
-        _;
-    }
-
-    modifier checkState(uint8 state) {
-        require(state == parameters.getState(), "incorrect state");
-        _;
-    }
 
     function initialize(
         address stakeManagerAddress,
@@ -61,7 +52,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external initialized checkEpoch(epoch) checkState(parameters.propose()) {
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Propose) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
@@ -84,7 +75,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sorted
-    ) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch) / (2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint32 lastVisited = disputes[epoch][msg.sender].lastVisited;
@@ -108,11 +99,11 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
-    function confirmBlock(uint32 epoch) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
+    function confirmBlock(uint32 epoch) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
             uint8 blockId = sortedProposedBlockIds[epoch - 1][i];
             if (proposedBlocks[epoch - 1][blockId].valid) {
@@ -153,7 +144,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         return (sortedProposedBlockIds[epoch].length);
     }
 
-    function finalizeDispute(uint32 epoch, uint8 blockId) public initialized checkEpoch(epoch) checkState(parameters.dispute()) {
+    function finalizeDispute(uint32 epoch, uint8 blockId) public initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),

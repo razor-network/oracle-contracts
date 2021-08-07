@@ -4,10 +4,13 @@ pragma solidity ^0.8.0;
 import "./interface/IParameters.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
+
 import "./storage/StakeStorage.sol";
+
 import "../Initializable.sol";
 import "../RAZOR.sol";
 import "./ACL.sol";
+import "./StateManager.sol";
 import "../Pause.sol";
 import "../StakedToken.sol";
 
@@ -15,13 +18,13 @@ import "../StakedToken.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Initializable, ACL, StakeStorage, Pause {
-    IParameters public parameters;
-    IRewardManager public rewardManager;
-    RAZOR public razor;
-    IVoteManager public voteManager;
+contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
+    IParameters private parameters;
+    IRewardManager private rewardManager;
+    RAZOR private razor;
+    IVoteManager private voteManager;
     //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
-    uint16[] public maturities = [
+    uint16[] private maturities = [
         50,
         70,
         86,
@@ -136,16 +139,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     event DelegationAcceptanceChanged(uint32 indexed stakerId, address staker, bool delegationEnabled);
 
-    modifier checkEpoch(uint32 epoch) {
-        require(epoch == parameters.getEpoch(), "incorrect epoch");
-        _;
-    }
-
-    modifier checkState(uint8 state) {
-        require(state == parameters.getState(), "incorrect state");
-        _;
-    }
-
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -166,7 +159,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
@@ -202,7 +195,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint32 epoch,
         uint256 amount,
         uint32 stakerId
-    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    ) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
@@ -234,7 +227,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    ) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -258,7 +251,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(epoch) checkState(parameters.commit()) whenNotPaused {
+    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
@@ -368,7 +361,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 _stake,
         string memory _reason,
         uint32 _epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) {
+    ) external onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_id, _stake, _reason, _epoch);
     }
 
@@ -381,7 +374,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint32 stakerId,
         address bountyHunter,
         uint32 epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) {
+    ) external onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 slashPenaltyAmount = (stakers[stakerId].stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         uint256 newStake = stakers[stakerId].stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
@@ -395,14 +388,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         //tx should complete.
         razor.transfer(bountyHunter, halfPenalty);
         //burn half the amount
-        razor.transfer(parameters.burnAddress(), halfPenalty);
+        razor.transfer(BURN_ADDRESS, halfPenalty);
     }
 
     function setStakerAge(
         uint32 _id,
         uint32 _age,
         uint32 _epoch
-    ) external onlyRole(parameters.getStakeModifierHash()) {
+    ) external onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
         emit AgeChange(_id, _age, _epoch, block.timestamp);
     }

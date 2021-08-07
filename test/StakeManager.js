@@ -4,7 +4,16 @@ test cases where nobody votes, too low stake (1-4) */
 
 const { utils } = require('ethers');
 const { assert } = require('chai');
-const { DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD } = require('./helpers/constants');
+const { DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD,
+  BLOCK_CONFIRMER_ROLE,
+  ASSET_CONFIRMER_ROLE,
+  STAKER_ACTIVITY_UPDATER_ROLE,
+  STAKE_MODIFIER_ROLE,
+  REWARD_MODIFIER_ROLE,
+  ASSET_MODIFIER_ROLE,
+  VOTE_MODIFIER_ROLE,
+
+ } = require('./helpers/constants');
 const {
   assertBNEqual,
   assertBNLessThan,
@@ -237,7 +246,7 @@ describe('StakeManager', function () {
       const stakeAfterAcc1 = (await stakeManager.stakers(stakerIdAcc1)).stake;
       assertBNEqual(stakeAfterAcc1, stakeBeforeAcc1.add(stake), 'Stake did not increase on staking after withdraw');
 
-      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await parameters.setSlashPenaltyNum(5000); // slashing only half stake
       await stakeManager.slash(stakerIdAcc1, signers[10].address, epoch); // slashing signers[1]
 
@@ -831,7 +840,7 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[7]).stake(epoch, stake1);
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
       await parameters.setSlashPenaltyNum(10000);
-      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(stakerIdAcc7, signers[10].address, epoch); // slashing whole stake of signers[7]
       const stake2 = tokenAmount('20000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
