@@ -19,10 +19,10 @@ import "../StakedToken.sol";
 /// for stakers
 
 contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
-    IParameters private parameters;
-    IRewardManager private rewardManager;
-    RAZOR private razor;
-    IVoteManager private voteManager;
+    IParameters public parameters;
+    IRewardManager public rewardManager;
+    RAZOR public razor;
+    IVoteManager public voteManager;
 
     event StakeChange(uint32 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
 

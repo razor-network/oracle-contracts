@@ -8,7 +8,7 @@ contract Constants {
         Propose,
         Dispute
     }
-    uint8 constant NUM_STATES = 4;
+    uint8 public constant NUM_STATES = 4;
 
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 public constant BLOCK_CONFIRMER_ROLE = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
@@ -31,5 +31,5 @@ contract Constants {
     // keccak256("VOTE_MODIFIER_ROLE")
     bytes32 public constant VOTE_MODIFIER_ROLE = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5;
 
-    address constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 }

@@ -17,11 +17,9 @@ interface IVoteManager {
 
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32);
 
-    function getVoteWeights(
-        uint32 epoch,
-        uint8 assetId,
-        uint32 voteValue
-    ) external view returns (uint256);
+    function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote);
+
+    function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256);
 
     function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256);
 

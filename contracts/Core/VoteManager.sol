@@ -66,6 +66,8 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
         require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
+        // avoid innocent staker getting slashed due to empty secret
+        require(secret != 0x0, "secret cannot be empty");
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //bounty hunter
         if (msg.sender != stakerAddress) {
@@ -83,9 +85,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         votes[thisStakerId].values = values;
         uint256 influence = stakeManager.getInfluence(thisStakerId);
         totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
-        for (uint8 i = 0; i < values.length; i++) {
-            voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
-        }
+        influenceSnapshot[epoch][thisStakerId] = influence;
         secrets = keccak256(abi.encodePacked(secrets, secret));
 
         emit Revealed(epoch, thisStakerId, values, block.timestamp);
@@ -96,18 +96,19 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         return (commitments[stakerId]);
     }
 
+    function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote) {
+        //stakerid -> assetid -> vote
+        return (votes[stakerId]);
+    }
+
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32) {
         //stakerid -> assetid -> vote
         return (votes[stakerId].values[assetId]);
     }
 
-    function getVoteWeights(
-        uint32 epoch,
-        uint8 assetId,
-        uint32 voteValue
-    ) external view returns (uint256) {
+    function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256) {
         //epoch -> assetid -> voteValue -> weight
-        return (voteWeights[epoch][assetId][voteValue]);
+        return (influenceSnapshot[epoch][stakerId]);
     }
 
     function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256) {

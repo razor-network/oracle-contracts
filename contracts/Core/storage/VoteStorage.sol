@@ -11,6 +11,8 @@ contract VoteStorage {
     //epoch -> asset -> stakeWeight
     mapping(uint32 => uint256) public totalInfluenceRevealed;
     //epoch -> assetid -> voteValue -> weight
-    mapping(uint32 => mapping(uint8 => mapping(uint32 => uint256))) public voteWeights;
+    // mapping(uint32 => mapping(uint8 => mapping(uint32 => uint256))) public voteWeights;
+    //epoch-> stakerid->influe
+    mapping(uint32 => mapping(uint32 => uint256)) public influenceSnapshot;
     bytes32 public secrets;
 }

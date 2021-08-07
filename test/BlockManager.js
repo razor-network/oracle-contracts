@@ -13,7 +13,8 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   BURN_ADDRESS,
 
-} = require('./helpers/constants'); const {
+} = require('./helpers/constants');
+const {
   calculateDisputesData,
   getEpoch,
   getBiggestInfluenceAndId,
@@ -200,29 +201,19 @@ describe('BlockManager', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-      const sortedVotes = [toBigNumber('200')];
-      const stakerIdAccount1 = await stakeManager.stakerIds(signers[5].address);
-      const stakerIdAccount2 = await stakeManager.stakerIds(signers[6].address);
-      const stakerIdAccount3 = await stakeManager.stakerIds(signers[8].address);
-
       const {
-        median, totalInfluenceRevealed,
-      } = await calculateDisputesData(
+        totalInfluenceRevealed, sortedStakers,
+      } = await calculateDisputesData(1,
         voteManager,
-        epoch,
-        sortedVotes,
-        [await stakeManager.getInfluence(stakerIdAccount1),
-          await stakeManager.getInfluence(stakerIdAccount2),
-          await stakeManager.getInfluence(stakerIdAccount3)] // initial weights
-      );
+        stakeManager,
+        epoch);
 
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes);
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedStakers);
 
       const dispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(dispute.assetId, toBigNumber('1'), 'assetId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
-      assertBNEqual(dispute.median, median, 'median should match');
-      assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
+      assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
     });
 
     it('should be able to finalize Dispute', async function () {
@@ -248,6 +239,9 @@ describe('BlockManager', function () {
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
       assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
       assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
+
+      const dispute = await blockManager.disputes(epoch, signers[19].address);
+      assertBNEqual(dispute.median, toBigNumber(200), 'median should match');
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
@@ -325,50 +319,38 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      const sortedVotes1 = [toBigNumber('2000'), toBigNumber('2010')];
-      const {
-        median: median1,
-        totalInfluenceRevealed: totalInfluenceRevealed1,
-      } = await calculateDisputesData(
+      // const sortedVotes1 = [toBigNumber('2000'), toBigNumber('2010')];
+      const res1 = await calculateDisputesData(1,
         voteManager,
-        epoch,
-        sortedVotes1,
-        [await voteManager.getVoteWeights(epoch, 1, sortedVotes1[0]),
-          await voteManager.getVoteWeights(epoch, 1, sortedVotes1[1])] // initial weights
-      );
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes1);
+        stakeManager,
+        epoch);
+
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, res1.sortedStakers);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(firstDispute.assetId, toBigNumber('1'), 'assetId should match');
-      assertBNEqual(firstDispute.accWeight, totalInfluenceRevealed1, 'totalInfluenceRevealed should match');
-      assertBNEqual(firstDispute.median, median1, 'median should match');
-      assertBNEqual(firstDispute.lastVisited, sortedVotes1[sortedVotes1.length - 1], 'lastVisited should match');
+      assertBNEqual(firstDispute.accWeight, res1.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
+      assertBNEqual(firstDispute.lastVisitedStaker, res1.sortedStakers[res1.sortedStakers.length - 1], 'lastVisited should match');
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
       let proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assert((await proposedBlock.valid) === false);
 
-      const sortedVotes2 = [toBigNumber('3000'), toBigNumber('3010')];
-      const {
-        median: median2,
-        totalInfluenceRevealed: totalInfluenceRevealed2,
-      } = await calculateDisputesData(
+      const res2 = await calculateDisputesData(2,
         voteManager,
-        epoch,
-        sortedVotes2,
-        [await voteManager.getVoteWeights(epoch, 2, sortedVotes2[0]),
-          await voteManager.getVoteWeights(epoch, 2, sortedVotes2[1])] // initial weights
-      );
+        stakeManager,
+        epoch);
 
-      await blockManager.connect(signers[15]).giveSorted(epoch, 2, sortedVotes2);
+      await blockManager.connect(signers[15]).giveSorted(epoch, 2, res2.sortedStakers);
 
       const secondDispute = await blockManager.disputes(epoch, signers[15].address);
 
       assertBNEqual(secondDispute.assetId, toBigNumber('2'), 'assetId should match');
-      assertBNEqual(secondDispute.accWeight, totalInfluenceRevealed2, 'totalInfluenceRevealed should match');
-      assertBNEqual(secondDispute.median, median2, 'median should match');
-      assertBNEqual(secondDispute.lastVisited, sortedVotes2[sortedVotes2.length - 1], 'lastVisited should match');
+      assertBNEqual(secondDispute.accWeight, res2.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
+      assertBNEqual(secondDispute.lastVisitedStaker, res2.sortedStakers[res2.sortedStakers.length - 1], 'lastVisited should match');
 
       await blockManager.connect(signers[15]).finalizeDispute(epoch, 1);
+      const secondDispute2 = await blockManager.disputes(epoch, signers[15].address);
+      assertBNEqual(secondDispute2.median, res2.median, 'median should match');
       proposedBlock = await blockManager.proposedBlocks(epoch, 1);
       assert((await proposedBlock.valid) === false);
     });
@@ -426,7 +408,7 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
         signers[19].address);
 
-      await mineToNextState();
+      await mineToNextState(); // propose
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
 
@@ -441,11 +423,11 @@ describe('BlockManager', function () {
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
-      await mineToNextState();
+      await mineToNextState(); // dispute
 
-      const sortedVotes = [toBigNumber('20000')];
+      const sortedStakers = [5];
 
-      await blockManager.connect(signers[15]).giveSorted(epoch, 1, sortedVotes);
+      await blockManager.connect(signers[15]).giveSorted(epoch, 1, sortedStakers);
 
       const beforeDisputeReset = await blockManager.disputes(epoch, signers[15].address);
       assertBNEqual(beforeDisputeReset.assetId, toBigNumber('1'), 'assetId should match');
@@ -456,7 +438,7 @@ describe('BlockManager', function () {
       assertBNEqual(afterDisputeReset.assetId, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.median, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
-      assertBNEqual(afterDisputeReset.lastVisited, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.lastVisitedStaker, toBigNumber('0'));
     });
 
     it('should be able to dispute in batches', async function () {
@@ -520,27 +502,26 @@ describe('BlockManager', function () {
       // Calculate Dispute data
       await mineToNextState();
       epoch = await getEpoch();
-      const sortedVotes = [toBigNumber('200')];
       const {
-        median, totalInfluenceRevealed,
-      } = await calculateDisputesData(
+        median, totalInfluenceRevealed, accProd, sortedStakers,
+      } = await calculateDisputesData(1,
         voteManager,
-        epoch,
-        sortedVotes,
-        [await voteManager.getVoteWeights(epoch, 1, sortedVotes[0])] // initial weights
-      );
-      // Dispute in batches
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes.slice(0, 51));
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes.slice(51, 101));
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes.slice(101, 151));
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedVotes.slice(151, 201));
+        stakeManager,
+        epoch);
 
+      // Dispute in batches
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [6]);
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
       const dispute = await blockManager.disputes(epoch, signers[19].address);
 
       assertBNEqual(dispute.assetId, toBigNumber('1'), 'assetId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
-      assertBNEqual(dispute.median, median, 'median should match');
-      assertBNEqual(dispute.lastVisited, sortedVotes[sortedVotes.length - 1], 'lastVisited should match');
+      assertBNEqual(dispute.accProd, accProd, 'accProd should match');
+      assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
+      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      const dispute2 = await blockManager.disputes(epoch, signers[19].address);
+
+      assertBNEqual(dispute2.median, median, 'median should match');
     });
   });
 });

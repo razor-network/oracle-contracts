@@ -74,33 +74,35 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     function giveSorted(
         uint32 epoch,
         uint8 assetId,
-        uint32[] memory sorted
+        uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
-        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch) / (2);
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-        uint32 lastVisited = disputes[epoch][msg.sender].lastVisited;
+        uint256 accProd = disputes[epoch][msg.sender].accProd;
+        uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].assetId = assetId;
         } else {
             require(disputes[epoch][msg.sender].assetId == assetId, "AssetId not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
-        for (uint256 i = 0; i < sorted.length; i++) {
-            require(sorted[i] > lastVisited, "sorted[i] is not greater than lastVisited");
-            lastVisited = sorted[i];
-            accWeight = accWeight + (voteManager.getVoteWeights(epoch, assetId, sorted[i]));
-            if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
-                disputes[epoch][msg.sender].median = sorted[i];
-                // break;
-            }
+        for (uint16 i = 0; i < sortedStakers.length; i++) {
+            require(sortedStakers[i] > lastVisitedStaker, "sorted[i] is not greater than lastVisited");
+            lastVisitedStaker = sortedStakers[i];
+            Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
+            require(vote.epoch == epoch, "epoch in vote doesnt match with current");
+            uint32 value = vote.values[assetId];
+            uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
+            accProd = accProd + value * influence;
+            accWeight = accWeight + influence;
         }
-        disputes[epoch][msg.sender].lastVisited = lastVisited;
+        disputes[epoch][msg.sender].lastVisitedStaker = lastVisitedStaker;
         disputes[epoch][msg.sender].accWeight = accWeight;
+        disputes[epoch][msg.sender].accProd = accProd;
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(uint32 epoch) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
-        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
+        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0);
     }
 
     function confirmBlock(uint32 epoch) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -114,6 +116,28 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
                 rewardManager.giveBlockReward(proposerId, epoch);
                 return;
             }
+        }
+    }
+
+    function finalizeDispute(uint32 epoch, uint8 blockId)
+        external
+        initialized
+        checkEpochAndState(epoch, parameters.epochLength(), State.Dispute)
+    {
+        uint8 assetId = disputes[epoch][msg.sender].assetId;
+        require(
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
+            "Total influence revealed doesnt match"
+        );
+        uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        require(median > 0, "median can not be zero");
+        if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
+            proposedBlocks[epoch][blockId].valid = false;
+            disputes[epoch][msg.sender].median = median;
+            stakeManager.slash(proposerId, msg.sender, epoch);
+        } else {
+            revert("Proposed Alternate block is identical to proposed block");
         }
     }
 
@@ -142,27 +166,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint256) {
         return (sortedProposedBlockIds[epoch].length);
-    }
-
-    function finalizeDispute(uint32 epoch, uint8 blockId)
-        public
-        initialized
-        checkEpochAndState(epoch, parameters.epochLength(), State.Dispute)
-    {
-        uint8 assetId = disputes[epoch][msg.sender].assetId;
-        require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
-            "Total influence revealed doesnt match"
-        );
-        uint256 median = disputes[epoch][msg.sender].median;
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        require(median > 0, "median can not be zero");
-        if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
-            proposedBlocks[epoch][blockId].valid = false;
-            stakeManager.slash(proposerId, msg.sender, epoch);
-        } else {
-            revert("Proposed Alternate block is identical to proposed block");
-        }
     }
 
     function isElectedProposer(
