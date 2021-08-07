@@ -65,21 +65,23 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
     ) external initialized checkEpoch(parameters.epochLength(), epoch) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
-        require(commitments[thisStakerId].epoch == epoch, "not commited in this epoch");
+        require(commitments[thisStakerId].epoch == epoch, "not committed in this epoch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
+
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+        commitments[thisStakerId].commitmentHash = 0x0;
         //bounty hunter
         if (msg.sender != stakerAddress) {
-            //bounty hunter revealing someone else's secret in commit state
             require(getState(parameters.epochLength()) == State.Commit, "Not commit state");
-            commitments[thisStakerId].commitmentHash = 0x0;
             stakeManager.slash(thisStakerId, msg.sender, epoch);
             return;
         }
         //revealing self
         require(getState(parameters.epochLength()) == State.Reveal, "Not reveal state");
-        require(stakeManager.getStake(thisStakerId) > 0, "zero stake");
+        //below require was changed from 0 to minstake because someone with very low stake can manipulate randao
+        require(stakeManager.getStake(thisStakerId) > parameters.minStake(), "stake below minimum");
 
         votes[thisStakerId].epoch = epoch;
         votes[thisStakerId].values = values;

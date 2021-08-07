@@ -375,7 +375,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'not commited in this epoch');
+        await assertRevert(tx, 'not committed in this epoch');
       });
 
       it('should not be able to commit other than in commit state', async function () {
@@ -480,7 +480,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'zero stake');
+        await assertRevert(tx, 'stake below minimum');
       });
 
       it('Should be able to slash if stake is zero', async function () {
