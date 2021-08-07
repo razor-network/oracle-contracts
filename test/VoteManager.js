@@ -163,8 +163,7 @@ describe('VoteManager', function () {
           biggestInfluencerId);
 
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
-        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
-
+        const ageBefore = await stakeManager.getAge(stakerIdAcc3);
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
         epoch = await getEpoch();
@@ -189,13 +188,13 @@ describe('VoteManager', function () {
 
         assertBNEqual(commitment1, commitment3.commitmentHash, 'commitment1, commitment3 not equal');
 
-        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        const ageAfter = await stakeManager.getAge(stakerIdAcc3);
         const expectedAgeDifference = toBigNumber(10000);
         const influenceAfter = (await stakeManager.getInfluence(stakerIdAcc3));
 
-        assertBNEqual(ageAfter.sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
+        assertBNEqual(toBigNumber(ageAfter).sub(ageBefore), expectedAgeDifference, 'Age difference incorrect');
         assertBNLessThan(influenceBefore, influenceAfter, 'Not rewarded');
-        assertBNEqual(ageBefore.add(10000), ageAfter, 'Penalty should not be applied');
+        assertBNEqual(toBigNumber(ageBefore).add(10000), ageAfter, 'Penalty should not be applied');
       });
 
       it('should be able to reveal again but with no rewards for now', async function () {
@@ -246,8 +245,8 @@ describe('VoteManager', function () {
 
         // const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
         // const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
-        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
-        const ageBefore2 = (await stakeManager.stakers(stakerIdAcc4)).age;
+        const ageBefore = await stakeManager.getAge(stakerIdAcc3);
+        const ageBefore2 = await stakeManager.getAge(stakerIdAcc4);
         await mineToNextState(); // dispute
         await mineToNextState(); // commit
         epoch = await getEpoch();
@@ -271,20 +270,23 @@ describe('VoteManager', function () {
         let toAdd = toBigNumber(0);
         let prod = toBigNumber(0);
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
+        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
         for (let i = 0; i < votes2.length; i++) {
-          prod = toBigNumber(votes2[i]).mul(ageBefore2);
+          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
           if (votes2[i] > medians[i]) {
-            toAdd = (prod.div(medians[i])).sub(ageBefore2);
+            toAdd = (prod.div(medians[i])).sub(expectedAgeAfter2);
           } else {
-            toAdd = ageBefore2.sub(prod.div(medians[i]));
+            toAdd = expectedAgeAfter2.sub(prod.div(medians[i]));
           }
           penalty = penalty.add(toAdd);
         }
-        const expectedAgeAfter2 = ageBefore2.add(10000).sub(penalty);
-        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
-        const ageAfter2 = (await stakeManager.stakers(stakerIdAcc4)).age;
+        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
 
-        assertBNLessThan(ageBefore, ageAfter, 'Not rewarded');
+        const ageAfter = await stakeManager.getAge(stakerIdAcc3);
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc4);
+
+        assertBNLessThan(toBigNumber(ageBefore), toBigNumber(ageAfter), 'Not rewarded');
         assertBNEqual(ageAfter2, expectedAgeAfter2, 'Age Penalty should be applied');
       });
 
@@ -356,7 +358,6 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
         const commitment2 = await voteManager.getCommitment(stakerId);
-        // console.log(commitment2,commitment1.toString())
         assert(commitment2.commitmentHash.toString() !== commitment1.toString(), 'commitment was successful');
       });
 

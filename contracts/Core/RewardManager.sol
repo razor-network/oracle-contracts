@@ -70,12 +70,12 @@ contract RewardManager is Initializable, ACL {
     function calculateInactivityPenalties(
         uint32 epochs,
         uint256 stakeValue,
-        uint256 ageValue
-    ) public view returns (uint256, uint256) {
+        uint32 ageValue
+    ) public view returns (uint256, uint32) {
         uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
-        uint256 penaltyAge = epochs * 10000;
-        uint256 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
+        uint32 penaltyAge = epochs * 10000;
+        uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
         return (newStake, newAge);
     }
 
@@ -94,8 +94,8 @@ contract RewardManager is Initializable, ACL {
 
         uint256 previousStake = thisStaker.stake;
         uint256 newStake = thisStaker.stake;
-        uint256 previousAge = thisStaker.age;
-        uint256 newAge = thisStaker.age;
+        uint32 previousAge = thisStaker.age;
+        uint32 newAge = thisStaker.age;
 
         uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
@@ -125,30 +125,32 @@ contract RewardManager is Initializable, ACL {
             stakeManager.setStakerAge(thisStaker.id, 0, epoch);
             return;
         }
-        uint256 previousAge = thisStaker.age;
+        uint32 age = thisStaker.age + 10000;
+        // cap age to maxAge
+        uint32 maxAge = parameters.maxAge();
+        age = age > maxAge ? maxAge : age;
+
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
 
         uint32[] memory mediansLastEpoch = _block.medians;
 
         if (mediansLastEpoch.length == 0) return;
-        uint256 penalty = 0;
+        uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
             uint32 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
-            uint256 medianLastEpoch = mediansLastEpoch[i];
-            uint256 prod = previousAge * voteValueLastEpoch;
+            uint32 medianLastEpoch = mediansLastEpoch[i];
+            uint64 prod = age * voteValueLastEpoch;
             // if (voteWeightLastEpoch > 0) {
             if (voteValueLastEpoch > medianLastEpoch) {
-                penalty = penalty + (prod / medianLastEpoch - previousAge);
-                // penalty = penalty + (previousAge * (voteValueLastEpoch - medianLastEpoch)**2) / medianLastEpoch**2;
+                penalty = penalty + (prod / medianLastEpoch - age);
             } else {
-                penalty = penalty + (previousAge - prod / medianLastEpoch);
+                penalty = penalty + (age - prod / medianLastEpoch);
             }
-
-            uint256 newAge = (previousAge + 10000 - (penalty));
-            newAge = newAge > parameters.maxAge() ? parameters.maxAge() : newAge;
-
-            stakeManager.setStakerAge(thisStaker.id, newAge, epoch);
         }
+
+        age = penalty > age ? 0 : age - uint32(penalty);
+
+        stakeManager.setStakerAge(thisStaker.id, age, epoch);
     }
 }

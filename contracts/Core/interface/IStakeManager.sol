@@ -41,7 +41,7 @@ interface IStakeManager {
 
     function setStakerAge(
         uint32 _id,
-        uint256 _age,
+        uint32 _age,
         uint32 _epoch
     ) external;
 
@@ -53,7 +53,7 @@ interface IStakeManager {
 
     function getNumStakers() external view returns (uint32);
 
-    function getAge(uint32 stakerId) external view returns (uint256);
+    function getAge(uint32 stakerId) external view returns (uint32);
 
     function getInfluence(uint32 stakerId) external view returns (uint256);
 

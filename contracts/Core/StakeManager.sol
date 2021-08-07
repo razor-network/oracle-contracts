@@ -124,7 +124,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     ];
     event StakeChange(uint32 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
 
-    event AgeChange(uint32 indexed stakerId, uint256 previousAge, uint256 newAge, uint32 epoch, uint256 timestamp);
+    event AgeChange(uint32 indexed stakerId, uint32 newAge, uint32 epoch, uint256 timestamp);
 
     event Staked(uint32 epoch, uint32 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
 
@@ -400,12 +400,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
 
     function setStakerAge(
         uint32 _id,
-        uint256 _age,
+        uint32 _age,
         uint32 _epoch
     ) external onlyRole(parameters.getStakeModifierHash()) {
-        uint256 previousAge = stakers[_id].age;
         stakers[_id].age = _age;
-        emit AgeChange(_id, previousAge, _age, _epoch, block.timestamp);
+        emit AgeChange(_id, _age, _epoch, block.timestamp);
     }
 
     /// @param _address Address of the staker
@@ -426,7 +425,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
     }
 
     /// @return age of staker
-    function getAge(uint32 stakerId) external view returns (uint256) {
+    function getAge(uint32 stakerId) external view returns (uint32) {
         return stakers[stakerId].age;
     }
 

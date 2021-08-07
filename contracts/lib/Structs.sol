@@ -16,7 +16,7 @@ library Structs {
         uint32 id;
         address _address;
         uint256 stake;
-        uint256 age;
+        uint32 age;
         uint32 epochStaked;
         bool acceptDelegation;
         uint256 commission;
