@@ -10,9 +10,6 @@ const { DEFAULT_ADMIN_ROLE_HASH,
   VOTE_MODIFIER_ROLE,
 } = require('./constants');
 const setupContracts = async () => {
-  const Structs = await ethers.getContractFactory('Structs');
-  const structs = await Structs.deploy();
-  await structs.deployed();
 
   const Random = await ethers.getContractFactory('Random');
   const random = await Random.deploy();
@@ -82,7 +79,6 @@ const setupContracts = async () => {
     razor,
     stakeManager,
     rewardManager,
-    structs,
     voteManager,
     initializeContracts,
     stakedToken,

@@ -2,6 +2,16 @@
 pragma solidity ^0.8.0;
 
 library Structs {
+
+    struct Vote {
+        uint32 epoch;
+        uint32[] values;
+    }
+
+    struct Commitment {
+        uint32 epoch;
+        bytes32 commitmentHash;
+    }
     struct Staker {
         uint32 id;
         address _address;
