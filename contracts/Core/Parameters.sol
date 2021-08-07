@@ -5,7 +5,6 @@ import "./ACL.sol";
 import "./storage/Constants.sol";
 
 contract Parameters is ACL, Constants {
-
     uint16 public penaltyNotRevealNum = 1;
     uint16 public penaltyNotRevealDenom = 10000;
     uint16 public slashPenaltyNum = 10000;
@@ -24,8 +23,6 @@ contract Parameters is ACL, Constants {
     uint32 public maxAge = 100 * 10000;
 
     bool public escapeHatchEnabled = true;
-
-
 
     //event to be emitted when any governance parameter value changes.
     event ParameterChanged(address admin, string parameterName, uint256 valueChangedFrom, uint256 valueChangedTo, uint256 timestamp);

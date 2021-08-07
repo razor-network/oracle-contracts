@@ -31,7 +31,11 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         parameters = IParameters(parametersAddress);
     }
 
-    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit)  {
+    function commit(uint32 epoch, bytes32 commitment)
+        external
+        initialized
+        checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
+    {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(commitments[stakerId].epoch != epoch, "already commited");
 

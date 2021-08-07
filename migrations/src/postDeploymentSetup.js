@@ -26,9 +26,29 @@ module.exports = async () => {
     Faucet: faucetAddress,
   } = await readDeploymentFile();
 
+  // keccak256("BLOCK_CONFIRMER_ROLE")
+  const BLOCK_CONFIRMER_ROLE = '0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f';
+
+  // keccak256("ASSET_CONFIRMER_ROLE")
+  const ASSET_CONFIRMER_ROLE = '0xed202a1bc048f9b31cb3937bc52e7c8fe76413f0674b9146ff4bcc15612ccbc2';
+
+  // keccak256("STAKER_ACTIVITY_UPDATER_ROLE")
+  const STAKER_ACTIVITY_UPDATER_ROLE = '0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece';
+
+  // keccak256("STAKE_MODIFIER_ROLE")
+  const STAKE_MODIFIER_ROLE = '0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804';
+
+  // keccak256("REWARD_MODIFIER_ROLE")
+  const REWARD_MODIFIER_ROLE = '0xcabcaf259dd9a27f23bd8a92bacd65983c2ebf027c853f89f941715905271a8d';
+
+  // keccak256("ASSET_MODIFIER_ROLE")
+  const ASSET_MODIFIER_ROLE = '0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe4';
+
+  // keccak256("VOTE_MODIFIER_ROLE")
+  const VOTE_MODIFIER_ROLE = '0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5';
+
   const randomLibraryDependency = { Random: randomAddress };
 
-  const { contractInstance: parameters } = await getdeployedContractInstance('Parameters', parametersAddress);
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
@@ -61,7 +81,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
-  pendingTransactions.push(await assetManager.grantRole(await constants.ASSET_CONFIRMER_ROLE(), blockManagerAddress));
+  pendingTransactions.push(await assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
   pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManagerAddress));
@@ -70,7 +90,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
-  pendingTransactions.push(await voteManager.grantRole(await parameters.getVoteModifierHash(), blockManagerAddress));
+  pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
 

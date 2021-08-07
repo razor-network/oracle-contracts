@@ -9,17 +9,11 @@ const {
   assertRevert,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
-const { DEFAULT_ADMIN_ROLE_HASH,
-  BLOCK_CONFIRMER_ROLE,
-  ASSET_CONFIRMER_ROLE,
-  STAKER_ACTIVITY_UPDATER_ROLE,
-  STAKE_MODIFIER_ROLE,
-  REWARD_MODIFIER_ROLE,
-  ASSET_MODIFIER_ROLE,
-  VOTE_MODIFIER_ROLE,
+const {
+  DEFAULT_ADMIN_ROLE_HASH,
   BURN_ADDRESS,
 
- } = require('./helpers/constants');const {
+} = require('./helpers/constants'); const {
   calculateDisputesData,
   getEpoch,
   getBiggestInfluenceAndId,

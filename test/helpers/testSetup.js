@@ -1,16 +1,14 @@
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
-const { DEFAULT_ADMIN_ROLE_HASH,
+const {
   BLOCK_CONFIRMER_ROLE,
-  ASSET_CONFIRMER_ROLE,
   STAKER_ACTIVITY_UPDATER_ROLE,
   STAKE_MODIFIER_ROLE,
   REWARD_MODIFIER_ROLE,
-  ASSET_MODIFIER_ROLE,
-  VOTE_MODIFIER_ROLE,
+  ASSET_CONFIRMER_ROLE,
 } = require('./constants');
-const setupContracts = async () => {
 
+const setupContracts = async () => {
   const Random = await ethers.getContractFactory('Random');
   const random = await Random.deploy();
   await random.deployed();

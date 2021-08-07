@@ -1,14 +1,13 @@
 const { assert } = require('chai');
-const { DEFAULT_ADMIN_ROLE_HASH,
+const {
+  DEFAULT_ADMIN_ROLE_HASH,
   BLOCK_CONFIRMER_ROLE,
   ASSET_CONFIRMER_ROLE,
   STAKER_ACTIVITY_UPDATER_ROLE,
   STAKE_MODIFIER_ROLE,
   REWARD_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
-  VOTE_MODIFIER_ROLE,
-
- } = require('./helpers/constants');
+} = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks,
 } = require('./helpers/testHelpers');
@@ -26,12 +25,11 @@ describe('Access Control Test', async () => {
   let stakeManager;
   let rewardManager;
   let initializeContracts;
-  let constants;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts
+      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });

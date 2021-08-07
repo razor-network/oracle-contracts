@@ -4,16 +4,11 @@ test penalizeEpochs */
 
 const { assert } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
-const { DEFAULT_ADMIN_ROLE_HASH,
-  BLOCK_CONFIRMER_ROLE,
-  ASSET_CONFIRMER_ROLE,
-  STAKER_ACTIVITY_UPDATER_ROLE,
-  STAKE_MODIFIER_ROLE,
-  REWARD_MODIFIER_ROLE,
+const {
+  DEFAULT_ADMIN_ROLE_HASH,
   ASSET_MODIFIER_ROLE,
-  VOTE_MODIFIER_ROLE,
 
- } = require('./helpers/constants');
+} = require('./helpers/constants');
 const {
   assertBNEqual,
   assertRevert,
@@ -23,11 +18,10 @@ const { toBigNumber } = require('./helpers/utils');
 
 describe('AssetManager', function () {
   let signers;
-  let parameters;
   let assetManager;
 
   before(async () => {
-    ({ parameters, assetManager } = await setupContracts());
+    ({ assetManager } = await setupContracts());
     signers = await ethers.getSigners();
   });
 

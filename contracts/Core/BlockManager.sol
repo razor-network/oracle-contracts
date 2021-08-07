@@ -144,7 +144,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         return (sortedProposedBlockIds[epoch].length);
     }
 
-    function finalizeDispute(uint32 epoch, uint8 blockId) public initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
+    function finalizeDispute(uint32 epoch, uint8 blockId)
+        public
+        initialized
+        checkEpochAndState(epoch, parameters.epochLength(), State.Dispute)
+    {
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),

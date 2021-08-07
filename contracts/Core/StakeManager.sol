@@ -23,7 +23,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     IRewardManager private rewardManager;
     RAZOR private razor;
     IVoteManager private voteManager;
-  
+
     event StakeChange(uint32 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
 
     event AgeChange(uint32 indexed stakerId, uint32 newAge, uint32 epoch, uint256 timestamp);
@@ -58,7 +58,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount)
+        external
+        initialized
+        checkEpoch(parameters.epochLength(), epoch)
+        checkState(parameters.epochLength(), State.Commit)
+        whenNotPaused
+    {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
@@ -150,7 +156,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     // And they have to use resetLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
+    function withdraw(uint32 epoch, uint32 stakerId)
+        external
+        initialized
+        checkEpoch(parameters.epochLength(), epoch)
+        checkState(parameters.epochLength(), State.Commit)
+        whenNotPaused
+    {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 library Structs {
-
     struct Vote {
         uint32 epoch;
         uint32[] values;

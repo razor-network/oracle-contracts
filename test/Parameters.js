@@ -1,16 +1,10 @@
 const { assert } = require('chai');
-const { DEFAULT_ADMIN_ROLE_HASH,
-  BLOCK_CONFIRMER_ROLE,
-  ASSET_CONFIRMER_ROLE,
-  STAKER_ACTIVITY_UPDATER_ROLE,
-  STAKE_MODIFIER_ROLE,
-  REWARD_MODIFIER_ROLE,
-  ASSET_MODIFIER_ROLE,
-  VOTE_MODIFIER_ROLE,
-
- } = require('./helpers/constants');const {
+const {
   assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
 } = require('./helpers/testHelpers');
+const {
+  DEFAULT_ADMIN_ROLE_HASH,
+} = require('./helpers/constants');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   getEpoch, getState, toBigNumber, tokenAmount,
@@ -24,12 +18,6 @@ describe('Parameters contract Tests', async () => {
   let parameters;
   const expectedRevertMessage = 'AccessControl';
 
-  // parameters as initiliazed in Parameters contract
-  const commit = toBigNumber('0');
-  const reveal = toBigNumber('1');
-  const propose = toBigNumber('2');
-  const dispute = toBigNumber('3');
-
   const penaltyNotRevealNumerator = toBigNumber('1');
   const penaltyNotRevealDenominator = toBigNumber('10000');
   const slashPenaltyNumerator = toBigNumber('10000');
@@ -38,7 +26,6 @@ describe('Parameters contract Tests', async () => {
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
-  const totalStates = toBigNumber('4');
   const exposureDenominator = toBigNumber('1000');
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('1000');
@@ -189,7 +176,6 @@ describe('Parameters contract Tests', async () => {
   });
 
   it('parameters values should be initialized correctly', async () => {
-
     const penaltyNotRevealNumValue = await parameters.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
 
