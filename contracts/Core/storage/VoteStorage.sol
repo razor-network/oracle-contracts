@@ -4,10 +4,21 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract VoteStorage {
+
+  struct Vote {
+      uint32 epoch;
+      uint32[] values;
+      // mapping(uint8 => uint256) weights;
+  }
+
+  struct Commitment {
+      uint32 epoch;
+      bytes32 commitmentHash;
+  }
     //stakerid -> commitment
-    mapping(uint32 => Structs.Commitment) public commitments;
+    mapping(uint32 => Commitment) public commitments;
     //stakerid  -> vote
-    mapping(uint32 => Structs.Vote) public votes;
+    mapping(uint32 => Vote) public votes;
     //epoch -> asset -> stakeWeight
     mapping(uint32 => uint256) public totalInfluenceRevealed;
     //epoch -> assetid -> voteValue -> weight

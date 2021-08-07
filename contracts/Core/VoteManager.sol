@@ -96,7 +96,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         emit Revealed(epoch, thisStakerId, values, block.timestamp);
     }
 
-    function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
+    function getCommitment(uint32 stakerId) external view returns (Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);
     }
