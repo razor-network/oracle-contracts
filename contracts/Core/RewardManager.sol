@@ -59,10 +59,8 @@ contract RewardManager is Initializable, ACL, Constants {
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
-        if (parameters.blockReward() > 0) {
-            uint256 newStake = stakeManager.getStaker(stakerId).stake + (blockReward);
-            stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
-        }
+        uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
+        stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
     }
 
     /// @notice Calculates the stake and age inactivity penalties of the staker

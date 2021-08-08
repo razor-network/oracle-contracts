@@ -32,13 +32,12 @@ library Structs {
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
-        bool valid;
     }
 
     struct Dispute {
         uint256 accWeight;
         uint256 accProd;
-        uint32 median;
+        // uint32 median;
         uint32 lastVisitedStaker;
         uint8 assetId;
     }

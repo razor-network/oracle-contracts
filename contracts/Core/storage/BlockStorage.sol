@@ -5,7 +5,7 @@ import "../../lib/Structs.sol";
 contract BlockStorage {
     //epoch -> address -> dispute -> assetid
     mapping(uint32 => mapping(address => Structs.Dispute)) public disputes;
-    //epoch -> proposalNumber -> block
+    //epoch -> blockId -> block
     mapping(uint32 => mapping(uint8 => Structs.Block)) public proposedBlocks;
     //epoch->blockId
     mapping(uint32 => uint8[]) public sortedProposedBlockIds;

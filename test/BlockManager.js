@@ -219,29 +219,33 @@ describe('BlockManager', function () {
     it('should be able to finalize Dispute', async function () {
       const epoch = await getEpoch();
 
-      const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      const secondProposedBlock = await blockManager.proposedBlocks(epoch, 1);
-
-      const firstProposedBlockIndex = (toBigNumber(firstProposedBlock.proposerId).gt(secondProposedBlock.proposerId))
-        ? 1 : 0;
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
       const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
       const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
-      const proposedBlock = await blockManager.proposedBlocks(epoch, firstProposedBlockIndex);
+      let blockId;
+      let block;
+      let blockIndex;
+      for (let i = 0; i < (await blockManager.getNumProposedBlocks(epoch)); i++) {
+        blockId = await blockManager.sortedProposedBlockIds(epoch, i);
+        block = await blockManager.proposedBlocks(epoch, blockId);
+        if (toBigNumber(block.proposerId).eq(1)) {
+          blockIndex = i;
+          break;
+        }
+      }
 
-      assert((await proposedBlock.valid) === false);
+      await blockManager.connect(signers[19]).finalizeDispute(epoch, blockIndex);
 
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
-      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount));
-      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')));
-      assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')));
+      assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
+      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')), 'half slashed amount didnt get burnt');
+      assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')), 'disputer did not get rewarded');
 
-      const dispute = await blockManager.disputes(epoch, signers[19].address);
-      assertBNEqual(dispute.median, toBigNumber(200), 'median should match');
+      // const dispute = await blockManager.disputes(epoch, signers[19].address);
+      // assertBNEqual(dispute.median, toBigNumber(200), 'median should match');
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
@@ -331,9 +335,18 @@ describe('BlockManager', function () {
       assertBNEqual(firstDispute.accWeight, res1.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(firstDispute.lastVisitedStaker, res1.sortedStakers[res1.sortedStakers.length - 1], 'lastVisited should match');
 
+      // let blockId
+      // let block
+      // let blockIndex
+      // for(i=0;i<(await blockManager.getNumProposedBlocks(epoch)); i++ ) {
+      //    blockId = await blockManager.sortedProposedBlockIds(epoch,i)
+      //    if(toBigNumber(blockId).eq(0)) {
+      //      blockIndex = i
+      //      break;
+      //    }
+      // }
+
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
-      let proposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      assert((await proposedBlock.valid) === false);
 
       const res2 = await calculateDisputesData(2,
         voteManager,
@@ -348,11 +361,9 @@ describe('BlockManager', function () {
       assertBNEqual(secondDispute.accWeight, res2.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(secondDispute.lastVisitedStaker, res2.sortedStakers[res2.sortedStakers.length - 1], 'lastVisited should match');
 
-      await blockManager.connect(signers[15]).finalizeDispute(epoch, 1);
-      const secondDispute2 = await blockManager.disputes(epoch, signers[15].address);
-      assertBNEqual(secondDispute2.median, res2.median, 'median should match');
-      proposedBlock = await blockManager.proposedBlocks(epoch, 1);
-      assert((await proposedBlock.valid) === false);
+      await blockManager.connect(signers[15]).finalizeDispute(epoch, 0);
+      // assertBNEqual(secondDispute2.median, res2.median, 'median should match');
+      // assert((await proposedBlock.valid) === false);
     });
 
     it('if no block is valid in previous epoch, stakers should not be penalised', async function () {
@@ -375,7 +386,7 @@ describe('BlockManager', function () {
 
       assertBNEqual((await blockManager.getBlock(epoch - 1)).proposerId, toBigNumber('0'));
       assertBNEqual(((await blockManager.getBlock(epoch - 1)).medians).length, toBigNumber('0'));
-      assert((await blockManager.getBlock(epoch - 1)).valid === false);
+      // assert((await blockManager.getBlock(epoch - 1)).valid === false);
 
       await mineToNextState();
 
@@ -436,7 +447,6 @@ describe('BlockManager', function () {
       const afterDisputeReset = await blockManager.disputes(epoch, signers[15].address);
 
       assertBNEqual(afterDisputeReset.assetId, toBigNumber('0'));
-      assertBNEqual(afterDisputeReset.median, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.lastVisitedStaker, toBigNumber('0'));
     });
@@ -503,7 +513,7 @@ describe('BlockManager', function () {
       await mineToNextState();
       epoch = await getEpoch();
       const {
-        median, totalInfluenceRevealed, accProd, sortedStakers,
+        totalInfluenceRevealed, accProd, sortedStakers,
       } = await calculateDisputesData(1,
         voteManager,
         stakeManager,
@@ -519,9 +529,6 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.accProd, accProd, 'accProd should match');
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
-      const dispute2 = await blockManager.disputes(epoch, signers[19].address);
-
-      assertBNEqual(dispute2.median, median, 'median should match');
     });
   });
 });

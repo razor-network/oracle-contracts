@@ -63,7 +63,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence);
 
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
@@ -102,43 +102,42 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
     // //if any mistake made during giveSorted, resetDispute and start again
     function resetDispute(uint32 epoch) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
-        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0, 0);
+        disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
+    //O(1)
     function confirmBlock(uint32 epoch) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
-            uint8 blockId = sortedProposedBlockIds[epoch - 1][i];
-            if (proposedBlocks[epoch - 1][blockId].valid) {
-                blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
-                uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
+        // for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
+        if (sortedProposedBlockIds[epoch - 1].length == 0) return;
+        uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
+        blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
+        uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
 
-                emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][i].medians, block.timestamp);
-                rewardManager.giveBlockReward(proposerId, epoch);
-                return;
-            }
-        }
+        rewardManager.giveBlockReward(proposerId, epoch - 1);
+        emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][blockId].medians, block.timestamp);
     }
 
-    function finalizeDispute(uint32 epoch, uint8 blockId)
+    // Complexity O(1)
+    function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
         checkEpochAndState(epoch, parameters.epochLength(), State.Dispute)
     {
-        uint8 assetId = disputes[epoch][msg.sender].assetId;
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
             "Total influence revealed doesnt match"
         );
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(median > 0, "median can not be zero");
-        if (proposedBlocks[epoch][blockId].medians[assetId] != median) {
-            proposedBlocks[epoch][blockId].valid = false;
-            disputes[epoch][msg.sender].median = median;
-            stakeManager.slash(proposerId, msg.sender, epoch);
-        } else {
-            revert("Proposed Alternate block is identical to proposed block");
-        }
+        uint8 assetId = disputes[epoch][msg.sender].assetId;
+        uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].medians[assetId] != median, "Proposed Alternate block is identical to proposed block");
+        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
+        sortedProposedBlockIds[epoch].pop();
+
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        stakeManager.slash(proposerId, msg.sender, epoch);
     }
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {

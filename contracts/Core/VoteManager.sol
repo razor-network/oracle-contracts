@@ -43,16 +43,14 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch - 1).proposerId == 0) {
-            if (blockManager.getNumProposedBlocks(epoch - 1) > 0) {
-                blockManager.confirmBlock(epoch);
-            }
+            blockManager.confirmBlock(epoch);
         }
         rewardManager.givePenalties(stakerId, epoch);
 
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
         if (thisStakerStake >= parameters.minStake()) {
-            commitments[stakerId].commitmentHash = commitment;
             commitments[stakerId].epoch = epoch;
+            commitments[stakerId].commitmentHash = commitment;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
         }
     }
@@ -62,7 +60,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpoch(parameters.epochLength(), epoch) {
+    ) external initialized checkEpoch(epoch, parameters.epochLength()) {
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
         require(commitments[thisStakerId].epoch == epoch, "not committed in this epoch");

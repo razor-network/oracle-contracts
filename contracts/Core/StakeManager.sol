@@ -61,8 +61,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function stake(uint32 epoch, uint256 amount)
         external
         initialized
-        checkEpoch(parameters.epochLength(), epoch)
-        checkState(parameters.epochLength(), State.Commit)
+        checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
         whenNotPaused
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
@@ -100,7 +99,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint256 amount,
         uint32 stakerId
-    ) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
@@ -132,7 +131,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external initialized checkEpoch(parameters.epochLength(), epoch) checkState(parameters.epochLength(), State.Commit) whenNotPaused {
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -159,8 +158,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function withdraw(uint32 epoch, uint32 stakerId)
         external
         initialized
-        checkEpoch(parameters.epochLength(), epoch)
-        checkState(parameters.epochLength(), State.Commit)
+        checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
         whenNotPaused
     {
         Structs.Staker storage staker = stakers[stakerId];
