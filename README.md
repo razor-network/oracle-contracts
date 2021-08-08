@@ -42,3 +42,10 @@ Run `npm run lint:sol:fix`
 We are currently live on Polygon Mumbai Testnet.
 
 Deployed contract addresses can be found [here](deployed/mumbai/addresses.json)
+
+# tenderly
+```
+npx hardhat node
+npm run deploy:local
+npm run deploy:mumbai
+```
