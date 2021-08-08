@@ -55,7 +55,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Propose) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
-        require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
+        require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
 
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
