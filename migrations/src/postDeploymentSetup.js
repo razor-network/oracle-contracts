@@ -22,7 +22,7 @@ module.exports = async () => {
     RewardManager: rewardManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
-    RAZOR: RAZORAddress
+    RAZOR: RAZORAddress,
   } = await readDeploymentFile();
 
   const randomLibraryDependency = { Random: randomAddress };
