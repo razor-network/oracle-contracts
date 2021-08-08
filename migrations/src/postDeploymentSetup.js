@@ -22,8 +22,7 @@ module.exports = async () => {
     RewardManager: rewardManagerAddress,
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
-    RAZOR: RAZORAddress,
-    Faucet: faucetAddress,
+    RAZOR: RAZORAddress
   } = await readDeploymentFile();
 
   const randomLibraryDependency = { Random: randomAddress };
@@ -52,7 +51,6 @@ module.exports = async () => {
       const tx = await RAZOR.transfer(stakerAddressList[i], SEED_AMOUNT);
       pendingTransactions.push(tx);
     }
-    pendingTransactions.push(await RAZOR.transfer(faucetAddress, SEED_AMOUNT));
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,

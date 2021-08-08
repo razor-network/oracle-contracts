@@ -7,7 +7,7 @@ const stakeManagerMigration = require('./src/5_deploy_stake_manager');
 const rewardManagerMigration = require('./src/6_deploy_reward_manager');
 const voteManagerMigration = require('./src/7_deploy_vote_manager');
 const delegatorMigration = require('./src/8_deploy_delegator');
-const RAZORAndFacuetMigration = require('./src/9_deploy_razor_and_faucet');
+const RAZORAndFacuetMigration = require('./src/9_deploy_razor');
 const postDeploymentSetup = require('./src/postDeploymentSetup');
 
 async function main() {
