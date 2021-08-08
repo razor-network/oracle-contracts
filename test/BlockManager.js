@@ -132,16 +132,13 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await voteManager.connect(signers[5]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[5].address);
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
 
       await voteManager.connect(signers[6]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[6].address);
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
 
       await voteManager.connect(signers[8]).reveal(epoch, votes3,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[8].address);
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
     });
 
     it('should be able to propose', async function () {
@@ -285,14 +282,11 @@ describe('BlockManager', function () {
       // Staker 6
 
       await voteManager.connect(signers[6]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[6].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Staker 7
 
       await voteManager.connect(signers[7]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[7].address);
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
     });
 
     it('all blocks being disputed', async function () {
@@ -391,9 +385,7 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await voteManager.connect(signers[8]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[8].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       assertBNEqual(staker.stake, stake, 'Stake should have remained the same');
     });
 
@@ -416,9 +408,7 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await voteManager.connect(signers[19]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[19].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState(); // propose
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[19].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
@@ -485,15 +475,11 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       await voteManager.connect(signers[2]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[2].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Staker 3
 
       await voteManager.connect(signers[3]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[3].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Propose
       await mineToNextState();
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);

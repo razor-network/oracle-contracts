@@ -37,6 +37,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
     {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
 
         // Switch to call confirm block only when block in previous epoch has not been confirmed
@@ -58,37 +59,47 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
     function reveal(
         uint32 epoch,
         uint32[] calldata values,
+        bytes32 secret
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Reveal) {
+        uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Staker does not exist");
+        require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
+        // avoid innocent staker getting slashed due to empty secret
+        require(secret != 0x0, "secret cannot be empty");
+
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
+        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        //below require was changed from 0 to minstake because someone with very low stake can manipulate randao
+        require(stakeManager.getStake(stakerId) > parameters.minStake(), "stake below minimum");
+
+        commitments[stakerId].commitmentHash = 0x0;
+        votes[stakerId].epoch = epoch;
+        votes[stakerId].values = values;
+        uint256 influence = stakeManager.getInfluence(stakerId);
+        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
+        influenceSnapshot[epoch][stakerId] = influence;
+        secrets = keccak256(abi.encodePacked(secrets, secret));
+
+        emit Revealed(epoch, stakerId, values, block.timestamp);
+    }
+
+    //bounty hunter revealing secret in commit state
+    function snitch(
+        uint32 epoch,
+        uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpoch(epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit) {
+        require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
         require(commitments[thisStakerId].epoch == epoch, "not committed in this epoch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
-
-        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        //bounty hunter
-        if (msg.sender != stakerAddress) {
-            require(getState(parameters.epochLength()) == State.Commit, "Not commit state");
-            stakeManager.slash(thisStakerId, msg.sender, epoch);
-            return;
-        }
-        //revealing self
-        require(getState(parameters.epochLength()) == State.Reveal, "Not reveal state");
-        //below require was changed from 0 to minstake because someone with very low stake can manipulate randao
-        require(stakeManager.getStake(thisStakerId) > parameters.minStake(), "stake below minimum");
-
-        votes[thisStakerId].epoch = epoch;
-        votes[thisStakerId].values = values;
-        uint256 influence = stakeManager.getInfluence(thisStakerId);
-        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
-        influenceSnapshot[epoch][thisStakerId] = influence;
-        secrets = keccak256(abi.encodePacked(secrets, secret));
-
-        emit Revealed(epoch, thisStakerId, values, block.timestamp);
+        stakeManager.slash(thisStakerId, msg.sender, epoch);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {

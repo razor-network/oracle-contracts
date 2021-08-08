@@ -9,6 +9,12 @@ interface IVoteManager {
     function reveal(
         uint32 epoch,
         uint32[] calldata values,
+        bytes32 secret
+    ) external;
+
+    function snitch(
+        uint32 epoch,
+        uint32[] calldata values,
         bytes32 secret,
         address stakerAddress
     ) external;

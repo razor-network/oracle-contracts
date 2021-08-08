@@ -313,9 +313,7 @@ describe('StakeManager', function () {
       // Reveal
 
       await voteManager.connect(signers[2]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[2].address);
-
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Next Epoch
       await mineToNextEpoch();
       epoch = await getEpoch();
@@ -352,10 +350,9 @@ describe('StakeManager', function () {
       // reveal
       await mineToNextState();
 
-      await voteManager.connect(signers[3]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[3].address);
       // Staker 3 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
+      await voteManager.connect(signers[3]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       staker = await stakeManager.stakers(3);
       assertBNNotEqual(staker.stake, stake, 'Stake should have decreased due to penalty');
     });
@@ -388,10 +385,9 @@ describe('StakeManager', function () {
       // reveal
       await mineToNextState();
 
-      await voteManager.connect(signers[3]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-        signers[3].address);
       // Staker is not penalised because no. of inactive epochs (8) <= max allowed inactive epochs i.e grace_period (8)
+      await voteManager.connect(signers[3]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       staker = await stakeManager.stakers(3);
       assertBNEqual(staker.stake, stake, 'Stake should not change');
     });
@@ -589,9 +585,7 @@ describe('StakeManager', function () {
         await mineToNextState();
 
         await voteManager.connect(signers[4]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[4].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // propose
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
@@ -686,9 +680,7 @@ describe('StakeManager', function () {
         await mineToNextState();
 
         await voteManager.connect(signers[4]).reveal(epoch, votes1,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[4].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // Staker 4 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
 
         // Delagator unstakes

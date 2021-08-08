@@ -137,17 +137,13 @@ describe('VoteManager', function () {
         //
         // // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        // arguments getvVote => epoch, stakerId, assetId
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         //
         await voteManager.connect(signers[4]).reveal(epoch, votes2,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[4].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
       });
@@ -216,15 +212,11 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        // arguments getvVote => epoch, stakerId, assetId
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
 
         await voteManager.connect(signers[4]).reveal(epoch, votes2,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[4].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
@@ -302,10 +294,9 @@ describe('VoteManager', function () {
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-        await voteManager.connect(signers[10]).reveal(epoch, votes,
+        await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
-
         const stakeAcc10 = await razor.connect(signers[10]).balanceOf(signers[10].address);
         const slashPenaltyAmount = (stakeBeforeAcc4.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
@@ -323,9 +314,7 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
-        // arguments getvVote => epoch, stakerId, assetId
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
         assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
@@ -337,9 +326,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[7].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         await assertRevert(tx, 'Staker does not exist');
       });
 
@@ -372,9 +359,7 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[7].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         await assertRevert(tx, 'not committed in this epoch');
       });
 
@@ -405,10 +390,8 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[7].address);
-
-        await assertRevert(tx, 'Not reveal state');
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        await assertRevert(tx, 'incorrect state');
       });
 
       it('Should not be able to reveal others secret if not in commit state', async function () {
@@ -416,11 +399,11 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         await mineToNextState(); // reveal
-        const tx = voteManager.connect(signers[10]).reveal(epoch, votes,
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[7].address);
 
-        await assertRevert(tx, 'Not commit state');
+        await assertRevert(tx, 'incorrect state');
       });
 
       it('Should not be able to reveal with incorrect value', async function () {
@@ -428,9 +411,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
 
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[7].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         await assertRevert(tx, 'incorrect secret/value');
       });
 
@@ -439,8 +420,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc',
-          signers[7].address); // last digit 'd' changed to 'c' for having incorrect secret
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc');// last digit 'd' changed to 'c' for having incorrect secret
 
         await assertRevert(tx, 'incorrect secret/value');
       });
@@ -477,9 +457,7 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[7].address);
-
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         await assertRevert(tx, 'stake below minimum');
       });
 
@@ -505,7 +483,7 @@ describe('VoteManager', function () {
 
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
-        await voteManager.connect(signers[10]).reveal(epoch, votes,
+        await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[6].address);
 
@@ -536,7 +514,7 @@ describe('VoteManager', function () {
 
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
-        await voteManager.connect(signers[10]).reveal(epoch, votes,
+        await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
