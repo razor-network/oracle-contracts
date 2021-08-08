@@ -1,9 +1,9 @@
 const { deployContract } = require('../migrationHelpers');
 
 const deployStakedTokenFactory = async () => {
-    await deployContract('StakedTokenFactory');
+  await deployContract('StakedTokenFactory');
 };
 
 module.exports = async () => {
-    await deployStakedTokenFactory();
+  await deployStakedTokenFactory();
 };

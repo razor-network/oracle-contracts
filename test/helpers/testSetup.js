@@ -81,7 +81,7 @@ const setupContracts = async () => {
     voteManager,
     initializeContracts,
     stakedToken,
-    stakedTokenFactory
+    stakedTokenFactory,
   };
 };
 

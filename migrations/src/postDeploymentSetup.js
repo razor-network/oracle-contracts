@@ -24,7 +24,7 @@ module.exports = async () => {
     Delegator: delegatorAddress,
     RAZOR: RAZORAddress,
     Faucet: faucetAddress,
-    StakedTokenFactory : stakedTokenFactoryAddress
+    StakedTokenFactory: stakedTokenFactoryAddress,
   } = await readDeploymentFile();
 
   const randomLibraryDependency = { Random: randomAddress };

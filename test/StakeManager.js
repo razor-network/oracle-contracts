@@ -35,6 +35,7 @@ describe('StakeManager', function () {
     let voteManager;
     let initializeContracts;
     let stakedToken;
+    let stakedTokenFactory;
 
     before(async () => {
       ({
@@ -46,7 +47,7 @@ describe('StakeManager', function () {
         voteManager,
         initializeContracts,
         stakedToken,
-        stakedTokenFactory
+        stakedTokenFactory,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -122,8 +123,8 @@ describe('StakeManager', function () {
       const sToken = await stakedToken.attach(staker.tokenAddress);
 
       // Mint, Burn of sToken should not be accesible to anyone beside StakeManager;
-      await assertRevert(sToken.mint(signers[0].address, tokenAmount('1000')), "Ownable: caller is not the owner");
-      await assertRevert(sToken.burn(signers[1].address, tokenAmount('1000')), "Ownable: caller is not the owner");
+      await assertRevert(sToken.mint(signers[0].address, tokenAmount('1000')), 'Ownable: caller is not the owner');
+      await assertRevert(sToken.burn(signers[1].address, tokenAmount('1000')), 'Ownable: caller is not the owner');
 
       assertBNEqual(stakerId, toBigNumber('1'));
       const numStakers = await stakeManager.numStakers();
