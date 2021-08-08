@@ -164,8 +164,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         return (_blockMedians);
     }
 
-    function getNumProposedBlocks(uint32 epoch) external view returns (uint256) {
-        return (sortedProposedBlockIds[epoch].length);
+    function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {
+        return (uint8(sortedProposedBlockIds[epoch].length));
+    }
+
+    function isBlockConfirmed(uint32 epoch) external view returns (bool) {
+        return (blocks[epoch].proposerId != 0);
     }
 
     function isElectedProposer(

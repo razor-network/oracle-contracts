@@ -44,7 +44,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
-        if (blockManager.getBlock(epoch - 1).proposerId == 0) {
+        if (!blockManager.isBlockConfirmed(epoch - 1)) {
             blockManager.confirmBlock(epoch);
         }
         rewardManager.givePenalties(stakerId, epoch);
