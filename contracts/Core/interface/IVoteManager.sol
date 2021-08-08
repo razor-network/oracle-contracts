@@ -21,6 +21,8 @@ interface IVoteManager {
 
     function getCommitment(uint32 stakerId) external view returns (bytes32);
 
+    function getCommitmentEpoch(uint32 stakerId) external view returns (uint32);
+
     function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32);
 
     function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote);

@@ -169,13 +169,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
         require(staker.stake > 0, "Nonpositive Stake");
+        require((voteManager.getCommitmentEpoch(stakerId)) != epoch, "Already commited");
         if (stakerIds[msg.sender] == stakerId) {
             // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
             require(
                 (lock.withdrawAfter - parameters.withdrawLockPeriod()) >= voteManager.getEpochLastCommitted(stakerId),
                 "Participated in Lock Period"
             );
-            // require((voteManager.getCommitment(stakerId)).epoch != epoch, "Already commited");
         }
 
         StakedToken sToken = StakedToken(staker.tokenAddress);

@@ -47,20 +47,4 @@ interface IParameters {
     function maxAge() external view returns (uint32);
 
     function escapeHatchEnabled() external view returns (bool);
-
-    function getAssetConfirmerHash() external view returns (bytes32);
-
-    function getBlockConfirmerHash() external view returns (bytes32);
-
-    function getStakeModifierHash() external view returns (bytes32);
-
-    function getStakerActivityUpdaterHash() external view returns (bytes32);
-
-    function getRewardModifierHash() external view returns (bytes32);
-
-    function getAssetModifierHash() external view returns (bytes32);
-
-    function getVoteModifierHash() external view returns (bytes32);
-
-    function getDefaultAdminHash() external view returns (bytes32);
 }
