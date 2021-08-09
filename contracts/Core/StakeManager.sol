@@ -5,7 +5,8 @@ import "./interface/IParameters.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "../tokenization/IStakedTokenFactory.sol";
-import "../tokenization/IERC20.sol";
+import "../tokenization/IStakedToken.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./storage/StakeStorage.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
@@ -192,14 +193,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers + (1);
-            IERC20 sToken = IERC20(stakedTokenFactory.createStakedToken(address(this)));
+            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
             stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, 0, 0, false, 0, address(sToken));
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
-            IERC20 sToken = IERC20(stakers[stakerId].tokenAddress);
+            IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
 
@@ -228,7 +229,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 2 : Calculate Mintable amount
-        IERC20 sToken = IERC20(stakers[stakerId].tokenAddress);
+        IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
@@ -259,7 +260,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(staker.stake > 0, "Nonpositive stake");
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
-        IERC20 sToken = IERC20(staker.tokenAddress);
+        IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
         emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp, msg.sender);
@@ -298,7 +299,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
             require(voteManager.getCommitment(epoch, stakerId) == 0x0, "Already commited");
         }
 
-        IERC20 sToken = IERC20(staker.tokenAddress);
+        IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost"); // Can Use ResetLock
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
@@ -365,7 +366,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, Pause {
         require(stakers[stakerId].id != 0, "staker.id = 0");
 
         Structs.Staker storage staker = stakers[stakerId];
-        IERC20 sToken = IERC20(stakers[stakerId].tokenAddress);
+        IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
 
         uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
 
