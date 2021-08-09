@@ -2,10 +2,18 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract StakedToken is ERC20, Ownable {
-    constructor() ERC20("sRZR", "sRZR") {}
+contract StakedToken is ERC20 {
+    address private _owner;
+
+    modifier onlyOwner() {
+        require(_owner == msg.sender, "Ownable: caller is not the owner");
+        _;
+    }
+
+    constructor(address stakeManagerAddress) ERC20("sRZR", "sRZR") {
+        _owner = stakeManagerAddress;
+    }
 
     function mint(address account, uint256 amount) external onlyOwner returns (bool) {
         _mint(account, amount);

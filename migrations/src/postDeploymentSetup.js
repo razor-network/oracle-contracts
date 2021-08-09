@@ -23,6 +23,7 @@ module.exports = async () => {
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
     RAZOR: RAZORAddress,
+    StakedTokenFactory: stakedTokenFactoryAddress,
   } = await readDeploymentFile();
 
   const randomLibraryDependency = { Random: randomAddress };
@@ -56,7 +57,7 @@ module.exports = async () => {
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, parametersAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
 
   pendingTransactions.push(await assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManagerAddress));

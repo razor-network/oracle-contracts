@@ -22,6 +22,7 @@ const setupContracts = async () => {
   const StakeManager = await ethers.getContractFactory('StakeManager');
   const RewardManager = await ethers.getContractFactory('RewardManager');
   const VoteManager = await ethers.getContractFactory('VoteManager');
+  const StakedTokenFactory = await ethers.getContractFactory('StakedTokenFactory');
 
   const parameters = await Parameters.deploy();
   const blockManager = await BlockManager.deploy();
@@ -32,12 +33,15 @@ const setupContracts = async () => {
   const rewardManager = await RewardManager.deploy();
   const voteManager = await VoteManager.deploy();
   const razor = await RAZOR.deploy(initialSupply);
+  const stakedTokenFactory = await StakedTokenFactory.deploy();
+
 
   await parameters.deployed();
   await blockManager.deployed();
   await delegator.deployed();
   await assetManager.deployed();
   await razor.deployed();
+  await stakedTokenFactory.deployed();
   await stakeManager.deployed();
   await rewardManager.deployed();
   await voteManager.deployed();
@@ -45,7 +49,7 @@ const setupContracts = async () => {
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
-    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address),
+    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
 
     assetManager.grantRole(await parameters.getAssetConfirmerHash(), blockManager.address),
@@ -74,6 +78,7 @@ const setupContracts = async () => {
     voteManager,
     initializeContracts,
     stakedToken,
+    stakedTokenFactory,
   };
 };
 

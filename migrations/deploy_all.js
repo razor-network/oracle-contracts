@@ -8,6 +8,7 @@ const rewardManagerMigration = require('./src/6_deploy_reward_manager');
 const voteManagerMigration = require('./src/7_deploy_vote_manager');
 const delegatorMigration = require('./src/8_deploy_delegator');
 const RAZORMigration = require('./src/9_deploy_razor');
+const stakedTokenFactoryMigration = require('./src/10_deploy_staked_token_factory');
 const postDeploymentSetup = require('./src/postDeploymentSetup');
 
 async function main() {
@@ -21,6 +22,7 @@ async function main() {
   await voteManagerMigration();
   await delegatorMigration();
   await RAZORMigration();
+  await stakedTokenFactoryMigration();
   await postDeploymentSetup();
 }
 
