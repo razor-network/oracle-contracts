@@ -26,7 +26,6 @@ describe('VoteManager', function () {
     let signers;
     let blockManager;
     let parameters;
-    let random;
     let razor;
     let stakeManager;
     let rewardManager;
@@ -35,7 +34,7 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, random, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, parameters, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -74,10 +73,12 @@ describe('VoteManager', function () {
         await razor.transfer(signers[4].address, tokenAmount('19000'));
         await razor.transfer(signers[5].address, tokenAmount('1000'));
         await razor.transfer(signers[6].address, tokenAmount('1000'));
+        await razor.transfer(signers[7].address, tokenAmount('2000'));
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
         await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
         await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
         await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
+        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('2000'));
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
@@ -148,6 +149,23 @@ describe('VoteManager', function () {
         assertBNEqual(stakeBefore, stakeAfter);
       });
 
+      it('should not be able to reveal more than once in a particular epoch', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[3].address);
+
+        await assertRevert(tx, 'not commited or already revealed');
+      });
+
       it('should be able to commit again with correct influence', async function () {
         let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
@@ -155,7 +173,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
@@ -251,7 +269,7 @@ describe('VoteManager', function () {
 
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        const iteration = await getIteration(stakeManager, random, staker);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[3]).propose(epoch,
@@ -349,6 +367,215 @@ describe('VoteManager', function () {
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
+      });
+
+      it('should not be able to reveal if staker does not exists', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'Structs.Staker does not exist');
+      });
+
+      it('should not be able to commit if stake is below minstake', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        const stakerId = await stakeManager.stakerIds(signers[7].address);
+        // slashing the staker to make his stake below minstake
+        await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+        await parameters.setSlashPenaltyNum(5000);
+        await stakeManager.slash(stakerId, signers[11].address, epoch);
+
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[7]).commit(epoch, commitment1);
+        const commitment2 = await voteManager.getCommitment(epoch, stakerId);
+        assertBNEqual(Number(commitment2), toBigNumber('0'), 'commitment is not zero');
+      });
+
+      it('Staker should not be able to reveal if not committed', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        await mineToNextState(); // reveal
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'not commited or already revealed');
+      });
+
+      it('should not be able to commit other than in commit state', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        const tx = voteManager.connect(signers[7]).commit(epoch, commitment1);
+        await assertRevert(tx, 'incorrect state');
+      });
+
+      it('Staker should not be able to reveal other than in reveal state', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[7]).commit(epoch, commitment1);
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'Not reveal state');
+      });
+
+      it('Should not be able to reveal others secret if not in commit state', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        await mineToNextState(); // reveal
+        const tx = voteManager.connect(signers[10]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'Not commit state');
+      });
+
+      it('Should not be able to reveal with incorrect value', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'incorrect secret/value');
+      });
+
+      it('Should not be able to reveal with incorrect secret', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc',
+          signers[7].address); // last digit 'd' changed to 'c' for having incorrect secret
+
+        await assertRevert(tx, 'incorrect secret/value');
+      });
+
+      it('Should not be able to reveal with invalid MerkleProof', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]; // 900 changed to 950 for having incorrect value
+        const tree = merkle('keccak256').sync(votes);
+        const proof = [];
+        for (let i = votes.length - 1; i >= 0; i--) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'invalid merkle proof');
+      });
+
+      it('Staker should not be able to commit in present epoch for commitment of next epoch', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        const tx = voteManager.connect(signers[7]).commit(epoch + 1, commitment);
+        await assertRevert(tx, 'incorrect epoch');
+      });
+
+      it('Staker should not be able to reveal if stake is zero', async function () {
+        const epoch = await getEpoch();
+        const stakerId = await stakeManager.stakerIds(signers[7].address);
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]; // 900 changed to 950 for having incorrect value
+        const tree = merkle('keccak256').sync(votes);
+        const root = tree.root();
+        const commitment1 = utils.solidityKeccak256(
+          ['uint256', 'uint256', 'bytes32'],
+          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        await voteManager.connect(signers[7]).commit(epoch, commitment1);
+
+        await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+        await parameters.setSlashPenaltyNum(10000);
+        await stakeManager.slash(stakerId, signers[10].address, epoch); // slashing signers[7] 100% making his stake zero
+
+        const proof = [];
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
+        }
+
+        await mineToNextState(); // reveal
+        const tx = voteManager.connect(signers[7]).reveal(epoch, tree.root(), votes, proof,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+
+        await assertRevert(tx, 'nonpositive stake');
       });
 
       it('Should be able to slash if stake is zero', async function () {

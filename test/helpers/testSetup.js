@@ -1,5 +1,3 @@
-const { BLOCK_REWARD } = require('./constants');
-
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const setupContracts = async () => {
@@ -32,7 +30,7 @@ const setupContracts = async () => {
   const delegator = await Delegator.deploy();
   const assetManager = await AssetManager.deploy(parameters.address);
   const stakeManager = await StakeManager.deploy();
-  const rewardManager = await RewardManager.deploy(BLOCK_REWARD.toHexString());
+  const rewardManager = await RewardManager.deploy();
   const voteManager = await VoteManager.deploy();
   const razor = await RAZOR.deploy(initialSupply);
   const faucet = await Faucet.deploy(razor.address);

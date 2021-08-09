@@ -1,5 +1,6 @@
 /* eslint-disable no-console */
 const jsonfile = require('jsonfile');
+const hre = require('hardhat');
 
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
@@ -46,6 +47,16 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
   console.log(`${contractName} deployment tx.hash = ${contract.deployTransaction.hash} ...`);
 
   await contract.deployed();
+
+  await hre.tenderly.persistArtifacts({
+    name: contractName,
+    address: contract.address,
+  });
+
+  await hre.tenderly.push({
+    name: contractName,
+    address: contract.address,
+  });
 
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);
