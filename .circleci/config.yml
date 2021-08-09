@@ -37,16 +37,14 @@ jobs:
   test:
     docker:
       - image: 'cimg/node:16.5'
-    parallelism: 6
-    resource_class: medium
+    resource_class: large
     steps:
       - attach_workspace:
           at: .
       - run:
           name: Run tests
           command: |
-            TESTFILES=$(circleci tests glob "test/*.js" | circleci tests split --split-by=timings)
-            CI=true npm run test $TESTFILES
+            CI=true npm run test 
             npm run codechecks
       - store_artifacts:
           path: test
