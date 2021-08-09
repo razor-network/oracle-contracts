@@ -39,6 +39,7 @@ interface IBlockManager {
     ) external;
 
     function claimBlockReward() external;
+
     function confirmBlock(uint256 stakerId) external;
 
     function getBlock(uint256 epoch) external view returns (Structs.Block memory _block);

@@ -64,59 +64,35 @@ contract AssetManager is ACL, AssetStorage {
 
     event CollectionActivityStatus(uint256 id, uint256 epoch, bool active, uint256 timestamp);
 
-    modifier checkState (uint256 state) {
+    modifier checkState(uint256 state) {
         require(state == parameters.getState(), "incorrect state");
         _;
     }
 
-    modifier checkStates (uint256 state1, uint256 state2) {
+    modifier checkStates(uint256 state1, uint256 state2) {
         require(state1 == parameters.getState() || state2 == parameters.getState(), "incorrect states");
         _;
     }
 
-    constructor(
-        address parametersAddress,
-        address blockManagerAddress
-    ) {
-       parameters = IParameters(parametersAddress);
-       blockManager = IBlockManager(blockManagerAddress);
+    constructor(address parametersAddress, address blockManagerAddress) {
+        parameters = IParameters(parametersAddress);
+        blockManager = IBlockManager(blockManagerAddress);
     }
 
-    function createJob (
+    function createJob(
         string calldata url,
         string calldata selector,
         string calldata name
-    ) 
-        external 
-        onlyRole(parameters.getAssetModifierHash()) 
-    {
+    ) external onlyRole(parameters.getAssetModifierHash()) {
         uint256 epoch = parameters.getEpoch();
-        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(),"Asset Creation Limit Reached");
+        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(), "Asset Creation Limit Reached");
 
         numAssets = numAssets + 1;
         numAssetsCreated[epoch]++;
 
-        Structs.Job memory job = Structs.Job(
-            numAssets, 
-            epoch, 
-            url, 
-            selector, 
-            name, 
-            true,
-            msg.sender, 
-            uint256(assetTypes.Job)
-        );
+        Structs.Job memory job = Structs.Job(numAssets, epoch, url, selector, name, true, msg.sender, uint256(assetTypes.Job));
         jobs[numAssets] = job;
-        emit JobCreated(
-            numAssets, 
-            epoch, 
-            url, 
-            selector, 
-            name,
-            msg.sender,  
-            block.timestamp, 
-            assetTypes.Job
-        );
+        emit JobCreated(numAssets, epoch, url, selector, name, msg.sender, block.timestamp, assetTypes.Job);
     }
 
     function updateJob(
@@ -134,13 +110,10 @@ contract AssetManager is ACL, AssetStorage {
         emit JobUpdated(jobID, epoch, url, selector, block.timestamp);
     }
 
-    function setAssetStatus(
-        uint256 id,
-        bool assetStatus
-    ) 
+    function setAssetStatus(uint256 id, bool assetStatus)
         external
         onlyRole(parameters.getAssetModifierHash())
-        checkStates(parameters.dispute(), parameters.confirm())  
+        checkStates(parameters.dispute(), parameters.confirm())
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
@@ -153,12 +126,11 @@ contract AssetManager is ACL, AssetStorage {
             emit JobActivityStatus(id, epoch, jobs[id].active, block.timestamp);
         } else {
             collections[id].active = assetStatus;
-            if(assetStatus) {
+            if (assetStatus) {
                 activeAssets.push(id);
-            }
-            else {
-                for(uint j = 0; j < activeAssets.length; j++){
-                    if(id == activeAssets[j]){
+            } else {
+                for (uint256 j = 0; j < activeAssets.length; j++) {
+                    if (id == activeAssets[j]) {
                         activeAssets[j] = activeAssets[activeAssets.length - 1];
                         activeAssets.pop();
                         break;
@@ -173,23 +145,16 @@ contract AssetManager is ACL, AssetStorage {
     // fulfills a collection by assigning a value to each collection.
     // if repeat is false, a value is assigned to it and the collection will be deactivated.
     // if repeat is true, the collection will never be deactivated unless it is manually deactivated.
-    function fulfillAsset(
-        uint256 id,
-        uint256 value
-    )
-        external
-        onlyRole(parameters.getAssetConfirmerHash())
-    {
+    function fulfillAsset(uint256 id, uint256 value) external onlyRole(parameters.getAssetConfirmerHash()) {
         uint256 epoch = parameters.getEpoch();
-        if(collections[id].assetType == uint256(assetTypes.Collection)){
-
+        if (collections[id].assetType == uint256(assetTypes.Collection)) {
             Structs.Collection storage collection = collections[id];
 
             if (!collection.repeat) {
                 collection.active = false;
 
-                for(uint j = 0; j < activeAssets.length; j++){
-                    if(id == activeAssets[j]){
+                for (uint256 j = 0; j < activeAssets.length; j++) {
+                    if (id == activeAssets[j]) {
                         activeAssets[j] = activeAssets[activeAssets.length - 1];
                         activeAssets.pop();
                         break;
@@ -217,16 +182,12 @@ contract AssetManager is ACL, AssetStorage {
         uint256[] memory jobIDs,
         uint32 aggregationMethod,
         bool repeat
-    ) 
-        external
-        onlyRole(parameters.getAssetModifierHash())
-        checkStates(parameters.dispute(), parameters.confirm()) 
-    {
+    ) external onlyRole(parameters.getAssetModifierHash()) checkStates(parameters.dispute(), parameters.confirm()) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         uint256 epoch = parameters.getEpoch();
-        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(),"Asset Creation Limit Reached");
+        require(numAssetsCreated[epoch] < parameters.maxAssetsCreatedPerEpoch(), "Asset Creation Limit Reached");
 
         numAssets = numAssets + 1;
         numAssetsCreated[epoch]++;
@@ -248,24 +209,11 @@ contract AssetManager is ACL, AssetStorage {
 
         activeAssets.push(numAssets);
 
-        emit CollectionCreated(
-            numAssets,
-            epoch,
-            name,
-            aggregationMethod,
-            jobIDs,
-            true,
-            msg.sender,
-            block.timestamp, 
-            assetTypes.Collection
-        );
+        emit CollectionCreated(numAssets, epoch, name, aggregationMethod, jobIDs, true, msg.sender, block.timestamp, assetTypes.Collection);
     }
 
-    function addJobToCollection(
-        uint256 collectionID,
-        uint256 jobID
-    )  
-        external 
+    function addJobToCollection(uint256 collectionID, uint256 jobID)
+        external
         onlyRole(parameters.getAssetModifierHash())
         checkState(parameters.confirm())
     {
@@ -282,11 +230,8 @@ contract AssetManager is ACL, AssetStorage {
         emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
-    function removeJobFromCollection(
-        uint256 collectionID, 
-        uint256 jobIDIndex
-    )  
-        external 
+    function removeJobFromCollection(uint256 collectionID, uint256 jobIDIndex)
+        external
         onlyRole(parameters.getAssetModifierHash())
         checkState(parameters.confirm())
     {
@@ -301,24 +246,14 @@ contract AssetManager is ACL, AssetStorage {
         emit CollectionUpdated(collectionID, epoch, collections[collectionID].name, collections[collectionID].jobIDs, block.timestamp);
     }
 
-    function getResult(
-        uint256 id
-    )
-        external
-        view
-        returns(
-            uint256 result
-        )
-    {
+    function getResult(uint256 id) external view returns (uint256 result) {
         require(id != 0, "ID cannot be 0");
-        require(collections[id].assetType == uint256(assetTypes.Collection),"ID not a collection");
+        require(collections[id].assetType == uint256(assetTypes.Collection), "ID not a collection");
 
         return collections[id].result;
     }
 
-    function getJob(
-        uint256 id
-    )
+    function getJob(uint256 id)
         external
         view
         returns (
@@ -330,25 +265,30 @@ contract AssetManager is ACL, AssetStorage {
     {
         require(jobs[id].assetType == uint256(assetTypes.Job), "ID is not a job");
         Structs.Job memory job = jobs[id];
-        return(job.url, job.selector, job.name, job.active);
+        return (job.url, job.selector, job.name, job.active);
     }
 
-    function getCollection(
-        uint256 id
-    )
+    function getCollection(uint256 id)
         external
         view
-        returns(
-            string memory name, 
-            uint32 aggregationMethod, 
-            uint256[] memory jobIDs, 
+        returns (
+            string memory name,
+            uint32 aggregationMethod,
+            uint256[] memory jobIDs,
             uint256 result,
             bool active,
             bool repeat
-        ) 
+        )
     {
         require(collections[id].assetType == uint256(assetTypes.Collection), "ID is not a collection");
-        return(collections[id].name, collections[id].aggregationMethod, collections[id].jobIDs, collections[id].result, collections[id].active, collections[id].repeat);
+        return (
+            collections[id].name,
+            collections[id].aggregationMethod,
+            collections[id].jobIDs,
+            collections[id].result,
+            collections[id].active,
+            collections[id].repeat
+        );
     }
 
     function getAssetType(uint256 id) external view returns (uint256) {
@@ -377,11 +317,11 @@ contract AssetManager is ACL, AssetStorage {
         return numAssets;
     }
 
-    function getNumActiveAssets() external view returns(uint256) {
-      return activeAssets.length;
+    function getNumActiveAssets() external view returns (uint256) {
+        return activeAssets.length;
     }
 
-    function getActiveAssets() external view returns(uint256[] memory) {
-      return activeAssets;
+    function getActiveAssets() external view returns (uint256[] memory) {
+        return activeAssets;
     }
 }

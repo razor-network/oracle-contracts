@@ -73,8 +73,8 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     ) external initialized checkEpoch(epoch) checkState(parameters.propose()) {
         uint256 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
-        require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(),"stake below minimum stake");
-        require(ids.length == assetManager.getNumActiveAssets(),"Invalid proposed block");
+        require(stakeManager.getStaker(proposerId).stake >= parameters.minStake(), "stake below minimum stake");
+        require(ids.length == assetManager.getNumActiveAssets(), "Invalid proposed block");
 
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
@@ -118,7 +118,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
-    function claimBlockReward() external initialized checkState(parameters.confirm()){
+    function claimBlockReward() external initialized checkState(parameters.confirm()) {
         uint256 epoch = parameters.getEpoch();
         uint256 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
@@ -135,7 +135,7 @@ contract BlockManager is Initializable, ACL, BlockStorage {
         }
     }
 
-    function confirmBlock(uint256 stakerId) external initialized onlyRole(parameters.getBlockConfirmerHash()){
+    function confirmBlock(uint256 stakerId) external initialized onlyRole(parameters.getBlockConfirmerHash()) {
         uint256 epoch = parameters.getEpoch();
 
         for (uint8 i = 0; i < proposedBlocks[epoch - 1].length; i++) {
@@ -248,16 +248,15 @@ contract BlockManager is Initializable, ACL, BlockStorage {
     function _confirmBlock(uint256 epoch, uint256 proposedBlock) internal {
         blocks[epoch] = proposedBlocks[epoch][proposedBlock];
         uint256 proposerId = proposedBlocks[epoch][proposedBlock].proposerId;
-        emit BlockConfirmed(epoch,
-                            proposerId,
-                            proposedBlocks[epoch][proposedBlock].medians,
-                            proposedBlocks[epoch][proposedBlock].ids,
-                            block.timestamp);
+        emit BlockConfirmed(
+            epoch,
+            proposerId,
+            proposedBlocks[epoch][proposedBlock].medians,
+            proposedBlocks[epoch][proposedBlock].ids,
+            block.timestamp
+        );
         for (uint8 j = 0; j < proposedBlocks[epoch][proposedBlock].ids.length; j++) {
-            assetManager.fulfillAsset(proposedBlocks[epoch][proposedBlock].ids[j],
-                                proposedBlocks[epoch][proposedBlock].medians[j]);
+            assetManager.fulfillAsset(proposedBlocks[epoch][proposedBlock].ids[j], proposedBlocks[epoch][proposedBlock].medians[j]);
         }
-
     }
-
 }

@@ -10,7 +10,7 @@ interface IParameters {
 
     function dispute() external view returns (uint32);
 
-    function confirm() external view returns(uint32);
+    function confirm() external view returns (uint32);
 
     function burnAddress() external view returns (address);
 
