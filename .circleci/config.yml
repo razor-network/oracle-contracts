@@ -45,7 +45,6 @@ jobs:
           name: Run tests
           command: |
             CI=true npm run test 
-            npm run codechecks
       - store_artifacts:
           path: test
           prefix: test
