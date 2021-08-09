@@ -10,7 +10,6 @@ const {
   assertRevert,
   mineToNextEpoch,
   mineToNextState,
-  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 
 const {
