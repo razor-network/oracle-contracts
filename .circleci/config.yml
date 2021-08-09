@@ -47,24 +47,11 @@ jobs:
           command: |
             TESTFILES=$(circleci tests glob "test/*.js" | circleci tests split --split-by=timings)
             CI=true npm run test $TESTFILES
-            
+            npm run codechecks
       - store_artifacts:
           path: test
           prefix: test
 
-  codechecks:
-    docker:
-      - image: 'cimg/node:16.5'
-    resource_class: xsmall
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run codechecks
-          command: npm run codechecks
-      - store_artifacts:
-          path: codechecks
-          prefix: codechecks
 
   lint:
     docker:
@@ -135,9 +122,6 @@ workflows:
       - test:
           requires:
             - install_dependencies
-      - codechecks:
-          requires:
-            - test
       - coverage:
           requires:
           - install_dependencies
