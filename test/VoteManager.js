@@ -653,14 +653,14 @@ describe('VoteManager', function () {
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
 
-      it('if the commited value is zero, staker should be able to commit', async function () {
+      it('if the revealed value is zero, staker should not be able to reveal', async function () {
         await mineToNextEpoch();
         await razor.transfer(signers[8].address, tokenAmount('19000'));
         await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
         await razor.transfer(signers[9].address, tokenAmount('17000'));
         await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
 
-        const epoch = await getEpoch();
+        let epoch = await getEpoch();
         await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
         await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
 
@@ -677,22 +677,19 @@ describe('VoteManager', function () {
         const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc8);
 
         assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
-      });
+        epoch = await getEpoch();
 
-      it('if the revealed value is zero, staker should not be able to reveal', async function () {
-        const epoch = await getEpoch();
-
-        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const tree = merkle('keccak256').sync(votes);
+        const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const tree2 = merkle('keccak256').sync(votes2);
 
         await mineToNextState(); // reveal
 
         const proof = [];
-        for (let i = 0; i < votes.length; i++) {
-          proof.push(tree.getProofPath(i, true, true));
+        for (let i = 0; i < votes2.length; i++) {
+          proof.push(tree2.getProofPath(i, true, true));
         }
 
-        const tx = voteManager.connect(signers[8]).reveal(epoch, tree.root(), votes, proof,
+        const tx = voteManager.connect(signers[8]).reveal(epoch, tree2.root(), votes2, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[8].address);
 
