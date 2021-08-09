@@ -47,7 +47,7 @@ jobs:
           command: |
             TESTFILES=$(circleci tests glob "test/*.js" | circleci tests split --split-by=timings)
             CI=true npm run test $TESTFILES
-      - npm run codechecks
+            npm run codechecks
       - store_artifacts:
           path: test
           prefix: test
