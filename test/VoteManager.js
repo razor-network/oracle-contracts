@@ -653,7 +653,7 @@ describe('VoteManager', function () {
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
 
-      it('if reported value is zero,should be able to commit', async function () {
+      it('if the commited value is zero, staker should be able to commit', async function () {
         await mineToNextEpoch();
         await razor.transfer(signers[8].address, tokenAmount('19000'));
         await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
@@ -679,7 +679,7 @@ describe('VoteManager', function () {
         assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
       });
 
-      it('if reported value is zero, should not be able to reveal', async function () {
+      it('if the revealed value is zero, staker should not be able to reveal', async function () {
         const epoch = await getEpoch();
 
         const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -698,7 +698,7 @@ describe('VoteManager', function () {
 
         await assertRevert(tx, 'revert');
       });
-      it('if the reported value is zero, should not be able to propose', async function () {
+      it('if the proposed value is zero, staker should not be able to propose', async function () {
         const epoch = await getEpoch();
 
         await mineToNextState(); // propose
@@ -718,7 +718,7 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'revert');
       });
 
-      it('if the reported value is zero, should not be able to dispute', async function () {
+      it('if the disputed value is zero, staker should not be able to dispute', async function () {
         await mineToNextState(); // dispute
         const epoch = await getEpoch();
 
@@ -729,7 +729,7 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
       });
 
-      it('if the reported value is zero, only commit should work in next epoch', async function () {
+      it('if the revealed/proposed value is zero, only commit should work in next epoch', async function () {
         await mineToNextState(); // commit
 
         let epoch = await getEpoch();
