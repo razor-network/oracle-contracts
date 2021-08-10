@@ -24,6 +24,8 @@ const {
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
+const { BigNumber } = ethers;
+
 describe('StakeManager', function () {
   describe('RAZOR', async function () {
     let signers;
@@ -943,6 +945,65 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'paused');
       assertBNEqual(prevStake, staker.stake, "Staker's stake changed");
       assertBNEqual(prevBalance, presentBalance, "Staker's razor balance changed");
+      await stakeManager.connect(signers[0]).unpause();
+    });
+
+    // Test for Issue : https://github.com/razor-network/contracts/issues/202
+    it('Conversion between RZR <> sRZR should work as expected', async function () {
+      /// Staker comes in network
+      const stakeOfStaker = tokenAmount('1000');
+      await razor.transfer(signers[8].address, stakeOfStaker); // new Delegator
+
+      // -------------------- @Step1 : Staker Stakes First Time --------------------
+      let epoch = await getEpoch();
+
+      await razor.connect(signers[8]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[8]).stake(epoch, stakeOfStaker);
+      await stakeManager.connect(signers[8]).setDelegationAcceptance('true');
+      const stakerId = await stakeManager.stakerIds(signers[8].address);
+      let staker = await stakeManager.stakers(stakerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+
+      // sRZRs Minted should be at 1 RZR == 1 sRZR
+      assertBNEqual(await sToken.balanceOf(staker._address), staker.stake, 'Amount of minted sRzR is not correct');
+
+      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
+      // Current Stake : 1000 ** 10 ** 18, 1000 RZR
+      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('1000'), 'Stake MisMatch');
+
+      // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
+      stakeManager.setStakerStake(stakerId, tokenAmount('2000'), 'test-rewardCase', epoch);
+      staker = await stakeManager.stakers(stakerId);
+
+      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
+      // Current Stake : 2000 ** 10 ** 18, 2000 RZR
+      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('2000'), 'Stake MisMatch');
+
+      // -------------------- @Step 3 : A delegator comes in network and stake 1 RZR (1 * 10 ** 18), now he should get 0.5 sRZR (0.5* 10 ** 18) ---------
+
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+
+      const stakeOfDelegator = tokenAmount('1');
+      await razor.transfer(signers[9].address, stakeOfDelegator); // new Delegator
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfDelegator);
+      await stakeManager.connect(signers[9]).delegate(epoch, stakeOfDelegator, stakerId);
+      staker = await stakeManager.stakers(stakerId);
+
+      // TotalSupply of sRZR : 1000.5 ** 10 **18, 1000.5 sRZR
+      // Current Stake of staker : 2001 ** 10 ** 18, 1001 RZR
+      // sRZRs Staker hold : 1000 ** 10 ** 18, 1000 sRZR
+      // sRZR Delegator hold : .5 ** 10** 18, 0.5 sRZR
+
+      assertBNEqual(await sToken.totalSupply(), toBigNumber('10005').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('2001'), 'Stake MisMatch');
+      assertBNEqual(await sToken.balanceOf(signers[8].address), tokenAmount('1000'), 'Staker Balance MisMatch');
+      assertBNEqual(await sToken.balanceOf(signers[9].address), toBigNumber('5').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Delegator Balance MisMatch');
     });
   });
 });
