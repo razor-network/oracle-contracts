@@ -18,12 +18,13 @@ For Mac, use `brew install jq` or for the most recent version use `brew install 
 # Deployment
 
 ##### Local Deployment using hardhat
-1. Run hardhat node (`npx hardhat node`)
-2. Run command `deploy:hardhat`
-3. Use tenderly to track local transactions: https://github.com/Tenderly/tenderly-cli#export
+1. Create a copy of local environment `.env.local` from `.env.tpl` and set the environment variables accordingly
+2. Run hardhat node (`npx hardhat node`)
+3. Run command `deploy:local`
+4. Use tenderly to track local transactions: https://github.com/Tenderly/tenderly-cli#export
 
 ##### Polygon Mumbai Testnet Deployment
-1. Create `.env.mumbai` file (Refs - `.env.tpl`), provide `mnemonic` & `provider` for deployment.
+1. Create a copy of local environment `.env.mumbai` from `.env.tpl` and set the environment variables accordingly
 2. Run command `deploy:mumbai`
 
 # Running tests
