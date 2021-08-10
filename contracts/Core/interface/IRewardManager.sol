@@ -7,4 +7,6 @@ interface IRewardManager {
     function givePenalties(uint256 stakerId, uint256 epoch) external;
 
     function giveBlockReward(uint256 stakerId, uint256 epoch) external;
+
+    function giveInactivityPenalties(uint256 stakerId, uint256 epoch) external;
 }

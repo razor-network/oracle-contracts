@@ -759,9 +759,30 @@ describe('StakeManager', function () {
       const withdrawWithin = await parameters.withdrawReleasePeriod();
 
       // Delegator withdraws
-      for (let i = 0; i < withdrawWithin + 1; i++) {
+      for (let i = 0; i < withdrawWithin; i++) {
         await mineToNextEpoch();
       }
+      epoch = await getEpoch();
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const tree = merkle('keccak256').sync(votes);
+      const root = tree.root();
+      const commitment = utils.solidityKeccak256(
+        ['uint256', 'uint256', 'bytes32'],
+        [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment);
+
+      // reveal
+      await mineToNextState();
+      const proof = [];
+      for (let i = 0; i < votes.length; i++) {
+        proof.push(tree.getProofPath(i, true, true));
+      }
+      await voteManager.connect(signers[4]).reveal(epoch, tree.root(), votes, proof,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+        signers[4].address);
+      await mineToNextEpoch();
+
       epoch = await getEpoch();
       const tx = stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
       await assertRevert(tx, 'Release Period Passed');
@@ -946,6 +967,22 @@ describe('StakeManager', function () {
       assertBNEqual(prevStake, staker.stake, "Staker's stake changed");
       assertBNEqual(prevBalance, presentBalance, "Staker's razor balance changed");
       await stakeManager.connect(signers[0]).unpause();
+      await stakeManager.connect(signers[4]).resetLock(stakerId);
+    });
+
+    it('should penalize staker for inactivity at the time of unstake', async function () {
+      const gracePeriod = Number(await parameters.gracePeriod());
+
+      for (let i = 0; i < gracePeriod + 1; i++) {
+        await mineToNextEpoch();
+      }
+
+      const epoch = await getEpoch();
+      const staker = await stakeManager.getStaker(4);
+      const amount = tokenAmount('20000');
+      await stakeManager.connect(signers[4]).unstake(epoch, staker.id, amount);
+      const newStake = await stakeManager.getStake(4);
+      assertBNLessThan(newStake, staker.stake, 'hello1');
     });
 
     // Test for Issue : https://github.com/razor-network/contracts/issues/202

@@ -52,6 +52,14 @@ contract RewardManager is Initializable, ACL {
         _givePenalties(stakerId, epoch);
     }
 
+    /// @notice gives inactivity penalties to stakers
+    /// @param stakerId The id of staker currently in consideration
+    /// @param epoch the epoch value
+    /// todo reduce complexity
+    function giveInactivityPenalties(uint256 stakerId, uint256 epoch) external initialized onlyRole(parameters.getRewardModifierHash()) {
+        _giveInactivityPenalties(stakerId, epoch);
+    }
+
     /// @notice The function gives block reward for one valid proposer in the
     /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
