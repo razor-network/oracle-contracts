@@ -21,7 +21,6 @@ const setupContracts = async () => {
 
   const Parameters = await ethers.getContractFactory('Parameters');
   const Delegator = await ethers.getContractFactory('Delegator');
-  const Faucet = await ethers.getContractFactory('Faucet');
   const AssetManager = await ethers.getContractFactory('AssetManager');
   const RAZOR = await ethers.getContractFactory('RAZOR');
   const StakeManager = await ethers.getContractFactory('StakeManager');
@@ -39,12 +38,10 @@ const setupContracts = async () => {
   const voteManager = await VoteManager.deploy();
   const razor = await RAZOR.deploy(initialSupply);
   const stakedTokenFactory = await StakedTokenFactory.deploy();
-  const faucet = await Faucet.deploy(razor.address);
 
   await parameters.deployed();
   await blockManager.deployed();
   await delegator.deployed();
-  await faucet.deployed();
   await assetManager.deployed();
   await razor.deployed();
   await stakedTokenFactory.deployed();
@@ -74,7 +71,6 @@ const setupContracts = async () => {
     blockManager,
     parameters,
     delegator,
-    faucet,
     assetManager,
     random,
     razor,

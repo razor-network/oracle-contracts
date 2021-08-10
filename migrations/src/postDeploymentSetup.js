@@ -23,7 +23,6 @@ module.exports = async () => {
     VoteManager: voteManagerAddress,
     Delegator: delegatorAddress,
     RAZOR: RAZORAddress,
-    Faucet: faucetAddress,
     StakedTokenFactory: stakedTokenFactoryAddress,
   } = await readDeploymentFile();
 
@@ -73,7 +72,6 @@ module.exports = async () => {
       const tx = await RAZOR.transfer(stakerAddressList[i], SEED_AMOUNT);
       pendingTransactions.push(tx);
     }
-    pendingTransactions.push(await RAZOR.transfer(faucetAddress, SEED_AMOUNT));
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
