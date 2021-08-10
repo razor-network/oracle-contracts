@@ -9,15 +9,14 @@
     "contracts/**/*"
   ],
   "scripts": {
-    "cp-local-env": "cp .env.local .env",
-    "pretest": "npm run cp-local-env",
+    "cp-ci-env": "cp .env.ci .env",
     "compile": "npx hardhat compile",
     "codechecks": "npx codechecks",
-    "coverage": "npm run cp-local-env && hardhat coverage && npm run coverage:check",
+    "coverage": "hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
     "deploy:local": "./scripts/deploy.sh local",
     "deploy:mumbai": "./scripts/deploy.sh mumbai",
-    "lint": "npm run cp-local-env && npm run lint:sol && npm run lint:js",
+    "lint": "npm run lint:sol && npm run lint:js",
     "lint:fix": "npm run lint:js:fix",
     "lint:js": "eslint \"**/*.js\"",
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
