@@ -946,7 +946,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[8]).approve(stakeManager.address, stakeOfStaker);
       await stakeManager.connect(signers[8]).stake(epoch, stakeOfStaker);
-      await stakeManager.connect(signers[8]).setDelegationAcceptance('true');
+      await stakeManager.connect(signers[8]).setDelegationAcceptance(true);
       const stakerId = await stakeManager.stakerIds(signers[8].address);
       let staker = await stakeManager.stakers(stakerId);
       const sToken = await stakedToken.attach(staker.tokenAddress);
@@ -962,8 +962,8 @@ describe('StakeManager', function () {
       // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
       await mineToNextEpoch();
       epoch = await getEpoch();
-      await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-      stakeManager.setStakerStake(stakerId, tokenAmount('2000'), 'test-rewardCase', epoch);
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+      stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000'));
       staker = await stakeManager.stakers(stakerId);
 
       // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
@@ -979,7 +979,7 @@ describe('StakeManager', function () {
       const stakeOfDelegator = tokenAmount('1');
       await razor.transfer(signers[9].address, stakeOfDelegator); // new Delegator
       await razor.connect(signers[9]).approve(stakeManager.address, stakeOfDelegator);
-      await stakeManager.connect(signers[9]).delegate(epoch, stakeOfDelegator, stakerId);
+      await stakeManager.connect(signers[9]).delegate(epoch, stakerId, stakeOfDelegator);
       staker = await stakeManager.stakers(stakerId);
 
       // TotalSupply of sRZR : 1000.5 ** 10 **18, 1000.5 sRZR
