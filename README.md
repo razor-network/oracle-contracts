@@ -10,7 +10,7 @@ These are the contracts for Razor network.
 You'll need npm to install the required packages.
 To install npm , go to this [link](https://www.npmjs.com/get-npm)
 
-#### jq 
+#### jq
 For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
 
 For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
@@ -52,3 +52,9 @@ npx hardhat test --network localhost
 tenderly export  --export-network hardhat 0x4c30a90c6d2370abaef047fbac5a3f2dd43a9490caae7c79ec700eee600db024
 
 ```
+
+# codechecks
+```
+CI=true npm test
+npx codechecks
+``` 
