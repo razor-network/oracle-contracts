@@ -73,12 +73,12 @@ describe('VoteManager', function () {
         await razor.transfer(signers[4].address, tokenAmount('19000'));
         await razor.transfer(signers[5].address, tokenAmount('1000'));
         await razor.transfer(signers[6].address, tokenAmount('1000'));
-        await razor.transfer(signers[7].address, tokenAmount('1000'));
+        await razor.transfer(signers[7].address, tokenAmount('2000'));
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
         await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
         await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
         await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
-        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('1000'));
+        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('2000'));
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
@@ -389,7 +389,7 @@ describe('VoteManager', function () {
       it('should not be able to commit if stake is below minstake', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('150'));
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
@@ -445,7 +445,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to reveal other than in reveal state', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('325'));
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();

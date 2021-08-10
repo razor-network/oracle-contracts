@@ -20,6 +20,7 @@ const {
   PROVIDER_URL,
   NETWORK,
   MNEMONIC,
+  CMC_KEY,
 } = process.env;
 
 // Ref - https://chainid.network/chains.json
@@ -54,6 +55,8 @@ module.exports = {
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
+    coinmarketcap: CMC_KEY,
+    currency: 'USD',
   },
   abiExporter: {
     path: './abi',
