@@ -726,7 +726,7 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
       });
 
-      it('if the revealed/proposed value is zero, only commit should work in next epoch', async function () {
+      it('if the revealed value is zero, only commit should work in next epoch', async function () {
         await mineToNextState(); // commit
 
         let epoch = await getEpoch();
