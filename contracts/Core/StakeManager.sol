@@ -73,7 +73,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
-            stakers[numStakers] = Structs.Staker(numStakers, msg.sender, amount, 10000, epoch, false, 0, address(sToken));
+
+            stakers[numStakers] = Structs.Staker(false, numStakers, 10000, epoch, msg.sender, address(sToken), 0, amount);
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;

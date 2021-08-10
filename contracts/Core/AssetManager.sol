@@ -77,8 +77,8 @@ contract AssetManager is ACL, AssetStorage, Constants {
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
-        Structs.Job memory job = Structs.Job(numAssets, epoch, url, selector, name, repeat, true, msg.sender, 0, uint8(assetTypes.Job));
-        jobs[numAssets] = job;
+
+        jobs[numAssets] = Structs.Job(true, repeat, numAssets, uint8(assetTypes.Job), epoch, msg.sender, 0, name, selector, url);
 
         emit JobCreated(numAssets, epoch, url, selector, name, repeat, msg.sender, block.timestamp, assetTypes.Job);
     }

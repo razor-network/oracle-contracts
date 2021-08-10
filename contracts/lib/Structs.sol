@@ -12,14 +12,14 @@ library Structs {
         bytes32 commitmentHash;
     }
     struct Staker {
+        bool acceptDelegation;
         uint32 id;
-        address _address;
-        uint256 stake;
         uint32 age;
         uint32 epochStaked;
-        bool acceptDelegation;
-        uint256 commission;
+        address _address;
         address tokenAddress;
+        uint256 commission;
+        uint256 stake;
     }
 
     struct Lock {
@@ -35,36 +35,36 @@ library Structs {
     }
 
     struct Dispute {
+        uint8 assetId;
+        uint32 lastVisitedStaker;
         uint256 accWeight;
         uint256 accProd;
         // uint32 median;
-        uint32 lastVisitedStaker;
-        uint8 assetId;
     }
 
     struct Job {
-        uint8 id;
-        uint32 epoch;
-        string url;
-        string selector;
-        string name;
-        bool repeat;
         bool active;
+        bool repeat;
+        uint8 id;
+        uint8 assetType;
+        uint32 epoch;
         address creator;
         uint32 result;
-        uint8 assetType;
+        string name;
+        string selector;
+        string url;
     }
 
     struct Collection {
-        uint8 id;
-        string name;
-        uint32 aggregationMethod;
-        uint8[] jobIDs;
-        mapping(uint8 => bool) jobIDExist;
-        uint32 epoch;
         bool active;
-        address creator;
-        uint32 result;
+        uint8 id;
         uint8 assetType;
+        uint8[] jobIDs;
+        uint32 result;
+        uint32 aggregationMethod;
+        uint32 epoch;
+        address creator;
+        mapping(uint8 => bool) jobIDExist;
+        string name;
     }
 }
