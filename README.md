@@ -10,13 +10,21 @@ These are the contracts for Razor network.
 You'll need npm to install the required packages.
 To install npm , go to this [link](https://www.npmjs.com/get-npm)
 
-#### jq
-For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
+# Development
+Create a `.env` file from `.env.tpl` and set the environment variables accordingly.
+##### Running tests
+Run `npm run test`
 
-For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
+##### Test Coverage
+Run `npm run coverage`
+
+##### Test Lint
+Run `npm run lint`
+
+##### prettify code
+Run `npm run lint:sol:fix`
 
 # Deployment
-
 ##### Local Deployment using hardhat
 1. Create a copy of local environment `.env.local` from `.env.tpl` and set the environment variables accordingly
 2. Run hardhat node (`npx hardhat node`)
@@ -27,17 +35,6 @@ For Mac, use `brew install jq` or for the most recent version use `brew install 
 1. Create a copy of local environment `.env.mumbai` from `.env.tpl` and set the environment variables accordingly
 2. Run command `deploy:mumbai`
 
-# Running tests
-Run `npm run test`
-
-# Test Coverage
-Run `npm run coverage`
-
-# Test Lint
-Run `npm run lint`
-
-# prettify code
-Run `npm run lint:sol:fix`
 
 # Addresses
 We are currently live on Polygon Mumbai Testnet.
