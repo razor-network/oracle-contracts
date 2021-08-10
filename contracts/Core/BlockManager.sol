@@ -52,7 +52,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Propose) {
+    ) external initialized checkEpochAndState(State.Propose, epoch, parameters.epochLength()) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
@@ -75,7 +75,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sortedStakers
-    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -91,7 +91,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
-            uint32 value = vote.values[assetId];
+            uint48 value = vote.values[assetId];
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;
@@ -102,7 +102,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Dispute) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
@@ -122,7 +122,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
-        checkEpochAndState(epoch, parameters.epochLength(), State.Dispute)
+        checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
     {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -138,7 +138,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         sortedProposedBlockIds[epoch].pop();
 
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        stakeManager.slash(proposerId, msg.sender, epoch);
+        stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {

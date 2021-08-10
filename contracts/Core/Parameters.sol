@@ -5,22 +5,22 @@ import "./ACL.sol";
 import "./storage/Constants.sol";
 
 contract Parameters is ACL, Constants {
+    uint8 public withdrawLockPeriod = 1;
+    uint8 public maxAltBlocks = 5;
+    uint8 public aggregationRange = 3;
+    uint8 public withdrawReleasePeriod = 5;
+    uint8 public resetLockPenalty = 1;
     uint16 public penaltyNotRevealNum = 1;
     uint16 public penaltyNotRevealDenom = 10000;
     uint16 public slashPenaltyNum = 10000;
     uint16 public slashPenaltyDenom = 10000;
-
-    uint256 public minStake = 1000 * (10**18);
-    uint256 public blockReward = 100 * (10**18);
-    uint8 public withdrawLockPeriod = 1;
-    uint8 public maxAltBlocks = 5;
     uint16 public epochLength = 300;
     uint16 public exposureDenominator = 1000;
     uint16 public gracePeriod = 8;
-    uint8 public aggregationRange = 3;
-    uint8 public withdrawReleasePeriod = 5;
-    uint8 public resetLockPenalty = 1;
     uint32 public maxAge = 100 * 10000;
+
+    uint256 public minStake = 1000 * (10**18);
+    uint256 public blockReward = 100 * (10**18);
 
     bool public escapeHatchEnabled = true;
 

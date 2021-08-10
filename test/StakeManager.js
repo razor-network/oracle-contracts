@@ -250,7 +250,7 @@ describe('StakeManager', function () {
 
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await parameters.setSlashPenaltyNum(5000); // slashing only half stake
-      await stakeManager.slash(stakerIdAcc1, signers[10].address, epoch); // slashing signers[1]
+      await stakeManager.slash(epoch, stakerIdAcc1, signers[10].address); // slashing signers[1]
 
       const slashPenaltyAmount = (stakeAfterAcc1.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
       let staker = await stakeManager.getStaker(stakerIdAcc1);
@@ -307,7 +307,7 @@ describe('StakeManager', function () {
 
       epoch = await getEpoch();
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint32[]', 'bytes32'],
+        ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -348,18 +348,17 @@ describe('StakeManager', function () {
       const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint32[]', 'bytes32'],
+        ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       await voteManager.connect(signers[3]).commit(epoch, commitment1);
-
-      // reveal
       await mineToNextState();
 
-      // Staker 3 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
       await voteManager.connect(signers[3]).reveal(epoch, votes1,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
       staker = await stakeManager.stakers(3);
+      console.log('staker.stake, stake', [staker.stake, stake].toString());
       assertBNNotEqual(staker.stake, stake, 'Stake should have decreased due to penalty');
     });
 
@@ -383,7 +382,7 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint32[]', 'bytes32'],
+        ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
       await voteManager.connect(signers[3]).commit(epoch, commitment);
@@ -428,7 +427,7 @@ describe('StakeManager', function () {
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint32[]', 'bytes32'],
+        ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
 
@@ -475,7 +474,7 @@ describe('StakeManager', function () {
       let staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       await razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
-      await stakeManager.connect(signers[5]).delegate(epoch, delegatedStake, stakerId);
+      await stakeManager.connect(signers[5]).delegate(epoch, stakerId, delegatedStake);
       staker = await stakeManager.stakers(4);
       assertBNEqual(staker.stake, stake2, 'Change in stake is incorrect');
       assertBNEqual(await sToken.balanceOf(signers[5].address), delegatedStake, 'Amount of minted sRzR is not correct');
@@ -582,7 +581,7 @@ describe('StakeManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         await voteManager.connect(signers[4]).commit(epoch, commitment);
@@ -612,7 +611,7 @@ describe('StakeManager', function () {
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment2 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -677,7 +676,7 @@ describe('StakeManager', function () {
         const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         await voteManager.connect(signers[4]).commit(epoch, commitment);
@@ -835,7 +834,8 @@ describe('StakeManager', function () {
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
       await parameters.setSlashPenaltyNum(10000);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.slash(stakerIdAcc7, signers[10].address, epoch); // slashing whole stake of signers[7]
+      await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
+      console.log('steeeek', (await stakeManager.getStake(stakerIdAcc7)).toString());
       const stake2 = tokenAmount('20000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
       const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);
@@ -898,7 +898,7 @@ describe('StakeManager', function () {
       const delegatedStake = tokenAmount('100000');
       await stakeManager.connect(signers[0]).pause();
       await razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
-      const tx = stakeManager.connect(signers[5]).delegate(epoch, delegatedStake, stakerId);
+      const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, delegatedStake);
       await assertRevert(tx, 'paused');
     });
 

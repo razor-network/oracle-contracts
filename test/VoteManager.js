@@ -53,7 +53,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         const tx = voteManager.connect(signers[5]).commit(epoch, commitment1);
@@ -92,7 +92,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -110,7 +110,7 @@ describe('VoteManager', function () {
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
 
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -138,7 +138,7 @@ describe('VoteManager', function () {
         // // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         //
@@ -170,7 +170,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -179,7 +179,7 @@ describe('VoteManager', function () {
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
 
         const commitment2 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -213,7 +213,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         await voteManager.connect(signers[4]).reveal(epoch, votes2,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
@@ -249,7 +249,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -315,7 +315,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(stakerIdAcc3, 0)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
@@ -338,12 +338,12 @@ describe('VoteManager', function () {
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         await parameters.setSlashPenaltyNum(5000);
-        await stakeManager.slash(stakerId, signers[11].address, epoch);
+        await stakeManager.slash(epoch, stakerId, signers[11].address);
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -368,7 +368,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -383,7 +383,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -431,7 +431,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
 
         const commitment = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -445,7 +445,7 @@ describe('VoteManager', function () {
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]; // 900 changed to 950 for having incorrect value
 
         const commitment1 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -453,8 +453,9 @@ describe('VoteManager', function () {
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         await parameters.setSlashPenaltyNum(10000);
-        await stakeManager.slash(stakerId, signers[10].address, epoch); // slashing signers[7] 100% making his stake zero
+        await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
 
+        console.log('steak', (await stakeManager.getStake(stakerId)).toString());
         await mineToNextState(); // reveal
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
@@ -471,7 +472,7 @@ describe('VoteManager', function () {
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
@@ -502,7 +503,7 @@ describe('VoteManager', function () {
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment3 = utils.solidityKeccak256(
-          ['uint32', 'uint32[]', 'bytes32'],
+          ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 

@@ -25,17 +25,17 @@ interface IBlockManager {
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted(
-        uint32 epoch,
         uint8 assetId,
+        uint32 epoch,
         uint32[] calldata sorted
     ) external;
 
     function resetDispute(uint32 epoch) external;
 
     function isElectedProposer(
+        uint32 stakerId,
         uint256 iteration,
-        uint256 biggestInfluencerId,
-        uint32 stakerId
+        uint256 biggestInfluencerId
     ) external;
 
     function confirmBlock(uint32 epoch) external;

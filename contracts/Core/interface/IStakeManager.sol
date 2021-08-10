@@ -10,8 +10,8 @@ interface IStakeManager {
 
     function delegate(
         uint32 epoch,
-        uint256 amount,
-        uint32 stakerId
+        uint32 stakerId,
+        uint256 amount
     ) external;
 
     function unstake(uint32 epoch) external;
@@ -27,22 +27,21 @@ interface IStakeManager {
     function resetLock(uint32 stakerId) external;
 
     function setStakerStake(
+        uint32 _epoch,
         uint32 _id,
-        uint256 _stake,
-        string memory _reason,
-        uint32 _epoch
+        uint256 _stake
     ) external;
 
     function slash(
+        uint32 epoch,
         uint32 stakerId,
-        address bountyHunter,
-        uint32 epoch
+        address bountyHunter
     ) external;
 
     function setStakerAge(
+        uint32 _epoch,
         uint32 _id,
-        uint32 _age,
-        uint32 _epoch
+        uint32 _age
     ) external;
 
     function escape(address _address) external;

@@ -18,11 +18,11 @@ contract Delegator {
         external
         view
         returns (
-            string memory url,
-            string memory selector,
-            string memory name,
             bool repeat,
-            uint32 result
+            uint32 result,
+            string memory name,
+            string memory selector,
+            string memory url
         )
     {
         return assetManager.getJob(id);

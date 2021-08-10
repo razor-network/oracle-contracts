@@ -49,8 +49,8 @@ contract RewardManager is Initializable, ACL, Constants {
     /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties(uint32 stakerId, uint32 epoch) external initialized onlyRole(REWARD_MODIFIER_ROLE) {
-        _givePenalties(stakerId, epoch);
+    function givePenalties(uint32 epoch, uint32 stakerId) external initialized onlyRole(REWARD_MODIFIER_ROLE) {
+        _givePenalties(epoch, stakerId);
     }
 
     /// @notice The function gives block reward for one valid proposer in the
@@ -60,7 +60,7 @@ contract RewardManager is Initializable, ACL, Constants {
     function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(stakerId, newStake, "Block Reward", epoch);
+        stakeManager.setStakerStake(epoch, stakerId, newStake);
     }
 
     /// @notice Calculates the stake and age inactivity penalties of the staker
@@ -83,7 +83,7 @@ contract RewardManager is Initializable, ACL, Constants {
     /// , deviation from the median value of particular asset
     /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
-    function _giveInactivityPenalties(uint32 stakerId, uint32 epoch) internal {
+    function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochStaked;
@@ -109,19 +109,19 @@ contract RewardManager is Initializable, ACL, Constants {
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
-            stakeManager.setStakerStake(stakerId, newStake, "Inactivity Penalty", epoch);
+            stakeManager.setStakerStake(epoch, stakerId, newStake);
         }
         if (newAge < previousAge) {
-            stakeManager.setStakerAge(stakerId, newAge, epoch);
+            stakeManager.setStakerAge(epoch, stakerId, newAge);
         }
     }
 
-    function _givePenalties(uint32 stakerId, uint32 epoch) internal {
-        _giveInactivityPenalties(stakerId, epoch);
+    function _givePenalties(uint32 epoch, uint32 stakerId) internal {
+        _giveInactivityPenalties(epoch, stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         if (epochLastRevealed != 0 && epochLastRevealed < epoch - 1) {
-            stakeManager.setStakerAge(thisStaker.id, 0, epoch);
+            stakeManager.setStakerAge(epoch, thisStaker.id, 0);
             return;
         }
         uint32 age = thisStaker.age + 10000;
@@ -136,7 +136,7 @@ contract RewardManager is Initializable, ACL, Constants {
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint32 voteValueLastEpoch = voteManager.getVoteValue(thisStaker.id, i);
+            uint32 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             uint64 prod = age * voteValueLastEpoch;
@@ -150,6 +150,6 @@ contract RewardManager is Initializable, ACL, Constants {
 
         age = penalty > age ? 0 : age - uint32(penalty);
 
-        stakeManager.setStakerAge(thisStaker.id, age, epoch);
+        stakeManager.setStakerAge(epoch, thisStaker.id, age);
     }
 }

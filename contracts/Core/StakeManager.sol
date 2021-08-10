@@ -24,19 +24,19 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
-    event StakeChange(uint32 indexed stakerId, uint256 previousStake, uint256 newStake, string reason, uint32 epoch, uint256 timestamp);
+    event StakeChange(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event AgeChange(uint32 indexed stakerId, uint32 newAge, uint32 epoch, uint256 timestamp);
+    event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
-    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address unstaker);
+    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp, address withdrawer);
+    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Delegated(uint32 epoch, uint32 indexed stakerId, address delegator, uint256 previousStake, uint256 newStake, uint256 timestamp);
+    event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event DelegationAcceptanceChanged(uint32 indexed stakerId, address staker, bool delegationEnabled);
+    event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
 
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
@@ -63,13 +63,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function stake(uint32 epoch, uint256 amount)
         external
         initialized
-        checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
-        uint256 previousStake = stakers[stakerId].stake;
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
@@ -91,7 +90,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             sToken.mint(msg.sender, toMint);
         }
 
-        emit Staked(epoch, stakerId, previousStake, stakers[stakerId].stake, block.timestamp);
+        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice Delegation
@@ -100,9 +99,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param stakerId The Id of staker whom you want to delegate
     function delegate(
         uint32 epoch,
-        uint256 amount,
-        uint32 stakerId
-    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit) whenNotPaused {
+        uint32 stakerId,
+        uint256 amount
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
@@ -114,13 +113,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
         // Step 3: Increase given stakers stake by : Amount
-        uint256 previousStake = stakers[stakerId].stake;
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
 
-        emit Delegated(epoch, stakerId, msg.sender, previousStake, stakers[stakerId].stake, block.timestamp);
+        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -134,7 +132,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external initialized checkEpochAndState(epoch, parameters.epochLength(), State.Commit) whenNotPaused {
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -143,7 +141,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp, msg.sender);
+
+        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
         //emit event here
     }
 
@@ -161,7 +160,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function withdraw(uint32 epoch, uint32 stakerId)
         external
         initialized
-        checkEpochAndState(epoch, parameters.epochLength(), State.Commit)
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
         Structs.Staker storage staker = stakers[stakerId];
@@ -202,7 +201,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //Transfer stake
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp, msg.sender);
+        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -219,7 +218,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         stakers[stakerId].acceptDelegation = status;
-        emit DelegationAcceptanceChanged(stakerId, msg.sender, status);
+        emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
 
     /// @notice Used by staker to set commision for delegation
@@ -269,12 +268,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function setStakerStake(
+        uint32 _epoch,
         uint32 _id,
-        uint256 _stake,
-        string memory _reason,
-        uint32 _epoch
+        uint256 _stake
     ) external onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerStake(_id, _stake, _reason, _epoch);
+        _setStakerStake(_epoch, _id, _stake);
     }
 
     /// @notice The function is used by the Votemanager reveal function
@@ -283,17 +281,18 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param stakerId The ID of the staker who is penalised
     /// @param bountyHunter The address of the bounty hunter
     function slash(
+        uint32 epoch,
         uint32 stakerId,
-        address bountyHunter,
-        uint32 epoch
+        address bountyHunter
     ) external onlyRole(STAKE_MODIFIER_ROLE) {
-        uint256 slashPenaltyAmount = (stakers[stakerId].stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
-        uint256 newStake = stakers[stakerId].stake - slashPenaltyAmount;
+        uint256 _stake = stakers[stakerId].stake;
+        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        _stake = _stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
 
         if (halfPenalty == 0) return;
 
-        _setStakerStake(stakerId, newStake, "Slashed", epoch);
+        _setStakerStake(epoch, stakerId, _stake);
         //reward half the amount to bounty hunter
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
@@ -304,12 +303,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     function setStakerAge(
+        uint32 _epoch,
         uint32 _id,
-        uint32 _age,
-        uint32 _epoch
+        uint32 _age
     ) external onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
-        emit AgeChange(_id, _age, _epoch, block.timestamp);
+        emit AgeChange(_epoch, _id, _age, block.timestamp);
     }
 
     /// @param _address Address of the staker
@@ -352,14 +351,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
     function _setStakerStake(
+        uint32 _epoch,
         uint32 _id,
-        uint256 _stake,
-        string memory _reason,
-        uint32 _epoch
+        uint256 _stake
     ) internal {
-        uint256 previousStake = stakers[_id].stake;
         stakers[_id].stake = _stake;
-        emit StakeChange(_id, previousStake, _stake, _reason, _epoch, block.timestamp);
+        emit StakeChange(_epoch, _id, _stake, block.timestamp);
     }
 
     /// @return maturity of staker

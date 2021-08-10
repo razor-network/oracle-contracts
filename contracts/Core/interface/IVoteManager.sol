@@ -8,22 +8,22 @@ interface IVoteManager {
 
     function reveal(
         uint32 epoch,
-        uint32[] calldata values,
-        bytes32 secret
+        bytes32 secret,
+        uint48[] calldata values
     ) external;
 
     function snitch(
         uint32 epoch,
-        uint32[] calldata values,
+        address stakerAddress,
         bytes32 secret,
-        address stakerAddress
+        uint48[] calldata values
     ) external;
 
     function getCommitment(uint32 stakerId) external view returns (bytes32);
 
     function getCommitmentEpoch(uint32 stakerId) external view returns (uint32);
 
-    function getVoteValue(uint32 stakerId, uint8 assetId) external view returns (uint32);
+    function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint32);
 
     function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote);
 
