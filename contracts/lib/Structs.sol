@@ -13,12 +13,12 @@ library Structs {
     }
     struct Staker {
         bool acceptDelegation;
+        uint8 commission;
+        address _address;
+        address tokenAddress;
         uint32 id;
         uint32 age;
         uint32 epochStaked;
-        address _address;
-        address tokenAddress;
-        uint256 commission;
         uint256 stake;
     }
 
@@ -47,8 +47,8 @@ library Structs {
         bool repeat;
         uint8 id;
         uint8 assetType;
-        uint32 epoch;
         address creator;
+        uint32 epoch;
         uint32 result;
         string name;
         string selector;
@@ -60,10 +60,10 @@ library Structs {
         uint8 id;
         uint8 assetType;
         uint8[] jobIDs;
+        address creator;
         uint32 result;
         uint32 aggregationMethod;
         uint32 epoch;
-        address creator;
         mapping(uint8 => bool) jobIDExist;
         string name;
     }

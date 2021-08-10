@@ -73,7 +73,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             numStakers = numStakers + (1);
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
 
-            stakers[numStakers] = Structs.Staker(false, numStakers, 10000, epoch, msg.sender, address(sToken), 0, amount);
+            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
@@ -222,7 +222,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice Used by staker to set commision for delegation
-    function setCommission(uint256 commission) external {
+    function setCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
@@ -231,7 +231,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint256 commission) external {
+    function decreaseCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");

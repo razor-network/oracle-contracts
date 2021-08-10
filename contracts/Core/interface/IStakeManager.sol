@@ -20,9 +20,9 @@ interface IStakeManager {
 
     function setDelegationAcceptance(bool status) external;
 
-    function setCommission(uint256 commission) external;
+    function setCommission(uint8 commission) external;
 
-    function decreaseCommission(uint256 commission) external;
+    function decreaseCommission(uint8 commission) external;
 
     function resetLock(uint32 stakerId) external;
 

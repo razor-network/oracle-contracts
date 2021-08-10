@@ -78,7 +78,7 @@ contract AssetManager is ACL, AssetStorage, Constants {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(true, repeat, numAssets, uint8(assetTypes.Job), epoch, msg.sender, 0, name, selector, url);
+        jobs[numAssets] = Structs.Job(true, repeat, numAssets, uint8(assetTypes.Job), msg.sender, epoch, 0, name, selector, url);
 
         emit JobCreated(repeat, assetTypes.Job, numAssets, msg.sender, epoch, block.timestamp, name, selector, url);
     }
