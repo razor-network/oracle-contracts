@@ -35,7 +35,6 @@ const setupContracts = async () => {
   const razor = await RAZOR.deploy(initialSupply);
   const stakedTokenFactory = await StakedTokenFactory.deploy();
 
-
   await parameters.deployed();
   await blockManager.deployed();
   await delegator.deployed();
