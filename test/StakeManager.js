@@ -360,7 +360,6 @@ describe('StakeManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
 
       staker = await stakeManager.stakers(3);
-      console.log('staker.stake, stake', [staker.stake, stake].toString());
       assertBNNotEqual(staker.stake, stake, 'Stake should have decreased due to penalty');
     });
 
@@ -837,7 +836,6 @@ describe('StakeManager', function () {
       await parameters.setSlashPenaltyNum(10000);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
-      console.log('steeeek', (await stakeManager.getStake(stakerIdAcc7)).toString());
       const stake2 = tokenAmount('20000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
       const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);

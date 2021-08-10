@@ -455,7 +455,6 @@ describe('VoteManager', function () {
         await parameters.setSlashPenaltyNum(10000);
         await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
 
-        console.log('steak', (await stakeManager.getStake(stakerId)).toString());
         await mineToNextState(); // reveal
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
