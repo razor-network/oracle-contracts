@@ -49,7 +49,6 @@ library Structs {
         uint8 assetType;
         address creator;
         uint32 epoch;
-        uint32 result;
         string name;
         string selector;
         string url;
@@ -61,7 +60,6 @@ library Structs {
         uint8 assetType;
         uint8[] jobIDs;
         address creator;
-        uint32 result;
         uint32 aggregationMethod;
         uint32 epoch;
         mapping(uint8 => bool) jobIDExist;

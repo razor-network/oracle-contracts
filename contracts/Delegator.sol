@@ -28,7 +28,7 @@ contract Delegator {
         return assetManager.getJob(id);
     }
 
-    function getResult(uint8 id) public view returns (uint256) {
-        return assetManager.getResult(id);
-    }
+    // function getResult(uint8 id) public view returns (uint256) {
+    //     return assetManager.getResult(id);
+    // }
 }

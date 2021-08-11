@@ -78,7 +78,7 @@ contract AssetManager is ACL, AssetStorage, Constants {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(true, repeat, numAssets, uint8(assetTypes.Job), msg.sender, epoch, 0, name, selector, url);
+        jobs[numAssets] = Structs.Job(true, repeat, numAssets, uint8(assetTypes.Job), msg.sender, epoch, name, selector, url);
 
         emit JobCreated(repeat, assetTypes.Job, numAssets, msg.sender, epoch, block.timestamp, name, selector, url);
     }
@@ -185,17 +185,17 @@ contract AssetManager is ACL, AssetStorage, Constants {
         emit CollectionUpdated(collectionID, collections[collectionID].jobIDs, epoch, block.timestamp, collections[collectionID].name);
     }
 
-    function getResult(uint8 id) external view returns (uint32 result) {
-        require(id != 0, "ID cannot be 0");
-
-        require(id <= numAssets, "ID does not exist");
-
-        if (jobs[id].assetType == uint8(assetTypes.Job)) {
-            return jobs[id].result;
-        } else {
-            return collections[id].result;
-        }
-    }
+    // function getResult(uint8 id) external view returns (uint32 result) {
+    //     require(id != 0, "ID cannot be 0");
+    //
+    //     require(id <= numAssets, "ID does not exist");
+    //
+    //     if (jobs[id].assetType == uint8(assetTypes.Job)) {
+    //         return jobs[id].result;
+    //     } else {
+    //         return collections[id].result;
+    //     }
+    // }
 
     function getJob(uint8 id)
         external
@@ -203,7 +203,6 @@ contract AssetManager is ACL, AssetStorage, Constants {
         returns (
             bool active,
             bool repeat,
-            uint32 result,
             string memory name,
             string memory selector,
             string memory url
@@ -212,7 +211,7 @@ contract AssetManager is ACL, AssetStorage, Constants {
         require(jobs[id].assetType == uint8(assetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
-        return (job.active, job.repeat, job.result, job.name, job.selector, job.url);
+        return (job.active, job.repeat, job.name, job.selector, job.url);
     }
 
     function getCollection(uint8 id)
@@ -222,7 +221,6 @@ contract AssetManager is ACL, AssetStorage, Constants {
             bool active,
             uint8[] memory jobIDs,
             uint32 aggregationMethod,
-            uint32 result,
             string memory name
         )
     {
@@ -232,7 +230,6 @@ contract AssetManager is ACL, AssetStorage, Constants {
             collections[id].active,
             collections[id].jobIDs,
             collections[id].aggregationMethod,
-            collections[id].result,
             collections[id].name
         );
     }
