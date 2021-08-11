@@ -1,6 +1,6 @@
 {
   "name": "@razor-network/contracts",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "These are the contracts for Razor network testnet",
   "author": "Razor Network",
   "private": false,
@@ -12,6 +12,7 @@
     "cp-local-env": "cp .env.local .env",
     "pretest": "npm run cp-local-env",
     "compile": "npx hardhat compile",
+    "codechecks": "npx codechecks",
     "coverage": "npm run cp-local-env && hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
     "deploy:local": "./scripts/deploy.sh local",
@@ -40,6 +41,7 @@
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {
+    "@codechecks/client": "^0.1.11",
     "@nomiclabs/hardhat-ethers": "2.0.2",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
