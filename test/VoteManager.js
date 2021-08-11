@@ -789,7 +789,7 @@ describe('VoteManager', function () {
 
         await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
       });
-      it('Block should not be proposed one no one votes', async function () {
+      it('Block should not be proposed when no one votes', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
         // commit state
@@ -855,7 +855,7 @@ describe('VoteManager', function () {
           iteration,
           biggestInfluencerId);
         // penalty should be applied for not voting in previous epoch
-        assert(stakeAfter, stakeBefore, 'penalties for not revealing in previous epoch should be applied');
+        assert(stakeAfter, stakeBefore, 'penalties should not be applied since no block is proposed and the staker didnt participated for one epoch which is less than grace period.');
       });
       it('penalties should be applied if staker does not participate for more than 8 epochs(grace period)', async function () {
         await mineToNextState();
