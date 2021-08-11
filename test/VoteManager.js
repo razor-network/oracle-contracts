@@ -3,6 +3,7 @@ test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
 const merkle = require('@razor-network/merkle');
+const { assert } = require('chai');
 const { utils } = require('ethers');
 const { DEFAULT_ADMIN_ROLE_HASH } = require('./helpers/constants');
 const {
@@ -652,142 +653,97 @@ describe('VoteManager', function () {
         assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
-
-      it('if the revealed value is zero, staker should not be able to reveal', async function () {
+      it('Block should not be proposed one no one votes', async function () {
         await mineToNextEpoch();
-        await razor.transfer(signers[8].address, tokenAmount('19000'));
-        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
-        await razor.transfer(signers[9].address, tokenAmount('17000'));
-        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
+        const epoch = await getEpoch();
+        // commit state
+        await mineToNextState();
+        // reveal state
+        await mineToNextState();
+        // propose state
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
-        let epoch = await getEpoch();
-        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
-        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
-
-        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const iteration = await getIteration(voteManager, stakeManager, staker);
+        const tx = blockManager.connect(signers[3]).propose(epoch,
+          [],
+          [],
+          iteration,
+          biggestInfluencerId);
+        assertRevert(tx, 'Cannot propose without revealing');
+      });
+      it('No Finalise Dispute should happen if no block is proposed or no one votes', async function () {
+        const epoch = await getEpoch();
+        await mineToNextState();
+        // dispute state
+        const sortedVotes = [];
+        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
+        // const firstProposedBlockIndex = await blockManager.proposedBlocks(epoch, 0);
+        // const tx2 = blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
+        assert(tx1, 'should be able to give sorted votes');
+        // assertRevert(tx2, 'Error: Transaction reverted without a reason string');
+      });
+      it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
+        await mineToNextState();
+        const epoch = await getEpoch();
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        // commit state
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
-        const commitment1 = utils.solidityKeccak256(
+        const commitment = utils.solidityKeccak256(
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-
-        await voteManager.connect(signers[8]).commit(epoch, commitment1);
-        const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc8);
-
-        assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
-        epoch = await getEpoch();
-
-        const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const tree2 = merkle('keccak256').sync(votes2);
-
-        await mineToNextState(); // reveal
-
+        await voteManager.connect(signers[3]).commit(epoch, commitment);
+        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        await mineToNextState();
+        // reveal state
         const proof = [];
-        for (let i = 0; i < votes2.length; i++) {
-          proof.push(tree2.getProofPath(i, true, true));
+        for (let i = 0; i < votes.length; i++) {
+          proof.push(tree.getProofPath(i, true, true));
         }
-
-        const tx = voteManager.connect(signers[8]).reveal(epoch, tree2.root(), votes2, proof,
+        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[8].address);
-
-        await assertRevert(tx, 'revert');
-      });
-      it('if the proposed value is zero, staker should not be able to propose', async function () {
-        const epoch = await getEpoch();
-
-        await mineToNextState(); // propose
-        const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-        const staker = await stakeManager.getStaker(stakerIdAcc8);
-
+          signers[3].address);
+        // propose state
+        await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
-
-        const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const tx = blockManager.connect(signers[8]).propose(epoch,
-          [19, 20, 21, 22, 23, 24, 25, 26, 27],
-          medians,
+        await blockManager.connect(signers[3]).propose(epoch,
+          [1, 2, 3, 4, 5, 6, 7, 8, 9],
+          [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);
-
-        await assertRevert(tx, 'revert');
+        // penalty should be applied for not voting in previous epoch
+        assert(stakeAfter, stakeBefore, 'penalties for not revealing in previous epoch should be applied');
       });
-
-      it('if the disputed value is zero, staker should not be able to dispute', async function () {
-        await mineToNextState(); // dispute
+      it('penalties should be applied if staker does not participate for more than 8 epochs(grace period)', async function () {
+        await mineToNextState();
+        await mineToNextState();
+        for (let i = 0; i <= 10; i++) {
+          await mineToNextEpoch();
+        }
         const epoch = await getEpoch();
-
-        const sortedVotes = [toBigNumber('0')];
-
-        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-
-        await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
-      });
-
-      it('if the revealed value is zero, only commit should work in next epoch', async function () {
-        await mineToNextState(); // commit
-
-        let epoch = await getEpoch();
-
-        const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
+        // commit state
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const tree = merkle('keccak256').sync(votes);
         const root = tree.root();
-        const commitment1 = utils.solidityKeccak256(
+        const commitment = utils.solidityKeccak256(
           ['uint256', 'uint256', 'bytes32'],
           [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
-
-        await voteManager.connect(signers[8]).commit(epoch, commitment1);
-        const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-        const commitment2 = await voteManager.getCommitment(epoch, stakerIdAcc8);
-
-        assertBNEqual(commitment1, commitment2, 'commitment1, commitment2 not equal');
-
-        epoch = await getEpoch();
-
-        const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const tree2 = merkle('keccak256').sync(votes2);
-
-        await mineToNextState(); // reveal
-
-        const proof2 = [];
-        for (let i = 0; i < votes2.length; i++) {
-          proof2.push(tree2.getProofPath(i, true, true));
-        }
-
-        const tx1 = voteManager.connect(signers[8]).reveal(epoch, tree2.root(), votes2, proof2,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[8].address);
-
-        await assertRevert(tx1, 'revert');
-
-        epoch = await getEpoch();
-
-        await mineToNextState(); // propose
-
-        const staker = await stakeManager.getStaker(stakerIdAcc8);
-
-        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker);
-        const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const tx2 = blockManager.connect(signers[8]).propose(epoch,
-          [19, 20, 21, 22, 23, 24, 25, 26, 27],
-          medians,
-          iteration,
-          biggestInfluencerId);
-
-        await assertRevert(tx2, 'revert');
-
-        await mineToNextState(); // dispute
-        epoch = await getEpoch();
-
-        const sortedVotes = [toBigNumber('0')];
-
-        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-
-        await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
+        await voteManager.connect(signers[3]).commit(epoch, commitment);
+        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
+        assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
+        assertBNLessThan(ageAfter, ageBefore, 'age should reduce since it did not participated in previous epochs');
       });
     });
   });
