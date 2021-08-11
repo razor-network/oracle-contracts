@@ -93,7 +93,7 @@ describe('StakeManager', function () {
       const tx1 = stakeManager.connect(signers[1]).pause();
       assertRevert(tx1, 'AccessControl');
     });
-    
+
     it('should not be able to stake if stake is less than min stake', async function () {
       const epoch = await getEpoch();
       const stakes = ['0', '1', '999'];
