@@ -80,6 +80,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
             require(parameters.getState() == parameters.reveal(), "Not reveal state");
             require(thisStaker.stake > 0, "nonpositive stake");
             for (uint256 i = 0; i < values.length; i++) {
+                require(values[i] > 0, "Value should be greater than zero");
                 require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))), "invalid merkle proof");
                 uint256 influence = stakeManager.getInfluence(thisStakerId);
                 votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
