@@ -855,7 +855,7 @@ describe('VoteManager', function () {
           iteration,
           biggestInfluencerId);
         // penalty should be applied for not voting in previous epoch
-        assert(stakeAfter, stakeBefore, 'penalties should not be applied since no block is proposed and the staker didnt participated for one epoch which is less than grace period.');
+        assert(stakeAfter, stakeBefore, 'no penalties when medians length is 0 and epochInactive less than grace period');
       });
       it('penalties should be applied if staker does not participate for more than 8 epochs(grace period)', async function () {
         await mineToNextState();
