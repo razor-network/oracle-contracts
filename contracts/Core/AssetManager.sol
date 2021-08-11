@@ -226,12 +226,7 @@ contract AssetManager is ACL, AssetStorage, Constants {
     {
         require(collections[id].assetType == uint8(assetTypes.Collection), "ID is not a collection");
 
-        return (
-            collections[id].active,
-            collections[id].jobIDs,
-            collections[id].aggregationMethod,
-            collections[id].name
-        );
+        return (collections[id].active, collections[id].jobIDs, collections[id].aggregationMethod, collections[id].name);
     }
 
     function getAssetType(uint8 id) external view returns (uint8) {
