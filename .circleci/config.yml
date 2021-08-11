@@ -106,7 +106,7 @@ jobs:
 
             mythx --ci --yes analyze --remap-import
             "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version
-            0.8.4 contracts/ --swc-blacklist 103,120,14,34
+            0.8.4 contracts/ --swc-blacklist 103,120,123
 
 notify:
   webhooks:
