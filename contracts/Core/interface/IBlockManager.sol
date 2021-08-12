@@ -15,9 +15,9 @@ interface IBlockManager {
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
     function propose(
-        uint256 epoch,
-        uint256[] memory ids,
-        uint256[] memory medians,
+        uint32 epoch,
+        uint32[] memory ids,
+        uint32[] memory medians,
         uint256 iteration,
         uint256 biggestInfluencerId
     ) external;
@@ -25,30 +25,28 @@ interface IBlockManager {
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted(
-        uint256 epoch,
-        uint256 assetId,
-        uint256[] calldata sorted
+        uint8 assetId,
+        uint32 epoch,
+        uint32[] calldata sorted
     ) external;
 
-    function resetDispute(uint256 epoch) external;
+    function resetDispute(uint32 epoch) external;
 
     function isElectedProposer(
+        uint32 stakerId,
         uint256 iteration,
-        uint256 biggestInfluencerId,
-        uint256 stakerId
+        uint256 biggestInfluencerId
     ) external;
 
-    function confirmBlock() external;
+    function confirmBlock(uint32 epoch) external;
 
-    function getBlock(uint256 epoch) external view returns (Structs.Block memory _block);
+    function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 
-    function getBlockMedians(uint256 epoch) external view returns (uint256[] memory _blockMedians);
+    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
 
-    function getLowerCutoffs(uint256 epoch) external view returns (uint256[] memory _lowerCutoffs);
+    function getProposedBlockMedians(uint32 epoch, uint256 proposedBlock) external view returns (uint32[] memory _blockMedians);
 
-    function getHigherCutoffs(uint256 epoch) external view returns (uint256[] memory _higherCutoffs);
+    function getNumProposedBlocks(uint32 epoch) external view returns (uint8);
 
-    function getProposedBlockMedians(uint256 epoch, uint256 proposedBlock) external view returns (uint256[] memory _blockMedians);
-
-    function getNumProposedBlocks(uint256 epoch) external view returns (uint256);
+    function isBlockConfirmed(uint32 epoch) external view returns (bool);
 }
