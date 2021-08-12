@@ -7,6 +7,7 @@ deployed/mumbai/abi
 abi
 .env
 .env.mumbai
+.env.local
 node_modules/
 .DS_Store
 .previous-deployment-addresses
