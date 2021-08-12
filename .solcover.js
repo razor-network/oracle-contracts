@@ -10,6 +10,6 @@ module.exports = {
     gasLimit: 0xfffffffffff,
   },
   mocha: {
-    enableTimeouts: false
+    enableTimeouts: true
   }
 }
