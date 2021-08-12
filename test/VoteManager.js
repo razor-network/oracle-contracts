@@ -121,20 +121,6 @@ describe('VoteManager', function () {
         assertBNEqual(age3, age4, 'age1, age2 not equal');
       });
 
-      it('should not be able to commit if already commited in a particular epoch', async function () {
-        const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
-        const commitment1 = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
-
-        const tx = voteManager.connect(signers[3]).commit(epoch, commitment1);
-        await assertRevert(tx, 'already commited');
-      });
-
       it('should be able to reveal', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
