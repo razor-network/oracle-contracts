@@ -121,6 +121,36 @@ describe('VoteManager', function () {
         assertBNEqual(age3, age4, 'age1, age2 not equal');
       });
 
+      it('should not be able to commit if already commited in a particular epoch', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const commitment1 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        const tx = voteManager.connect(signers[3]).commit(epoch, commitment1);
+        await assertRevert(tx, 'already commited');
+      });
+
+      it('should not be able to commit if commitment is zero', async function () {
+        const epoch = await getEpoch();
+        const tx = voteManager.connect(signers[3]).commit(epoch, '0x0000000000000000000000000000000000000000000000000000000000000000');
+        await assertRevert(tx, 'Invalid commitment');
+      });
+
+      it('should not be able to commit if already commited in a particular epoch', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const commitment1 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+
+        const tx = voteManager.connect(signers[7]).commit(epoch, commitment1);
+        await assertRevert(tx, 'Staker does not exist');
+      });
+
       it('should be able to reveal', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
@@ -146,6 +176,13 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
+      });
+
+      it('should not be able to reveal if secret is zero', async function () {
+        const epoch = await getEpoch();
+        const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        const tx = voteManager.connect(signers[4]).reveal(epoch, votes2, '0x0000000000000000000000000000000000000000000000000000000000000000');
+        await assertRevert(tx, 'secret cannot be empty');
       });
 
       it('should be able to commit again with correct influence', async function () {
@@ -303,6 +340,42 @@ describe('VoteManager', function () {
         assertBNEqual(stakeAcc10, slashPenaltyAmount.div('2'), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
       });
 
+      it('staker should not be able to snitch from himself', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tx = voteManager.connect(signers[4]).snitch(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[4].address);
+        await assertRevert(tx, 'cant snitch on yourself');
+      });
+
+      it('should not be able to snitch from a staker who does not exists', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[7].address);
+        await assertRevert(tx, 'Staker does not exist');
+      });
+
+      it('Should not be able to snitch with incorrect secret or values', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[4].address);
+        await assertRevert(tx, 'incorrect secret/value');
+      });
+
+      it('Should not be able to snitch from an innocent staker if secret provided is empty', async function () {
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
+          '0x0000000000000000000000000000000000000000000000000000000000000000',
+          signers[4].address);
+        await assertRevert(tx, 'secret cannot be empty');
+      });
+
       it('Account 3 should be able to reveal again', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
@@ -423,6 +496,16 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc');// last digit 'd' changed to 'c' for having incorrect secret
 
         await assertRevert(tx, 'incorrect secret/value');
+      });
+
+      it('should not be able to call snitch on a staker if staker has not commited in present epoch', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[4].address);
+        await assertRevert(tx, 'not committed in this epoch');
       });
 
       it('Staker should not be able to commit in present epoch for commitment of next epoch', async function () {
