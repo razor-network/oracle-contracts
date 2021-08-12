@@ -96,7 +96,7 @@ describe('StakeManager', function () {
 
     it('should not be able to stake if stake is less than min stake', async function () {
       const epoch = await getEpoch();
-      const stake = tokenAmount('999')
+      const stake = tokenAmount('999');
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
       assertRevert(tx, 'staked amount is less than minimum stake required');
