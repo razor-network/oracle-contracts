@@ -714,7 +714,7 @@ describe('VoteManager', function () {
         );
         await voteManager.connect(signers[3]).commit(epoch, commitment);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        assert(stakeAfter < stakeBefore, 'stake should reduce');
+        assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
       });
     });
   });
