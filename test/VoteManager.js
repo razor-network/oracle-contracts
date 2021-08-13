@@ -663,10 +663,9 @@ describe('VoteManager', function () {
         // dispute state
         const sortedVotes = [];
         const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
-        // const firstProposedBlockIndex = await blockManager.proposedBlocks(epoch, 0);
-        // const tx2 = blockManager.connect(signers[19]).finalizeDispute(epoch, firstProposedBlockIndex);
+        const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
-        // assertRevert(tx2, 'Error: Transaction reverted without a reason string');
+        assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
         await mineToNextState();
