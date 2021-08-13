@@ -11,6 +11,7 @@ const {
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
+  STAKE_MODIFIER_ROLE,
   BURN_ADDRESS,
 
 } = require('./helpers/constants');
