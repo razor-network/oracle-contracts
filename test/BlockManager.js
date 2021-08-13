@@ -587,7 +587,7 @@ describe('BlockManager', function () {
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
-      assertRevert(tx, 'Cannot propose without revealing')
+      assertRevert(tx, 'Cannot propose without revealing');
     });
   });
 });
