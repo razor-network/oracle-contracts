@@ -540,7 +540,7 @@ describe('BlockManager', function () {
       const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker);
       const tx = blockManager.connect(signers[8]).propose(epoch,
-        [100, 200, 300, 400, 500, 600, 700, 800, 90,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
       assertRevert(tx, 'stake below minimum stake');
