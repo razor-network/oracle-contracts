@@ -517,34 +517,6 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
     });
-    it('staker should not be able to propose when stake below minStake', async function () {
-      await mineToNextEpoch();
-      const epoch = await getEpoch();
-      const stakerIdAcc2 = await stakeManager.stakerIds(signers[8].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc2);
-
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[8]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[8]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await mineToNextState();
-      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await parameters.setSlashPenaltyNum(9500);
-      await stakeManager.slash(epoch, stakerIdAcc2, signers[11].address);
-      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker);
-      const tx = blockManager.connect(signers[8]).propose(epoch,
-        [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-      assertRevert(tx, 'stake below minimum stake');
-    });
     it('staker should not be able to propose when not elected', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -588,6 +560,34 @@ describe('BlockManager', function () {
         iteration,
         biggestInfluencerId);
       assertRevert(tx, 'Cannot propose without revealing');
+    });
+    it('staker should not be able to propose when stake below minStake', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[8].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[8]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[8]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+      await parameters.setSlashPenaltyNum(9500);
+      await stakeManager.slash(epoch, stakerIdAcc2, signers[11].address);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+      const tx = blockManager.connect(signers[8]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        biggestInfluencerId);
+      assertRevert(tx, 'stake below minimum stake');
     });
   });
 });
