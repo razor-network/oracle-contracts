@@ -549,7 +549,6 @@ describe('BlockManager', function () {
       const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker);
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -557,7 +556,6 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[8]).commit(epoch, commitment1);
       await mineToNextState();
       await mineToNextState();
-
       const tx = blockManager.connect(signers[8]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
