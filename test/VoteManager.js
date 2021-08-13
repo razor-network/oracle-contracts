@@ -139,7 +139,7 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'Invalid commitment');
       });
 
-      it('should not be able to commit if already commited in a particular epoch', async function () {
+      it('should not be able to commit if staker does not exists', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = utils.solidityKeccak256(
