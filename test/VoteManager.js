@@ -653,7 +653,6 @@ describe('VoteManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker);
         const tx = blockManager.connect(signers[3]).propose(epoch,
           [],
-          [],
           iteration,
           biggestInfluencerId);
         assertRevert(tx, 'Cannot propose without revealing');
@@ -677,29 +676,21 @@ describe('VoteManager', function () {
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // commit state
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
         const commitment = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         await voteManager.connect(signers[3]).commit(epoch, commitment);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         await mineToNextState();
         // reveal state
-        const proof = [];
-        for (let i = 0; i < votes.length; i++) {
-          proof.push(tree.getProofPath(i, true, true));
-        }
-        await voteManager.connect(signers[3]).reveal(epoch, tree.root(), votes, proof,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
-          signers[3].address);
+        await voteManager.connect(signers[3]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // propose state
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
         await blockManager.connect(signers[3]).propose(epoch,
-          [1, 2, 3, 4, 5, 6, 7, 8, 9],
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);
@@ -715,20 +706,15 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
         // commit state
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tree = merkle('keccak256').sync(votes);
-        const root = tree.root();
         const commitment = utils.solidityKeccak256(
-          ['uint256', 'uint256', 'bytes32'],
-          [epoch, root, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
         await voteManager.connect(signers[3]).commit(epoch, commitment);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
-        assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
-        assertBNLessThan(ageAfter, ageBefore, 'age should reduce since it did not participated in previous epochs');
+        assert(stakeAfter < stakeBefore, 'stake should reduce');
       });
     });
   });
