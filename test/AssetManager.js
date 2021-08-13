@@ -113,12 +113,12 @@ describe('AssetManager', function () {
       assertBNEqual(job.url, 'http://testurl.com', 'job url should be "http://testurl.com"');
     });
 
-    it('should not be able to create collection with incative jobs', async function () {
+    it('should not be able to create collection with inactive jobs', async function () {
       const tx = assetManager.createCollection([1, 5], 2, 'Test Collection');
       await assertRevert(tx, 'Job ID not active');
     });
 
-    it('should not be able to add incative job to a collection', async function () {
+    it('should not be able to add inactive job to a collection', async function () {
       const tx = assetManager.addJobToCollection(3, 5);
       await assertRevert(tx, 'Job ID not active');
     });
