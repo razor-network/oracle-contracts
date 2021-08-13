@@ -721,6 +721,83 @@ describe('VoteManager', function () {
         //
         await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
       });
+      it('Block should not be proposed when no one votes', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        // commit state
+        await mineToNextState();
+        // reveal state
+        await mineToNextState();
+        // propose state
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+
+        const iteration = await getIteration(voteManager, stakeManager, staker);
+        const tx = blockManager.connect(signers[3]).propose(epoch,
+          [],
+          iteration,
+          biggestInfluencerId);
+        assertRevert(tx, 'Cannot propose without revealing');
+      });
+      it('No Finalise Dispute should happen if no block is proposed or no one votes', async function () {
+        const epoch = await getEpoch();
+        await mineToNextState();
+        // dispute state
+        const sortedVotes = [];
+        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
+        const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
+        assert(tx1, 'should be able to give sorted votes');
+        assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
+      });
+      it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
+        await mineToNextState();
+        const epoch = await getEpoch();
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        // commit state
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[3]).commit(epoch, commitment);
+        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        await mineToNextState();
+        // reveal state
+        await voteManager.connect(signers[3]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        // propose state
+        await mineToNextState();
+        const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker);
+        await blockManager.connect(signers[3]).propose(epoch,
+          [100, 200, 300, 400, 500, 600, 700, 800, 900],
+          iteration,
+          biggestInfluencerId);
+        // penalty should be applied for not voting in previous epoch
+        assert(stakeAfter, stakeBefore, 'no penalties when medians length is 0 and epochInactive less than grace period');
+      });
+      it('penalties should be applied if staker does not participate for more than 8 epochs(grace period)', async function () {
+        await mineToNextState();
+        await mineToNextState();
+        for (let i = 0; i <= 10; i++) {
+          await mineToNextEpoch();
+        }
+        const epoch = await getEpoch();
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        // commit state
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[3]).commit(epoch, commitment);
+        const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
+        assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
+      });
     });
   });
 });
