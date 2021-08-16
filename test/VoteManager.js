@@ -88,7 +88,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = Promise.all(await initializeContracts());
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
         await assertRevert(tx, 'Initializable: contract is already initialized');
       });
 
