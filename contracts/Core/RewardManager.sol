@@ -18,16 +18,6 @@ contract RewardManager is Initializable, ACL, Constants {
     IVoteManager public voteManager;
     IBlockManager public blockManager;
 
-    modifier checkEpoch(uint32 epoch) {
-        require(epoch == parameters.getEpoch(), "incorrect epoch");
-        _;
-    }
-
-    modifier checkState(uint256 state) {
-        require(state == parameters.getState(), "incorrect state");
-        _;
-    }
-
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
