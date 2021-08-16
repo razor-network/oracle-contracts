@@ -1,33 +1,23 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
+import "./StateManager.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract VoteManager is Initializable, ACL, VoteStorage {
+contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
 
-    event Committed(uint256 epoch, uint256 stakerId, bytes32 commitment, uint256 timestamp);
-    event Revealed(uint256 epoch, uint256 stakerId, uint256 stake, uint256[] values, uint256 timestamp);
-
-    modifier checkEpoch(uint256 epoch) {
-        require(epoch == parameters.getEpoch(), "incorrect epoch");
-        _;
-    }
-
-    modifier checkState(uint256 state) {
-        require(state == parameters.getState(), "incorrect state");
-        _;
-    }
+    event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, uint48[] values, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -41,90 +31,115 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         parameters = IParameters(parametersAddress);
     }
 
-    function commit(uint256 epoch, bytes32 commitment) external initialized checkEpoch(epoch) checkState(parameters.commit()) {
-        uint256 stakerId = stakeManager.getStakerId(msg.sender);
-        require(commitments[epoch][stakerId] == 0x0, "already commited");
-        Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
+    function commit(uint32 epoch, bytes32 commitment)
+        external
+        initialized
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
+    {
+        require(commitment != 0x0, "Invalid commitment");
+        uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Staker does not exist");
+        require(commitments[stakerId].epoch != epoch, "already commited");
 
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
 
-        if (blockManager.getBlock(epoch - 1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch - 1) > 0) {
-            blockManager.confirmBlock();
+        if (!blockManager.isBlockConfirmed(epoch - 1)) {
+            blockManager.confirmBlock(epoch);
         }
-        rewardManager.givePenalties(stakerId, epoch);
+        rewardManager.givePenalties(epoch, stakerId);
 
-        if (thisStaker.stake >= parameters.minStake()) {
-            commitments[epoch][stakerId] = commitment;
-            stakeManager.updateCommitmentEpoch(stakerId);
+        uint256 thisStakerStake = stakeManager.getStake(stakerId);
+        if (thisStakerStake >= parameters.minStake()) {
+            commitments[stakerId].epoch = epoch;
+            commitments[stakerId].commitmentHash = commitment;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
         }
     }
 
     function reveal(
-        uint256 epoch,
-        bytes32 root,
-        uint256[] memory values,
-        bytes32[][] memory proofs,
+        uint32 epoch,
+        uint48[] calldata values,
+        bytes32 secret
+    ) external initialized checkEpochAndState(State.Reveal, epoch, parameters.epochLength()) {
+        uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Staker does not exist");
+        require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
+        require(stakeManager.getStake(stakerId) > parameters.minStake(), "stake below minimum");
+        // avoid innocent staker getting slashed due to empty secret
+        require(secret != 0x0, "secret cannot be empty");
+
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
+        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        //below require was changed from 0 to minstake because someone with very low stake can manipulate randao
+
+        //TODO: REQUIRE all assets to be revealed
+        commitments[stakerId].commitmentHash = 0x0;
+        votes[stakerId].epoch = epoch;
+        votes[stakerId].values = values;
+        uint256 influence = stakeManager.getInfluence(stakerId);
+        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
+        influenceSnapshot[epoch][stakerId] = influence;
+        secrets = keccak256(abi.encodePacked(secrets, secret));
+
+        emit Revealed(epoch, stakerId, values, block.timestamp);
+    }
+
+    //bounty hunter revealing secret in commit state
+    function snitch(
+        uint32 epoch,
+        uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpoch(epoch) {
-        uint256 thisStakerId = stakeManager.getStakerId(stakerAddress);
-        require(thisStakerId > 0, "Structs.Staker does not exist");
-        Structs.Staker memory thisStaker = stakeManager.getStaker(thisStakerId);
-        require(commitments[epoch][thisStakerId] != 0x0, "not commited or already revealed");
-        require(keccak256(abi.encodePacked(epoch, root, secret)) == commitments[epoch][thisStakerId], "incorrect secret/value");
-
-        //if revealing self
-        if (msg.sender == stakerAddress) {
-            require(parameters.getState() == parameters.reveal(), "Not reveal state");
-            require(thisStaker.stake > 0, "nonpositive stake");
-            for (uint256 i = 0; i < values.length; i++) {
-                require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i]))), "invalid merkle proof");
-                uint256 influence = stakeManager.getInfluence(thisStakerId);
-                votes[epoch][thisStakerId][i] = Structs.Vote(values[i], thisStaker.stake);
-                voteWeights[epoch][i][values[i]] = voteWeights[epoch][i][values[i]] + influence;
-                totalInfluenceRevealed[epoch][i] = totalInfluenceRevealed[epoch][i] + influence;
-            }
-
-            commitments[epoch][thisStakerId] = 0x0;
-            stakeManager.setStakerEpochLastRevealed(thisStakerId, epoch);
-            secrets = keccak256(abi.encodePacked(secrets, secret));
-            emit Revealed(epoch, thisStakerId, thisStaker.stake, values, block.timestamp);
-        } else {
-            //bounty hunter revealing someone else's secret in commit state
-            require(parameters.getState() == parameters.commit(), "Not commit state");
-            commitments[epoch][thisStakerId] = 0x0;
-            stakeManager.slash(thisStakerId, msg.sender, epoch);
-        }
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) {
+        require(msg.sender != stakerAddress, "cant snitch on yourself");
+        uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
+        require(thisStakerId > 0, "Staker does not exist");
+        require(commitments[thisStakerId].epoch == epoch, "not committed in this epoch");
+        // avoid innocent staker getting slashed due to empty secret
+        require(secret != 0x0, "secret cannot be empty");
+        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
+        commitments[thisStakerId].commitmentHash = 0x0;
+        stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
-    function getCommitment(uint256 epoch, uint256 stakerId) public view returns (bytes32) {
+    function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
-        return (commitments[epoch][stakerId]);
+        return (commitments[stakerId]);
     }
 
-    function getVote(
-        uint256 epoch,
-        uint256 stakerId,
-        uint256 assetId
-    ) public view returns (Structs.Vote memory vote) {
-        //epoch -> stakerid -> assetid -> vote
-        return (votes[epoch][stakerId][assetId]);
+    function getCommitmentEpoch(uint32 stakerId) external view returns (uint32) {
+        //epoch -> stakerid -> commitment
+        return (commitments[stakerId].epoch);
     }
 
-    function getVoteWeight(
-        uint256 epoch,
-        uint256 assetId,
-        uint256 voteValue
-    ) public view returns (uint256) {
+    function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote) {
+        //stakerid -> assetid -> vote
+        return (votes[stakerId]);
+    }
+
+    function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint48) {
+        //stakerid -> assetid -> vote
+        return (votes[stakerId].values[assetId]);
+    }
+
+    function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256) {
         //epoch -> assetid -> voteValue -> weight
-        return (voteWeights[epoch][assetId][voteValue]);
+        return (influenceSnapshot[epoch][stakerId]);
     }
 
-    function getTotalInfluenceRevealed(uint256 epoch, uint256 assetId) public view returns (uint256) {
+    function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256) {
         // epoch -> asset -> stakeWeight
-        return (totalInfluenceRevealed[epoch][assetId]);
+        return (totalInfluenceRevealed[epoch]);
+    }
+
+    function getEpochLastCommitted(uint32 stakerId) external view returns (uint32) {
+        return commitments[stakerId].epoch;
+    }
+
+    function getEpochLastRevealed(uint32 stakerId) external view returns (uint32) {
+        return votes[stakerId].epoch;
     }
 
     function getRandaoHash() public view returns (bytes32) {
