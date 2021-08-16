@@ -545,5 +545,69 @@ describe('BlockManager', function () {
         biggestInfluencerId);
       assertRevert(tx, 'stake below minimum stake');
     });
+    it('should not be able to give sorted votes for wrong asset ID or for stakers who didnt vote in epoch', async function () {
+      // Commit
+      await mineToNextEpoch();
+      await razor.transfer(signers[9].address, tokenAmount('423000'));
+      await razor.transfer(signers[10].address, tokenAmount('19000'));
+      let epoch = await getEpoch();
+      await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('420000'));
+
+      await razor.connect(signers[10]).approve(stakeManager.address, tokenAmount('18000'));
+      await stakeManager.connect(signers[10]).stake(epoch, tokenAmount('18000'));
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[9]).commit(epoch, commitment1);
+
+      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment2 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[10]).commit(epoch, commitment2);
+
+      // Reveal
+      await mineToNextState();
+
+      await voteManager.connect(signers[9]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      // Staker 3
+
+      await voteManager.connect(signers[10]).reveal(epoch, votes2,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      // Propose
+      await mineToNextState();
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[9].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+
+      await blockManager.connect(signers[9]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        biggestInfluencerId);
+      const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
+      assertBNEqual(proposedBlock.proposerId, toBigNumber('8'), 'incorrect proposalID');
+
+      // Calculate Dispute data
+      await mineToNextState();
+      epoch = await getEpoch();
+
+      // Dispute in batches
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [8]);
+      const tx1 = blockManager.connect(signers[19]).giveSorted(epoch, 2, [9]);
+      const tx2 = blockManager.connect(signers[19]).giveSorted(epoch, 1, [11]);
+      assertRevert(tx1, 'AssetId not matching');
+      assertRevert(tx2, 'epoch in vote doesnt match with current');
+    });
   });
 });
