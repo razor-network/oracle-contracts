@@ -6,7 +6,6 @@ import "./Core/ACL.sol";
 
 contract Delegator is ACL {
     address public delegate;
-    address public owner = msg.sender;
     IAssetManager public assetManager;
 
     function upgradeDelegate(address newDelegateAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
