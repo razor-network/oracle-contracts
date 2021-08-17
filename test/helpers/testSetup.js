@@ -28,7 +28,7 @@ const setupContracts = async () => {
   const blockManager = await BlockManager.deploy();
   const stakedToken = await ethers.getContractFactory('StakedToken');
   const delegator = await Delegator.deploy();
-  const assetManager = await AssetManager.deploy(parameters.address, blockManager.address);
+  const assetManager = await AssetManager.deploy(parameters.address);
   const stakeManager = await StakeManager.deploy();
   const rewardManager = await RewardManager.deploy();
   const voteManager = await VoteManager.deploy();

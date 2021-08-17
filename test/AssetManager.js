@@ -70,12 +70,6 @@ describe('AssetManager', function () {
       assertBNEqual((await assetManager.getNumActiveAssets()), toBigNumber('1'));
     });
 
-    it('activeAssets list should be updated to 1', async () => {
-      const activeAssets = await assetManager.getActiveAssets();
-      assert(activeAssets.length === 1);
-      assertBNEqual(activeAssets, toBigNumber('3'));
-    });
-
     it('should be able to add a job to a collection', async function () {
       const url = 'http://testurl.com/3';
       const selector = 'selector/3';
@@ -227,7 +221,8 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Duplicate JobIDs sent');
     });
 
-    it('should not be able add or remove jobID from collection if not in confirm state', async () => {
+    it('should not be able add or remove jobID from collection if in confirm state', async () => {
+      await mineToNextEpoch();
       let tx = assetManager.addJobToCollection(5, 4);
       await assertRevert(tx, 'incorrect state');
       tx = assetManager.removeJobFromCollection(3, 1);
@@ -235,7 +230,7 @@ describe('AssetManager', function () {
     });
 
     it('should not add jobID to a collection if the collectionID specified is not a collection', async function () {
-      await mineToNextState();// confirm
+      await mineToNextState();// reveal
       const tx = assetManager.addJobToCollection(5, 4);
       await assertRevert(tx, 'Collection ID not present');
     });
@@ -252,26 +247,6 @@ describe('AssetManager', function () {
     it('should not be add job if it already exists in the collection', async function () {
       const tx = assetManager.addJobToCollection(3, 1);
       await assertRevert(tx, 'Job exists in this collection');
-    });
-
-    it('should not be able to create an asset more than maximum limit', async function () {
-      await mineToNextEpoch();
-      const url = 'http://testurl.com';
-      const selector = 'selector';
-      const name = 'test';
-      let i = 0;
-      let j = 0;
-      while (i < 20) { await assetManager.createJob(url, selector, name); i++; }
-      const tx = assetManager.createJob(url, selector, name);
-      await assertRevert(tx, 'Asset Creation Limit Reached');
-      await mineToNextEpoch();
-      await mineToNextState(); // reveal
-      await mineToNextState(); // propose
-      await mineToNextState(); // dispute
-      const Cname = 'Test Collection';
-      while (j < 20) { await assetManager.createCollection(Cname, [1, 2], 1, true); j++; }
-      const tx1 = assetManager.createCollection(Cname, [1, 2], 1, true);
-      await assertRevert(tx1, 'Asset Creation Limit Reached');
     });
 
     // it('should be able to get result using proxy', async function () {

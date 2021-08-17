@@ -51,7 +51,7 @@ contract VoteManager is Initializable, ACL, VoteStorage {
         // and if previous epoch do have proposed blocks
 
         if (blockManager.getBlock(epoch - 1).proposerId == 0 && blockManager.getNumProposedBlocks(epoch - 1) > 0) {
-            blockManager.confirmBlock(stakerId);
+            blockManager.confirmPreviousEpochBlock(stakerId);
         }
         rewardManager.givePenalties(stakerId, epoch);
 

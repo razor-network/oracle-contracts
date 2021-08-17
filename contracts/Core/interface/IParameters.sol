@@ -50,8 +50,6 @@ interface IParameters {
 
     function maxAge() external view returns (uint256);
 
-    function maxAssetsCreatedPerEpoch() external view returns (uint256);
-
     function escapeHatchEnabled() external view returns (bool);
 
     function getAssetConfirmerHash() external view returns (bytes32);

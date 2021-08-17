@@ -62,31 +62,31 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.fulfillAsset(2, 222), expectedRevertMessage);
   });
 
-  it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
+  it('confirmPreviousEpochBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
     // Checking if Anyone can access it
-    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(1), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await blockManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await blockManager.grantRole(await parameters.getStakeModifierHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await blockManager.grantRole(await parameters.getStakerActivityUpdaterHash(), signers[0].address);
-    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(1), expectedRevertMessage);
   });
 
-  it('confirmBlock() should be accessable by BlockConfirmer', async () => {
-    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+  it('confirmPreviousEpochBlock() should be accessable by BlockConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmPreviousEpochBlock method to work.
     await waitNBlocks(300);
     const blockConfirmerHash = await parameters.getBlockConfirmerHash();
     await blockManager.grantRole(blockConfirmerHash, signers[0].address);
-    await blockManager.confirmBlock(1);
+    await blockManager.confirmPreviousEpochBlock(1);
     await blockManager.revokeRole(blockConfirmerHash, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(1), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(1), expectedRevertMessage);
   });
 
   it('slash() should not be accessable by anyone besides StakeModifier', async () => {
@@ -315,6 +315,7 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(await parameters.getAssetConfirmerHash(), signers[0].address);
     await assetManager.grantRole(assetModifierHash, signers[0].address);
     await assetManager.createJob('http://testurl.com/1', 'selector/1', 'test1');
+    await mineToNextState();
     await assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2');
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(assetManager.updateJob(1, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);

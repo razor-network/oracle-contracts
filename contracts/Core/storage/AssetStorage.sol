@@ -11,10 +11,7 @@ contract AssetStorage {
     }
     mapping(uint256 => Structs.Job) public jobs;
     mapping(uint256 => Structs.Collection) public collections;
-    //epoch - > numAssetsCreatedThisEpoch
-    mapping(uint256 => uint256) public numAssetsCreated;
-
-    uint256[] public activeAssets;
 
     uint256 public numAssets;
+    uint256 public numActiveAssets;
 }
