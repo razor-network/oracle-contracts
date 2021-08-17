@@ -29,7 +29,7 @@ contract StateManager is Constants {
     }
 
     function getState(uint32 epochLength) public view returns (State) {
-        uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)));
+        uint32 state = uint32(((block.number) / (epochLength / NUM_STATES)));
         return State(state % (NUM_STATES));
     }
 }

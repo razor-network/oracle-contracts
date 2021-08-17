@@ -107,15 +107,33 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     }
 
     //O(1)
-    function confirmBlock(uint32 epoch) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        // for (uint8 i = 0; i < sortedProposedBlockIds[epoch - 1].length; i++) {
+    function claimBlockReward() external initialized checkState(State.Confirm, parameters.epochLength()) {
+        uint32 epoch = parameters.getEpoch();
+        uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(stakerId > 0, "Structs.Staker does not exist");
+        require(blocks[epoch].proposerId == 0, "Block already confirmed");
+
+        if (sortedProposedBlockIds[epoch].length == 0) return;
+
+        uint8 blockId = sortedProposedBlockIds[epoch][0];
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
+
+        blocks[epoch] = proposedBlocks[epoch][blockId];
+        rewardManager.giveBlockReward(stakerId, epoch);
+        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+    }
+
+    function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
+        uint32 epoch = parameters.getEpoch();
         if (sortedProposedBlockIds[epoch - 1].length == 0) return;
+
         uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
         blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
-        uint32 proposerId = proposedBlocks[epoch - 1][blockId].proposerId;
 
-        rewardManager.giveBlockReward(proposerId, epoch - 1);
-        emit BlockConfirmed(epoch - 1, proposerId, proposedBlocks[epoch - 1][blockId].medians, block.timestamp);
+        rewardManager.giveBlockReward(stakerId, epoch - 1);
+
+        emit BlockConfirmed(epoch - 1, proposedBlocks[epoch - 1][blockId].proposerId, proposedBlocks[epoch - 1][blockId].medians, block.timestamp);
     }
 
     // Complexity O(1)
