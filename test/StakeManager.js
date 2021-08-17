@@ -424,7 +424,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[3]).approve(stakeManager.address, stake2);
       await stakeManager.connect(signers[3]).stake(epoch, stake2);
       // Staker 3 restakes during grace_period
-      // But epochStaked is not updated , this epoch would still remain be considered as an inactive epoch for staker 3 .
+      // But epochFirstStaked is not updated , this epoch would still remain be considered as an inactive epoch for staker 3 .
       // no commit/reveal in this epoch
 
       await mineToNextEpoch();
