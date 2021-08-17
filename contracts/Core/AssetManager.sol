@@ -8,7 +8,7 @@ import "./ACL.sol";
 
 contract AssetManager is ACL, AssetStorage, Constants {
     IParameters public parameters;
-    
+
     event JobCreated(
         bool repeat,
         uint8 id,
@@ -233,7 +233,13 @@ contract AssetManager is ACL, AssetStorage, Constants {
     {
         require(collections[id].assetType == uint8(assetTypes.Collection), "ID is not a collection");
 
-        return (collections[id].active, collections[id].jobIDs, collections[id].aggregationMethod, collections[id].name, collections[id].power);
+        return (
+            collections[id].active,
+            collections[id].jobIDs,
+            collections[id].aggregationMethod,
+            collections[id].name,
+            collections[id].power
+        );
     }
 
     function getAssetType(uint8 id) external view returns (uint8) {
