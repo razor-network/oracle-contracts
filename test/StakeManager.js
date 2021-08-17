@@ -183,6 +183,7 @@ describe('StakeManager', function () {
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
       assertBNEqual(newAge, age1, 'age is incorrect');
+      assertBNEqual(await stakeManager.getEpochStaked(stakerId), epoch, 'epoch staked is incorrect');
       assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
@@ -414,7 +415,7 @@ describe('StakeManager', function () {
     it('Staker should not be able to withdraw if committed during lock period despite not revealing', async function () {
       let epoch = await getEpoch();
       const amount = tokenAmount('10000');
-      const stakerId = stakeManager.stakerIds(signers[2].address);
+      const stakerId = await stakeManager.stakerIds(signers[2].address);
       await stakeManager.connect(signers[2]).resetLock(stakerId); // reseting lock because in above testcase signers[2] is having an existing lock
       const staker = await stakeManager.getStaker(stakerId);
       await stakeManager.connect(signers[2]).unstake(epoch, stakerId, amount);
@@ -1060,9 +1061,9 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).escape(signers[0].address);
       await stakeManager.connect(signers[0]).unpause();
       const tx = stakeManager.connect(signers[5]).withdraw(epoch, stakerIdacc3);
+      await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
       await razor.connect(signers[0]).transfer(stakeManager.address, balanceContractBefore);
       await stakeManager.connect(signers[3]).resetLock(stakerIdacc3);
-      await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
       await stakeManager.connect(signers[0]).pause();
     });
 
@@ -1163,7 +1164,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000'));
+      await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000'));
       staker = await stakeManager.stakers(stakerId);
 
       // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
