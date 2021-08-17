@@ -47,8 +47,9 @@ library Structs {
         bool repeat;
         uint8 id;
         uint8 assetType;
-        address creator;
+        uint8 power;
         uint32 epoch;
+        address creator;
         string name;
         string selector;
         string url;
@@ -58,10 +59,11 @@ library Structs {
         bool active;
         uint8 id;
         uint8 assetType;
-        uint8[] jobIDs;
-        address creator;
+        uint8 power;
         uint32 aggregationMethod;
         uint32 epoch;
+        uint8[] jobIDs;
+        address creator;
         mapping(uint8 => bool) jobIDExist;
         string name;
     }
