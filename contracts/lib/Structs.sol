@@ -18,7 +18,7 @@ library Structs {
         address tokenAddress;
         uint32 id;
         uint32 age;
-        uint32 epochStaked;
+        uint32 epochFirstStaked;
         uint256 stake;
     }
 
