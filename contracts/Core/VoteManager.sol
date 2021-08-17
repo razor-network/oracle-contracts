@@ -121,7 +121,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
 
     function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint48) {
         //stakerid -> assetid -> vote
-        return (votes[stakerId].values[assetId-1]);
+        return (votes[stakerId].values[assetId - 1]);
     }
 
     function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256) {
