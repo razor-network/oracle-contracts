@@ -10,33 +10,31 @@ These are the contracts for Razor network.
 You'll need npm to install the required packages.
 To install npm , go to this [link](https://www.npmjs.com/get-npm)
 
-#### jq
-For Windows/Linux, Visit [here](https://stedolan.github.io/jq/download/)
-
-For Mac, use `brew install jq` or for the most recent version use `brew install --HEAD jq`. Visit [this](https://github.com/stedolan/jq/wiki/Installation) for more info.
-
-# Deployment
-
-##### Local Deployment using hardhat
-1. Run hardhat node (`npx hardhat node`)
-2. Run command `deploy:hardhat`
-3. Use tenderly to track local transactions: https://github.com/Tenderly/tenderly-cli#export
-
-##### Polygon Mumbai Testnet Deployment
-1. Create `.env.mumbai` file (Refs - `.env.tpl`), provide `mnemonic` & `provider` for deployment.
-2. Run command `deploy:mumbai`
-
-# Running tests
+# Development
+Create a `.env` file from `.env.tpl` and set the environment variables accordingly.
+##### Running tests
 Run `npm run test`
 
-# Test Coverage
+##### Test Coverage
 Run `npm run coverage`
 
-# Test Lint
+##### Test Lint
 Run `npm run lint`
 
-# prettify code
+##### prettify code
 Run `npm run lint:sol:fix`
+
+# Deployment
+##### Local Deployment using hardhat
+1. Create a copy of local environment `.env.local` from `.env.tpl` and set the environment variables accordingly
+2. Run hardhat node (`npx hardhat node`)
+3. Run command `deploy:local`
+4. Use tenderly to track local transactions: https://github.com/Tenderly/tenderly-cli#export
+
+##### Polygon Mumbai Testnet Deployment
+1. Create a copy of local environment `.env.mumbai` from `.env.tpl` and set the environment variables accordingly
+2. Run command `deploy:mumbai`
+
 
 # Addresses
 We are currently live on Polygon Mumbai Testnet.

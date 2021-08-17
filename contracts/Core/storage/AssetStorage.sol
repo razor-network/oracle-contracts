@@ -9,8 +9,8 @@ contract AssetStorage {
         Job,
         Collection
     }
-    mapping(uint256 => Structs.Job) public jobs;
-    mapping(uint256 => Structs.Collection) public collections;
+    mapping(uint8 => Structs.Job) public jobs;
+    mapping(uint8 => Structs.Collection) public collections;
 
-    uint256 public numAssets;
+    uint8 public numAssets;
 }

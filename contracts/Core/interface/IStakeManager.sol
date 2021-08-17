@@ -4,58 +4,59 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IStakeManager {
-    function setStakerEpochLastRevealed(uint256 _id, uint256 _epochLastRevealed) external;
+    function updateCommitmentEpoch(uint32 stakerId) external;
 
-    function updateCommitmentEpoch(uint256 stakerId) external;
-
-    function stake(uint256 epoch, uint256 amount) external;
+    function stake(uint32 epoch, uint256 amount) external;
 
     function delegate(
-        uint256 epoch,
-        uint256 amount,
-        uint256 stakerId
+        uint32 epoch,
+        uint32 stakerId,
+        uint256 amount
     ) external;
 
-    function unstake(uint256 epoch) external;
+    function unstake(uint32 epoch) external;
 
-    function withdraw(uint256 epoch) external;
+    function withdraw(uint32 epoch) external;
 
     function setDelegationAcceptance(bool status) external;
 
-    function setCommission(uint256 commission) external;
+    function setCommission(uint8 commission) external;
 
-    function decreaseCommission(uint256 commission) external;
+    function decreaseCommission(uint8 commission) external;
 
-    function resetLock(uint256 stakerId) external;
+    function resetLock(uint32 stakerId) external;
 
     function setStakerStake(
-        uint256 _id,
-        uint256 _stake,
-        string memory _reason,
-        uint256 _epoch
+        uint32 _epoch,
+        uint32 _id,
+        uint256 _stake
     ) external;
 
     function slash(
-        uint256 id,
-        address bountyHunter,
-        uint256 epoch
+        uint32 epoch,
+        uint32 stakerId,
+        address bountyHunter
     ) external;
 
     function setStakerAge(
-        uint256 _id,
-        uint256 _age,
-        uint256 _epoch
+        uint32 _epoch,
+        uint32 _id,
+        uint32 _age
     ) external;
 
     function escape(address _address) external;
 
-    function getStakerId(address _address) external view returns (uint256);
+    function getStakerId(address _address) external view returns (uint32);
 
-    function getStaker(uint256 _id) external view returns (Structs.Staker memory staker);
+    function getStaker(uint32 _id) external view returns (Structs.Staker memory staker);
 
-    function getNumStakers() external view returns (uint256);
+    function getNumStakers() external view returns (uint32);
 
-    function getAge() external view returns (uint256);
+    function getAge(uint32 stakerId) external view returns (uint32);
 
-    function getInfluence(uint256 stakerId) external view returns (uint256);
+    function getInfluence(uint32 stakerId) external view returns (uint256);
+
+    function getStake(uint32 stakerId) external view returns (uint256);
+
+    function getEpochStaked(uint32 stakerId) external view returns (uint32);
 }
