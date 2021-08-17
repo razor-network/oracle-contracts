@@ -1029,10 +1029,9 @@ describe('StakeManager', function () {
       let epoch = await getEpoch();
       const stakerIdacc3 = await stakeManager.stakerIds(signers[3].address);
       await stakeManager.connect(signers[3]).unstake(epoch, stakerIdacc3, tokenAmount('1000'));
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      await mineToNextEpoch();
       epoch = await getEpoch();
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       await stakeManager.connect(signers[0]).pause();
@@ -1051,10 +1050,9 @@ describe('StakeManager', function () {
       await razor.connect(signers[5]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[5]).delegate(epoch, stakerIdacc3, amount);
       await stakeManager.connect(signers[5]).unstake(epoch, stakerIdacc3, tokenAmount('10000'));
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      await mineToNextEpoch();
       epoch = await getEpoch();
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       await stakeManager.connect(signers[0]).pause();
@@ -1198,10 +1196,9 @@ describe('StakeManager', function () {
       let epoch = await getEpoch();
       const stakerIdacc3 = await stakeManager.stakerIds(signers[3].address);
       await stakeManager.connect(signers[3]).unstake(epoch, stakerIdacc3, tokenAmount('1000'));
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await parameters.setSlashPenaltyNum(10000);
