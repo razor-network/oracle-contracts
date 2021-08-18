@@ -133,7 +133,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         rewardManager.giveBlockReward(stakerId, epoch - 1);
 
-        emit BlockConfirmed(epoch - 1, proposedBlocks[epoch - 1][blockId].proposerId, proposedBlocks[epoch - 1][blockId].medians, block.timestamp);
+        emit BlockConfirmed(
+            epoch - 1,
+            proposedBlocks[epoch - 1][blockId].proposerId,
+            proposedBlocks[epoch - 1][blockId].medians,
+            block.timestamp
+        );
     }
 
     // Complexity O(1)
