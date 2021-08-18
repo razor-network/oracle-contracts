@@ -91,7 +91,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
-            uint48 value = vote.values[assetId];
+            uint48 value = vote.values[assetId - 1];
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;
