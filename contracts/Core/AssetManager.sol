@@ -73,10 +73,10 @@ contract AssetManager is ACL, AssetStorage, Constants {
 
     function createJob(
         bool repeat,
+        int8 power,
         string calldata name,
         string calldata selector,
-        string calldata url,
-        int8 power
+        string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
@@ -88,9 +88,9 @@ contract AssetManager is ACL, AssetStorage, Constants {
 
     function updateJob(
         uint8 jobID,
+        int8 power,
         string calldata selector,
-        string calldata url,
-        int8 power
+        string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
 
@@ -123,8 +123,8 @@ contract AssetManager is ACL, AssetStorage, Constants {
     function createCollection(
         uint8[] memory jobIDs,
         uint32 aggregationMethod,
-        string calldata name,
-        int8 power
+        int8 power,
+        string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
 
@@ -208,16 +208,16 @@ contract AssetManager is ACL, AssetStorage, Constants {
         returns (
             bool active,
             bool repeat,
+            int8 power,
             string memory name,
             string memory selector,
-            string memory url,
-            int8 power
+            string memory url
         )
     {
         require(jobs[id].assetType == uint8(assetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
-        return (job.active, job.repeat, job.name, job.selector, job.url, job.power);
+        return (job.active, job.repeat, job.power, job.name, job.selector, job.url);
     }
 
     function getCollection(uint8 id)
@@ -225,20 +225,20 @@ contract AssetManager is ACL, AssetStorage, Constants {
         view
         returns (
             bool active,
+            int8 power,
             uint8[] memory jobIDs,
             uint32 aggregationMethod,
-            string memory name,
-            int8 power
+            string memory name
         )
     {
         require(collections[id].assetType == uint8(assetTypes.Collection), "ID is not a collection");
 
         return (
             collections[id].active,
+            collections[id].power,
             collections[id].jobIDs,
             collections[id].aggregationMethod,
-            collections[id].name,
-            collections[id].power
+            collections[id].name
         );
     }
 
