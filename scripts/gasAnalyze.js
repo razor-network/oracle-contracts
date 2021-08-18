@@ -1,10 +1,5 @@
 const getJSON = require('get-json');
-<<<<<<< HEAD
-  const json;
-  const json = require('../gasReporterOutput.json');
-=======
 const json = require('../gasReporterOutput.json');
->>>>>>> e01da43bedf5a05c6b2a99dbaa96bb1be5a852e2
 
 function median(numbers) {
   const sorted = numbers.slice().sort((a, b) => a - b);
