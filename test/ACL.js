@@ -383,6 +383,6 @@ describe('Access Control Test', async () => {
   });
   it('Only Admin should be able to call upgradeDelegate', async () => {
     assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
+    await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), 'Caller is not owner');
   });
 });

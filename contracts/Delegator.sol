@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "./Core/interface/IAssetManager.sol";
-import "./Core/ACL.sol";
 
-contract Delegator is ACL {
+contract Delegator {
     address public delegate;
     IAssetManager public assetManager;
+    address public owner = msg.sender;
 
-    function upgradeDelegate(address newDelegateAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function upgradeDelegate(address newDelegateAddress) external {
+        require(owner == msg.sender, "Caller is not owner");
         delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
     }
