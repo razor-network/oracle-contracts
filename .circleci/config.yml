@@ -84,29 +84,17 @@ jobs:
           path: coverage
           prefix: coverage
 
-  mythx:
+  eth-security-toolbox:
     docker:
-      - image: 'cimg/python:3.9.6-node'
+      - image: 'trailofbits/eth-security-toolbox'
     resource_class: medium
     steps:
       - attach_workspace:
           at: .
       - run:
-          name: Setup virtual environment
-          command: python -m virtualenv venv
-      - run:
-          name: Install MythX CLI
-          command: |
-            . venv/bin/activate
-            pip install mythx-cli
-      - run:
-          name: Analyze with MythX
-          command: >
-            . venv/bin/activate
+          name: Slither
+          command: slither .
 
-            mythx --ci --yes analyze --remap-import
-            "@openzeppelin/=$(pwd)/node_modules/@openzeppelin/" --solc-version
-            0.8.4 contracts/ --swc-blacklist 103,120
 
 notify:
   webhooks:
@@ -125,7 +113,7 @@ workflows:
       - coverage:
           requires:
           - install_dependencies
-      - mythx:
+      - eth-security-toolbox:
           requires:
           - install_dependencies
       - lint:
