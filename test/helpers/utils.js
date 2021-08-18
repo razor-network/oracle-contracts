@@ -105,6 +105,20 @@ const getIteration = async (voteManager, stakeManager, staker) => {
   return 0;
 };
 
+const getFalseIteration = async (voteManager, stakeManager, staker) => {
+  const numStakers = await stakeManager.getNumStakers();
+  const stakerId = staker.id;
+  const influence = await stakeManager.getInfluence(stakerId);
+
+  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
+  const randaoHash = await voteManager.getRandaoHash();
+  for (let i = 0; i < 10000000000; i++) {
+    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
+    if (isElected && i > 1) return (i - 1);
+  }
+  return 0;
+};
+
 const getState = async () => {
   const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
   const state = blockNumber.div(EPOCH_LENGTH.div(NUM_STATES));
@@ -118,6 +132,7 @@ module.exports = {
   getBiggestInfluenceAndId,
   getEpoch,
   getIteration,
+  getFalseIteration,
   getState,
   prng,
   prngHash,
