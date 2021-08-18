@@ -207,6 +207,8 @@ describe('VoteManager', function () {
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
         const ageBefore = await stakeManager.getAge(stakerIdAcc3);
         await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -286,6 +288,8 @@ describe('VoteManager', function () {
         const ageBefore = await stakeManager.getAge(stakerIdAcc3);
         const ageBefore2 = await stakeManager.getAge(stakerIdAcc4);
         await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -677,6 +681,8 @@ describe('VoteManager', function () {
       });
 
       it('if the revealed value is zero, next epoch should work normally', async function () {
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[8]).claimBlockReward();
         await mineToNextState(); // commit
 
         let epoch = await getEpoch();
@@ -756,7 +762,7 @@ describe('VoteManager', function () {
         assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
-        await mineToNextState();
+        await mineToNextEpoch();
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
