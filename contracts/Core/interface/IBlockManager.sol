@@ -38,7 +38,9 @@ interface IBlockManager {
         uint256 biggestInfluencerId
     ) external;
 
-    function confirmBlock(uint32 epoch) external;
+    function claimBlockReward() external;
+
+    function confirmPreviousEpochBlock(uint32 stakerId) external;
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 

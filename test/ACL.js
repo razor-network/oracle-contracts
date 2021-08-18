@@ -25,11 +25,12 @@ describe('Access Control Test', async () => {
   let stakeManager;
   let rewardManager;
   let initializeContracts;
+  let delegator;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts,
+      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -48,33 +49,33 @@ describe('Access Control Test', async () => {
     assert(isAdminRoleGranted === true, 'Admin role was not Granted');
   });
 
-  it('confirmBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
+  it('confirmPreviousEpochBlock() should not be accessable by anyone besides BlockConfirmer', async () => {
     // Checking if Anyone can access it
     const epoch = getEpoch();
-    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await blockManager.grantRole(ASSET_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await blockManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await blockManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
   });
 
-  it('confirmBlock() should be accessable by BlockConfirmer', async () => {
-    // Wait for 300 blocks, as epoch should be greater than 300, for confirmBlock method to work.
+  it('confirmPreviousEpochBlock() should be accessable by BlockConfirmer', async () => {
+    // Wait for 300 blocks, as epoch should be greater than 300, for confirmPreviousEpochBlock method to work.
     await waitNBlocks(300);
     const epoch = getEpoch();
 
     await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await blockManager.confirmBlock(epoch);
+    await blockManager.confirmPreviousEpochBlock(epoch);
     await blockManager.revokeRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmBlock(epoch), expectedRevertMessage);
+    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
   });
 
   it('slash() should not be accessable by anyone besides StakeModifier', async () => {
@@ -379,5 +380,9 @@ describe('Access Control Test', async () => {
 
     // New admin should be able to assign roles
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
+  });
+  it('Only Admin should be able to call upgradeDelegate', async () => {
+    assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
   });
 });

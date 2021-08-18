@@ -344,7 +344,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     function getEpochStaked(uint32 stakerId) external view returns (uint32) {
-        return stakers[stakerId].epochStaked;
+        return stakers[stakerId].epochFirstStaked;
     }
 
     /// @notice Internal function for setting stake of the staker

@@ -5,8 +5,8 @@ const ONE_ETHER = BigNumber.from(10).pow(BigNumber.from(18));
 
 const EPOCH_LENGTH = BigNumber.from(300);
 const NUM_BLOCKS = 10;
-const NUM_STATES = BigNumber.from(4);
-const STATE_LENGTH = BigNumber.from(75);
+const NUM_STATES = BigNumber.from(5);
+const STATE_LENGTH = BigNumber.from(60);
 const GRACE_PERIOD = 8;
 const WITHDRAW_LOCK_PERIOD = 1;
 const MATURITIES = [50, 70, 86, 100, 111, 122, 132, 141, 150, 158,

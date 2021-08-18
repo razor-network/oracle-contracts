@@ -76,7 +76,7 @@ contract RewardManager is Initializable, ACL, Constants {
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-        uint32 epochLastActive = thisStaker.epochStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochStaked;
+        uint32 epochLastActive = thisStaker.epochFirstStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochFirstStaked;
 
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
@@ -126,7 +126,7 @@ contract RewardManager is Initializable, ACL, Constants {
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint32 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
+            uint32 voteValueLastEpoch = voteManager.getVoteValue(i + 1, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;
