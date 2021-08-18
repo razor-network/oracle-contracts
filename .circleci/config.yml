@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Slither
           command: | 
-              slither . --filter-paths "node_modules" --disable-color --print human-summary
+              slither . --filter-paths "node_modules" --disable-color
 
 notify:
   webhooks:
