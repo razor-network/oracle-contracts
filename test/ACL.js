@@ -328,7 +328,7 @@ describe('Access Control Test', async () => {
     await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2');
     await assetManager.createCollection([1, 2], 1, 0, 'test');
-    await assetManager.createJob('http://testurl.com/3', 'selector/3', 'test3', true, 0);
+    await assetManager.createJob(true, 0, 'http://testurl.com/3', 'selector/3', 'test3');
     await assetManager.addJobToCollection(3, 4);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.addJobToCollection(3, 4), expectedRevertMessage);

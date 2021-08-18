@@ -56,7 +56,7 @@ describe('AssetManager', function () {
         power,
         name,
         selector,
-        url,
+        url
       );
 
       const collectionName = 'Test Collection';
