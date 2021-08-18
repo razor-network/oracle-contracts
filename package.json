@@ -22,7 +22,8 @@
     "lint:js:fix": "eslint --fix . \"**/*.js\"",
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "gas": "CI=true npm run test && node scripts/gasAnalyze.js"
   },
   "repository": {
     "type": "git",
@@ -52,6 +53,7 @@
     "eslint-config-airbnb-base": "^14.2.1",
     "eslint-plugin-import": "^2.22.1",
     "ethers": "^5.0.31",
+    "get-json": "^1.0.1",
     "hardhat": "2.5.0",
     "hardhat-gas-reporter": "1.0.4",
     "prettier": "^2.3.2",
