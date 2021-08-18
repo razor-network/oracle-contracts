@@ -25,11 +25,12 @@ describe('Access Control Test', async () => {
   let stakeManager;
   let rewardManager;
   let initializeContracts;
+  let delegator;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts,
+      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -379,5 +380,9 @@ describe('Access Control Test', async () => {
 
     // New admin should be able to assign roles
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
+  });
+  it('Only Admin should be able to call upgradeDelegate', async () => {
+    assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
   });
 });
