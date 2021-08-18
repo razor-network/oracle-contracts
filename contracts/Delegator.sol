@@ -9,7 +9,7 @@ contract Delegator {
     address public owner = msg.sender;
 
     function upgradeDelegate(address newDelegateAddress) external {
-        require(owner == msg.sender, "Caller is not owner");
+        require(msg.sender == owner, "Caller is not owner");
         delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
     }
