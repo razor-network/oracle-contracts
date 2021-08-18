@@ -589,5 +589,37 @@ describe('BlockManager', function () {
         biggestInfluencerId);
       assertRevert(tx, 'stake below minimum stake');
     });
+    it('should not be able to give sorted votes for stakers who didnt vote in epoch', async function () {
+      await mineToNextState();
+      const epoch = await getEpoch();
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 1, [8]);
+      assertRevert(tx, 'epoch in vote doesnt match with current');
+    });
+    it('should not be able to give sorted votes for wrong asset ID', async function () {
+      await mineToNextEpoch();
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const epoch = await getEpoch();
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment);
+      await mineToNextState();// reveal
+      await voteManager.connect(signers[3]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();// propose
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+      await blockManager.connect(signers[3]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        biggestInfluencerId);
+      await mineToNextState();// dispute
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 2, [7]);
+      assertRevert(tx, 'AssetId not matching');
+    });
   });
 });
