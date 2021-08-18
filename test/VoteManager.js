@@ -87,6 +87,11 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
       });
 
+      it('should not be able to initialize contracts if they are already initialized', async function () {
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
+        await assertRevert(tx, 'Initializable: contract is already initialized');
+      });
+
       it('should be able to commit', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -168,7 +173,7 @@ describe('VoteManager', function () {
         // // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         //
@@ -250,7 +255,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         await voteManager.connect(signers[4]).reveal(epoch, votes2,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
@@ -388,7 +393,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
