@@ -2,6 +2,7 @@
 test same vote values, stakes
 test penalizeEpochs */
 
+const { assert } = require('chai');
 const {
   assertBNEqual,
   mineToNextEpoch,
@@ -579,6 +580,20 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
       const tx = blockManager.connect(signers[19]).giveSorted(epoch, 2, [7]);
       assertRevert(tx, 'AssetId not matching');
+    });
+    it('Only valid staker can call the claimBlockReward function', async function () {
+      await mineToNextState(); // confirm state
+      const tx = blockManager.connect(signers[1]).claimBlockReward(); // Signer[1] is not a staker
+      assertRevert(tx, 'Structs.Staker does not exist');
+    });
+    it('if Staker other than BlockProposer tries to call ClaimBlockReward should revert', async function () {
+      const tx = blockManager.connect(signers[2]).claimBlockReward(); // Signer[2] never proposed a block
+      assertRevert(tx, 'Block can be confirmed by proposer of the block');
+    });
+    it('If block is already confirmed Block Proposer should not be able to confirm using ClaimBlockReward()', async function () {
+      await blockManager.connect(signers[3]).claimBlockReward();// BlockProposer confirms the block
+      const tx = blockManager.connect(signers[3]).claimBlockReward(); // it again tries to confirm block
+      assertRevert(tx, 'Block already confirmed');
     });
   });
 });
