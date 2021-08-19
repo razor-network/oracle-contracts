@@ -84,7 +84,7 @@ jobs:
           path: coverage
           prefix: coverage
 
-  eth-security-toolbox:
+  slither:
     docker:
       - image: 'trailofbits/eth-security-toolbox'
     resource_class: medium
@@ -113,7 +113,7 @@ workflows:
       - coverage:
           requires:
           - install_dependencies
-      - eth-security-toolbox:
+      - slither:
           requires:
           - install_dependencies
       - lint:
