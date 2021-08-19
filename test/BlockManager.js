@@ -2,7 +2,6 @@
 test same vote values, stakes
 test penalizeEpochs */
 
-const { assert } = require('chai');
 const {
   assertBNEqual,
   mineToNextEpoch,
