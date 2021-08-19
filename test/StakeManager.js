@@ -764,6 +764,8 @@ describe('StakeManager', function () {
         staker = await stakeManager.getStaker(4);
         const stakeBefore = staker.stake;
         await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[4]).claimBlockReward();
         await mineToNextState(); // commit again in order to get block reward
         epoch = await getEpoch();
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -777,7 +779,6 @@ describe('StakeManager', function () {
         staker = await stakeManager.getStaker(4);
         const stakeAfter = staker.stake;
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded'); // Staker 4 gets Block Reward results in increase of valuation of sRZR
-
         // Delagator unstakes
         epoch = await getEpoch();
         const amount = tokenAmount('10000'); // unstaking partial amount
@@ -801,7 +802,6 @@ describe('StakeManager', function () {
         let rAmount = (lock.amount.mul(staker.stake)).div(totalSupply); // 10000
         const newStake = prevStake.sub(rAmount);
         const commission = (rAmount.mul(staker.commission)).div(100); // commission in accordance to rAmount
-
         // Delegator withdraws
         await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
         staker = await stakeManager.getStaker(4);
@@ -813,7 +813,6 @@ describe('StakeManager', function () {
 
         // As staker 4 takes in Block Rewards ,so there is increase in valuation of sRZR
         // due to which rAmount > rAmountUnchanged (Case Unchanged is when 1RZR = 1SRZR)
-
         let rAmountUnchanged = lock.amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR
         const commissionUnchanged = (rAmountUnchanged.mul(staker.commission)).div(100);// commisson in accordance to rAmountUnchanged where 1RZR= 1sRZR
         rAmountUnchanged = rAmountUnchanged.sub(commissionUnchanged);
@@ -832,7 +831,6 @@ describe('StakeManager', function () {
         // commit
         let epoch = await getEpoch();
         const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
         const commitment = utils.solidityKeccak256(
           ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']

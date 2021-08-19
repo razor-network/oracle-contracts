@@ -249,6 +249,9 @@ describe('BlockManager', function () {
 
     it('block proposed by account 6 should be confirmed', async function () {
       await mineToNextState();
+      await blockManager.connect(signers[6]).claimBlockReward();
+      await mineToNextState();
+
       await razor.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
 
       const epoch = await getEpoch();
@@ -363,7 +366,7 @@ describe('BlockManager', function () {
     });
 
     it('if no block is valid in previous epoch, stakers should not be penalised', async function () {
-      await mineToNextState();
+      await mineToNextEpoch();
       const epoch = await getEpoch();
 
       const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
