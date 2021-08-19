@@ -114,7 +114,7 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
   const randaoHash = await voteManager.getRandaoHash();
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
-    if (isElected && i > 1) return (i - 1);
+    if (!isElected) return i;
   }
   return 0;
 };
