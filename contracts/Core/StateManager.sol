@@ -14,6 +14,16 @@ contract StateManager is Constants {
         _;
     }
 
+    modifier checkStates(State state1, State state2, uint32 epochLength) {
+        require(state1 == getState(epochLength) || state2 == getState(epochLength), "incorrect state");
+        _;
+    }
+
+    modifier checkNotState(State state, uint32 epochLength) {
+        require(state != getState(epochLength), "incorrect state");
+        _;
+    }
+
     modifier checkEpochAndState(
         State state,
         uint32 epoch,

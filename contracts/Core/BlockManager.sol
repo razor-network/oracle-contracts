@@ -56,7 +56,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
-
+        require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
