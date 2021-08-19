@@ -381,7 +381,6 @@ describe('Access Control Test', async () => {
   });
 
   it('updateCollection() should be accessable by only AssetModifier', async () => {
-
     const assetModifierHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetModifierHash, signers[0].address);
 
