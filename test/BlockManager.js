@@ -2,6 +2,7 @@
 test same vote values, stakes
 test penalizeEpochs */
 
+const { assert } = require('chai');
 const {
   assertBNEqual,
   mineToNextEpoch,
@@ -624,6 +625,45 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
       const tx = blockManager.connect(signers[19]).giveSorted(epoch, 2, [7]);
       assertRevert(tx, 'AssetId not matching');
+    });
+    it('should not be able to finalise dispute if medians value is zero', async function () {
+      await mineToNextEpoch();
+      const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const epoch = await getEpoch();
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment);
+      await mineToNextState();// reveal
+      await voteManager.connect(signers[3]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();// propose
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+      await blockManager.connect(signers[3]).propose(epoch,
+        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        iteration,
+        biggestInfluencerId);
+      await mineToNextState();// dispute
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
+
+      const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      assertRevert(tx, 'median can not be zero');
+    });
+    it('should be able to return correct data for getBlockMedians', async function () {
+      const tx = await blockManager.connect(signers[19]).getBlockMedians(await getEpoch());
+      assert(tx, 'transaction should not reverted');
+    });
+    it('getProposedBlock Function should work as expected', async function () {
+      const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
+      assert(tx, 'transaction should not get reverted');
+    });
+    it('getProposedBlockMedians should work as expected', async function () {
+      const tx = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      assert(tx, 'transaction should not get reverted');
     });
   });
 });
