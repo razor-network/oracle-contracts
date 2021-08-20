@@ -2,6 +2,7 @@
 test same vote values, stakes
 test penalizeEpochs */
 
+const { assert } = require('chai');
 const {
   assertBNEqual,
   mineToNextEpoch,
@@ -638,6 +639,11 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[3]).claimBlockReward();// BlockProposer confirms the block
       const tx = blockManager.connect(signers[3]).claimBlockReward(); // it again tries to confirm block
       assertRevert(tx, 'Block already confirmed');
+    });
+    it('claimBlockReward should be called in confirm state', async function () {
+      await mineToNextState();
+      const tx = blockManager.connect(signers[3]).claimBlockReward();
+      assertRevert(tx, 'incorrect state');
     });
   });
 });
