@@ -207,7 +207,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @notice remove all funds in case of emergency
     function escape(address _address) external initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
         if (parameters.escapeHatchEnabled()) {
-            razor.transfer(_address, razor.balanceOf(address(this)));
+            require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
             revert("escape hatch is disabled");
         }
@@ -297,9 +297,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        razor.transfer(bountyHunter, halfPenalty);
+        require(razor.transfer(bountyHunter, halfPenalty),"razor transfer failed");
         //burn half the amount
-        razor.transfer(BURN_ADDRESS, halfPenalty);
+        require(razor.transfer(BURN_ADDRESS, halfPenalty),"razor transfer failed");
     }
 
     function setStakerAge(
