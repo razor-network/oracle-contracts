@@ -415,7 +415,4 @@ describe('Access Control Test', async () => {
     assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
     await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
   });
-  it('upgradeDelegate should work for non zero address', async () => {
-    assertRevert(delegator.connect(signers[0]).upgradeDelegate(0x0000000000000000000000000000000000000000), 'hello');
-  });
 });
