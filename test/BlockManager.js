@@ -5,6 +5,7 @@ test penalizeEpochs */
 const { assert } = require('chai');
 const {
   assertBNEqual,
+  assertDeepEqual,
   mineToNextEpoch,
   mineToNextState,
   assertRevert,
@@ -674,18 +675,16 @@ describe('BlockManager', function () {
     });
     it('should be able to return correct data for getBlockMedians', async function () {
       const tx = await blockManager.connect(signers[19]).getBlockMedians(await getEpoch());
-      assert(tx, [], 'transaction should return correct data');
+      assertDeepEqual(tx, [], 'transaction should return correct data');
     });
     it('getProposedBlock Function should work as expected', async function () {
       const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
-      assert(tx._block.medians, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'it should return correct value');
-      assert(tx._block.proposerId, 7, 'it should return correct value');
-      assert(tx._block.iteration, 3, 'it should return correct value');
-      assert(Number(tx._block.biggestInfluence), 1.33 * (10 ** 24), 'it should return correct value');
-    });
-    it('getProposedBlockMedians should work as expected', async function () {
-      const tx = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
-      assert(tx, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'transaction should not get reverted');
+      const medians = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      const { proposerId, iteration, biggestInfluence } = await blockManager.proposedBlocks(await getEpoch(), 0);
+      assertBNEqual(tx._block.proposerId, proposerId, 'it should return correct value');
+      assertDeepEqual(tx._block.medians, medians, 'it should return correct value');
+      assertBNEqual(tx._block.iteration, iteration, 'it should return correct value');
+      assertBNEqual(tx._block.biggestInfluence, biggestInfluence, 'it should return correct value');
     });
   });
 });
