@@ -103,7 +103,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 amount
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
+        require(stakers[stakerId].tokenAddress != address(0x0), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
