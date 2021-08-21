@@ -5,6 +5,7 @@ import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
+import "./interface/IRewardManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./ACL.sol";

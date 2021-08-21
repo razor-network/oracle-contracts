@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./IStakedToken.sol";
 
 contract StakedToken is ERC20 {
     address private _owner;

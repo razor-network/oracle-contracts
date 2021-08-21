@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./StakedToken.sol";
+import "./IStakedTokenFactory.sol";
 
 contract StakedTokenFactory {
     function createStakedToken(address stakeManagerAddress) external returns (address) {
