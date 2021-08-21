@@ -94,8 +94,7 @@ jobs:
       - run:
           name: Slither
           command: | 
-              slither . --filter-paths "node_modules" --disable-color --exclude conformance-to-solidity-naming-conventions, incorrect-versions-of-solidity
-
+              slither . --exclude conformance-to-solidity-naming-conventions, incorrect-versions-of-solidity --filter-paths "node_modules" --disable-color 
 notify:
   webhooks:
     - url: >-
