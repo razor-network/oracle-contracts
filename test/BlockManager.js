@@ -626,6 +626,25 @@ describe('BlockManager', function () {
       const tx = blockManager.connect(signers[19]).giveSorted(epoch, 2, [7]);
       assertRevert(tx, 'AssetId not matching');
     });
+    it('Only valid staker can call the claimBlockReward function', async function () {
+      await mineToNextState(); // confirm state
+      const tx = blockManager.connect(signers[1]).claimBlockReward(); // Signer[1] is not a staker
+      assertRevert(tx, 'Structs.Staker does not exist');
+    });
+    it('if Staker other than BlockProposer tries to call ClaimBlockReward should revert', async function () {
+      const tx = blockManager.connect(signers[2]).claimBlockReward(); // Signer[2] never proposed a block
+      assertRevert(tx, 'Block can be confirmed by proposer of the block');
+    });
+    it('If block is already confirmed Block Proposer should not be able to confirm using ClaimBlockReward()', async function () {
+      await blockManager.connect(signers[3]).claimBlockReward();// BlockProposer confirms the block
+      const tx = blockManager.connect(signers[3]).claimBlockReward(); // it again tries to confirm block
+      assertRevert(tx, 'Block already confirmed');
+    });
+    it('claimBlockReward should be called in confirm state', async function () {
+      await mineToNextState();
+      const tx = blockManager.connect(signers[3]).claimBlockReward();
+      assertRevert(tx, 'incorrect state');
+    });
     it('should not be able to finalise dispute if medians value is zero', async function () {
       await mineToNextEpoch();
       const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -655,15 +674,18 @@ describe('BlockManager', function () {
     });
     it('should be able to return correct data for getBlockMedians', async function () {
       const tx = await blockManager.connect(signers[19]).getBlockMedians(await getEpoch());
-      assert(tx, 'transaction should not reverted');
+      assert(tx, [], 'transaction should return correct data');
     });
     it('getProposedBlock Function should work as expected', async function () {
       const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
-      assert(tx, 'transaction should not get reverted');
+      assert(tx._block.medians, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'transaction should not get reverted');
+      assert(tx._block.proposerId, 7, 'it doesnt match');
+      assert(tx._block.iteration, 3, 'it should return correct value');
+      assert(Number(tx._block.biggestInfluence), 1.33 * (10 ** 24), 'it should return correct value');
     });
     it('getProposedBlockMedians should work as expected', async function () {
       const tx = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
-      assert(tx, 'transaction should not get reverted');
+      assert(tx, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'transaction should not get reverted');
     });
   });
 });
