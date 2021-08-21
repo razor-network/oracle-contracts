@@ -678,8 +678,8 @@ describe('BlockManager', function () {
     });
     it('getProposedBlock Function should work as expected', async function () {
       const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
-      assert(tx._block.medians, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'transaction should not get reverted');
-      assert(tx._block.proposerId, 7, 'it doesnt match');
+      assert(tx._block.medians, [0, 0, 0, 0, 0, 0, 0, 0, 0], 'it should return correct value');
+      assert(tx._block.proposerId, 7, 'it should return correct value');
       assert(tx._block.iteration, 3, 'it should return correct value');
       assert(Number(tx._block.biggestInfluence), 1.33 * (10 ** 24), 'it should return correct value');
     });
