@@ -6,6 +6,7 @@ import "./IStakedTokenFactory.sol";
 
 contract StakedTokenFactory {
     function createStakedToken(address stakeManagerAddress) external returns (address) {
+        require(stakeManagerAddress != address(0x0), "zero address check");
         StakedToken sToken = new StakedToken(stakeManagerAddress);
         return address(sToken);
     }
