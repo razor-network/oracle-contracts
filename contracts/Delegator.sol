@@ -9,7 +9,7 @@ contract Delegator is ACL {
     IAssetManager public assetManager;
 
     function upgradeDelegate(address newDelegateAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newDelegateAddress!=address(0x0), "Zero Address check");
+        require(newDelegateAddress != address(0x0), "Zero Address check");
         delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
     }

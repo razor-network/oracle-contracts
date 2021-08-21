@@ -297,9 +297,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        require(razor.transfer(bountyHunter, halfPenalty),"razor transfer failed");
+        require(razor.transfer(bountyHunter, halfPenalty), "razor transfer failed");
         //burn half the amount
-        require(razor.transfer(BURN_ADDRESS, halfPenalty),"razor transfer failed");
+        require(razor.transfer(BURN_ADDRESS, halfPenalty), "razor transfer failed");
     }
 
     function setStakerAge(
