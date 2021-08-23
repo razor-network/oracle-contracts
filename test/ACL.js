@@ -397,8 +397,11 @@ describe('Access Control Test', async () => {
     const assetModifierHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetModifierHash, signers[0].address);
 
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
-    await assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection([1, 2], 1, 0, 'test');
 
     await assetManager.updateCollection(3, 2, -2);

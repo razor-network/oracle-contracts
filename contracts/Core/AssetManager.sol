@@ -12,20 +12,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
     event JobCreated(uint8 id, int8 power, address creator, uint32 epoch, uint256 timestamp, string name, string selector, string url);
 
-    //event JobReported(
-    //    bool active,
-    //    bool repeat,
-    //    uint8 id,
-    //    int8 power,
-    //    address creator,
-    //    uint32 value,
-    //    uint32 epoch,
-    //    uint256 timestamp,
-    //    string name,
-    //    string selector,
-    //    string url
-    //);
-
     event JobUpdated(uint8 id, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
 
     event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
@@ -89,7 +75,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         int8 power,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkNotState(State.Commit, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) notCommitState(State.Commit, parameters.epochLength()) {
         require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
 
         uint32 epoch = parameters.getEpoch();
@@ -103,7 +89,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function setAssetStatus(bool assetStatus, uint8 id)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        checkStates(State.Dispute, State.Confirm, parameters.epochLength())
+        checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength())
     {
         require(id != 0, "ID cannot be 0");
 
@@ -118,9 +104,9 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         } else {
             collections[id].active = assetStatus;
             if (assetStatus) {
-                numActiveAssets++;
+                numActiveAssets = numActiveAssets + 1;
             } else {
-                numActiveAssets--;
+                numActiveAssets = numActiveAssets - 1;
             }
 
             emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
@@ -132,13 +118,13 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         uint32 aggregationMethod,
         int8 power,
         string calldata name
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkStates(State.Dispute, State.Confirm, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength()) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
 
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        numActiveAssets++;
+        numActiveAssets = numActiveAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
         collections[numAssets].id = numAssets;
@@ -166,7 +152,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function addJobToCollection(uint8 collectionID, uint8 jobID)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        checkNotState(State.Commit, parameters.epochLength())
+        notCommitState(State.Commit, parameters.epochLength())
     {
         require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
 
@@ -198,7 +184,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        checkNotState(State.Commit, parameters.epochLength())
+        notCommitState(State.Commit, parameters.epochLength())
     {
         require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
 
