@@ -54,7 +54,15 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     //    string name
     //);
 
-    event CollectionUpdated(uint8 id, uint32 epoch, uint8[] updatedJobIDs, uint256 timestamp, string name);
+    event CollectionUpdated(
+        uint8 id,
+        uint32 epoch,
+        uint32 aggregationMethod,
+        int8 power,
+        uint8[] updatedJobIDs,
+        uint256 timestamp,
+        string name
+    );
 
     event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
@@ -176,7 +184,15 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
         collections[collectionID].jobIDExist[jobID] = true;
 
-        emit CollectionUpdated(collectionID, epoch, collections[collectionID].jobIDs, block.timestamp, collections[collectionID].name);
+        emit CollectionUpdated(
+            collectionID,
+            epoch,
+            collections[collectionID].aggregationMethod,
+            collections[collectionID].power,
+            collections[collectionID].jobIDs,
+            block.timestamp,
+            collections[collectionID].name
+        );
     }
 
     function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex)
@@ -195,7 +211,39 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         }
         collections[collectionID].jobIDs.pop();
 
-        emit CollectionUpdated(collectionID, epoch, collections[collectionID].jobIDs, block.timestamp, collections[collectionID].name);
+        emit CollectionUpdated(
+            collectionID,
+            epoch,
+            collections[collectionID].aggregationMethod,
+            collections[collectionID].power,
+            collections[collectionID].jobIDs,
+            block.timestamp,
+            collections[collectionID].name
+        );
+    }
+
+    function updateCollection(
+        uint8 collectionID,
+        uint32 aggregationMethod,
+        int8 power
+    ) external onlyRole(ASSET_MODIFIER_ROLE) {
+        require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].active, "Collection is inactive");
+
+        uint32 epoch = parameters.getEpoch();
+
+        collections[collectionID].power = power;
+        collections[collectionID].aggregationMethod = aggregationMethod;
+
+        emit CollectionUpdated(
+            collectionID,
+            epoch,
+            collections[collectionID].aggregationMethod,
+            collections[collectionID].power,
+            collections[collectionID].jobIDs,
+            block.timestamp,
+            collections[collectionID].name
+        );
     }
 
     // function getResult(uint8 id) external view returns (uint32 result) {
