@@ -256,7 +256,7 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Existing Lock doesnt exist');
     });
 
-    it('Staker should not be able to unstake more than his sToken balance', async function () {
+    it('Staker should not be able to unstake more than his sRZR balance', async function () {
       const epoch = await getEpoch();
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.getStaker(stakerIdAcc1);
@@ -1206,7 +1206,7 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Nonpositive Stake');
     });
 
-    it('staker should not be able to withdraw more than his sToken balance', async function () {
+    it('Stakers should not be able to withdraw if their current sRZR balance is less than the locked amount', async function () {
       let epoch = await getEpoch();
       await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('420000'));
@@ -1224,7 +1224,7 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[12]).resetLock(stakerId);
     });
 
-    it('sToken burn should fail if staker calls resetLock and his sToken balance is less than sAmount', async function () {
+    it('ResetLock should fail, if stakers sRZR balance is less than the amount to be penalized', async function () {
       let epoch = await getEpoch();
       let stakerId = await stakeManager.stakerIds(signers[12].address);
       let staker = await stakeManager.stakers(stakerId);
