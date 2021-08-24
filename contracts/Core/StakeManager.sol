@@ -75,9 +75,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             // Minting
-            sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
+            sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
@@ -184,8 +184,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost"); // Can Use ResetLock
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
         staker.stake = staker.stake - rAmount;
+        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
 
         // Function to Reset the lock
         _resetLock(stakerId);
@@ -200,8 +200,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         //Transfer stake
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
-
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -254,11 +252,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Converting Penalty into sAmount
         uint256 sAmount = _convertRZRtoSRZR(penalty, staker.stake, sToken.totalSupply());
 
-        //Burning sAmount from msg.sender
-        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
-
         //Updating Staker Stake
         staker.stake = staker.stake - penalty;
+
+        //Burning sAmount from msg.sender
+        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
 
         _resetLock(stakerId);
     }
@@ -297,9 +295,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        require(razor.transfer(bountyHunter, halfPenalty), "razor transfer failed");
+        razor.transfer(bountyHunter, halfPenalty);
         //burn half the amount
-        require(razor.transfer(BURN_ADDRESS, halfPenalty), "razor transfer failed");
+        razor.transfer(BURN_ADDRESS, halfPenalty);
     }
 
     function setStakerAge(
