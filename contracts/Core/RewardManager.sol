@@ -53,6 +53,10 @@ contract RewardManager is Initializable, ACL, Constants {
         stakeManager.setStakerStake(epoch, stakerId, newStake);
     }
 
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external initialized onlyRole(REWARD_MODIFIER_ROLE) {
+        _giveInactivityPenalties(epoch, stakerId);
+    }
+
     /// @notice Calculates the stake and age inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch

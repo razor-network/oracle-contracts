@@ -1111,13 +1111,13 @@ describe('StakeManager', function () {
     it('Staker should not be able to withdraw if contract is paused', async function () {
       let epoch = await getEpoch();
       const stakerId = await stakeManager.stakerIds(signers[4].address);
-      let staker = await stakeManager.getStaker(stakerId);
       const amount = tokenAmount('20000');
       await stakeManager.connect(signers[4]).unstake(epoch, stakerId, amount);
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
+      let staker = await stakeManager.getStaker(stakerId);
       const prevStake = staker.stake;
       const prevBalance = await razor.balanceOf(staker._address);
       await mineToNextEpoch();
@@ -1130,6 +1130,38 @@ describe('StakeManager', function () {
       assertBNEqual(prevStake, staker.stake, "Staker's stake changed");
       assertBNEqual(prevBalance, presentBalance, "Staker's razor balance changed");
       await stakeManager.connect(signers[0]).unpause();
+    });
+
+    it('staker should be given inactivity penalties at the time of unstaking incase of inactivity', async function () {
+      // commit
+      let epoch = await getEpoch();
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment);
+
+      // reveal
+      await mineToNextState();
+
+      await voteManager.connect(signers[4]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      const epochsJumped = GRACE_PERIOD + 2;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+
+      epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      await stakeManager.connect(signers[4]).resetLock(stakerId);
+      const amount = tokenAmount('20000');
+      let staker = await stakeManager.getStaker(stakerId);
+      const prevStake = staker.stake;
+      await stakeManager.connect(signers[4]).unstake(epoch, stakerId, amount);
+      staker = await stakeManager.getStaker(stakerId);
+      assertBNLessThan(staker.stake, prevStake);
     });
 
     // Test for Issue : https://github.com/razor-network/contracts/issues/202

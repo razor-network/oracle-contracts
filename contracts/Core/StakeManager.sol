@@ -140,6 +140,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sAmount > 0, "Non-Positive Amount");
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
+        if (stakerIds[msg.sender] == stakerId) {
+            // Staker can remain inactive for long time and then withdraw the funds before committing to avoid inactivity penalty.
+            rewardManager.giveInactivityPenalties(epoch, stakerId);
+        }
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
 
         emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
