@@ -67,9 +67,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         whenNotPaused
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
-        require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
         emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+        require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
+
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             stakerId = numStakers;
@@ -103,13 +104,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0), "Staker has not staked yet");
         // Step 1:  Razor Token Transfer : Amount
+        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 2 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
-        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         // Step 3: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
@@ -182,17 +183,17 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
 
         // Function to Reset the lock
         _resetLock(stakerId);
 
+        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             uint256 commission = (rAmount * staker.commission) / 100;
-            require(razor.transfer(staker._address, commission), "couldnt transfer");
             rAmount = rAmount - commission;
+            require(razor.transfer(staker._address, commission), "couldnt transfer");
         }
 
         //Transfer stake
