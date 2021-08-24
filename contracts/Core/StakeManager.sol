@@ -182,12 +182,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost"); // Can Use ResetLock
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
+        uint256 lockAmount = lock.amount;
         staker.stake = staker.stake - rAmount;
-
         // Function to Reset the lock
         _resetLock(stakerId);
-
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
+        require(sToken.burn(msg.sender, lockAmount), "Token burn Failed");
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
