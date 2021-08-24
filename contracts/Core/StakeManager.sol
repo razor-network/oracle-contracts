@@ -69,14 +69,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
+        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
         if (stakerId == 0) {
             numStakers = numStakers + (1);
-            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
-
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
-            // Minting
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
+            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
+            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
+            // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -89,8 +89,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             sToken.mint(msg.sender, toMint);
         }
-
-        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice Delegation
@@ -111,14 +109,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
+        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         // Step 3: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
-
-        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -140,9 +137,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sAmount > 0, "Non-Positive Amount");
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
+        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
 
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
         //emit event here
     }
 
