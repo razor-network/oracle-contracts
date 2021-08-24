@@ -270,6 +270,16 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Job exists in this collection');
     });
 
+    it('updateCollection should only work for collections which exists', async function () {
+      const tx = assetManager.updateCollection(10, 2, 5);
+      assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should only work for collections which are currently active', async function () {
+      await assetManager.setAssetStatus(false, 3);
+      const tx = assetManager.updateCollection(3, 2, 5);
+      assertRevert(tx, 'Collection is inactive');
+    });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);
