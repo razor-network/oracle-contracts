@@ -82,6 +82,13 @@ describe('AssetManager', function () {
       assertBNEqual(collection.jobIDs[2], toBigNumber('4'));
     });
 
+    it('should be able to update collection', async function () {
+      await assetManager.updateCollection(3, 2, 5);
+      const collection = await assetManager.getCollection(3);
+      assertBNEqual(collection.power, toBigNumber('5'));
+      assertBNEqual(collection.aggregationMethod, toBigNumber('2'));
+    });
+
     it('should return the correct asset type when getAssetType is called', async function () {
       const numAssets = await assetManager.getNumAssets();
       for (let i = 1; i <= numAssets; i++) {
@@ -266,6 +273,16 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Job exists in this collection');
     });
 
+    it('updateCollection should only work for collections which exists', async function () {
+      const tx = assetManager.updateCollection(10, 2, 5);
+      assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should only work for collections which are currently active', async function () {
+      await assetManager.setAssetStatus(false, 3);
+      const tx = assetManager.updateCollection(3, 2, 5);
+      assertRevert(tx, 'Collection is inactive');
+    });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);
