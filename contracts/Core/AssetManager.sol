@@ -28,18 +28,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         string name
     );
 
-    //event CollectionReported(
-    //    uint8 id,
-    //    int8 power,
-    //    uint32 epoch,
-    //    uint32 aggregationMethod,
-    //    uint32 value,
-    //    uint8[] jobIDs,
-    //    address creator,
-    //    uint256 timestamp,
-    //    string name
-    //);
-
     event CollectionUpdated(
         uint8 id,
         uint32 epoch,
