@@ -10,7 +10,7 @@ contract Parameters is ACL, Constants {
     uint8 public aggregationRange = 3;
     uint8 public withdrawReleasePeriod = 5;
     uint8 public resetLockPenalty = 1;
-    uint8 public maxCommission = 100;
+    uint8 public maxCommission = 20;
     uint16 public penaltyNotRevealNum = 1;
     uint16 public penaltyNotRevealDenom = 10000;
     uint16 public slashPenaltyNum = 10000;
