@@ -103,17 +103,18 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0), "Staker has not staked yet");
-        // Step 1:  Razor Token Transfer : Amount
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
-        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
-        // Step 2 : Calculate Mintable amount
+        // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
-        // Step 3: Increase given stakers stake by : Amount
+        // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+
+        // Step 3:  Razor Token Transfer : Amount
+        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
@@ -252,10 +253,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //Updating Staker Stake
         staker.stake = staker.stake - penalty;
 
+        _resetLock(stakerId);
+
         //Burning sAmount from msg.sender
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
-
-        _resetLock(stakerId);
     }
 
     /// @notice External function for setting stake of the staker
