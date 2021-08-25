@@ -120,7 +120,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
 
-        // Step 5 : Store or update investment releation, its used to calculate profit,
+        // Step 5 : Store or update quotient, its used to calculate profit,
         sToken.updateQuotient(msg.sender, amount, toMint);
 
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -196,9 +196,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
-            uint256 investment = sToken.getDelegatedAmount(msg.sender, lock.amount);
-            if (rAmount > investment) {
-                uint256 gain = rAmount - investment;
+            uint256 initial = sToken.getDelegatedAmount(msg.sender, lock.amount);
+            if (rAmount > initial) {
+                uint256 gain = rAmount - initial;
                 uint256 commission = (gain * staker.commission) / 100;
                 require(razor.transfer(staker._address, commission), "couldnt transfer");
                 rAmount = rAmount - commission;
