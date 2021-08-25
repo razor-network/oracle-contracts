@@ -5,9 +5,9 @@ import "../../lib/Structs.sol";
 
 contract AssetStorage {
     enum assetTypes {
-        None,
-        Job,
-        Collection
+        NONE,
+        JOB,
+        COLLECTION
     }
     mapping(uint8 => Structs.Job) public jobs;
     mapping(uint8 => Structs.Collection) public collections;
