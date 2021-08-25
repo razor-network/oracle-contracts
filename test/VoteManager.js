@@ -5,7 +5,7 @@ test cases where nobody votes, too low stake (1-4) */
 const { utils } = require('ethers');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
-
+  ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
 
 } = require('./helpers/constants'); const {
@@ -34,10 +34,11 @@ describe('VoteManager', function () {
     let rewardManager;
     let voteManager;
     let initializeContracts;
+    let assetManager;
 
     before(async () => {
       ({
-        blockManager, parameters, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, parameters, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -68,6 +69,22 @@ describe('VoteManager', function () {
 
       it('should be able to initialize', async function () {
         await Promise.all(await initializeContracts());
+
+        await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+        const url = 'http://testurl.com';
+        const selector = 'selector';
+        const name = 'test';
+        const power = -2;
+        let i = 0;
+        while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+
+        while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
+
+        const Cname = 'Test Collection';
+        for (let i = 1; i <= 8; i++) {
+          await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+        }
+        await assetManager.createCollection([9, 1], 1, 3, Cname);
 
         await mineToNextEpoch();
         await razor.transfer(signers[3].address, tokenAmount('423000'));
@@ -207,6 +224,8 @@ describe('VoteManager', function () {
         const influenceBefore = (await stakeManager.getInfluence(stakerIdAcc3));
         const ageBefore = await stakeManager.getAge(stakerIdAcc3);
         await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -286,6 +305,8 @@ describe('VoteManager', function () {
         const ageBefore = await stakeManager.getAge(stakerIdAcc3);
         const ageBefore2 = await stakeManager.getAge(stakerIdAcc4);
         await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -677,6 +698,8 @@ describe('VoteManager', function () {
       });
 
       it('if the revealed value is zero, next epoch should work normally', async function () {
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[8]).claimBlockReward();
         await mineToNextState(); // commit
 
         let epoch = await getEpoch();
@@ -756,7 +779,7 @@ describe('VoteManager', function () {
         assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
-        await mineToNextState();
+        await mineToNextEpoch();
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);

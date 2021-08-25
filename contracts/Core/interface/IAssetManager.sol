@@ -32,4 +32,6 @@ interface IAssetManager {
             uint32 aggregationMethod,
             string memory name
         );
+
+    function getNumActiveAssets() external view returns (uint8);
 }
