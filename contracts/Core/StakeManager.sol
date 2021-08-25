@@ -200,8 +200,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
                 uint256 commission = (gain * staker.commission) / 100;
-                require(razor.transfer(staker._address, commission), "couldnt transfer");
                 rAmount = rAmount - commission;
+                require(razor.transfer(staker._address, commission), "couldnt transfer");
             }
         }
         // Reset lock
@@ -236,6 +236,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
+        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
         stakers[stakerId].commission = commission;
     }
 

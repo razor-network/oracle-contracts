@@ -10,6 +10,7 @@ contract Parameters is ACL, Constants {
     uint8 public aggregationRange = 3;
     uint8 public withdrawReleasePeriod = 5;
     uint8 public resetLockPenalty = 1;
+    uint8 public maxCommission = 100;
     uint16 public penaltyNotRevealNum = 1;
     uint16 public penaltyNotRevealDenom = 10000;
     uint16 public slashPenaltyNum = 10000;
@@ -18,7 +19,6 @@ contract Parameters is ACL, Constants {
     uint16 public exposureDenominator = 1000;
     uint16 public gracePeriod = 8;
     uint32 public maxAge = 100 * 10000;
-
     uint256 public minStake = 1000 * (10**18);
     uint256 public blockReward = 100 * (10**18);
 
@@ -99,6 +99,12 @@ contract Parameters is ACL, Constants {
     function setMaxAge(uint32 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "maxAge", maxAge, _maxAge, block.timestamp);
         maxAge = _maxAge;
+    }
+
+    function setMaxCommission(uint8 _maxCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "maxCommission", maxCommission, _maxCommission, block.timestamp);
+        require(_maxCommission <= 100, "Invalid Max Commission Update");
+        maxCommission = _maxCommission;
     }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {

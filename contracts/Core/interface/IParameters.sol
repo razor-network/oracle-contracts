@@ -46,5 +46,7 @@ interface IParameters {
 
     function maxAge() external view returns (uint32);
 
+    function maxCommission() external view returns (uint8);
+
     function escapeHatchEnabled() external view returns (bool);
 }
