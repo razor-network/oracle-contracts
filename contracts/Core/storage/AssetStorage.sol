@@ -4,10 +4,10 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract AssetStorage {
-    enum assetTypes {
-        NONE,
-        JOB,
-        COLLECTION
+    enum AssetTypes {
+        None,
+        Job,
+        Collection
     }
     mapping(uint8 => Structs.Job) public jobs;
     mapping(uint8 => Structs.Collection) public collections;
