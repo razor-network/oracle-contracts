@@ -12,6 +12,7 @@ const {
 const {
   assertBNEqual,
   assertRevert,
+  mineToNextState,
 } = require('./helpers/testHelpers');
 
 const { toBigNumber } = require('./helpers/utils');
@@ -34,13 +35,11 @@ describe('AssetManager', function () {
       const url = 'http://testurl.com';
       const selector = 'selector';
       const name = 'test';
-      const repeat = true;
       const power = -2;
-      await assetManager.createJob(repeat, power, name, selector, url);
+      await assetManager.createJob(power, name, selector, url);
       const job = await assetManager.jobs(1);
       assert(job.url === url);
       assert(job.selector === selector);
-      assert(job.repeat === repeat);
       assertBNEqual(job.assetType, toBigNumber('1'));
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('1'));
     });
@@ -49,16 +48,16 @@ describe('AssetManager', function () {
       const url = 'http://testurl.com/2';
       const selector = 'selector/2';
       const name = 'test2';
-      const repeat = true;
       const power = 3;
       await assetManager.createJob(
-        repeat,
         power,
         name,
         selector,
         url
       );
-
+      await mineToNextState();// reveal
+      await mineToNextState();// propose
+      await mineToNextState();// dispute
       const collectionName = 'Test Collection';
       await assetManager.createCollection([1, 2], 1, power, collectionName);
       const collection = await assetManager.getCollection(3);
@@ -72,9 +71,8 @@ describe('AssetManager', function () {
       const url = 'http://testurl.com/3';
       const selector = 'selector/3';
       const name = 'test3';
-      const repeat = true;
       const power = -6;
-      await assetManager.createJob(repeat, power, name, selector, url);
+      await assetManager.createJob(power, name, selector, url);
 
       await assetManager.addJobToCollection(3, 4);
       const collection = await assetManager.getCollection(3);
@@ -102,7 +100,7 @@ describe('AssetManager', function () {
     });
 
     it('should be able to update Job', async function () {
-      await assetManager.createJob(true, 6, 'test4', 'selector/4', 'http://testurl.com/4');
+      await assetManager.createJob(6, 'test4', 'selector/4', 'http://testurl.com/4');
       await assetManager.updateJob(5, 4, 'selector/5', 'http://testurl.com/5');
       const job = await assetManager.jobs(5);
       assert(job.url === 'http://testurl.com/5');
@@ -119,7 +117,6 @@ describe('AssetManager', function () {
     it('should be able to get a job', async function () {
       const job = await assetManager.getJob(1);
       assertBNEqual(job.active, 'true', 'job should be active');
-      assertBNEqual(job.repeat, 'true', 'repeat should be true for job 1');
       assertBNEqual(job.name, 'test', 'job name should be "test"');
       assertBNEqual(job.selector, 'selector', 'job selector should be "selector"');
       assertBNEqual(job.url, 'http://testurl.com', 'job url should be "http://testurl.com"');
@@ -273,6 +270,16 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Job exists in this collection');
     });
 
+    it('updateCollection should only work for collections which exists', async function () {
+      const tx = assetManager.updateCollection(10, 2, 5);
+      assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should only work for collections which are currently active', async function () {
+      await assetManager.setAssetStatus(false, 3);
+      const tx = assetManager.updateCollection(3, 2, 5);
+      assertRevert(tx, 'Collection is inactive');
+    });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);
