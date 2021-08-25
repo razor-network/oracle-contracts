@@ -76,6 +76,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
+            sToken.updateQuotient(msg.sender, amount, amount); // Though quotient is not used for stakers, as they dont pay commission , its added here as staker can trasnfer their sRZR to someone else.
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
@@ -88,6 +89,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             sToken.mint(msg.sender, toMint);
+            sToken.updateQuotient(msg.sender, amount, toMint);
         }
 
         emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -117,6 +119,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
+
+        // Step 5 : Store or update investment releation, its used to calculate profit,
+        sToken.updateQuotient(msg.sender, amount, toMint);
 
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
@@ -187,18 +192,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
         staker.stake = staker.stake - rAmount;
 
-        // Function to Reset the lock
-        _resetLock(stakerId);
-
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (rAmount * staker.commission) / 100;
-            require(razor.transfer(staker._address, commission), "couldnt transfer");
-            rAmount = rAmount - commission;
+            // Calculate Gain
+            uint256 investment = sToken.getDelegatedAmount(msg.sender, lock.amount);
+            if (rAmount > investment) {
+                uint256 gain = rAmount - investment;
+                uint256 commission = (gain * staker.commission) / 100;
+                require(razor.transfer(staker._address, commission), "couldnt transfer");
+                rAmount = rAmount - commission;
+            }
         }
+        // Reset lock
+        _resetLock(stakerId);
 
-        //Transfer stake
+        //Transfer Razor back
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
         emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);

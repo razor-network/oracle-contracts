@@ -31,4 +31,12 @@ interface IStakedToken is IERC20 {
      * - `account` must have at least `amount` tokens.
      */
     function burn(address account, uint256 amount) external returns (bool);
+
+    function updateQuotient(
+        address delegator,
+        uint256 numAddition,
+        uint256 denAddition
+    ) external returns (bool);
+
+    function getDelegatedAmount(address delegator, uint256 sAmount) external view returns (uint256);
 }
