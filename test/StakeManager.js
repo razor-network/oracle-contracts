@@ -5,7 +5,7 @@ test cases where nobody votes, too low stake (1-4) */
 const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
-  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD,
+  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
 
   STAKE_MODIFIER_ROLE,
 
@@ -42,11 +42,13 @@ describe('StakeManager', function () {
     let initializeContracts;
     let stakedToken;
     let stakedTokenFactory;
+    let assetManager;
 
     before(async () => {
       ({
         razor,
         blockManager,
+        assetManager,
         stakeManager,
         rewardManager,
         parameters,
@@ -81,6 +83,22 @@ describe('StakeManager', function () {
 
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
+
+      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      const url = 'http://testurl.com';
+      const selector = 'selector';
+      const name = 'test';
+      const power = -2;
+      let i = 0;
+      while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+
+      while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
+
+      const Cname = 'Test Collection';
+      for (let i = 1; i <= 8; i++) {
+        await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+      }
+      await assetManager.createCollection([9, 1], 1, 3, Cname);
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');

@@ -44,7 +44,6 @@ library Structs {
 
     struct Job {
         bool active;
-        bool repeat;
         uint8 id;
         uint8 assetType;
         int8 power;
