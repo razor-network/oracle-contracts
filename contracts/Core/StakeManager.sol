@@ -240,7 +240,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function resetLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to reset
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
-        require(stakers[stakerId].id != 0, "staker.id = 0");
 
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
