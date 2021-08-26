@@ -104,6 +104,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
+        require(isStakerActive(stakerId, epoch), "Staker is inactive");
+
         // Step 1:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
@@ -345,6 +347,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     function getEpochStaked(uint32 stakerId) external view returns (uint32) {
         return stakers[stakerId].epochFirstStaked;
+    }
+
+    /// @return isStakerActive : Activity < Grace
+    function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
+        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
+        uint32 inactiveEpochs = (epoch - epochLastRevealed == 0) ? 0 : epoch - epochLastRevealed - 1;
+        if (inactiveEpochs < parameters.gracePeriod()) return true;
+        return false;
     }
 
     /// @notice Internal function for setting stake of the staker
