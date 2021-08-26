@@ -1247,6 +1247,7 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[9]).reveal(epoch, votes1,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Next Epoch
+      await mineToNextEpoch();
     });
 
     it('Stakers should not be able to withdraw if their current sRZR balance is less than the locked amount', async function () {
