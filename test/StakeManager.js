@@ -1223,7 +1223,6 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Nonpositive Stake');
     });
 
-
     it('Staker with minStake staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('1000');
       await razor.transfer(signers[9].address, stakeOfStaker);
@@ -1231,7 +1230,6 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
       await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
-      const stakerId = await stakeManager.stakerIds(signers[9].address);
       await mineToNextEpoch();
 
       // Participation In Epoch
@@ -1248,7 +1246,6 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[9]).reveal(epoch, votes1,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // Next Epoch
-
     });
   });
 });
