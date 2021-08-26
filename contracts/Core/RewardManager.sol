@@ -13,7 +13,7 @@ import "./ACL.sol";
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL, Constants {
+contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
@@ -40,7 +40,7 @@ contract RewardManager is Initializable, ACL, Constants {
     /// @param stakerId The id of staker currently in consideration
     /// @param epoch the epoch value
     /// todo reduce complexity
-    function givePenalties(uint32 epoch, uint32 stakerId) external initialized onlyRole(REWARD_MODIFIER_ROLE) {
+    function givePenalties(uint32 epoch, uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _givePenalties(epoch, stakerId);
     }
 
@@ -48,7 +48,7 @@ contract RewardManager is Initializable, ACL, Constants {
     /// previous epoch by increasing stake of staker
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
-    function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
         stakeManager.setStakerStake(epoch, stakerId, newStake);
