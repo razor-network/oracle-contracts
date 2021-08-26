@@ -102,8 +102,8 @@ contract Parameters is ACL, Constants {
     }
 
     function setMaxCommission(uint8 _maxCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "maxCommission", maxCommission, _maxCommission, block.timestamp);
         require(_maxCommission <= 100, "Invalid Max Commission Update");
+        emit ParameterChanged(msg.sender, "maxCommission", maxCommission, _maxCommission, block.timestamp);
         maxCommission = _maxCommission;
     }
 
