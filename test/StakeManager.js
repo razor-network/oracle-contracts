@@ -1277,7 +1277,7 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[12]).resetLock(stakerId);
       await assertRevert(tx, 'ERC20: burn amount exceeds balance');
     });
-      
+
     // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
     it('Scenario Test : Delegation Gain and Quotient ', async function () {
       const epoch = await getEpoch();
