@@ -1,4 +1,4 @@
 {
-        "detectors_to_exclude": "solc-version,incorrect-equality,conformance-to-solidity-naming-conventions",
+        "detectors_to_exclude": "solc-version,incorrect-equality,conformance-to-solidity-naming-conventions,unchecked-transfer,reentrancy-vulnerabilities-1,unused-return,missing-zero-address-validation,calls-inside-a-loop",
         "filter_paths": "@openzeppelin/upgrades/contracts/|@openzeppelin/contracts-ethereum-package/contracts/|@openzeppelin/contracts/|thirdparty|test/"
 }
