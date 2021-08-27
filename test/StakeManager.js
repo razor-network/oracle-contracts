@@ -1181,43 +1181,5 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
     });
-
-    it('Stakers should not be able to withdraw if their current sRZR balance is less than the locked amount', async function () {
-      let epoch = await getEpoch();
-      await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('420000'));
-      const stakerId = await stakeManager.stakerIds(signers[12].address);
-      const staker = await stakeManager.stakers(stakerId);
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      await stakeManager.connect(signers[12]).unstake(epoch, stakerId, tokenAmount('420000'));
-      await sToken.connect(signers[12]).transfer(signers[10].address, tokenAmount('20000'));
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
-        await mineToNextEpoch();
-      }
-      epoch = await getEpoch();
-      const tx = stakeManager.connect(signers[12]).withdraw(epoch, stakerId);
-      await assertRevert(tx, 'locked amount lost');
-      await stakeManager.connect(signers[12]).resetLock(stakerId);
-    });
-
-    it('ResetLock should fail, if stakers sRZR balance is less than the amount to be penalized', async function () {
-      let epoch = await getEpoch();
-      let stakerId = await stakeManager.stakerIds(signers[12].address);
-      let staker = await stakeManager.stakers(stakerId);
-      let sToken = await stakedToken.attach(staker.tokenAddress);
-      let amount = await sToken.balanceOf(staker._address);
-      await stakeManager.connect(signers[12]).unstake(epoch, stakerId, amount);
-      await sToken.connect(signers[12]).transfer(signers[10].address, amount);
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD + 1; i++) {
-        await mineToNextEpoch();
-      }
-      epoch = await getEpoch();
-      stakerId = await stakeManager.stakerIds(signers[12].address);
-      staker = await stakeManager.stakers(stakerId);
-      sToken = await stakedToken.attach(staker.tokenAddress);
-      amount = await sToken.balanceOf(staker._address);
-      const tx = stakeManager.connect(signers[12]).resetLock(stakerId);
-      await assertRevert(tx, 'ERC20: burn amount exceeds balance');
-    });
   });
 });
