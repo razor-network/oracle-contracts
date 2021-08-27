@@ -584,36 +584,23 @@ describe('StakeManager', function () {
         await assertRevert(tx5, 'staker id = 0');
       });
 
-    it('Staker should not be able to set commission if delegation not accepted', async function () {
+    it('Staker should not be able to set commission if delegation is accepted', async function () {
+      await stakeManager.connect(signers[1]).setDelegationAcceptance('true');
       const tx = stakeManager.connect(signers[1]).setCommission(5);
-      await assertRevert(tx, 'Delegetion not accpected');
+      await assertRevert(tx, 'Delegation accepted');
     });
 
     it('Delegator should not be able to delegate if delegation not accepted', async function () {
-      const epoch = await getEpoch();
-      const amount = tokenAmount('420000');
-      const stakerId = await stakeManager.stakerIds(signers[1].address);
-      const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, amount);
-      await assertRevert(tx, 'Delegetion not accpected');
-    });
-
-    it('staker should accept delegation', async function () {
       const stake1 = tokenAmount('420000');
       await mineToNextEpoch();
       const epoch = await getEpoch();
       await razor.connect(signers[4]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[4]).stake(epoch, stake1);
-      await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
-      const staker = await stakeManager.getStaker(4);
-      const { acceptDelegation } = staker;
-      assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
-    });
-
-    it('Delegator should not be able to delegate more than his rzr balance', async function () {
-      const epoch = await getEpoch();
+      const amount = tokenAmount('420000');
       const stakerId = await stakeManager.stakerIds(signers[4].address);
-      const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, tokenAmount('500000'));
-      await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
+      await razor.connect(signers[5]).approve(stakeManager.address, amount);
+      const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, amount);
+      await assertRevert(tx, 'Delegetion not accpected');
     });
 
     it('Staker should be able to set commission', async function () {
@@ -627,6 +614,20 @@ describe('StakeManager', function () {
     it('Staker should not be able to set commission if commission already initialized', async function () {
       const tx = stakeManager.connect(signers[4]).setCommission(5);
       await assertRevert(tx, 'Commission already intilised');
+    });
+
+    it('staker should accept delegation', async function () {
+      await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
+      const staker = await stakeManager.getStaker(4);
+      const { acceptDelegation } = staker;
+      assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
+    });
+
+    it('Delegator should not be able to delegate more than his rzr balance', async function () {
+      const epoch = await getEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, tokenAmount('500000'));
+      await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
     });
 
     it('chosen staker should stake atleast once', async function () {
