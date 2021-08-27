@@ -112,6 +112,8 @@ describe('StakeManager', function () {
       await razor.transfer(signers[8].address, stake1);
       await razor.transfer(signers[9].address, stake1);
       await razor.transfer(signers[12].address, stake1);
+      await razor.transfer(signers[13].address, stake1);
+      await razor.transfer(signers[14].address, stake1);
     });
 
     it('should not allow non admin to pause', async function () {
@@ -1260,6 +1262,31 @@ describe('StakeManager', function () {
       amount = await sToken.balanceOf(staker._address);
       const tx = stakeManager.connect(signers[12]).resetLock(stakerId);
       await assertRevert(tx, 'ERC20: burn amount exceeds balance');
+    });
+    it('staker should be able to unstake its own stake, not delegated funds', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      const stake = tokenAmount('10000');
+      const delegatedStake = tokenAmount('10000');
+      await razor.connect(signers[13]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[13]).stake(epoch, stake);
+      const stakerId = await stakeManager.stakerIds(signers[13].address);
+      await stakeManager.connect(signers[13]).setDelegationAcceptance('true');
+      await stakeManager.connect(signers[13]).setCommission(5);
+      await razor.connect(signers[1]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[1]).delegate(epoch, stakerId, delegatedStake);
+      let staker = await stakeManager.stakers(stakerId);
+      const tx = stakeManager.connect(signers[13]).unstake(epoch, stakerId, staker.stake); // Staker to unstake delegated Amount
+      assertRevert(tx, 'Invalid Amount')
+      assertBNEqual(toBigNumber('20000000000000000000000'), staker.stake, 'it should be equal');
+      await stakeManager.connect(signers[13]).unstake(epoch, stakerId, stake);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[13]).withdraw(epoch, stakerId);
+      staker = await stakeManager.stakers(stakerId);
+      assertBNEqual(tokenAmount('10000'), staker.stake, 'it should be zero');
     });
   });
 });
