@@ -1277,7 +1277,7 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[1]).delegate(epoch, stakerId, delegatedStake);
       let staker = await stakeManager.stakers(stakerId);
       const tx = stakeManager.connect(signers[13]).unstake(epoch, stakerId, staker.stake); // Staker to unstake delegated Amount
-      assertRevert(tx, 'Invalid Amount')
+      assertRevert(tx, 'Invalid Amount');
       assertBNEqual(toBigNumber('20000000000000000000000'), staker.stake, 'it should be equal');
       await stakeManager.connect(signers[13]).unstake(epoch, stakerId, stake);
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
