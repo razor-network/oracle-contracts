@@ -712,5 +712,57 @@ describe('BlockManager', function () {
       const tx = blockManager.connect(signers[3]).claimBlockReward();
       assertRevert(tx, 'incorrect state');
     });
+    it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
+      // commit
+      await mineToNextEpoch();
+      await razor.transfer(signers[9].address, tokenAmount('19000'));
+      await razor.transfer(signers[10].address, tokenAmount('17000'));
+      let epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('19000'));
+      await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('19000'));
+
+      await razor.connect(signers[10]).approve(stakeManager.address, tokenAmount('17000'));
+      await stakeManager.connect(signers[10]).stake(epoch, tokenAmount('17000'));
+
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[9]).commit(epoch, commitment1);
+
+      // Reveal
+      await mineToNextState();
+
+      await voteManager.connect(signers[9]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // Propose
+      await mineToNextState();
+      const stakerIdAcc9 = await stakeManager.stakerIds(signers[9].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc9);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+
+      await blockManager.connect(signers[9]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        biggestInfluencerId);
+
+      // dispute
+      await mineToNextState();
+      epoch = await getEpoch();
+
+      // disputed without calling giveSoted() , so totalInfluenceRevealed does not match
+
+      await blockManager.disputes(epoch, signers[10].address);
+
+      const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
+      await assertRevert(tx, 'Total influence revealed doesnt match');
+    });
   });
 });
