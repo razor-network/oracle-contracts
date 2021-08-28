@@ -225,7 +225,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function setCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        require(!stakers[stakerId].acceptDelegation, "Delegation accepted");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
         stakers[stakerId].commission = commission;
     }
