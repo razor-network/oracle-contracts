@@ -103,7 +103,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].tokenAddress != address(0x0), "Staker has not staked yet");
-        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -112,6 +111,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         // Step 3:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
@@ -141,8 +141,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
-
-        //emit event here
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -183,11 +181,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost"); // Can Use ResetLock
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
-        uint256 lockAmount = lock.amount;
         staker.stake = staker.stake - rAmount;
+        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
         // Function to Reset the lock
         _resetLock(stakerId);
-        require(sToken.burn(msg.sender, lockAmount), "Token burn Failed");
+
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
