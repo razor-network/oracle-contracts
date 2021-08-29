@@ -660,12 +660,19 @@ describe('BlockManager', function () {
       await mineToNextState();// propose
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[3].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker);
+      const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       await blockManager.connect(signers[3]).propose(epoch,
-        [0, 0, 0, 0, 0, 0, 0, 0, 0],
+        medians,
         iteration,
         biggestInfluencerId);
+      const block = await blockManager.proposedBlocks(await getEpoch(), 0);
+      const median = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      assertBNEqual(block.proposerId, stakerIdAcc2, 'ID should be equal');
+      assertDeepEqual(median, medians, 'medians should be equal');
+      assertBNEqual(block.iteration, iteration, 'iteration should be equal');
+      assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
       await mineToNextState();// dispute
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
 
