@@ -5,7 +5,7 @@ test cases where nobody votes, too low stake (1-4) */
 const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
-  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD,
+  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
 
   STAKE_MODIFIER_ROLE,
 
@@ -42,11 +42,13 @@ describe('StakeManager', function () {
     let initializeContracts;
     let stakedToken;
     let stakedTokenFactory;
+    let assetManager;
 
     before(async () => {
       ({
         razor,
         blockManager,
+        assetManager,
         stakeManager,
         rewardManager,
         parameters,
@@ -82,6 +84,22 @@ describe('StakeManager', function () {
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
 
+      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      const url = 'http://testurl.com';
+      const selector = 'selector';
+      const name = 'test';
+      const power = -2;
+      let i = 0;
+      while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+
+      while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
+
+      const Cname = 'Test Collection';
+      for (let i = 1; i <= 8; i++) {
+        await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+      }
+      await assetManager.createCollection([9, 1], 1, 3, Cname);
+
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');
       await razor.transfer(signers[1].address, stake1);
@@ -93,6 +111,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[7].address, stake1);
       await razor.transfer(signers[8].address, stake1);
       await razor.transfer(signers[9].address, stake1);
+      await razor.transfer(signers[12].address, stake1);
     });
 
     it('should not allow non admin to pause', async function () {
@@ -255,7 +274,7 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Existing Lock doesnt exist');
     });
 
-    it('Staker should not be able to unstake more than his stoken balance', async function () {
+    it('Staker should not be able to unstake more than his sRZR balance', async function () {
       const epoch = await getEpoch();
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.getStaker(stakerIdAcc1);
@@ -1203,6 +1222,44 @@ describe('StakeManager', function () {
       await stakeManager.slash(epoch, stakerIdacc3, signers[10].address);
       const tx = stakeManager.connect(signers[3]).withdraw(epoch, stakerIdacc3);
       await assertRevert(tx, 'Nonpositive Stake');
+    });
+
+    it('Stakers should not be able to withdraw if their current sRZR balance is less than the locked amount', async function () {
+      let epoch = await getEpoch();
+      await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('420000'));
+      const stakerId = await stakeManager.stakerIds(signers[12].address);
+      const staker = await stakeManager.stakers(stakerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      await stakeManager.connect(signers[12]).unstake(epoch, stakerId, tokenAmount('420000'));
+      await sToken.connect(signers[12]).transfer(signers[10].address, tokenAmount('20000'));
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      const tx = stakeManager.connect(signers[12]).withdraw(epoch, stakerId);
+      await assertRevert(tx, 'locked amount lost');
+      await stakeManager.connect(signers[12]).resetLock(stakerId);
+    });
+
+    it('ResetLock should fail, if stakers sRZR balance is less than the amount to be penalized', async function () {
+      let epoch = await getEpoch();
+      let stakerId = await stakeManager.stakerIds(signers[12].address);
+      let staker = await stakeManager.stakers(stakerId);
+      let sToken = await stakedToken.attach(staker.tokenAddress);
+      let amount = await sToken.balanceOf(staker._address);
+      await stakeManager.connect(signers[12]).unstake(epoch, stakerId, amount);
+      await sToken.connect(signers[12]).transfer(signers[10].address, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD + 1; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      stakerId = await stakeManager.stakerIds(signers[12].address);
+      staker = await stakeManager.stakers(stakerId);
+      sToken = await stakedToken.attach(staker.tokenAddress);
+      amount = await sToken.balanceOf(staker._address);
+      const tx = stakeManager.connect(signers[12]).resetLock(stakerId);
+      await assertRevert(tx, 'ERC20: burn amount exceeds balance');
     });
   });
 });

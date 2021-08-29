@@ -13,4 +13,5 @@ contract AssetStorage {
     mapping(uint8 => Structs.Collection) public collections;
 
     uint8 public numAssets;
+    uint8 public numActiveAssets;
 }
