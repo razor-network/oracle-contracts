@@ -9,7 +9,7 @@ const {
   ASSET_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
-  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks,
+  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -204,27 +204,27 @@ describe('Access Control Test', async () => {
 
   it('createJob() should not be accessable by anyone besides AssetCreator', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
+    await assertRevert(assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
+    await assertRevert(assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
+    await assertRevert(assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
+    await assertRevert(assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
   });
 
   it('createJob() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
-    await assertRevert(assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2'), expectedRevertMessage);
+    await assertRevert(assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2'), expectedRevertMessage);
   });
 
   it('updateJob() should not be accessable by anyone besides AssetCreator', async () => {
@@ -247,7 +247,8 @@ describe('Access Control Test', async () => {
   it('updateJob() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await mineToNextState();
     await assetManager.updateJob(1, 2, 'http://testurl.com/2', 'selector/2');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.updateJob(1, 2, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
@@ -273,7 +274,10 @@ describe('Access Control Test', async () => {
   it('setAssetStatus() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await mineToNextState();
+    await mineToNextState();
+    await mineToNextState();
     await assetManager.setAssetStatus(true, 1);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
@@ -299,8 +303,11 @@ describe('Access Control Test', async () => {
   it('createCollection() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
-    await assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
@@ -326,10 +333,13 @@ describe('Access Control Test', async () => {
   it('addJobToCollection() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
-    await assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection([1, 2], 1, 0, 'test');
-    await assetManager.createJob(true, 0, 'http://testurl.com/3', 'selector/3', 'test3');
+    await assetManager.createJob(0, 'http://testurl.com/3', 'selector/3', 'test3');
     await assetManager.addJobToCollection(3, 4);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.addJobToCollection(3, 4), expectedRevertMessage);
@@ -355,12 +365,48 @@ describe('Access Control Test', async () => {
   it('removeJobFromCollection() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
-    await assetManager.createJob(true, 0, 'http://testurl.com/1', 'selector/1', 'test1');
-    await assetManager.createJob(true, 0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.removeJobFromCollection(3, 1);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.removeJobFromCollection(3, 1), expectedRevertMessage);
+  });
+
+  it('updateCollection() should not be accessable by anyone besides AssetModifier', async () => {
+    // Checking if Anyone can access it
+    await assertRevert(assetManager.updateCollection(3, 2, -2), expectedRevertMessage);
+
+    // Checking if BlockConfirmer can access it
+    await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
+    await assertRevert(assetManager.updateCollection(3, 2, -2), expectedRevertMessage);
+
+    // Checking if StakeModifier can access it
+    await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+    await assertRevert(assetManager.updateCollection(3, 2, -2), expectedRevertMessage);
+
+    // Checking if StakerActivityUpdater can access it
+    await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
+    await assertRevert(assetManager.updateCollection(3, 2, -2), expectedRevertMessage);
+  });
+
+  it('updateCollection() should be accessable by only AssetModifier', async () => {
+    const assetModifierHash = ASSET_MODIFIER_ROLE;
+    await assetManager.grantRole(assetModifierHash, signers[0].address);
+
+    await assetManager.createJob(0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await assetManager.createJob(0, 'http://testurl.com/2', 'selector/2', 'test2');
+    await mineToNextState();// reveal
+    await mineToNextState();// propose
+    await mineToNextState();// dispute
+    await assetManager.createCollection([1, 2], 1, 0, 'test');
+
+    await assetManager.updateCollection(3, 2, -2);
+    await assetManager.revokeRole(assetModifierHash, signers[0].address);
+    await assertRevert(assetManager.updateCollection(3, 2, -2), expectedRevertMessage);
   });
 
   it('Only Default Admin should able to update Block Reward', async () => {

@@ -111,7 +111,7 @@ contract Parameters is ACL, Constants {
     }
 
     function getState() external view returns (uint8) {
-        uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)));
-        return (state % (NUM_STATES));
+        uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
+        return (state);
     }
 }
