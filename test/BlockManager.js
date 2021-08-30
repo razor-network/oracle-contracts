@@ -4,6 +4,7 @@ test penalizeEpochs */
 
 const {
   assertBNEqual,
+  assertDeepEqual,
   mineToNextEpoch,
   mineToNextState,
   assertRevert,
@@ -711,6 +712,53 @@ describe('BlockManager', function () {
       await mineToNextState();
       const tx = blockManager.connect(signers[3]).claimBlockReward();
       assertRevert(tx, 'incorrect state');
+    });
+    it('should not be able to finalise dispute if medians value is zero', async function () {
+      await mineToNextEpoch();
+      const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const epoch = await getEpoch();
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment);
+      await mineToNextState();// reveal
+      await voteManager.connect(signers[3]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();// propose
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+      const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+      const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      await blockManager.connect(signers[3]).propose(epoch,
+        medians,
+        iteration,
+        biggestInfluencerId);
+      const block = await blockManager.proposedBlocks(await getEpoch(), 0);
+      const median = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      assertBNEqual(block.proposerId, stakerIdAcc2, 'ID should be equal');
+      assertDeepEqual(median, medians, 'medians should be equal');
+      assertBNEqual(block.iteration, iteration, 'iteration should be equal');
+      assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
+      await mineToNextState();// dispute
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
+
+      const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      assertRevert(tx, 'median can not be zero');
+    });
+    it('should be able to return correct data for getBlockMedians', async function () {
+      const tx = await blockManager.connect(signers[19]).getBlockMedians(await getEpoch());
+      assertDeepEqual(tx, [], 'transaction should return correct data');
+    });
+    it('getProposedBlock Function should work as expected', async function () {
+      const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
+      const medians = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      const { proposerId, iteration, biggestInfluence } = await blockManager.proposedBlocks(await getEpoch(), 0);
+      assertBNEqual(tx._block.proposerId, proposerId, 'it should return correct value');
+      assertDeepEqual(tx._block.medians, medians, 'it should return correct value');
+      assertBNEqual(tx._block.iteration, iteration, 'it should return correct value');
+      assertBNEqual(tx._block.biggestInfluence, biggestInfluence, 'it should return correct value');
     });
     it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
       // commit
