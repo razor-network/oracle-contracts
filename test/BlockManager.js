@@ -271,7 +271,7 @@ describe('BlockManager', function () {
 
       const {
         totalInfluenceRevealed, sortedStakers,
-      } = await calculateDisputesData(1,
+      } = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -392,7 +392,7 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       // const sortedVotes1 = [toBigNumber('2000'), toBigNumber('2010')];
-      const res1 = await calculateDisputesData(1,
+      const res1 = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -574,7 +574,7 @@ describe('BlockManager', function () {
       epoch = await getEpoch();
       const {
         totalInfluenceRevealed, accProd, sortedStakers,
-      } = await calculateDisputesData(1,
+      } = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -879,7 +879,7 @@ describe('BlockManager', function () {
       await mineToNextState();
       epoch = await getEpoch();
 
-      const res1 = await calculateDisputesData(1,
+      const res1 = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
