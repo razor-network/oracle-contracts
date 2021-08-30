@@ -28,6 +28,7 @@ library Structs {
     }
 
     struct Block {
+        uint8[] ids;
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;
@@ -58,6 +59,7 @@ library Structs {
         bool active;
         uint8 id;
         uint8 assetType;
+        uint8 assetIndex;
         int8 power;
         uint32 epoch;
         uint32 aggregationMethod;

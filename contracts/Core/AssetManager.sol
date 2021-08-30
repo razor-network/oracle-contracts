@@ -77,7 +77,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function setAssetStatus(bool assetStatus, uint8 id)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength())
+        checkState(State.Confirm, parameters.epochLength())
     {
         require(id != 0, "ID cannot be 0");
 
@@ -90,12 +90,28 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
             emit JobActivityStatus(jobs[id].active, id, epoch, block.timestamp);
         } else {
-            collections[id].active = assetStatus;
             if (assetStatus) {
-                numActiveAssets = numActiveAssets + 1;
+                if(!collections[id].active){
+                    activeAssets.push(id);
+                    collections[id].assetIndex = uint8(activeAssets.length);
+                }
             } else {
-                numActiveAssets = numActiveAssets - 1;
+                if(collections[id].active){
+                    for(uint8 j = 0; j < activeAssets.length; j++){
+                        if(id == activeAssets[j]){
+                            activeAssets[j] = activeAssets[activeAssets.length - 1];
+                            activeAssets.pop();
+                            collections[id].assetIndex = 0;
+                            if(j != activeAssets.length) {
+                                collections[activeAssets[j]].assetIndex = j + 1;
+                            }
+                            break;
+                        }
+                    }
+                }
             }
+
+            collections[id].active = assetStatus;
 
             emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         }
@@ -106,13 +122,12 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         uint32 aggregationMethod,
         int8 power,
         string calldata name
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, parameters.epochLength()) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
 
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        numActiveAssets = numActiveAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
         collections[numAssets].id = numAssets;
@@ -134,6 +149,8 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         collections[numAssets].active = true;
         collections[numAssets].assetType = uint8(assetTypes.Collection);
         collections[numAssets].creator = msg.sender;
+        activeAssets.push(numAssets);
+        collections[numAssets].assetIndex = uint8(activeAssets.length);
         emit CollectionCreated(true, numAssets, power, epoch, aggregationMethod, jobIDs, msg.sender, block.timestamp, name);
     }
 
@@ -295,11 +312,22 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         }
     }
 
+    function getAssetIndex(uint8 id) external view returns (uint8) {
+        require(collections[id].assetType == uint8(assetTypes.Collection), "ID needs to be a collection");
+        //require(collections[id].active, "ID has been deactivated");
+
+        return collections[id].assetIndex;
+    }
+
     function getNumAssets() external view returns (uint8) {
         return numAssets;
     }
 
     function getNumActiveAssets() external view returns (uint8) {
-        return numActiveAssets;
+        return uint8(activeAssets.length);
+    }
+
+    function getActiveAssets() external view returns(uint8[] memory) {
+      return activeAssets;
     }
 }

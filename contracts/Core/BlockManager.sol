@@ -19,9 +19,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint8[] ids, uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
+    event Proposed(uint8[] ids, uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -49,6 +49,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
+        uint8[] memory ids,
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
@@ -63,11 +64,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(ids, proposerId, medians, iteration, biggestInfluence);
 
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
-        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
+        emit Proposed(ids, epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -79,6 +80,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
+        uint8 assetIndex = assetManager.getAssetIndex(assetId);
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].assetId = assetId;
         } else {
@@ -91,7 +93,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
-            uint48 value = vote.values[assetId - 1];
+            uint48 value = vote.values[assetIndex - 1];
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;
@@ -121,7 +123,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
-        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        emit BlockConfirmed(proposedBlocks[epoch][blockId].ids, epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -134,6 +136,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         rewardManager.giveBlockReward(stakerId, epoch - 1);
 
         emit BlockConfirmed(
+            proposedBlocks[epoch - 1][blockId].ids,
             epoch - 1,
             proposedBlocks[epoch - 1][blockId].proposerId,
             proposedBlocks[epoch - 1][blockId].medians,
@@ -155,7 +158,8 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         require(median > 0, "median can not be zero");
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
-        require(proposedBlocks[epoch][blockId].medians[assetId] != median, "Proposed Alternate block is identical to proposed block");
+        uint8 assetIndex = assetManager.getAssetIndex(assetId);
+        require(proposedBlocks[epoch][blockId].medians[assetIndex] != median, "Proposed Alternate block is identical to proposed block");
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
         sortedProposedBlockIds[epoch].pop();
