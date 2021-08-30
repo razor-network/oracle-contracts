@@ -91,18 +91,18 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
             emit JobActivityStatus(jobs[id].active, id, epoch, block.timestamp);
         } else {
             if (assetStatus) {
-                if(!collections[id].active){
+                if (!collections[id].active) {
                     activeAssets.push(id);
                     collections[id].assetIndex = uint8(activeAssets.length);
                 }
             } else {
-                if(collections[id].active){
-                    for(uint8 j = 0; j < activeAssets.length; j++){
-                        if(id == activeAssets[j]){
+                if (collections[id].active) {
+                    for (uint8 j = 0; j < activeAssets.length; j++) {
+                        if (id == activeAssets[j]) {
                             activeAssets[j] = activeAssets[activeAssets.length - 1];
                             activeAssets.pop();
                             collections[id].assetIndex = 0;
-                            if(j != activeAssets.length) {
+                            if (j != activeAssets.length) {
                                 collections[activeAssets[j]].assetIndex = j + 1;
                             }
                             break;
@@ -327,7 +327,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         return uint8(activeAssets.length);
     }
 
-    function getActiveAssets() external view returns(uint8[] memory) {
-      return activeAssets;
+    function getActiveAssets() external view returns (uint8[] memory) {
+        return activeAssets;
     }
 }

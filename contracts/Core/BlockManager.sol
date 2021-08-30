@@ -21,7 +21,15 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
     event BlockConfirmed(uint8[] ids, uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint8[] ids, uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
+    event Proposed(
+        uint8[] ids,
+        uint32 epoch,
+        uint32 stakerId,
+        uint32[] medians,
+        uint256 iteration,
+        uint32 biggestInfluencerId,
+        uint256 timestamp
+    );
 
     function initialize(
         address stakeManagerAddress,

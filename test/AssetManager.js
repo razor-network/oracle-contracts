@@ -14,7 +14,6 @@ const {
   assertRevert,
   mineToNextState,
   mineToNextEpoch,
-  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 
 const { toBigNumber } = require('./helpers/utils');
@@ -304,7 +303,7 @@ describe('AssetManager', function () {
       assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('0'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(14), toBigNumber('1'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
-      
+
       // Deactivating an asset with index between 0 and length - 1
       await assetManager.setAssetStatus(false, 10);
       assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');

@@ -753,8 +753,10 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc2);
       const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker);
+      const ids = await assetManager.getActiveAssets();
       const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       await blockManager.connect(signers[3]).propose(epoch,
+        ids,
         medians,
         iteration,
         biggestInfluencerId);
@@ -765,7 +767,7 @@ describe('BlockManager', function () {
       assertBNEqual(block.iteration, iteration, 'iteration should be equal');
       assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
       await mineToNextState();// dispute
-      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [7]);
+      await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
 
       const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
       assertRevert(tx, 'median can not be zero');
