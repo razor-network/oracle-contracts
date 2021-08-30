@@ -271,7 +271,7 @@ describe('BlockManager', function () {
 
       const {
         totalInfluenceRevealed, sortedStakers,
-      } = await calculateDisputesData(1,
+      } = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -392,7 +392,7 @@ describe('BlockManager', function () {
       await mineToNextState();
 
       // const sortedVotes1 = [toBigNumber('2000'), toBigNumber('2010')];
-      const res1 = await calculateDisputesData(1,
+      const res1 = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -574,7 +574,7 @@ describe('BlockManager', function () {
       epoch = await getEpoch();
       const {
         totalInfluenceRevealed, accProd, sortedStakers,
-      } = await calculateDisputesData(1,
+      } = await calculateDisputesData(2,
         voteManager,
         stakeManager,
         epoch);
@@ -811,6 +811,86 @@ describe('BlockManager', function () {
 
       const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
       await assertRevert(tx, 'Total influence revealed doesnt match');
+    });
+    it('should not be able to finalize dispute, if proposed alternate block is identical to proposed blocks', async function () {
+      // Commit
+      await mineToNextEpoch();
+      await razor.transfer(signers[12].address, tokenAmount('423000'));
+      await razor.transfer(signers[13].address, tokenAmount('19000'));
+      let epoch = await getEpoch();
+
+      await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('420000'));
+
+      await razor.connect(signers[13]).approve(stakeManager.address, tokenAmount('18000'));
+      await stakeManager.connect(signers[13]).stake(epoch, tokenAmount('18000'));
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[12]).commit(epoch, commitment1);
+
+      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      const commitment2 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[13]).commit(epoch, commitment2);
+
+      // Reveal
+      await mineToNextState();
+
+      await voteManager.connect(signers[12]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // Staker 13
+      await voteManager.connect(signers[13]).reveal(epoch, votes2,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // Propose
+      await mineToNextState();
+      const stakerIdAcc12 = await stakeManager.stakerIds(signers[12].address);
+      const staker12 = await stakeManager.getStaker(stakerIdAcc12);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+
+      const iteration1 = await getIteration(voteManager, stakeManager, staker12);
+
+      await blockManager.connect(signers[12]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        iteration1,
+        biggestInfluencerId);
+
+      const stakerIdAcc13 = await stakeManager.stakerIds(signers[13].address);
+      const staker13 = await stakeManager.getStaker(stakerIdAcc13);
+
+      const iteration2 = await getIteration(voteManager, stakeManager, staker13);
+
+      await blockManager.connect(signers[13]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        iteration2,
+        biggestInfluencerId);
+
+      // dispute
+      await mineToNextState();
+      epoch = await getEpoch();
+
+      const res1 = await calculateDisputesData(2,
+        voteManager,
+        stakeManager,
+        epoch);
+
+      await blockManager.connect(signers[10]).giveSorted(epoch, 1, res1.sortedStakers);
+
+      await blockManager.disputes(epoch, signers[10].address);
+
+      const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
+
+      await assertRevert(tx, 'Proposed Alternate block is identical to proposed block');
     });
   });
 });

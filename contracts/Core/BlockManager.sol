@@ -155,7 +155,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         require(median > 0, "median can not be zero");
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
-        require(proposedBlocks[epoch][blockId].medians[assetId] != median, "Proposed Alternate block is identical to proposed block");
+        require(proposedBlocks[epoch][blockId].medians[assetId - 1] != median, "Proposed Alternate block is identical to proposed block");
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
         sortedProposedBlockIds[epoch].pop();
