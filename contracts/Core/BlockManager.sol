@@ -21,14 +21,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(
-        uint32 epoch,
-        uint32 stakerId,
-        uint32[] medians,
-        uint256 iteration,
-        uint32 biggestInfluencerId,
-        uint256 timestamp
-    );
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -164,7 +157,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
         uint8 assetIndex = assetManager.getAssetIndex(assetId);
-        require(proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median, "Proposed Alternate block is identical to proposed block");
+        require(
+            proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
+            "Proposed Alternate block is identical to proposed block"
+        );
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
         sortedProposedBlockIds[epoch].pop();
