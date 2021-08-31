@@ -1265,7 +1265,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[9].address, amount);
       await razor.connect(signers[9]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[9]).stake(epoch, amount);
-      await stakeManager.connect(signers[9]).setDelegationAcceptance('true');;
+      await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
       const stakerId = await stakeManager.stakerIds(signers[9].address);
 
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
@@ -1280,7 +1280,7 @@ describe('StakeManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextEpoch();
 
-      //delegation working as expected till staker is active
+      // delegation working as expected till staker is active
       epoch = await getEpoch();
       await razor.transfer(signers[10].address, amount);
       await razor.connect(signers[10]).approve(stakeManager.address, amount);
