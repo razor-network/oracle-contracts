@@ -1267,7 +1267,6 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[9]).stake(epoch, amount);
       await stakeManager.connect(signers[9]).setDelegationAcceptance('true');;
       const stakerId = await stakeManager.stakerIds(signers[9].address);
-      let staker = await stakeManager.getStaker(stakerId);
 
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
       const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -1282,6 +1281,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
 
       //delegation working as expected till staker is active
+      epoch = await getEpoch();
       await razor.transfer(signers[10].address, amount);
       await razor.connect(signers[10]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[10]).delegate(epoch, stakerId, amount);
@@ -1295,7 +1295,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[10].address, amount);
       await razor.connect(signers[10]).approve(stakeManager.address, amount);
       const tx = stakeManager.connect(signers[10]).delegate(epoch, stakerId, amount);
-      await assertRevert(tx, 'Staker is Inactive');
+      await assertRevert(tx, 'Staker is inactive');
     });
     it('Staker with minStake staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('1000');
