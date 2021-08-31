@@ -28,7 +28,6 @@ library Structs {
     }
 
     struct Block {
-        uint8[] ids;
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;

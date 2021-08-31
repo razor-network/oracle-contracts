@@ -19,10 +19,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     IVoteManager public voteManager;
     IAssetManager public assetManager;
 
-    event BlockConfirmed(uint8[] ids, uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
     event Proposed(
-        uint8[] ids,
         uint32 epoch,
         uint32 stakerId,
         uint32[] medians,
@@ -57,7 +56,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
-        uint8[] memory ids,
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
@@ -72,11 +70,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(ids, proposerId, medians, iteration, biggestInfluence);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence);
 
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
-        emit Proposed(ids, epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
+        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -131,7 +129,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
-        emit BlockConfirmed(proposedBlocks[epoch][blockId].ids, epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -144,7 +142,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         rewardManager.giveBlockReward(stakerId, epoch - 1);
 
         emit BlockConfirmed(
-            proposedBlocks[epoch - 1][blockId].ids,
             epoch - 1,
             proposedBlocks[epoch - 1][blockId].proposerId,
             proposedBlocks[epoch - 1][blockId].medians,

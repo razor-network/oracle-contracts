@@ -215,10 +215,8 @@ describe('VoteManager', function () {
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
 
         const iteration = await getIteration(voteManager, stakeManager, staker);
-        const ids = await assetManager.getActiveAssets();
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
-          ids,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);
@@ -297,9 +295,7 @@ describe('VoteManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker);
         await mineToNextState(); // propose
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const ids = await assetManager.getActiveAssets();
         await blockManager.connect(signers[3]).propose(epoch,
-          ids,
           medians,
           iteration,
           biggestInfluencerId);
@@ -682,9 +678,7 @@ describe('VoteManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker);
 
         const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const ids = await assetManager.getActiveAssets();
         await blockManager.connect(signers[8]).propose(epoch,
-          ids,
           medians,
           iteration,
           biggestInfluencerId);
@@ -740,9 +734,7 @@ describe('VoteManager', function () {
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
         const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-        const ids = await assetManager.getActiveAssets();
         await blockManager.connect(signers[8]).propose(epoch,
-          ids,
           medians,
           iteration,
           biggestInfluencerId);
@@ -809,9 +801,8 @@ describe('VoteManager', function () {
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
-        const ids = await assetManager.getActiveAssets();
         await blockManager.connect(signers[3]).propose(epoch,
-          ids,
+
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);
