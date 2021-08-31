@@ -136,12 +136,23 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(staker.stake > 0, "Nonpositive stake");
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
+
+        rewardManager.giveInactivityPenalties(epoch, stakerId);
+
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
 
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
+        staker.stake = staker.stake - rAmount;
+
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
+
+        staker.epochLastUnstakedOrFirstStaked = epoch;
+
         //emit event here
+        emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+
+        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -168,32 +179,18 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
-        require(staker.stake > 0, "Nonpositive Stake");
-        require((voteManager.getCommitmentEpoch(stakerId)) != epoch, "Already commited");
-        if (stakerIds[msg.sender] == stakerId) {
-            // Staker Must not particiapte in withdraw lock period, To counter Hit and Run Attacks
-            require(
-                (lock.withdrawAfter - parameters.withdrawLockPeriod()) >= voteManager.getEpochLastCommitted(stakerId),
-                "Participated in Lock Period"
-            );
-        }
 
-        IStakedToken sToken = IStakedToken(staker.tokenAddress);
-        require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost"); // Can Use ResetLock
-
-        uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
-        require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
-        staker.stake = staker.stake - rAmount;
+        uint256 withdrawAmount = lock.amount;
 
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
             uint256 initial = sToken.getRZRDeposited(msg.sender, lock.amount);
-            if (rAmount > initial) {
-                uint256 gain = rAmount - initial;
+            if (withdrawAmount > initial) {
+                uint256 gain = withdrawAmount - initial;
                 uint256 commission = (gain * staker.commission) / 100;
-                rAmount = rAmount - commission;
+                withdrawAmount = withdrawAmount - commission;
                 require(razor.transfer(staker._address, commission), "couldnt transfer");
             }
         }
@@ -201,9 +198,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         _resetLock(stakerId);
 
         //Transfer Razor back
-        require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
+        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Withdrew(epoch, stakerId, lockedAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -219,6 +216,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function setDelegationAcceptance(bool status) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
+        require(stakers[stakerId].commission != 0, "comission not set");
         stakers[stakerId].acceptDelegation = status;
         emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
@@ -227,7 +225,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function setCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
         require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
         stakers[stakerId].commission = commission;
@@ -249,20 +246,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
 
         Structs.Staker storage staker = stakers[stakerId];
-        IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
+        uint256 lockedAmount = locks[msg.sender][stakers[stakerId].tokenAddress].amount;
+        IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
-        uint256 penalty = (staker.stake * parameters.resetLockPenalty()) / 100;
+        //Giving out the resetLock penalty
+        uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
+        lockedAmount = lockedAmount - penalty;
 
-        // Converting Penalty into sAmount
-        uint256 sAmount = _convertRZRtoSRZR(penalty, staker.stake, sToken.totalSupply());
-
-        //Burning sAmount from msg.sender
-        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
+        //Calculating the amount of sToken to be minted
+        uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
 
         //Updating Staker Stake
-        staker.stake = staker.stake - penalty;
+        staker.stake = staker.stake + lockedAmount;
 
         _resetLock(stakerId);
+
+        sToken.mint(msg.sender, sAmount);
     }
 
     /// @notice External function for setting stake of the staker
@@ -345,8 +344,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         return stakers[stakerId].stake;
     }
 
-    function getEpochStaked(uint32 stakerId) external view returns (uint32) {
-        return stakers[stakerId].epochFirstStaked;
+    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
+        return stakers[stakerId].epochLastUnstakedOrFirstStaked;
     }
 
     /// @notice Internal function for setting stake of the staker
