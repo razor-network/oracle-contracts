@@ -179,8 +179,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
-        //require(staker.stake > 0, "Nonpositive Stake");
-        //require((voteManager.getCommitmentEpoch(stakerId)) != epoch, "Already commited");
 
         uint256 lockedAmount = lock.amount;
 

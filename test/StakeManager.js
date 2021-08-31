@@ -391,6 +391,50 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Nonpositive stake');
     });
 
+    it('staker should be able to withdraw even if they have participated in the withdraw lock period', async function () {
+      // @notice: Checking for Staker 2
+      const stake = tokenAmount('10000');
+      let epoch = await getEpoch();
+      let staker = await stakeManager.getStaker(2);
+      const prevStake = staker.stake;
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = (stake.mul(staker.stake)).div(totalSupply);
+      await stakeManager.connect(signers[2]).unstake(epoch, 2, stake);
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
+      staker = await stakeManager.getStaker(2);
+      assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
+      assertBNEqual(lock.withdrawAfter, toBigNumber(epoch + WITHDRAW_LOCK_PERIOD), 'Withdraw after for the lock is incorrect');
+      assertBNEqual(prevStake.sub(rAmount), staker.stake, 'Stake not correct');
+      // Next Epoch
+      await mineToNextEpoch();
+
+      // Participation In Epoch
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      epoch = await getEpoch();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      // Commit
+      await voteManager.connect(signers[2]).commit(epoch, commitment1);
+      await mineToNextState();
+
+      // Reveal
+      await voteManager.connect(signers[2]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // Next Epoch
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      const prevBalance = await razor.balanceOf(signers[2].address);
+      await stakeManager.connect(signers[2]).withdraw(epoch, 2);
+      const newBalance = await razor.balanceOf(signers[2].address);
+      assertBNEqual(prevBalance.add(rAmount), newBalance, 'Could not Withdraw');
+    });
+
     it('should penalize staker if number of inactive epochs is greater than grace_period', async function () {
       let epoch = await getEpoch();
       const stake = tokenAmount('420000');
