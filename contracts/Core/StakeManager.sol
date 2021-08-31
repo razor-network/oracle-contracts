@@ -350,9 +350,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @return isStakerActive : Activity < Grace
     function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        uint32 inactiveEpochs = (epoch - epochLastRevealed == 0) ? 0 : epoch - epochLastRevealed - 1;
-        if (inactiveEpochs < parameters.gracePeriod()) return true;
-        return false;
+        return ((epoch - epochLastRevealed) <= parameters.gracePeriod());
     }
 
     /// @notice Internal function for setting stake of the staker
