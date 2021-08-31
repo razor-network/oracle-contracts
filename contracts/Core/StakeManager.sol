@@ -71,25 +71,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 stakerId = stakerIds[msg.sender];
         if (stakerId == 0) {
             numStakers = numStakers + (1);
-            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
+            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
 
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
-            sToken.updateQuotient(msg.sender, amount, amount); // Though quotient is not used for stakers, as they dont pay commission , its added here as staker can trasnfer their sRZR to someone else.
+            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
-
+            // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+            sToken.mint(msg.sender, toMint);
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
-            // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint);
-            sToken.updateQuotient(msg.sender, amount, toMint);
         }
 
         emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -113,14 +110,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
-        // Step 3: Increase given stakers stake by : Amount
-        stakers[stakerId].stake = stakers[stakerId].stake + (amount);
-
-        // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+        // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
 
-        // Step 5 : Store or update quotient, its used to calculate profit,
-        sToken.updateQuotient(msg.sender, amount, toMint);
+        // Step 4: Increase given stakers stake by : Amount
+        stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
@@ -195,7 +189,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
-            uint256 initial = sToken.getDelegatedAmount(msg.sender, lock.amount);
+            uint256 initial = sToken.getRZRPutIn(msg.sender, lock.amount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
                 uint256 commission = (gain * staker.commission) / 100;
