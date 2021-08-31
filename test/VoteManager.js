@@ -73,7 +73,7 @@ describe('VoteManager', function () {
         await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
-        const selectorType = 0
+        const selectorType = 0;
         const name = 'test';
         const power = -2;
         let i = 0;
