@@ -103,7 +103,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 amount
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        require(stakers[stakerId].tokenAddress != address(0x0000000000000000000000000000000000000000), "Staker has not staked yet");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
         // Step 1:  Razor Token Transfer : Amount
@@ -246,7 +245,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function resetLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to reset
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
-        require(stakers[stakerId].id != 0, "staker.id = 0");
 
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
