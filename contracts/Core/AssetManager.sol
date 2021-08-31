@@ -97,16 +97,12 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
                 }
             } else {
                 if (collections[id].active) {
-                    for (uint8 j = 0; j < activeAssets.length; j++) {
-                        if (id == activeAssets[j]) {
-                            activeAssets[j] = activeAssets[activeAssets.length - 1];
-                            activeAssets.pop();
-                            collections[id].assetIndex = 0;
-                            if (j != activeAssets.length) {
-                                collections[activeAssets[j]].assetIndex = j + 1;
-                            }
-                            break;
-                        }
+                    uint8 assetIndex = collections[id].assetIndex;
+                    activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+                    activeAssets.pop();
+                    collections[id].assetIndex = 0;
+                    if ((assetIndex - 1) != activeAssets.length) {
+                        collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
                     }
                 }
             }
