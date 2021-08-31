@@ -14,8 +14,8 @@ contract StakedToken is ERC20, IStakedToken {
     IStakeManager public stakeManager;
 
     // Mapping to store the amount of RZR delegated or staked by user
-    // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorAmount/balOfsRZR()) * sRZRamount)
-    // razorAmount/balOfsRZR() this indicate, for 1 sRZR, how much you had put in
+    // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorPutIn/balOfsRZR()) * sRZRamount)
+    // razorPutIn/balOfsRZR() indicates, for 1 sRZR, how much you had put in
 
     mapping(address => uint256) public razorPutIn;
 
