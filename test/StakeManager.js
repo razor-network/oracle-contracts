@@ -1147,6 +1147,32 @@ describe('StakeManager', function () {
       assertBNEqual(await sToken.balanceOf(signers[9].address), toBigNumber('5').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Delegator Balance MisMatch');
     });
 
+    it('Staker with minStake staked, should be able to participate', async function () {
+      const stakeOfStaker = tokenAmount('1000');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      let epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+      await mineToNextEpoch();
+
+      // Participation In Epoch
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      epoch = await getEpoch();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      // Commit
+      await voteManager.connect(signers[9]).commit(epoch, commitment1);
+      await mineToNextState();
+      // Reveal
+      await voteManager.connect(signers[9]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      // Next Epoch
+      await mineToNextEpoch();
+    });
+
     it('should be given out inactivity penalties at the time of unstaking', async function () {
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {

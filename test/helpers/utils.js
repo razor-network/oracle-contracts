@@ -24,11 +24,11 @@ const calculateDisputesData = async (assetId, voteManager, stakeManager, epoch) 
 
     if (vote[0] === epoch) {
       sortedStakers.push(i);
-      votes.push(vote[1][assetId]);
+      votes.push(vote[1][assetId - 1]);
 
       infl = await voteManager.getInfluenceSnapshot(epoch, i);
       // accWeight += infl;
-      accProd = accProd.add(toBigNumber(vote[1][assetId]).mul(infl));
+      accProd = accProd.add(toBigNumber(vote[1][assetId - 1]).mul(infl));
     }
   }
 
