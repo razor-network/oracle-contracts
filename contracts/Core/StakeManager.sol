@@ -144,15 +144,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
 
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
-        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
         staker.stake = staker.stake - rAmount;
 
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
 
         staker.epochLastUnstakedOrFirstStaked = epoch;
 
-        emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
         //emit event here
+        emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+
+        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -189,8 +190,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             uint256 commission = (lockedAmount * staker.commission) / 100;
-            require(razor.transfer(staker._address, commission), "couldnt transfer");
             lockedAmount = lockedAmount - commission;
+            require(razor.transfer(staker._address, commission), "couldnt transfer");
         }
 
         //Transfer stake
@@ -244,16 +245,19 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 lockedAmount = locks[msg.sender][stakers[stakerId].tokenAddress].amount;
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
+        //Giving out the resetLock penalty
         uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
         lockedAmount = lockedAmount - penalty;
 
+        //Calculating the amount of sToken to be minted
         uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
-        sToken.mint(msg.sender, sAmount);
 
         //Updating Staker Stake
         staker.stake = staker.stake + lockedAmount;
 
         _resetLock(stakerId);
+
+        sToken.mint(msg.sender, sAmount);
     }
 
     /// @notice External function for setting stake of the staker
