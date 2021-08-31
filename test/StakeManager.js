@@ -594,25 +594,6 @@ describe('StakeManager', function () {
       const epoch = await getEpoch();
       await razor.connect(signers[4]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[4]).stake(epoch, stake1);
-      await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
-      const staker = await stakeManager.getStaker(4);
-      // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[4]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[4]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await mineToNextEpoch();
-      const { acceptDelegation } = staker;
-      assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
-    });
-
-    it('Delegator should not be able to delegate more than his rzr balance', async function () {
-      const epoch = await getEpoch();
       const amount = tokenAmount('420000');
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       await razor.connect(signers[5]).approve(stakeManager.address, amount);
@@ -636,6 +617,18 @@ describe('StakeManager', function () {
     it('staker should accept delegation', async function () {
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       const staker = await stakeManager.getStaker(4);
+      const epoch = await getEpoch();
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[4]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextEpoch();
       const { acceptDelegation } = staker;
       assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
     });
@@ -1274,6 +1267,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[9].address, amount);
       await razor.connect(signers[9]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[9]).stake(epoch, amount);
+      await stakeManager.connect(signers[9]).setCommission(4);
       await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
       const stakerId = await stakeManager.stakerIds(signers[9].address);
 
