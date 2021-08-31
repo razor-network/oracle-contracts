@@ -668,7 +668,7 @@ describe('BlockManager', function () {
     it('should not be able to give sorted votes for stakers who didnt vote in epoch', async function () {
       await mineToNextState();
       const epoch = await getEpoch();
-      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 1, [8]);
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 10, [8]);
       assertRevert(tx, 'epoch in vote doesnt match with current');
     });
     it('For the second batch while raising dispute, assetid should match to the disputed assetid of first batch', async function () {

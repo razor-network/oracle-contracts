@@ -764,7 +764,6 @@ describe('VoteManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker);
         const tx = blockManager.connect(signers[3]).propose(epoch,
           [],
-          [],
           iteration,
           biggestInfluencerId);
         assertRevert(tx, 'Cannot propose without revealing');
