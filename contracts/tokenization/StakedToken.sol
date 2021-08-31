@@ -14,10 +14,10 @@ contract StakedToken is ERC20, IStakedToken {
     IStakeManager public stakeManager;
 
     // Mapping to store the amount of RZR delegated or staked by user
-    // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorPutIn/balOfsRZR()) * sRZRamount)
-    // razorPutIn/balOfsRZR() indicates, for 1 sRZR, how much you had put in
+    // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorDeposited/balOfsRZR()) * sRZRamount)
+    // razorDeposited/balOfsRZR() indicates, for 1 sRZR, how much you had put in
 
-    mapping(address => uint256) public razorPutIn;
+    mapping(address => uint256) public razorDeposited;
 
     modifier onlyOwner() {
         require(_owner == msg.sender, "Ownable: caller is not the owner");
@@ -42,9 +42,9 @@ contract StakedToken is ERC20, IStakedToken {
 
     /// @notice Used in withdraw
     // At any time via calling this one can find out how much RZR was invested for this much sRZR
-    function getRZRPutIn(address user, uint256 sAmount) public view override returns (uint256) {
+    function getRZRDeposited(address user, uint256 sAmount) public view override returns (uint256) {
         require(balanceOf(user) >= sAmount, "Amount Exceeds Balance");
-        return ((sAmount * razorPutIn[user]) / balanceOf(user));
+        return ((sAmount * razorDeposited[user]) / balanceOf(user));
     }
 
     function _beforeTokenTransfer(
@@ -66,15 +66,15 @@ contract StakedToken is ERC20, IStakedToken {
 
             if (totalsRZR == 0) razorAdded = amount;
             else razorAdded = (amount * currentStake) / totalsRZR;
-            razorPutIn[to] = razorPutIn[to] + razorAdded;
+            razorDeposited[to] = razorDeposited[to] + razorAdded;
         } else if (to == address(0)) {
             //Burn
-            uint256 propotionalRazorContribution = getRZRPutIn(from, amount);
-            razorPutIn[from] = razorPutIn[from] - propotionalRazorContribution;
+            uint256 propotionalRazorContribution = getRZRDeposited(from, amount);
+            razorDeposited[from] = razorDeposited[from] - propotionalRazorContribution;
         } else {
-            uint256 propotionalRazorContribution = getRZRPutIn(from, amount);
-            razorPutIn[from] = razorPutIn[from] - propotionalRazorContribution;
-            razorPutIn[to] = razorPutIn[to] + propotionalRazorContribution;
+            uint256 propotionalRazorContribution = getRZRDeposited(from, amount);
+            razorDeposited[from] = razorDeposited[from] - propotionalRazorContribution;
+            razorDeposited[to] = razorDeposited[to] + propotionalRazorContribution;
         }
     }
 }

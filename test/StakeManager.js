@@ -729,7 +729,7 @@ describe('StakeManager', function () {
       const totalSupply = await sToken.totalSupply();
       const rAmount = (lock.amount.mul(staker.stake)).div(totalSupply); // 10000
       const newStake = prevStake.sub(rAmount); // 510000
-      const initial = await sToken.getRZRPutIn(signers[5].address, lock.amount); // How much delegator had put for this much amount of SRZRS
+      const initial = await sToken.getRZRDeposited(signers[5].address, lock.amount); // How much delegator had put for this much amount of SRZRS
       const gain = (rAmount.sub(initial)); // commission in accordance to gain
 
       const commission = ((gain).mul(staker.commission)).div(100);
@@ -824,7 +824,7 @@ describe('StakeManager', function () {
         const sToken = await stakedToken.attach(staker.tokenAddress);
         const totalSupply = await sToken.totalSupply();
 
-        const initial = await sToken.getRZRPutIn(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
+        const initial = await sToken.getRZRDeposited(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
         let rAmount = (lock.amount.mul(staker.stake)).div(totalSupply); // 10000, How much is withdrawable
         const gain = (rAmount.sub(initial)); // commission in accordance to gain
         const commission = ((gain).mul(staker.commission)).div(100);
@@ -897,7 +897,7 @@ describe('StakeManager', function () {
         let rAmount = (lock.amount.mul(staker.stake)).div(totalSupply); // 10000
         const newStake = prevStake.sub(rAmount);
 
-        const initial = await sToken.getRZRPutIn(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
+        const initial = await sToken.getRZRDeposited(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
         const gain = (rAmount.sub(initial)); // commission in accordance to gain
         assertBNLessThan(gain, toBigNumber('0'), 'Gain calculated is not expected');
         const commission = 0; // as gain is < 0
@@ -1002,7 +1002,7 @@ describe('StakeManager', function () {
 
       const newStake = prevStake.sub(rAmount);
 
-      const initial = await sToken.getRZRPutIn(signers[6].address, amount); // How much delegator had put for this much amount of SRZRS
+      const initial = await sToken.getRZRDeposited(signers[6].address, amount); // How much delegator had put for this much amount of SRZRS
       const gain = (rAmount.sub(initial)); // commission in accordance to gain
       const commission = gain > 0 ? ((gain).mul(staker.commission)).div(100) : 0;
 
@@ -1300,7 +1300,7 @@ describe('StakeManager', function () {
 
       // All checks
       let sRZRBalance = await sToken.balanceOf(signers[13].address);
-      let initial = await sToken.getRZRPutIn(signers[13].address, sRZRBalance);
+      let initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
       let totalSupply = await sToken.totalSupply();
       staker = await stakeManager.stakers(stakerId);
       let withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
@@ -1319,7 +1319,7 @@ describe('StakeManager', function () {
 
       // All checks
       sRZRBalance = await sToken.balanceOf(signers[13].address);
-      initial = await sToken.getRZRPutIn(signers[13].address, sRZRBalance);
+      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
       totalSupply = await sToken.totalSupply();
       staker = await stakeManager.stakers(stakerId);
       withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
@@ -1338,7 +1338,7 @@ describe('StakeManager', function () {
 
       // All checks
       sRZRBalance = await sToken.balanceOf(signers[13].address);
-      initial = await sToken.getRZRPutIn(signers[13].address, sRZRBalance);
+      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
       totalSupply = await sToken.totalSupply();
       staker = await stakeManager.stakers(stakerId);
       withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
