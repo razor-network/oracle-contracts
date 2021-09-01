@@ -144,10 +144,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
+        staker.epochLastUnstakedOrFirstStaked = epoch;
+
+        // Transfer commission in case of delegators
+        // Check commission rate >0
+        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+            // Calculate Gain
+            uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
+            if (rAmount > initial) {
+                uint256 gain = rAmount - initial;
+                uint256 commission = (gain * staker.commission) / 100;
+                rAmount = rAmount - commission;
+                require(razor.transfer(staker._address, commission), "couldnt transfer");
+            }
+        }
 
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
-
-        staker.epochLastUnstakedOrFirstStaked = epoch;
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -180,25 +192,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
-        uint256 withdrawAmount = lock.amount;
+        uint256 lockedAmount = lock.amount;
 
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            // Calculate Gain
-            uint256 initial = sToken.getRZRDeposited(msg.sender, lock.amount);
-            if (withdrawAmount > initial) {
-                uint256 gain = withdrawAmount - initial;
-                uint256 commission = (gain * staker.commission) / 100;
-                withdrawAmount = withdrawAmount - commission;
-                require(razor.transfer(staker._address, commission), "couldnt transfer");
-            }
-        }
         // Reset lock
         _resetLock(stakerId);
 
         //Transfer Razor back
-        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
+        require(razor.transfer(msg.sender, lockedAmount), "couldnt transfer");
 
         emit Withdrew(epoch, stakerId, lockedAmount, staker.stake, block.timestamp);
     }
