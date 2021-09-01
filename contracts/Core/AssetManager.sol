@@ -53,7 +53,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(true, numAssets, uint8(assetTypes.Job), power, epoch, msg.sender, name, selector, url);
+        jobs[numAssets] = Structs.Job(true, numAssets, uint8(AssetTypes.Job), power, epoch, msg.sender, name, selector, url);
 
         emit JobCreated(numAssets, power, msg.sender, epoch, block.timestamp, name, selector, url);
     }
@@ -64,7 +64,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) notCommitState(State.Commit, parameters.epochLength()) {
-        require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
+        require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
 
         uint32 epoch = parameters.getEpoch();
 
@@ -85,7 +85,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
         uint32 epoch = parameters.getEpoch();
 
-        if (jobs[id].assetType == uint8(assetTypes.Job)) {
+        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
             jobs[id].active = assetStatus;
 
             emit JobActivityStatus(jobs[id].active, id, epoch, block.timestamp);
@@ -132,7 +132,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         collections[numAssets].aggregationMethod = aggregationMethod;
         collections[numAssets].name = name;
         for (uint8 i = 0; i < jobIDs.length; i++) {
-            require(jobs[jobIDs[i]].assetType == uint8(assetTypes.Job), "Job ID not present");
+            require(jobs[jobIDs[i]].assetType == uint8(AssetTypes.Job), "Job ID not present");
 
             require(jobs[jobIDs[i]].active, "Job ID not active");
 
@@ -143,7 +143,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
             collections[numAssets].jobIDExist[jobIDs[i]] = true;
         }
         collections[numAssets].active = true;
-        collections[numAssets].assetType = uint8(assetTypes.Collection);
+        collections[numAssets].assetType = uint8(AssetTypes.Collection);
         collections[numAssets].creator = msg.sender;
         activeAssets.push(numAssets);
         collections[numAssets].assetIndex = uint8(activeAssets.length);
@@ -155,11 +155,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         onlyRole(ASSET_MODIFIER_ROLE)
         notCommitState(State.Commit, parameters.epochLength())
     {
-        require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
 
         require(collections[collectionID].active, "Collection is inactive");
 
-        require(jobs[jobID].assetType == uint8(assetTypes.Job), "Job ID not present");
+        require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
 
         require(jobs[jobID].active, "Job ID not active");
 
@@ -187,7 +187,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         onlyRole(ASSET_MODIFIER_ROLE)
         notCommitState(State.Commit, parameters.epochLength())
     {
-        require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
 
         require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
 
@@ -214,7 +214,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         uint32 aggregationMethod,
         int8 power
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
-        require(collections[collectionID].assetType == uint8(assetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
 
         uint32 epoch = parameters.getEpoch();
@@ -238,7 +238,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     //
     //     require(id <= numAssets, "ID does not exist");
     //
-    //     if (jobs[id].assetType == uint8(assetTypes.Job)) {
+    //     if (jobs[id].assetType == uint8(AssetTypes.Job)) {
     //         return jobs[id].result;
     //     } else {
     //         return collections[id].result;
@@ -256,7 +256,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
             string memory url
         )
     {
-        require(jobs[id].assetType == uint8(assetTypes.Job), "ID is not a job");
+        require(jobs[id].assetType == uint8(AssetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
         return (job.active, job.power, job.name, job.selector, job.url);
@@ -273,7 +273,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
             string memory name
         )
     {
-        require(collections[id].assetType == uint8(assetTypes.Collection), "ID is not a collection");
+        require(collections[id].assetType == uint8(AssetTypes.Collection), "ID is not a collection");
 
         return (
             collections[id].active,
@@ -289,10 +289,10 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
         require(id <= numAssets, "ID does not exist");
 
-        if (jobs[id].assetType == uint8(assetTypes.Job)) {
-            return uint8(assetTypes.Job);
+        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
+            return uint8(AssetTypes.Job);
         } else {
-            return uint8(assetTypes.Collection);
+            return uint8(AssetTypes.Collection);
         }
     }
 
@@ -301,7 +301,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
         require(id <= numAssets, "ID does not exist");
 
-        if (jobs[id].assetType == uint8(assetTypes.Job)) {
+        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
             return jobs[id].active;
         } else {
             return collections[id].active;

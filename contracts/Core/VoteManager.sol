@@ -143,7 +143,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         return votes[stakerId].epoch;
     }
 
-    function getRandaoHash() public view returns (bytes32) {
+    function getRandaoHash() external view returns (bytes32) {
         return (secrets);
     }
 }

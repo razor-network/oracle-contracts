@@ -7,6 +7,7 @@ const {
   STAKE_MODIFIER_ROLE,
   REWARD_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
+  ZERO_ADDRESS,
 } = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
@@ -435,5 +436,8 @@ describe('Access Control Test', async () => {
   it('Only Admin should be able to call upgradeDelegate', async () => {
     assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
     await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
+  });
+  it('Upgrade Delegator should not accept zero Address', async function () {
+    await assertRevert(delegator.connect(signers[0]).upgradeDelegate(ZERO_ADDRESS), 'Zero Address check');
   });
 });
