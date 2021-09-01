@@ -103,7 +103,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
-        
+
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
