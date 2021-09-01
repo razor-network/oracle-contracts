@@ -17,7 +17,11 @@ interface IStakedToken is IERC20 {
      *
      * - `account` cannot be the zero address.
      */
-    function mint(address account, uint256 amount) external returns (bool);
+    function mint(
+        address account,
+        uint256 amount,
+        uint256 razorDeposited
+    ) external returns (bool);
 
     /**
      * @dev Destroys `amount` tokens from `account`, reducing the

@@ -30,7 +30,12 @@ contract StakedToken is ERC20, IStakedToken {
         stakerID = _stakerID;
     }
 
-    function mint(address account, uint256 amount) external override onlyOwner returns (bool) {
+    function mint(
+        address account,
+        uint256 amount,
+        uint256 _razorDeposited
+    ) external override onlyOwner returns (bool) {
+        razorDeposited[account] = razorDeposited[account] + _razorDeposited;
         _mint(account, amount);
         return true;
     }
@@ -41,7 +46,7 @@ contract StakedToken is ERC20, IStakedToken {
     }
 
     /// @notice Used in withdraw
-    // At any time via calling this one can find out how much RZR was invested for this much sRZR
+    // At any time via calling this one can find out how much RZR was deposited for this much sRZR
     function getRZRDeposited(address user, uint256 sAmount) public view override returns (uint256) {
         require(balanceOf(user) >= sAmount, "Amount Exceeds Balance");
         return ((sAmount * razorDeposited[user]) / balanceOf(user));
@@ -56,22 +61,13 @@ contract StakedToken is ERC20, IStakedToken {
         //burn : subtraction, would happeen when staker calls withdraw
         //transfer : add and sub
 
-        // Convert sRZR to RZR
+        // Mint case is handled up only
 
-        if (from == address(0)) {
-            // Mint
-            uint256 currentStake = stakeManager.getStake(stakerID);
-            uint256 totalsRZR = totalSupply();
-            uint256 razorAdded;
-
-            if (totalsRZR == 0) razorAdded = amount;
-            else razorAdded = (amount * currentStake) / totalsRZR;
-            razorDeposited[to] = razorDeposited[to] + razorAdded;
-        } else if (to == address(0)) {
+        if (to == address(0)) {
             //Burn
             uint256 propotionalRazorContribution = getRZRDeposited(from, amount);
             razorDeposited[from] = razorDeposited[from] - propotionalRazorContribution;
-        } else {
+        } else if (from != address(0)) {
             uint256 propotionalRazorContribution = getRZRDeposited(from, amount);
             razorDeposited[from] = razorDeposited[from] - propotionalRazorContribution;
             razorDeposited[to] = razorDeposited[to] + propotionalRazorContribution;

@@ -193,7 +193,7 @@ describe('StakeManager', function () {
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const newAge = await stakeManager.getAge(stakerId);
       // Mint, Burn of sToken should not be accesible to anyone beside StakeManager;
-      await assertRevert(sToken.mint(signers[0].address, tokenAmount('1000')), 'Ownable: caller is not the owner');
+      await assertRevert(sToken.mint(signers[0].address, tokenAmount('1000'), tokenAmount('1000')), 'Ownable: caller is not the owner');
       await assertRevert(sToken.burn(signers[1].address, tokenAmount('1000')), 'Ownable: caller is not the owner');
 
       assertBNEqual(stakerId, toBigNumber('1'));

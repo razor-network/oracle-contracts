@@ -72,21 +72,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-
-            // Minting
-            sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
+
+            // Minting
+            sToken.mint(msg.sender, amount, amount); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
-            // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint);
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+
+            // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+            sToken.mint(msg.sender, toMint, amount);
         }
 
         emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -110,11 +111,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
-        // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        sToken.mint(msg.sender, toMint);
-
-        // Step 4: Increase given stakers stake by : Amount
+        // Step 3: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+
+        // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+        sToken.mint(msg.sender, toMint, amount);
 
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
@@ -154,7 +155,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
-                commission = (gain * staker.commission) / 100;
+                uint256 commissionPercent = staker.commission < parameters.maxCommission() ? staker.commission : parameters.maxCommission();
+                commission = (gain * commissionPercent) / 100;
             }
         }
 
@@ -198,11 +200,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
         }
 
-        // Reset lock
-        _resetLock(stakerId);
-
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
+
+        // Reset lock
+        _resetLock(stakerId);
 
         emit Withdrew(epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
@@ -265,7 +267,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         _resetLock(stakerId);
 
-        sToken.mint(msg.sender, sAmount);
+        sToken.mint(msg.sender, sAmount, lockedAmount);
     }
 
     /// @notice External function for setting stake of the staker
