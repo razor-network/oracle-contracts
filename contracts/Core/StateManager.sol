@@ -4,13 +4,22 @@ pragma solidity ^0.8.0;
 import "./storage/Constants.sol";
 
 contract StateManager is Constants {
-    modifier checkEpoch(uint32 epoch, uint32 epochLength) {
-        require(epoch == getEpoch(epochLength), "incorrect epoch");
+    modifier checkState(State state, uint32 epochLength) {
+        require(state == getState(epochLength), "incorrect state");
         _;
     }
 
-    modifier checkState(State state, uint32 epochLength) {
-        require(state == getState(epochLength), "incorrect state");
+    modifier checkDisputeOrConfirmState(
+        State dispute,
+        State confirm,
+        uint32 epochLength
+    ) {
+        require(dispute == getState(epochLength) || confirm == getState(epochLength), "incorrect state");
+        _;
+    }
+
+    modifier notCommitState(State state, uint32 epochLength) {
+        require(state != getState(epochLength), "incorrect state");
         _;
     }
 

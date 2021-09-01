@@ -18,7 +18,7 @@ library Structs {
         address tokenAddress;
         uint32 id;
         uint32 age;
-        uint32 epochFirstStaked;
+        uint32 epochLastUnstakedOrFirstStaked;
         uint256 stake;
     }
 
@@ -44,7 +44,6 @@ library Structs {
 
     struct Job {
         bool active;
-        bool repeat;
         uint8 id;
         uint8 assetType;
         int8 power;

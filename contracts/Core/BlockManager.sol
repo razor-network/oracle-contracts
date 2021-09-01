@@ -56,10 +56,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
         require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
-
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+        require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
@@ -155,7 +155,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         require(median > 0, "median can not be zero");
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
-        require(proposedBlocks[epoch][blockId].medians[assetId] != median, "Proposed Alternate block is identical to proposed block");
+        require(proposedBlocks[epoch][blockId].medians[assetId - 1] != median, "Proposed Alternate block is identical to proposed block");
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
         sortedProposedBlockIds[epoch].pop();
