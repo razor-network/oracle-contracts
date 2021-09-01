@@ -23,7 +23,8 @@ library Structs {
     }
 
     struct Lock {
-        uint256 amount; //amount in sTokens
+        uint256 amount; //amount in RZR
+        uint256 commission;
         uint256 withdrawAfter;
     }
 

@@ -148,18 +148,17 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         // Transfer commission in case of delegators
         // Check commission rate >0
+        uint256 commission;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
-                uint256 commission = (gain * staker.commission) / 100;
-                rAmount = rAmount - commission;
-                require(razor.transfer(staker._address, commission), "couldnt transfer");
+                commission = (gain * staker.commission) / 100;
             }
         }
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -192,15 +191,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
-        uint256 lockedAmount = lock.amount;
+        uint256 withdrawAmount = lock.amount;
+
+        if (lock.commission > 0) {
+            withdrawAmount = lock.amount - lock.commission;
+            require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
+        }
 
         // Reset lock
         _resetLock(stakerId);
 
-        //Transfer Razor back
-        require(razor.transfer(msg.sender, lockedAmount), "couldnt transfer");
+        //Transfer Razor Back
+        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, lockedAmount, staker.stake, block.timestamp);
+        emit Withdrew(epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -397,6 +401,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, withdrawAfter: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
     }
 }
