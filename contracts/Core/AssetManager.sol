@@ -309,7 +309,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     }
 
     function getAssetIndex(uint8 id) external view returns (uint8) {
-        require(collections[id].assetType == uint8(assetTypes.Collection), "ID needs to be a collection");
+        require(collections[id].assetType == uint8(AssetTypes.Collection), "ID needs to be a collection");
 
         return collections[id].assetIndex;
     }
