@@ -721,7 +721,7 @@ describe('StakeManager', function () {
       const stakerPrevBalance = await razor.balanceOf(staker._address);
       let withdawAmount = lock.amount;
       if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);;
+        withdawAmount = withdawAmount.sub(lock.commission);
       }
       await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
       const DelegatorBalance = await razor.balanceOf(signers[5].address);
@@ -889,7 +889,7 @@ describe('StakeManager', function () {
         const DelegatorBalance = await razor.balanceOf(signers[5].address);
         let withdawAmount = lock.amount;
         if (lock.commission > 0) {
-          withdawAmount = withdawAmount.sub(lock.commission);;
+          withdawAmount = withdawAmount.sub(lock.commission);
         }
 
         const newBalance = prevBalance.add(lock.amount);
