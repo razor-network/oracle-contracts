@@ -67,17 +67,18 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         whenNotPaused
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
-        require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
+        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
+        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+
         if (stakerId == 0) {
             numStakers = numStakers + (1);
+            stakerId = numStakers;
+            stakerIds[msg.sender] = stakerId;
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
-
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
             // Minting
             sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
-            stakerId = numStakers;
-            stakerIds[msg.sender] = stakerId;
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
@@ -89,8 +90,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             sToken.mint(msg.sender, toMint);
         }
-
-        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice Delegation
@@ -104,22 +103,21 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
-
-        // Step 1:  Razor Token Transfer : Amount
-        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
-
-        // Step 2 : Calculate Mintable amount
+        
+        // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply);
 
-        // Step 3: Increase given stakers stake by : Amount
+        // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+
+        // Step 3:  Razor Token Transfer : Amount
+        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         sToken.mint(msg.sender, toMint);
-
-        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -148,9 +146,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
-
         staker.epochLastUnstakedOrFirstStaked = epoch;
+
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -205,7 +203,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @notice remove all funds in case of emergency
     function escape(address _address) external initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
         if (parameters.escapeHatchEnabled()) {
-            razor.transfer(_address, razor.balanceOf(address(this)));
+            require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
             revert("escape hatch is disabled");
         }

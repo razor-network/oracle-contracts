@@ -2,9 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "./StakedToken.sol";
+import "./IStakedTokenFactory.sol";
 
-contract StakedTokenFactory {
-    function createStakedToken(address stakeManagerAddress) external returns (address) {
+contract StakedTokenFactory is IStakedTokenFactory {
+    function createStakedToken(address stakeManagerAddress) external override returns (address) {
+        require(stakeManagerAddress != address(0x0), "zero address check");
         StakedToken sToken = new StakedToken(stakeManagerAddress);
         return address(sToken);
     }

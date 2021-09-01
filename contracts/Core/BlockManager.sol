@@ -118,10 +118,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint8 blockId = sortedProposedBlockIds[epoch][0];
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-
+        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
-        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -131,14 +130,14 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
         blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
 
-        rewardManager.giveBlockReward(stakerId, epoch - 1);
-
         emit BlockConfirmed(
             epoch - 1,
             proposedBlocks[epoch - 1][blockId].proposerId,
             proposedBlocks[epoch - 1][blockId].medians,
             block.timestamp
         );
+
+        rewardManager.giveBlockReward(stakerId, epoch - 1);
     }
 
     // Complexity O(1)
