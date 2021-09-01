@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract AssetStorage {
-    enum assetTypes {
+    enum AssetTypes {
         None,
         Job,
         Collection
