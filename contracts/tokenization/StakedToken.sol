@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "./IStakedToken.sol";
 
-contract StakedToken is ERC20 {
+contract StakedToken is ERC20, IStakedToken {
     address private _owner;
 
     modifier onlyOwner() {
@@ -15,12 +16,12 @@ contract StakedToken is ERC20 {
         _owner = stakeManagerAddress;
     }
 
-    function mint(address account, uint256 amount) external onlyOwner returns (bool) {
+    function mint(address account, uint256 amount) external override onlyOwner returns (bool) {
         _mint(account, amount);
         return true;
     }
 
-    function burn(address account, uint256 amount) external onlyOwner returns (bool) {
+    function burn(address account, uint256 amount) external override onlyOwner returns (bool) {
         _burn(account, amount);
         return true;
     }

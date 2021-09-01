@@ -11,11 +11,11 @@ import "../Initializable.sol";
 contract InitializableMock is Initializable {
     bool public initializerRan;
 
-    function initialize() public initializer {
-        initializerRan = true;
+    function initializeNested() external initializer {
+        initialize();
     }
 
-    function initializeNested() public initializer {
-        initialize();
+    function initialize() public initializer {
+        initializerRan = true;
     }
 }
