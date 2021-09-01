@@ -54,6 +54,10 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         stakeManager.setStakerStake(epoch, stakerId, newStake);
     }
 
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external onlyRole(REWARD_MODIFIER_ROLE) {
+        _giveInactivityPenalties(epoch, stakerId);
+    }
+
     /// @notice Calculates the stake and age inactivity penalties of the staker
     /// @param epochs The difference of epochs where the staker was inactive
     /// @param stakeValue The Stake that staker had in last epoch
@@ -77,7 +81,9 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-        uint32 epochLastActive = thisStaker.epochFirstStaked < epochLastRevealed ? epochLastRevealed : thisStaker.epochFirstStaked;
+        uint32 epochLastActive = thisStaker.epochLastUnstakedOrFirstStaked < epochLastRevealed
+            ? epochLastRevealed
+            : thisStaker.epochLastUnstakedOrFirstStaked;
 
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
