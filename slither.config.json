@@ -1,4 +1,4 @@
 {
-        "detectors_to_exclude": "calls-inside-a-loop,missing-zero-address-validation,reentrancy-vulnerabilities-3,reentrancy-vulnerabilities-2,reentrancy-vulnerabilities-1,solc-version,incorrect-equality,conformance-to-solidity-naming-conventions,unchecked-transfer,unused-return",
+        "exclude": "calls-inside-a-loop,missing-zero-address-validation,reentrancy-vulnerabilities-3,reentrancy-vulnerabilities-2,reentrancy-vulnerabilities-1,solc-version,incorrect-equality,conformance-to-solidity-naming-conventions,unchecked-transfer,unused-return",
         "filter_paths": "node_modules"
 }
