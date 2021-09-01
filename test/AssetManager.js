@@ -288,6 +288,13 @@ describe('AssetManager', function () {
       assertRevert(tx, 'Collection is inactive');
     });
 
+    it('getAssetindex should only work if the id is a collection', async function () {
+      const tx1 = assetManager.getAssetIndex(100);
+      assertRevert(tx1, 'ID needs to be a collection');
+      const tx2 = assetManager.getAssetIndex(1);
+      assertRevert(tx2, 'ID needs to be a collection');
+    });
+
     it('assetIndex should alloted properly after deactivating a collection', async function () {
       await mineToNextEpoch();
       await mineToNextState(); // reveal
@@ -308,6 +315,13 @@ describe('AssetManager', function () {
       await assetManager.setAssetStatus(false, 10);
       assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('4'), 'Incorrect index assignment');
+    });
+
+    it('should not add or remove from a collection from activeAssets when it is activated/deactivated', async function () {
+      await assetManager.setAssetStatus(true, 8);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been added again');
+      await assetManager.setAssetStatus(false, 7);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been removed again');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
