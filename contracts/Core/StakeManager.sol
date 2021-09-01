@@ -146,9 +146,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
-
         staker.epochLastUnstakedOrFirstStaked = epoch;
+
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
