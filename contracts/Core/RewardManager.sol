@@ -54,7 +54,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         stakeManager.setStakerStake(epoch, stakerId, newStake);
     }
 
-    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }
 
