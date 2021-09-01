@@ -155,8 +155,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
-                uint256 commissionPercent = staker.commission < parameters.maxCommission() ? staker.commission : parameters.maxCommission();
-                commission = (gain * commissionPercent) / 100;
+                uint8 maxCommission = parameters.maxCommission();
+                uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
+                commission = (gain * commissionApplicable) / 100;
             }
         }
 
