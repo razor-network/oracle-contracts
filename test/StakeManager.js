@@ -566,6 +566,12 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[1]).setDelegationAcceptance('true');
       await assertRevert(tx, 'comission not set');
     });
+
+    it('Staker should not be able to decreaseCommission if comission is zero', async function () {
+      const tx = stakeManager.connect(signers[1]).decreaseCommission(0);
+      await assertRevert(tx, 'Invalid Commission Update');
+    });
+
     it('Delegator should not be able to delegate if delegation not accepted', async function () {
       const stake1 = tokenAmount('420000');
       await mineToNextEpoch();

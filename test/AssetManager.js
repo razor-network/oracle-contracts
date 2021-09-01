@@ -280,6 +280,12 @@ describe('AssetManager', function () {
       const tx = assetManager.updateCollection(3, 2, 5);
       assertRevert(tx, 'Collection is inactive');
     });
+
+    it('should not be able to update job in commit state', async function () {
+      const tx = assetManager.updateJob(5, 4, 'selector/6', 'http://testurl.com/6');
+      assertRevert(tx, 'incorrect state');
+    });
+
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);
