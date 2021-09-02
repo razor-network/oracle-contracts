@@ -3,12 +3,11 @@ pragma solidity ^0.8.0;
 
 interface IAssetManager {
     function createJob(
-        bool repeat,
-        string calldata url,
-        string calldata selector
+        int8 power,
+        string calldata name,
+        string calldata selector,
+        string calldata url
     ) external;
-
-    function getResult(uint8 id) external view returns (uint32);
 
     function getAssetType(uint8 id) external view returns (uint8);
 
@@ -16,19 +15,20 @@ interface IAssetManager {
         external
         view
         returns (
-            bool repeat,
-            uint32 result,
-            string memory url,
+            bool active,
+            int8 power,
+            string memory name,
             string memory selector,
-            string memory name
+            string memory url
         );
 
     function getCollection(uint8 id)
         external
         view
         returns (
+            bool active,
+            int8 power,
             uint8[] memory jobIDs,
-            uint32 result,
             uint32 aggregationMethod,
             string memory name
         );

@@ -2,12 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
+import "./interface/IAssetManager.sol";
 import "./storage/AssetStorage.sol";
 import "./storage/Constants.sol";
 import "./StateManager.sol";
 import "./ACL.sol";
 
-contract AssetManager is ACL, AssetStorage, Constants, StateManager {
+contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
     IParameters public parameters;
 
     event JobCreated(uint8 id, int8 power, address creator, uint32 epoch, uint256 timestamp, string name, string selector, string url);
@@ -49,7 +50,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         string calldata name,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) {
+    ) external override onlyRole(ASSET_MODIFIER_ROLE) {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
@@ -248,6 +249,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function getJob(uint8 id)
         external
         view
+        override
         returns (
             bool active,
             int8 power,
@@ -265,6 +267,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function getCollection(uint8 id)
         external
         view
+        override
         returns (
             bool active,
             int8 power,
@@ -284,7 +287,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         );
     }
 
-    function getAssetType(uint8 id) external view returns (uint8) {
+    function getAssetType(uint8 id) external view override returns (uint8) {
         require(id != 0, "ID cannot be 0");
 
         require(id <= numAssets, "ID does not exist");
@@ -308,7 +311,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         }
     }
 
-    function getAssetIndex(uint8 id) external view returns (uint8) {
+    function getAssetIndex(uint8 id) external view override returns (uint8) {
         require(collections[id].assetType == uint8(AssetTypes.Collection), "ID needs to be a collection");
 
         return collections[id].assetIndex;
@@ -318,11 +321,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         return numAssets;
     }
 
-    function getNumActiveAssets() external view returns (uint8) {
+    function getNumActiveAssets() external view override returns (uint8) {
         return uint8(activeAssets.length);
     }
 
-    function getActiveAssets() external view returns (uint8[] memory) {
+    function getActiveAssets() external view override returns (uint8[] memory) {
         return activeAssets;
     }
 }
