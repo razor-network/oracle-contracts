@@ -1306,7 +1306,7 @@ describe('StakeManager', function () {
 
     // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
     it('Scenario Test : Delegation Gain and Quotient ', async function () {
-      const epoch = await getEpoch();
+      let epoch = await getEpoch();
       const stake = tokenAmount('1000');
       await razor.transfer(signers[11].address, stake);
       await razor.connect(signers[11]).approve(stakeManager.address, stake);
@@ -1315,6 +1315,20 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[11]).setDelegationAcceptance(true);
       const stakerId = await stakeManager.stakerIds(signers[11].address);
       let staker = await stakeManager.stakers(stakerId);
+
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[11]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[11]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextEpoch();
+
+      epoch = await getEpoch();
       const sToken = await stakedToken.attach(staker.tokenAddress);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000')); // Staker Rewarded
