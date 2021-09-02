@@ -102,6 +102,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 amount
     ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+        require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -341,6 +342,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
         return stakers[stakerId].epochLastUnstakedOrFirstStaked;
+    }
+
+    /// @return isStakerActive : Activity < Grace
+    function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
+        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
+        return ((epoch - epochLastRevealed) <= parameters.gracePeriod());
     }
 
     /// @notice Internal function for setting stake of the staker
