@@ -75,20 +75,21 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
-            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
+            IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
+
             // Minting
-            sToken.mint(msg.sender, amount); // as 1RZR = 1 sRZR
+            sToken.mint(msg.sender, amount, amount); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
-
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
+
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint);
+            sToken.mint(msg.sender, toMint, amount);
         }
     }
 
@@ -117,7 +118,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        sToken.mint(msg.sender, toMint);
+        sToken.mint(msg.sender, toMint, amount);
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -145,10 +146,23 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
-
         staker.epochLastUnstakedOrFirstStaked = epoch;
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, epoch + (parameters.withdrawLockPeriod()));
+        // Transfer commission in case of delegators
+        // Check commission rate >0
+        uint256 commission;
+        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+            // Calculate Gain
+            uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
+            if (rAmount > initial) {
+                uint256 gain = rAmount - initial;
+                uint8 maxCommission = parameters.maxCommission();
+                uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
+                commission = (gain * commissionApplicable) / 100;
+            }
+        }
+
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -181,23 +195,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
-        uint256 lockedAmount = lock.amount;
+        uint256 withdrawAmount = lock.amount;
 
-        // Function to Reset the lock
-        _resetLock(stakerId);
-
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (lockedAmount * staker.commission) / 100;
-            lockedAmount = lockedAmount - commission;
-            require(razor.transfer(staker._address, commission), "couldnt transfer");
+        if (lock.commission > 0) {
+            withdrawAmount = lock.amount - lock.commission;
+            require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
         }
 
-        //Transfer stake
-        require(razor.transfer(msg.sender, lockedAmount), "couldnt transfer");
+        //Transfer Razor Back
+        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, lockedAmount, staker.stake, block.timestamp);
+        // Reset lock
+        _resetLock(stakerId);
+
+        emit Withdrew(epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -223,6 +234,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
+        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
         stakers[stakerId].commission = commission;
     }
 
@@ -257,7 +269,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         _resetLock(stakerId);
 
-        sToken.mint(msg.sender, sAmount);
+        sToken.mint(msg.sender, sAmount, lockedAmount);
     }
 
     /// @notice External function for setting stake of the staker
@@ -399,6 +411,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, withdrawAfter: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
     }
 }
