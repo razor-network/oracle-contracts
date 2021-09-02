@@ -595,6 +595,18 @@ describe('StakeManager', function () {
     it('staker should accept delegation', async function () {
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       const staker = await stakeManager.getStaker(4);
+      const epoch = await getEpoch();
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[4]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextEpoch();
       const { acceptDelegation } = staker;
       assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
     });
@@ -1068,7 +1080,7 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[3]).withdraw(epoch, stakerIdacc3);
       await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
       await razor.connect(signers[0]).transfer(stakeManager.address, balanceContractBefore);
-    });
+    })
 
     it('admin should not be able to withdraw funds if escape hatch is disabled', async function () {
       await stakeManager.connect(signers[0]).pause();
@@ -1163,6 +1175,17 @@ describe('StakeManager', function () {
       assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
       assertBNEqual(await staker.stake, tokenAmount('1000'), 'Stake MisMatch');
 
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[8]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[8]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
       // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
       await mineToNextEpoch();
       epoch = await getEpoch();
@@ -1196,7 +1219,45 @@ describe('StakeManager', function () {
       assertBNEqual(await sToken.balanceOf(signers[8].address), tokenAmount('1000'), 'Staker Balance MisMatch');
       assertBNEqual(await sToken.balanceOf(signers[9].address), toBigNumber('5').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Delegator Balance MisMatch');
     });
+    it('Delegation should revert, if staker is inactive for more than grace period', async function () {
+      let epoch = await getEpoch();
+      const amount = tokenAmount('10000');
+      await razor.transfer(signers[9].address, amount);
+      await razor.connect(signers[9]).approve(stakeManager.address, amount);
+      await stakeManager.connect(signers[9]).stake(epoch, amount);
+      await stakeManager.connect(signers[9]).setCommission(4);
+      await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
+      const stakerId = await stakeManager.stakerIds(signers[9].address);
 
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[9]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[9]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextEpoch();
+
+      // delegation working as expected till staker is active
+      epoch = await getEpoch();
+      await razor.transfer(signers[10].address, amount);
+      await razor.connect(signers[10]).approve(stakeManager.address, amount);
+      await stakeManager.connect(signers[10]).delegate(epoch, stakerId, amount);
+
+      const epochsJumped = GRACE_PERIOD + 1;
+      for (let i = 0; i <= epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      // delegation reverted
+      await razor.transfer(signers[10].address, amount);
+      await razor.connect(signers[10]).approve(stakeManager.address, amount);
+      const tx = stakeManager.connect(signers[10]).delegate(epoch, stakerId, amount);
+      await assertRevert(tx, 'Staker is inactive');
+    });
     it('Staker with minStake staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('1000');
       await razor.transfer(signers[9].address, stakeOfStaker);
