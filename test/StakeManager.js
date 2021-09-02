@@ -1080,7 +1080,7 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[3]).withdraw(epoch, stakerIdacc3);
       await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
       await razor.connect(signers[0]).transfer(stakeManager.address, balanceContractBefore);
-    })
+    });
 
     it('admin should not be able to withdraw funds if escape hatch is disabled', async function () {
       await stakeManager.connect(signers[0]).pause();
