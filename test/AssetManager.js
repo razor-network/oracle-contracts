@@ -291,6 +291,20 @@ describe('AssetManager', function () {
       const tx = assetManager.updateCollection(3, 2, 5);
       assertRevert(tx, 'Collection is inactive');
     });
+
+    it('updateJob, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
+      await mineToNextState(); // confirm
+      await mineToNextState(); // commit
+
+      const tx = assetManager.updateJob(5, 4, 'selector/6', 'http://testurl.com/6');
+      assertRevert(tx, 'incorrect state');
+
+      const tx1 = assetManager.addJobToCollection(3, 1);
+      assertRevert(tx1, 'incorrect state');
+
+      const tx2 = assetManager.removeJobFromCollection(5, 4);
+      assertRevert(tx2, 'incorrect state');
+    });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
     //  assert(await delegator.delegate() === assetManager.address);
