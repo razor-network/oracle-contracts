@@ -95,6 +95,7 @@ jobs:
           name: Slither
           command: | 
               slither . --filter-paths "node_modules" --disable-color 
+              
   gasCompare:
     docker:
       - image: 'cimg/node:16.5'
