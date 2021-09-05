@@ -111,10 +111,8 @@ jobs:
             git checkout master
             CI=true npm run test
             mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
+            npm run gasCompare ./temp/gasReporterOutput_Master.json ./temp/gasReporterOutput_Current.json
 
-      - store_artifacts:
-          path: test
-          prefix: test
     
 notify:
   webhooks:
@@ -137,5 +135,8 @@ workflows:
           requires:
           - install_dependencies
       - lint:
+          requires:
+          - install_dependencies
+      - gasCompare:
           requires:
           - install_dependencies
