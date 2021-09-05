@@ -65,7 +65,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(stakeManager.getStake(stakerId) > parameters.minStake(), "stake below minimum");
+        require(stakeManager.getStake(stakerId) >= parameters.minStake(), "stake below minimum");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
 
@@ -109,11 +109,6 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         return (commitments[stakerId]);
     }
 
-    function getCommitmentEpoch(uint32 stakerId) external view returns (uint32) {
-        //epoch -> stakerid -> commitment
-        return (commitments[stakerId].epoch);
-    }
-
     function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote) {
         //stakerid->votes
         return (votes[stakerId]);
@@ -142,7 +137,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         return votes[stakerId].epoch;
     }
 
-    function getRandaoHash() public view returns (bytes32) {
+    function getRandaoHash() external view returns (bytes32) {
         return (secrets);
     }
 }
