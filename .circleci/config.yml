@@ -114,7 +114,6 @@ jobs:
               mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
               npm run gasCompare ./temp/gasReporterOutput_Master.json ./temp/gasReporterOutput_Current.json
               result=`cat ./temp/result.txt`
-              sudo apt-get install jq
               pr_response=$(curl --location --request GET "https://api.github.com/repos/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/pulls?head=$CIRCLE_PROJECT_USERNAME:$CIRCLE_BRANCH&state=open" \
               -u $GH_USER:$GH_TOKEN)
               if [ $(echo $pr_response | jq length) -eq 0 ]; then

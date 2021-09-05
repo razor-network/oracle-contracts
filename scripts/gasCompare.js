@@ -62,7 +62,7 @@ if(list==={}){
       });        
 }
 else{
-    fs.writeFile('./temp/result.txt', "No change in gas Consumption" , function (err) {
+    fs.writeFile('./temp/result.txt', '"No change in gas Consumption"' , function (err) {
         if (err) return console.log(err);
       }); 
 
