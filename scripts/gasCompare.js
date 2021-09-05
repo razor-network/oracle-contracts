@@ -1,8 +1,6 @@
 const fs = require("fs");
 let arguments = process.argv
 
-//method to read the file information
-
 let getFileData = (filePath) => {
 
     try{
