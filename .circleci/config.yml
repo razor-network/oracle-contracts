@@ -105,13 +105,13 @@ jobs:
       - run:
           name: Run GasCompare
           command: |
-            CI=true npm run test
-            mkdir temp
-            mv ./gasReporterOutput.json ./temp/gasReporterOutput_Current.json
-            git checkout master
-            CI=true npm run test
-            mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
-            npm run gasCompare ./temp/gasReporterOutput_Master.json ./temp/gasReporterOutput_Current.json
+              CI=true npm run test
+              mkdir temp
+              mv ./gasReporterOutput.json ./temp/gasReporterOutput_Current.json
+              git checkout master
+              CI=true npm run test
+              mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
+              npm run gasCompare ./temp/gasReporterOutput_Master.json ./temp/gasReporterOutput_Current.json
 
     
 notify:
