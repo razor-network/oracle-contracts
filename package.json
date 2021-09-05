@@ -23,7 +23,8 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
     "test": "hardhat test",
-    "gas": "CI=true npm run test && node scripts/gasAnalyze.js"
+    "gas": "CI=true npm run test && node scripts/gasAnalyze.js",
+    "gasCompare": "node scripts/gasCompare.js"
   },
   "repository": {
     "type": "git",
@@ -37,7 +38,8 @@
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
     "hardhat-abi-exporter": "^2.2.1",
-    "jsonfile": "^6.1.0"
+    "jsonfile": "^6.1.0",
+    "fs": "^0.0.1-security"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.11",

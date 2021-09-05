@@ -95,6 +95,27 @@ jobs:
           name: Slither
           command: | 
               slither . --filter-paths "node_modules" --disable-color 
+  gasCompare:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run GasCompare
+          command: |
+            CI=true npm run test
+            mkdir temp
+            mv ./gasReporterOutput.json ./temp/gasReporterOutput_Current.json
+            git checkout master
+            CI=true npm run test
+            mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
+
+      - store_artifacts:
+          path: test
+          prefix: test
+    
 notify:
   webhooks:
     - url: >-
