@@ -56,7 +56,17 @@ let gasCompare = () => {
 
     }
 }
-console.log(list)
+if(list==={}){
+    fs.writeFile('./temp/result.txt', list , function (err) {
+        if (err) return console.log(err);
+      });        
+}
+else{
+    fs.writeFile('./temp/result.txt', "No change in gas Consumption" , function (err) {
+        if (err) return console.log(err);
+      }); 
+
+}
 }
 
 gasCompare();
