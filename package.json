@@ -37,9 +37,10 @@
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
     "@openzeppelin/contracts": "^4.2.0",
+    "circle-github-bot": "^2.1.0",
+    "fs": "^0.0.1-security",
     "hardhat-abi-exporter": "^2.2.1",
-    "jsonfile": "^6.1.0",
-    "fs": "^0.0.1-security"
+    "jsonfile": "^6.1.0"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.11",

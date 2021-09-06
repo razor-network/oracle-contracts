@@ -1,4 +1,5 @@
 const fs = require("fs");
+const bot = require("circle-github-bot").create();
 let arguments = process.argv
 
 let getFileData = (filePath) => {
@@ -56,14 +57,10 @@ let gasCompare = () => {
     }
 }
 if(list==={}){
-    fs.writeFile('./temp/result.txt', list , function (err) {
-        if (err) return console.log(err);
-      });        
+    bot.comment(list);        
 }
 else{
-    fs.writeFile('./temp/result.txt', '"No change in gas Consumption"' , function (err) {
-        if (err) return console.log(err);
-      }); 
+    bot.comment("No changes in gas consumption"); 
 
 }
 }
