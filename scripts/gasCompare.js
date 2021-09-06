@@ -58,7 +58,7 @@ let gasCompare = async () => {
 
     }
 }
-if(list==={}){
+if(list!=={}){
     await commenter.createOrUpdateComment('gasCompare', `${list} following are the changes`).catch(err=>{
         console.log(err);
     })
