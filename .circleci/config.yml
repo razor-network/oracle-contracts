@@ -106,6 +106,9 @@ jobs:
       - run:
           name: Run GasCompare
           command: |
+              if [ "$CIRCLE_BRANCH" == 'master' ]; then
+              exit 0
+              fi
               CI=true npm run test
               mkdir temp
               mv ./gasReporterOutput.json ./temp/gasReporterOutput_Current.json
