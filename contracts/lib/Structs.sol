@@ -18,12 +18,13 @@ library Structs {
         address tokenAddress;
         uint32 id;
         uint32 age;
-        uint32 epochFirstStaked;
+        uint32 epochLastUnstakedOrFirstStaked;
         uint256 stake;
     }
 
     struct Lock {
-        uint256 amount; //amount in sTokens
+        uint256 amount; //amount in RZR
+        uint256 commission;
         uint256 withdrawAfter;
     }
 
