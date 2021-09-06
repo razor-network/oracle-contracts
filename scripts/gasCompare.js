@@ -59,12 +59,12 @@ let gasCompare = async () => {
     }
 }
 if(list==={}){
-    await commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+    await commenter.createOrUpdateComment('gasCompare', `${list} following are the changes`).catch(err=>{
         console.log(err);
     })
 }
 else{
-    await commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+    await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`).catch(err=>{
         console.log(err);
     })
 }
