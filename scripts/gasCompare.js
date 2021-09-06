@@ -1,5 +1,6 @@
 const fs = require("fs");
-const bot = require("circle-github-bot").create();
+const Commenter = require('../dist/index')
+const commenter = new Commenter()
 let arguments = process.argv
 
 let getFileData = (filePath) => {
@@ -57,10 +58,14 @@ let gasCompare = () => {
     }
 }
 if(list==={}){
-    bot.comment(process.env.GH_AUTH_TOKEN,list);        
+    commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+        console.log(err);
+    })
 }
 else{
-    bot.comment(process.env.GH_AUTH_TOKEN,"No changes in gas consumption"); 
+    commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+        console.log(err);
+    })
 }
 }
 
