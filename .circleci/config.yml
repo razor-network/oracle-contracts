@@ -113,7 +113,7 @@ jobs:
               CI=true npm run test
               mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
               git checkout $CIRCLE_BRANCH
-              npm run gasCompare ./temp/gasReporterOutput_Master.json ./temp/gasReporterOutput_Current.json
+              npm run gasCompare ./temp/gasReporterOutput_Current.json ./temp/gasReporterOutput_Master.json
               
 
 
