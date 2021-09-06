@@ -47,6 +47,7 @@ library Structs {
         bool active;
         uint8 id;
         uint8 assetType;
+        uint8 selectorType;
         int8 power;
         uint32 epoch;
         address creator;

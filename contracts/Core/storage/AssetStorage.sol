@@ -9,6 +9,10 @@ contract AssetStorage {
         Job,
         Collection
     }
+    enum JobSelectorType {
+        JSON,
+        XHTML
+    }
     mapping(uint8 => Structs.Job) public jobs;
     mapping(uint8 => Structs.Collection) public collections;
 

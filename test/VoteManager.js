@@ -73,10 +73,11 @@ describe('VoteManager', function () {
         await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
+        const selectorType = 0;
         const name = 'test';
         const power = -2;
         let i = 0;
-        while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+        while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
 
         while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
 
