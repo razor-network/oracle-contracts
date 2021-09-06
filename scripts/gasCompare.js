@@ -1,6 +1,7 @@
 const fs = require("fs");
 const Commenter = require('../dist/index')
 const commenter = new Commenter()
+
 let arguments = process.argv
 
 let getFileData = (filePath) => {
