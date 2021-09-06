@@ -292,7 +292,7 @@ describe('AssetManager', function () {
       assertRevert(tx, 'Collection is inactive');
     });
 
-    it('updateJob, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
+    it('updateJob, updateCollection, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
       await mineToNextState(); // confirm
       await mineToNextState(); // commit
 
@@ -302,8 +302,14 @@ describe('AssetManager', function () {
       const tx1 = assetManager.addJobToCollection(3, 1);
       assertRevert(tx1, 'incorrect state');
 
-      const tx2 = assetManager.removeJobFromCollection(5, 4);
+      const tx2 = assetManager.updateCollection(3, 2, 5);
       assertRevert(tx2, 'incorrect state');
+
+      const tx3 = assetManager.addJobToCollection(3, 1);
+      assertRevert(tx3, 'incorrect state');
+
+      const tx4 = assetManager.removeJobFromCollection(5, 4);
+      assertRevert(tx4, 'incorrect state');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
