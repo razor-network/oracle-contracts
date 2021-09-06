@@ -59,12 +59,12 @@ let gasCompare = () => {
     }
 }
 if(list==={}){
-    commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+    await commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
         console.log(err);
     })
 }
 else{
-    commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
+    await commenter.createOrUpdateComment('gasCompare', list).catch(err=>{
         console.log(err);
     })
 }
