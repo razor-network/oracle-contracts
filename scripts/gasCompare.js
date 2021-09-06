@@ -57,11 +57,10 @@ let gasCompare = () => {
     }
 }
 if(list==={}){
-    bot.comment(list);        
+    bot.comment(process.env.GH_AUTH_TOKEN,list);        
 }
 else{
-    bot.comment("No changes in gas consumption"); 
-
+    bot.comment(process.env.GH_AUTH_TOKEN,"No changes in gas consumption"); 
 }
 }
 
