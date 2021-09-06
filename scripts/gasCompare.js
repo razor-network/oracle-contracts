@@ -44,6 +44,7 @@ let compareValue = (a,b) => {
 // method to compare the gas Consumption.
 
 let gasCompare = () => {
+    console.log(process.env.CIRCLE_PULL_REQUEST)
     let list = {}
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
