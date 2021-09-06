@@ -64,6 +64,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
+<<<<<<< HEAD
         jobs[numAssets] = Structs.Job(
             true,
             numAssets,
@@ -76,6 +77,9 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
             selector,
             url
         );
+=======
+        jobs[numAssets] = Structs.Job(true, numAssets, uint8(AssetTypes.Job), power, epoch, msg.sender, name, selector, url);
+>>>>>>> master
 
         emit JobCreated(numAssets, selectorType, power, msg.sender, epoch, block.timestamp, name, selector, url);
     }
