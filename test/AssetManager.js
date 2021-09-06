@@ -296,7 +296,7 @@ describe('AssetManager', function () {
       await mineToNextState(); // confirm
       await mineToNextState(); // commit
 
-      const tx = assetManager.updateJob(5, 4, 'selector/6', 'http://testurl.com/6');
+      const tx = assetManager.updateJob(5, 4, 0, 'selector/6', 'http://testurl.com/6');
       assertRevert(tx, 'incorrect state');
 
       const tx1 = assetManager.addJobToCollection(3, 1);

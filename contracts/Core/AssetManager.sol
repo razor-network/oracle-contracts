@@ -12,7 +12,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
     event JobCreated(
         uint8 id,
-        uint8 selectorType,
+        JobSelectorType selectorType,
         int8 power,
         address creator,
         uint32 epoch,
@@ -22,7 +22,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         string url
     );
 
-    event JobUpdated(uint8 id, uint8 selectorType, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
+    event JobUpdated(uint8 id, JobSelectorType selectorType, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
 
     event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
@@ -56,7 +56,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
     function createJob(
         int8 power,
-        uint8 selectorType,
+        JobSelectorType selectorType,
         string calldata name,
         string calldata selector,
         string calldata url
@@ -64,7 +64,18 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(true, numAssets, uint8(AssetTypes.Job), selectorType, power, epoch, msg.sender, name, selector, url);
+        jobs[numAssets] = Structs.Job(
+            true,
+            numAssets,
+            uint8(AssetTypes.Job),
+            uint8(selectorType),
+            power,
+            epoch,
+            msg.sender,
+            name,
+            selector,
+            url
+        );
 
         emit JobCreated(numAssets, selectorType, power, msg.sender, epoch, block.timestamp, name, selector, url);
     }
@@ -72,7 +83,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function updateJob(
         uint8 jobID,
         int8 power,
-        uint8 selectorType,
+        JobSelectorType selectorType,
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) notCommitState(State.Commit, parameters.epochLength()) {
@@ -82,7 +93,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
-        jobs[jobID].selectorType = selectorType;
+        jobs[jobID].selectorType = uint8(selectorType);
         jobs[jobID].power = power;
         emit JobUpdated(jobID, selectorType, epoch, power, block.timestamp, selector, url);
     }
