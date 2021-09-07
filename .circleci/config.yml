@@ -110,13 +110,12 @@ jobs:
               exit 0
               fi
               CI=true npm run test
-              mkdir temp
-              mv ./gasReporterOutput.json ./temp/gasReporterOutput_Current.json
+              mv ./temp/gasReporterOutput.json /tmp/gasReporterOutput_Current.json
               git checkout master
               CI=true npm run test
-              mv ./gasReporterOutput.json ./temp/gasReporterOutput_Master.json
+              mv ./temp/gasReporterOutput.json /tmp/gasReporterOutput_Master.json
               git checkout $CIRCLE_BRANCH
-              npm run gasCompare ./temp/gasReporterOutput_Current.json ./temp/gasReporterOutput_Master.json
+              npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
               
 
 
