@@ -9,7 +9,7 @@ const voteManagerMigration = require('./src/7_deploy_vote_manager');
 const delegatorMigration = require('./src/8_deploy_delegator');
 const RAZORMigration = require('./src/9_deploy_razor');
 const stakedTokenFactoryMigration = require('./src/10_deploy_staked_token_factory');
-const randaoManagerMigration = require('./src/11_deploy_randao_manager');
+const randomNoManagerMigration = require('./src/11_deploy_random_no_manager');
 const postDeploymentSetup = require('./src/postDeploymentSetup');
 
 async function main() {
@@ -24,7 +24,7 @@ async function main() {
   await delegatorMigration();
   await RAZORMigration();
   await stakedTokenFactoryMigration();
-  await randaoManagerMigration();
+  await randomNoManagerMigration();
   await postDeploymentSetup();
 }
 

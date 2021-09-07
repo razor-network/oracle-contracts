@@ -6,7 +6,7 @@ import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
-import "../randao/IRandaoProvider.sol";
+import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
@@ -19,7 +19,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
     IAssetManager public assetManager;
-    IRandaoProvider public randaoProvider;
+    IRandomNoProvider public randomNoProvider;
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
@@ -31,14 +31,14 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         address voteManagerAddress,
         address assetManagerAddress,
         address parametersAddress,
-        address randaoManagerAddress
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
         parameters = IParameters(parametersAddress);
-        randaoProvider = IRandaoProvider(randaoManagerAddress);
+        randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
     // elected proposer proposes block.
@@ -125,7 +125,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
-        randaoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -142,7 +142,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             block.timestamp
         );
         rewardManager.giveBlockReward(stakerId, epoch - 1);
-        randaoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        randomNoProvider.provideSecret(epoch - 1, voteManager.getRandaoHash());
     }
 
     // Complexity O(1)

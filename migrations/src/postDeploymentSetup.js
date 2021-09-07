@@ -24,7 +24,7 @@ module.exports = async () => {
     Delegator: delegatorAddress,
     RAZOR: RAZORAddress,
     StakedTokenFactory: stakedTokenFactoryAddress,
-    RandaoManager: randaoManagerAddress,
+    RandomNoManager: randomNoManagerAddress,
   } = await readDeploymentFile();
 
   // keccak256("BLOCK_CONFIRMER_ROLE")
@@ -57,7 +57,7 @@ module.exports = async () => {
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
-  const { contractInstance: randaoManager } = await getdeployedContractInstance('RandaoManager', randaoManagerAddress, randomLibraryDependency);
+  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress, randomLibraryDependency);
 
   const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
@@ -77,11 +77,11 @@ module.exports = async () => {
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
-    assetManagerAddress, parametersAddress, randaoManagerAddress));
+    assetManagerAddress, parametersAddress, randomNoManagerAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await randaoManager.initialize(blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress, parametersAddress));
 
   pendingTransactions.push(await assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));

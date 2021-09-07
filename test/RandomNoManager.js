@@ -23,14 +23,14 @@ const {
 
 const { utils } = ethers;
 
-describe('RandaoManager', function () {
+describe('RandomNoManager', function () {
   let signers;
   let blockManager;
   let voteManager;
   let razor;
   let stakeManager;
   let parameters;
-  let randaoManager;
+  let randomNoManager;
   let initializeContracts;
 
   before(async () => {
@@ -40,7 +40,7 @@ describe('RandaoManager', function () {
       razor,
       stakeManager,
       voteManager,
-      randaoManager,
+      randomNoManager,
       initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
@@ -48,11 +48,11 @@ describe('RandaoManager', function () {
 
   describe('razor', async () => {
     it('admin role should be granted', async () => {
-      const isAdminRoleGranted = await randaoManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+      const isAdminRoleGranted = await randomNoManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
     });
-    it('should not be able to initiliaze RandaoManager contract without admin role', async () => {
-      const tx = randaoManager.connect(signers[1]).initialize(
+    it('should not be able to initiliaze randomNoManager contract without admin role', async () => {
+      const tx = randomNoManager.connect(signers[1]).initialize(
         blockManager.address,
         parameters.address
       );
@@ -72,9 +72,9 @@ describe('RandaoManager', function () {
       // Lets consider follwoing epoch as X
       const epoch = await getEpoch();
 
-      await randaoManager.register();
+      await randomNoManager.register();
       // requestId = 1; EpochRequested would be: epoch X , as we are in commit state
-      assertBNEqual(await randaoManager.requests(toBigNumber('1')), epoch);
+      assertBNEqual(await randomNoManager.requests(toBigNumber('1')), epoch);
 
       // Commit
       const votes = [0];
@@ -89,18 +89,18 @@ describe('RandaoManager', function () {
       await voteManager.connect(signers[5]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
 
-      await randaoManager.register();
+      await randomNoManager.register();
 
       // requestId = 2; EpochRequsted would be: epoch X + 1, as we requsted after commit state
       // For some reason this add is throwing exception that is not function, will check this
-      // assertBNEqual(await randaoManager.requests(toBigNumber('2')), epoch.add(toBigNumber('1')));
+      // assertBNEqual(await randomNoManager.requests(toBigNumber('2')), epoch.add(toBigNumber('1')));
     });
 
     it('client should be able to get random number if its ready', async () => {
       const epoch = await getEpoch();
 
       // Should revert as random no will only be available for request id 1 post confirm for Epoch X
-      let tx = randaoManager.getRandomNumber(toBigNumber(1));
+      let tx = randomNoManager.getRandomNumber(toBigNumber(1));
       await assertRevert(tx, 'Random Number not genarated yet');
 
       // Propose
@@ -122,16 +122,30 @@ describe('RandaoManager', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
 
       // Get Random no : Request id 1
-      const randomNo = await randaoManager.getRandomNumber(toBigNumber(1));
-      const seed = await randaoManager.secrets(epoch);
+      const randomNo = await randomNoManager.getRandomNumber(toBigNumber(1));
+      const seed = await randomNoManager.secrets(epoch);
       const salt = utils.solidityKeccak256(['bytes32'], [utils.defaultAbiCoder.encode(['uint256'], [toBigNumber('1')])]);
       const locallyCalculatedRandomNo = await prngHash(seed, salt);
       assertBNEqual(randomNo, toBigNumber(locallyCalculatedRandomNo));
 
+      // Get Random no : Generic From Epoch
+      const randomNo1 = await randomNoManager.getGenericRandomNumber(epoch);
+      const seed1 = await randomNoManager.secrets(epoch);
+      const salt1 = utils.solidityKeccak256(['bytes32'], [utils.defaultAbiCoder.encode(['uint256'], [toBigNumber('0')])]);
+      const locallyCalculatedRandomNo1 = await prngHash(seed1, salt1);
+      assertBNEqual(randomNo1, toBigNumber(locallyCalculatedRandomNo1));
+
       // Get Random no : Request id 2
       // Should revert as random no will still not be available for request id 2, as its designated epoch would be X + 1
-      tx = randaoManager.getRandomNumber(toBigNumber(2));
+      tx = randomNoManager.getRandomNumber(toBigNumber(2));
       await assertRevert(tx, 'Random Number not genarated yet');
+
+      // Next Epoch
+      mineToNextEpoch();
+
+      // Get Random no : Generic From Last Epoch
+      const randomNo2 = await randomNoManager.getGenericRandomNumberOfLastEpoch();
+      assertBNEqual(randomNo2, toBigNumber(locallyCalculatedRandomNo1));
     });
   });
 });
