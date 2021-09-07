@@ -47,7 +47,6 @@ let compareValue = (a,b) => {
 // method to compare the gas Consumption.
 
 let gasCompare = async () => {
-    console.log(process.env.CIRCLE_PULL_REQUEST)
     let list = {}
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
@@ -58,7 +57,7 @@ let gasCompare = async () => {
 
     }
 }
-if(list!=={}){
+if(Object.keys(list).length!==0){
     await commenter.createOrUpdateComment('gasCompare', `${JSON.stringify(list)} following are the changes`).catch(err=>{
         console.log(err);
     })
