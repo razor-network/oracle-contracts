@@ -41,6 +41,7 @@
     "circleci-pr-commenter": "^0.1.2",
     "fs": "^0.0.1-security",
     "hardhat-abi-exporter": "^2.2.1",
+    "json-to-markdown-table": "^1.0.0",
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {
