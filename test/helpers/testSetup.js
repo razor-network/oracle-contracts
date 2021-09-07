@@ -19,6 +19,12 @@ const setupContracts = async () => {
     },
   });
 
+  const RandaoManager = await ethers.getContractFactory('RandaoManager', {
+    libraries: {
+      Random: random.address,
+    },
+  });
+
   const Parameters = await ethers.getContractFactory('Parameters');
   const Delegator = await ethers.getContractFactory('Delegator');
   const AssetManager = await ethers.getContractFactory('AssetManager');
@@ -38,6 +44,7 @@ const setupContracts = async () => {
   const voteManager = await VoteManager.deploy();
   const razor = await RAZOR.deploy(initialSupply);
   const stakedTokenFactory = await StakedTokenFactory.deploy();
+  const randaoManager = await RandaoManager.deploy();
 
   await parameters.deployed();
   await blockManager.deployed();
@@ -48,12 +55,14 @@ const setupContracts = async () => {
   await stakeManager.deployed();
   await rewardManager.deployed();
   await voteManager.deployed();
+  await randaoManager.deployed();
 
   const initializeContracts = async () => [
-    blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address),
+    blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address, parameters.address, randaoManager.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
+    randaoManager.initialize(blockManager.address, parameters.address),
     assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManager.address),
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManager.address),
@@ -80,6 +89,7 @@ const setupContracts = async () => {
     initializeContracts,
     stakedToken,
     stakedTokenFactory,
+    randaoManager,
   };
 };
 
