@@ -279,6 +279,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
+    await mineToNextState();
     await assetManager.setAssetStatus(true, 1);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
@@ -309,6 +310,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
+    await mineToNextState();// confirm
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
@@ -339,6 +341,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
+    await mineToNextState();// confirm
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.createJob(0, 0, 'http://testurl.com/3', 'selector/3', 'test3');
     await assetManager.addJobToCollection(3, 4);
@@ -371,6 +374,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
+    await mineToNextState();// confirm
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.removeJobFromCollection(3, 1);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
@@ -403,6 +407,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
+    await mineToNextState();// confirm
     await assetManager.createCollection([1, 2], 1, 0, 'test');
 
     await assetManager.updateCollection(3, 2, -2);
