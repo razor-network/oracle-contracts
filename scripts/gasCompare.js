@@ -45,7 +45,7 @@ let compareValue = (gas_usage_current,gas_usage_master) => {
 // method to compare the gas Consumption.
 
 let gasCompare = async () => {
-    let coloumn = ['contract','method','change%'];
+    let coloumn = ['contract','method','change%','current','master'];
     let gasChangeData = [];
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
@@ -56,10 +56,21 @@ let gasCompare = async () => {
             {
                 let obj = {'contract': gasDataI[i].contract, 
                 'method':gasDataI[i].method, 
-                'change%': change > 0 ? '(+)' + change.toFixed(2).toString() :'(-)' + Math.abs(change.toFixed(2))}
+                'current':calculateMedianValue(gasDataI[i].gasData),
+                'master' :calculateMedianValue(gasDataII[i].gasData),
+                'change%': change > 0 ? '(+)' + change.toFixed(2).toString() :'(-)' + Math.abs(change.toFixed(2)),}
                 gasChangeData.push(obj);
             }
         }
+        else{
+            let obj = {'contract': gasDataI[i].contract, 
+                'method':gasDataI[i].method, 
+                'current':calculateMedianValue(gasDataI[i].gasData),
+                'master' :0,
+                'change%':0,}
+                gasChangeData.push(obj);
+
+            }
     }
 let markdownstring = markdown(gasChangeData,coloumn);
 if(gasChangeData.length!==0){
