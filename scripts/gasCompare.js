@@ -1,6 +1,6 @@
 const fs = require("fs");
 const markdown = require('json-to-markdown-table');
-const Commenter = require('../node_modules/circleci-pr-commenter/dist/index');
+const Commenter = require('circleci-pr-commenter');
 const commenter = new Commenter()
 
 let arguments = process.argv
@@ -33,16 +33,13 @@ let calculateMedianValue = (numbers) => {
 }
 //method to compare gas values before and after.
 
-let compareValue = (a,b) => {
+let compareValue = (gas_usage_current,gas_usage_master) => {
 
-    if(a<b){
-        return ((a-b)*100)/a;
-    }
-    else if(b<a){
-        return ((a-b)*100)/a ;
+    if(gas_usage_current > gas_usage_master || gas_usage_current < gas_usage_master){
+        return ((gas_usage_current-gas_usage_master)/gas_usage_master)*100;
     }
     else{
-        return 0
+        return 0 //no change
     }      
 }
 // method to compare the gas Consumption.
