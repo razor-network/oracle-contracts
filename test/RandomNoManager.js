@@ -141,7 +141,7 @@ describe('RandomNoManager', function () {
       await assertRevert(tx, 'Random Number not genarated yet');
 
       // Next Epoch
-      mineToNextEpoch();
+      mineToNextState();
 
       // Get Random no : Generic From Last Epoch
       const randomNo2 = await randomNoManager.getGenericRandomNumberOfLastEpoch();

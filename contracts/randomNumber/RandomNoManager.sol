@@ -60,31 +60,29 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// @return random number
     function getRandomNumber(uint256 _requestId) external view override returns (uint256) {
         uint32 epochOfRequest = requests[_requestId];
-        bytes32 secret = secrets[epochOfRequest];
-
-        if (secret == 0x0) {
-            revert("Random Number not genarated yet");
-        } else {
-            return uint256(Random.prngHash(secret, keccak256(abi.encode(_requestId))));
-        }
+        return _generateRandomNumber(epochOfRequest, _requestId);
     }
 
     /// @notice Allows client to get generic random number of last epoch
     /// @return random number
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
         uint32 epoch = getEpoch(parameters.epochLength());
-        return getGenericRandomNumber(epoch - 1);
+        return _generateRandomNumber(epoch - 1, 0);
     }
 
     /// @notice Allows client to get generic random number of any epoch
     /// @param epoch random no of which epoch
     /// @return random number
     function getGenericRandomNumber(uint32 epoch) public view override returns (uint256) {
+        return _generateRandomNumber(epoch, 0);
+    }
+
+    function _generateRandomNumber(uint32 epoch, uint256 requestId) internal view returns (uint256) {
         bytes32 secret = secrets[epoch];
         if (secret == 0x0) {
             revert("Random Number not genarated yet");
         } else {
-            return uint256(Random.prngHash(secret, keccak256(abi.encode(0))));
+            return uint256(Random.prngHash(secret, keccak256(abi.encode(requestId))));
         }
     }
 }
