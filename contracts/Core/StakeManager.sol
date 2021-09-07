@@ -34,8 +34,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
-
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
 
     /// @param razorAddress The address of the Razor token ERC20 contract
@@ -112,7 +110,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
-        emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         // Step 3:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
