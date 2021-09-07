@@ -96,8 +96,9 @@ describe('BlockManager', function () {
       const selector = 'selector';
       const name = 'test';
       const power = -2;
+      const selectorType = 0;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+      while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
 
       await mineToNextEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));

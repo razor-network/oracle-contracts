@@ -87,10 +87,11 @@ describe('StakeManager', function () {
       await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
+      const selectorType = 0;
       const name = 'test';
       const power = -2;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+      while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
 
       while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
@@ -566,6 +567,11 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[1]).setDelegationAcceptance('true');
       await assertRevert(tx, 'comission not set');
     });
+
+    it('Once the commision is set it can not be decreased to zero', async function () {
+      const tx = stakeManager.connect(signers[1]).decreaseCommission(0);
+      await assertRevert(tx, 'Invalid Commission Update');
+    });
     it('Delegator should not be able to delegate if delegation not accepted', async function () {
       const stake1 = tokenAmount('420000');
       await mineToNextEpoch();
@@ -577,6 +583,12 @@ describe('StakeManager', function () {
       await razor.connect(signers[5]).approve(stakeManager.address, amount);
       const tx = stakeManager.connect(signers[5]).delegate(epoch, stakerId, amount);
       await assertRevert(tx, 'Delegetion not accpected');
+    });
+
+    it('Staker should not be able to setCommission if it exceeds maximum limit', async function () {
+      const commRate = await parameters.maxCommission();
+      const tx = stakeManager.connect(signers[4]).setCommission(commRate + 1);
+      await assertRevert(tx, 'Commission exceeds maxlimit');
     });
 
     it('Staker should be able to set commission', async function () {
@@ -735,6 +747,7 @@ describe('StakeManager', function () {
       if (lock.commission > 0) {
         withdawAmount = withdawAmount.sub(lock.commission);
       }
+
       await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
       const DelegatorBalance = await razor.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(withdawAmount);

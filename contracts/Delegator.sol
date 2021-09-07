@@ -19,6 +19,7 @@ contract Delegator is ACL {
         view
         returns (
             bool active,
+            uint8 selectorType,
             int8 power,
             string memory name,
             string memory selector,

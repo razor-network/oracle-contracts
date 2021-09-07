@@ -2,13 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IAssetManager {
-    function createJob(
-        int8 power,
-        string calldata name,
-        string calldata selector,
-        string calldata url
-    ) external;
-
     function getAssetType(uint8 id) external view returns (uint8);
 
     function getJob(uint8 id)
@@ -16,6 +9,7 @@ interface IAssetManager {
         view
         returns (
             bool active,
+            uint8 selectorType,
             int8 power,
             string memory name,
             string memory selector,
