@@ -53,18 +53,17 @@ let gasCompare = async () => {
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
     for(i in gasDataI){
-        if(i in gasDataII){
-        if(calculateMedianValue(gasDataI[i].gasData) && compareValue(calculateMedianValue(gasDataI[i].gasData),calculateMedianValue(gasDataII[i].gasData))!=0)
-        {
-            let obj = {'contract': gasDataI[i].contract, 
-            'method':gasDataI[i].method, 
-            'change%': compareValue(calculateMedianValue(gasDataI[i].gasData),calculateMedianValue(gasDataII[i].gasData)) };
-            gasChangeData.push(obj);
+        if(i in gasDataII){        
+            let change = compareValue(calculateMedianValue(gasDataI[i].gasData),calculateMedianValue(gasDataII[i].gasData));        
+            if(calculateMedianValue(gasDataI[i].gasData) && change!=0)
+            {
+                let obj = {'contract': gasDataI[i].contract, 
+                'method':gasDataI[i].method, 
+                'change%': change > 0 ? '(+)' + change.toFixed(2).toString() :'(-)' + Math.abs(change.toFixed(2))}
+                gasChangeData.push(obj);
+            }
         }
-        
-
     }
-}
 let markdownstring = markdown(gasChangeData,coloumn);
 if(gasChangeData.length!==0){
     await commenter.createOrUpdateComment('gasCompare', markdownstring ).catch(err=>{
