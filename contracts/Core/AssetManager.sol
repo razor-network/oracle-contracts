@@ -125,8 +125,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
                     uint8 assetIndex = collections[id].assetIndex;
                     if (assetIndex == activeAssets.length) {
                         activeAssets.pop();
-                    }
-                    else{
+                    } else {
                         activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
                         collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
                         activeAssets.pop();
