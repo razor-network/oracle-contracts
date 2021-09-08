@@ -41,12 +41,6 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
         }
     }
 
-    /// @notice Allows Client to check first if given req id is avaialble before registering.
-    /// @param requestId : unique request id
-    function isReqIdAvailable(bytes32 requestId) external view override initialized returns (bool) {
-        return (requests[msg.sender][requestId] == 0);
-    }
-
     /// @notice Called by BlockManager in ClaimBlockReward or ConfirmBlockLastEpoch in confirm state
     /// @param epoch current epoch
     /// @param _secret hash of encoded rando secret from stakers
@@ -57,6 +51,12 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
         require(secrets[epoch] == 0x0, "Secret already set");
         secrets[epoch] = _secret;
         emit RandomNumberAvailable(epoch);
+    }
+
+    /// @notice Allows Client to check first if given req id is avaialble before registering.
+    /// @param requestId : unique request id
+    function isReqIdAvailable(bytes32 requestId) external view override initialized returns (bool) {
+        return (requests[msg.sender][requestId] == 0);
     }
 
     /// @notice Allows client to pull random number once available

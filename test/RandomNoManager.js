@@ -158,7 +158,7 @@ describe('RandomNoManager', function () {
       // Next Epoch
       await mineToNextState();
 
-      // // Get Random no : Generic From Last Epoch
+      // Get Random no : Generic From Last Epoch
       const randomNo2 = await randomNoManager.getGenericRandomNumberOfLastEpoch();
       assertBNEqual(randomNo2, toBigNumber(locallyCalculatedRandomNo1));
     });
