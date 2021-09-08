@@ -284,7 +284,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         _setStakerStake(_epoch, _id, _stake);
     }
 
-    /// @notice The function is used by the Votemanager reveal function
+    /// @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
     /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
     /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
     /// @param stakerId The ID of the staker who is penalised
@@ -293,22 +293,42 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
 
-        if (halfPenalty == 0) return;
+        if (halfPenalty == 0) return 0;
 
         _setStakerStake(epoch, stakerId, _stake);
+
+        //reward half the amount to bounty hunter
+        bountyCounter = bountyCounter + 1;
+        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, halfPenalty, epoch + (parameters.withdrawLockPeriod()));
+
+        //burn half the amount
+        //please note that since slashing is a critical part of consensus algorithm,
+        //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
+        //tx should complete.
+        razor.transfer(BURN_ADDRESS, halfPenalty);
+
+        return bountyCounter;
+    }
+
+    function redeemBounty(uint32 bountyId) external {
+        uint32 epoch = getEpoch(parameters.epochLength());
+        Structs.BountyLock memory bountyLock = bountyLocks[bountyId];
+
+        require(msg.sender == bountyLock.bountyHunter, "Incorrect Caller");
+        require(bountyLock.redeemAfter <= epoch, "Redeem epoch not reached");
+        delete bountyLocks[bountyId];
+
         //reward half the amount to bounty hunter
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        razor.transfer(bountyHunter, halfPenalty);
-        //burn half the amount
-        razor.transfer(BURN_ADDRESS, halfPenalty);
+        razor.transfer(msg.sender, bountyLock.amount);
     }
 
     function setStakerAge(

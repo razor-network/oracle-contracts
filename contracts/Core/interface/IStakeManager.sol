@@ -36,7 +36,7 @@ interface IStakeManager {
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external;
+    ) external returns (uint32);
 
     function setStakerAge(
         uint32 _epoch,

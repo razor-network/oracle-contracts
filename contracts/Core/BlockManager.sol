@@ -146,6 +146,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         external
         initialized
         checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
+        returns (uint32)
     {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -165,7 +166,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         sortedProposedBlockIds[epoch].pop();
 
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        stakeManager.slash(epoch, proposerId, msg.sender);
+        return stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {
