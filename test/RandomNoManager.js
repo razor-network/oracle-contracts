@@ -72,9 +72,15 @@ describe('RandomNoManager', function () {
       // Lets consider follwoing epoch as X
       const epoch = await getEpoch();
 
-      await randomNoManager.register();
-      // requestId = 1; EpochRequested would be: epoch X , as we are in commit state
-      assertBNEqual(await randomNoManager.requests(toBigNumber('1')), epoch);
+      let reqid = utils.solidityKeccak256(['uint32'], ['32434']);
+      let isReqIdAvailable = await randomNoManager.isReqIdAvailable(reqid);
+      assertBNEqual(isReqIdAvailable, true);
+      await randomNoManager.register(reqid);
+      isReqIdAvailable = await randomNoManager.isReqIdAvailable(reqid);
+      assertBNEqual(isReqIdAvailable, false);
+
+      // EpochRequested would be: epoch X , as we are in commit state
+      assertBNEqual(await randomNoManager.requests(signers[0].address, reqid), epoch);
 
       // Commit
       const votes = [0];
@@ -89,18 +95,26 @@ describe('RandomNoManager', function () {
       await voteManager.connect(signers[5]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
 
-      await randomNoManager.register();
+      // Registering with same reqId, should revert
+      const tx = randomNoManager.register(reqid);
+      await assertRevert(tx, 'Duplicate Request ID');
 
-      // requestId = 2; EpochRequsted would be: epoch X + 1, as we requsted after commit state
+      // Registering with unique reqId
+      reqid = utils.solidityKeccak256(['uint32'], ['62438']);
+      isReqIdAvailable = await randomNoManager.isReqIdAvailable(reqid);
+      assertBNEqual(isReqIdAvailable, true);
+      await randomNoManager.register(reqid);
+      // EpochRequsted would be: epoch X + 1, as we requsted after commit state
       // For some reason this add is throwing exception that is not function, will check this
-      // assertBNEqual(await randomNoManager.requests(toBigNumber('2')), epoch.add(toBigNumber('1')));
+      assertBNEqual(await randomNoManager.requests(signers[0].address, reqid), epoch + 1);
     });
 
     it('client should be able to get random number if its ready', async () => {
       const epoch = await getEpoch();
 
-      // Should revert as random no will only be available for request id 1 post confirm for Epoch X
-      let tx = randomNoManager.getRandomNumber(toBigNumber(1));
+      // Should revert as random no will only be available for request id : utils.solidityKeccak256(['uint32'], ['32434']) post confirm for Epoch X
+      let reqid = utils.solidityKeccak256(['uint32'], ['32434']);
+      let tx = randomNoManager.getRandomNumber(reqid);
       await assertRevert(tx, 'Random Number not genarated yet');
 
       // Propose
@@ -121,29 +135,30 @@ describe('RandomNoManager', function () {
       await mineToNextState();
       await blockManager.connect(signers[5]).claimBlockReward();
 
-      // Get Random no : Request id 1
-      const randomNo = await randomNoManager.getRandomNumber(toBigNumber(1));
+      // Get Random no : Request id  : utils.solidityKeccak256(['uint32'], ['32434']);
+      const randomNo = await randomNoManager.getRandomNumber(reqid);
       const seed = await randomNoManager.secrets(epoch);
-      const salt = utils.solidityKeccak256(['bytes32'], [utils.defaultAbiCoder.encode(['uint256'], [toBigNumber('1')])]);
+      const salt = reqid;
       const locallyCalculatedRandomNo = await prngHash(seed, salt);
       assertBNEqual(randomNo, toBigNumber(locallyCalculatedRandomNo));
 
-      // Get Random no : Generic From Epoch
+      // // Get Random no : Generic From Epoch
       const randomNo1 = await randomNoManager.getGenericRandomNumber(epoch);
       const seed1 = await randomNoManager.secrets(epoch);
-      const salt1 = utils.solidityKeccak256(['bytes32'], [utils.defaultAbiCoder.encode(['uint256'], [toBigNumber('0')])]);
+      const salt1 = 0;
       const locallyCalculatedRandomNo1 = await prngHash(seed1, salt1);
       assertBNEqual(randomNo1, toBigNumber(locallyCalculatedRandomNo1));
 
-      // Get Random no : Request id 2
+      // Get Random no : Request id 2 : utils.solidityKeccak256(['uint32'], ['62438']);
       // Should revert as random no will still not be available for request id 2, as its designated epoch would be X + 1
-      tx = randomNoManager.getRandomNumber(toBigNumber(2));
+      reqid = utils.solidityKeccak256(['uint32'], ['62438']);
+      tx = randomNoManager.getRandomNumber(reqid);
       await assertRevert(tx, 'Random Number not genarated yet');
 
       // Next Epoch
       await mineToNextState();
 
-      // Get Random no : Generic From Last Epoch
+      // // Get Random no : Generic From Last Epoch
       const randomNo2 = await randomNoManager.getGenericRandomNumberOfLastEpoch();
       assertBNEqual(randomNo2, toBigNumber(locallyCalculatedRandomNo1));
     });

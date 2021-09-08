@@ -28,18 +28,23 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
 
     /// @notice Allows Client to register for random number
     /// Per request a rquest id is generated, which is binded to one epoch
-    /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other state
-    /// @return requestId : A unique id per request
-    function register() external override initialized returns (uint256) {
+    /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other states
+    /// @param requestId : unique request id
+    function register(bytes32 requestId) external override initialized {
         uint32 epoch = getEpoch(parameters.epochLength());
         State state = getState(parameters.epochLength());
-        requestId = requestId + 1;
+        require(requests[msg.sender][requestId] == 0, "Duplicate Request ID");
         if (state == State.Commit) {
-            requests[requestId] = epoch;
+            requests[msg.sender][requestId] = epoch;
         } else {
-            requests[requestId] = epoch + 1;
+            requests[msg.sender][requestId] = epoch + 1;
         }
-        return requestId;
+    }
+
+    /// @notice Allows Client to check first if given req id is avaialble before registering.
+    /// @param requestId : unique request id
+    function isReqIdAvailable(bytes32 requestId) external view override initialized returns (bool) {
+        return (requests[msg.sender][requestId] == 0);
     }
 
     /// @notice Called by BlockManager in ClaimBlockReward or ConfirmBlockLastEpoch in confirm state
@@ -49,18 +54,18 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
         /// @dev this require is added for extra assurance to clients,
         /// to give them assurance that once secret is set for epoch, it cant be changed
         /// as admin could always override this SECRETS_MODIFIER_ROLE role
-        require(secrets[epoch] == 0x0, "secret already set");
+        require(secrets[epoch] == 0x0, "Secret already set");
         secrets[epoch] = _secret;
         emit RandomNumberAvailable(epoch);
     }
 
     /// @notice Allows client to pull random number once available
     /// Random no is generated from secret of that epoch and request id, its unique per requestid
-    /// @param _requestId : A unique id per request
+    /// @param requestId : A unique id per request
     /// @return random number
-    function getRandomNumber(uint256 _requestId) external view override returns (uint256) {
-        uint32 epochOfRequest = requests[_requestId];
-        return _generateRandomNumber(epochOfRequest, _requestId);
+    function getRandomNumber(bytes32 requestId) external view override returns (uint256) {
+        uint32 epochOfRequest = requests[msg.sender][requestId];
+        return _generateRandomNumber(epochOfRequest, requestId);
     }
 
     /// @notice Allows client to get generic random number of last epoch
@@ -77,12 +82,12 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
         return _generateRandomNumber(epoch, 0);
     }
 
-    function _generateRandomNumber(uint32 epoch, uint256 requestId) internal view returns (uint256) {
+    function _generateRandomNumber(uint32 epoch, bytes32 requestId) internal view returns (uint256) {
         bytes32 secret = secrets[epoch];
         if (secret == 0x0) {
             revert("Random Number not genarated yet");
         } else {
-            return uint256(Random.prngHash(secret, keccak256(abi.encode(requestId))));
+            return uint256(Random.prngHash(secret, requestId));
         }
     }
 }
