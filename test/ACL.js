@@ -433,11 +433,11 @@ describe('Access Control Test', async () => {
     // New admin should be able to assign roles
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
-  it('Only Admin should be able to call upgradeDelegate', async () => {
-    assert(await delegator.connect(signers[0]).upgradeDelegate(signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).upgradeDelegate(signers[2].address), expectedRevertMessage);
+  it('Only Admin should be able to call initialize in Delegator', async () => {
+    assert(await delegator.connect(signers[0]).initialize(signers[2].address, signers[2].address, signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).initialize(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
   });
-  it('Upgrade Delegator should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).upgradeDelegate(ZERO_ADDRESS), 'Zero Address check');
+  it('Delegator initializer should not accept zero Address', async function () {
+    await assertRevert(delegator.connect(signers[0]).initialize(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS), 'Zero Address check');
   });
 });

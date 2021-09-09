@@ -21,17 +21,20 @@ const { toBigNumber } = require('./helpers/utils');
 describe('AssetManager', function () {
   let signers;
   let assetManager;
+  let initializeContracts;
 
   before(async () => {
-    ({ assetManager } = await setupContracts());
+    ({ assetManager, initializeContracts } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
-  describe('Delegator', function () {
+  describe('AssetManager', function () {
     it('Admin role should be granted', async () => {
       assert(await assetManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
     it('should be able to create Job with JSON selector', async function () {
+      await Promise.all(await initializeContracts());
+      await mineToNextEpoch();
       await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';

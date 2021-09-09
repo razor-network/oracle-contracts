@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
 import "./interface/IAssetManager.sol";
+import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
 import "./storage/Constants.sol";
 import "./StateManager.sol";
@@ -10,6 +11,7 @@ import "./ACL.sol";
 
 contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
     IParameters public parameters;
+    IDelegator public delegator;
 
     event JobCreated(
         uint8 id,
@@ -55,6 +57,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         parameters = IParameters(parametersAddress);
     }
 
+    function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newDelegatorAddress != address(0x0), "Zero Address check");
+        delegator = IDelegator(newDelegatorAddress);
+    }
+
     function createJob(
         int8 power,
         JobSelectorType selectorType,
@@ -79,6 +86,8 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         );
 
         emit JobCreated(numAssets, selectorType, power, msg.sender, epoch, block.timestamp, name, selector, url);
+
+        delegator.setIDName(name, numAssets);
     }
 
     function updateJob(
@@ -175,6 +184,8 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         activeAssets.push(numAssets);
         collections[numAssets].assetIndex = uint8(activeAssets.length);
         emit CollectionCreated(true, numAssets, power, epoch, aggregationMethod, jobIDs, msg.sender, block.timestamp, name);
+
+        delegator.setIDName(name, numAssets);
     }
 
     function addJobToCollection(uint8 collectionID, uint8 jobID)
