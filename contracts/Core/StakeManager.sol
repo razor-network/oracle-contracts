@@ -316,19 +316,21 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         return bountyCounter;
     }
 
+    /// @notice Allows bountyHunter to redeem their bounty once its locking period is over
+    /// @param bountyId The ID of the bounty
     function redeemBounty(uint32 bountyId) external {
         uint32 epoch = getEpoch(parameters.epochLength());
-        Structs.BountyLock memory bountyLock = bountyLocks[bountyId];
+        uint256 bounty = bountyLocks[bountyId].amount;
 
-        require(msg.sender == bountyLock.bountyHunter, "Incorrect Caller");
-        require(bountyLock.redeemAfter <= epoch, "Redeem epoch not reached");
+        require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
+        require(bountyLocks[bountyId].redeemAfter <= epoch, "Redeem epoch not reached");
         delete bountyLocks[bountyId];
 
         //reward half the amount to bounty hunter
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        razor.transfer(msg.sender, bountyLock.amount);
+        razor.transfer(msg.sender, bounty);
     }
 
     function setStakerAge(

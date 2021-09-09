@@ -15,6 +15,7 @@ const {
   STAKE_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
   BURN_ADDRESS,
+  WITHDRAW_LOCK_PERIOD,
 
 } = require('./helpers/constants');
 const {
@@ -285,11 +286,10 @@ describe('BlockManager', function () {
     });
 
     it('should be able to finalize Dispute', async function () {
-      const epoch = await getEpoch();
+      let epoch = await getEpoch();
 
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
-      const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
       const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
       let blockId;
@@ -310,16 +310,52 @@ describe('BlockManager', function () {
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
       assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')), 'half slashed amount didnt get burnt');
-      assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(slashPenaltyAmount.div('2')), 'disputer did not get rewarded');
 
-      // const dispute = await blockManager.disputes(epoch, signers[19].address);
-      // assertBNEqual(dispute.median, toBigNumber(200), 'median should match');
+      // Bounty should be locked
+      assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
+      const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+      epoch = await getEpoch();
+      assertBNEqual(bountyLock.bountyHunter, signers[19].address);
+      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+      assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
       await mineToNextState();
       await blockManager.connect(signers[6]).claimBlockReward();
-      await mineToNextState();
+      const epoch = await getEpoch();
+      assertBNEqual(
+        (await blockManager.getBlock(epoch)).proposerId,
+        await stakeManager.stakerIds(signers[6].address),
+        `${await stakeManager.stakerIds(signers[6].address)} ID is the one who proposed the block `
+      );
+    });
+
+    it('Once Lock Period is over, Disputer should be able to redeem bounty', async function () {
+      const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+      const balanceBeforeAcc19 = await razor.balanceOf(signers[19].address);
+      // Shouldnt be reedemable before withdrawlock period
+      const tx = stakeManager.connect(signers[19]).redeemBounty(toBigNumber('1'));
+      assertRevert(tx, 'Redeem epoch not reached');
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+
+      // Anyone shouldnt be able to redeem someones elses bounty
+      const tx1 = stakeManager.connect(signers[8]).redeemBounty(toBigNumber('1'));
+      assertRevert(tx1, 'Incorrect Caller');
+
+      // Should able to redeem
+      await stakeManager.connect(signers[19]).redeemBounty(toBigNumber('1'));
+      assertBNEqual(await razor.balanceOf(signers[19].address), balanceBeforeAcc19.add(bountyLock.amount), 'disputer did not get bounty');
+
+      // Should not able to redeem again
+      const tx2 = stakeManager.connect(signers[19]).redeemBounty(toBigNumber('1'));
+      assertRevert(tx2, 'Incorrect Caller');
+    });
+
+    it('all blocks being disputed', async function () {
+      await mineToNextEpoch();
 
       await razor.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
 
@@ -345,12 +381,6 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[7]).commit(epoch, commitment2);
 
-      assertBNEqual(
-        (await blockManager.getBlock(epoch - 1)).proposerId,
-        await stakeManager.stakerIds(signers[6].address),
-        `${await stakeManager.stakerIds(signers[6].address)} ID is the one who proposed the block `
-      );
-
       await mineToNextState();
 
       // Staker 6
@@ -361,10 +391,7 @@ describe('BlockManager', function () {
 
       await voteManager.connect(signers[7]).reveal(epoch, votes2,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-    });
 
-    it('all blocks being disputed', async function () {
-      const epoch = await getEpoch();
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
       const staker6 = await stakeManager.getStaker(stakerIdAcc6);
 
