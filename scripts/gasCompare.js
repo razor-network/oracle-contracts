@@ -35,11 +35,12 @@ let calculateMedianValue = (numbers) => {
 
 let compareValue = (gas_usage_current,gas_usage_master) => {
 
-    if(gas_usage_current > gas_usage_master || gas_usage_current < gas_usage_master){
-        return ((gas_usage_current-gas_usage_master)/gas_usage_master)*100;
+    if(gas_usage_current === gas_usage_master){
+        return 0 //no change ;
     }
     else{
-        return 0 //no change
+        return ((gas_usage_current-gas_usage_master)/gas_usage_master)*100
+        
     }      
 }
 // method to compare the gas Consumption.
