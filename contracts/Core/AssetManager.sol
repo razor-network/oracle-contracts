@@ -243,11 +243,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
         require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
-
         uint32 epoch = parameters.getEpoch();
-        for (uint256 i = 1; i < 10000; i++) {
-            i++;
-        }
         collections[collectionID].power = power;
         collections[collectionID].aggregationMethod = aggregationMethod;
 
