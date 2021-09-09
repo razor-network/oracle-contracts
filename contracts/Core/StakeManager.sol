@@ -113,7 +113,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
         emit Delegated(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
-
         // Step 3:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
