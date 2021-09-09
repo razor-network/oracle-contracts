@@ -30,9 +30,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     event Staked(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
@@ -142,7 +142,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
 
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
         //emit event here
     }
 
@@ -201,7 +201,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         //Transfer stake
         require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
 
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Withdrew(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
