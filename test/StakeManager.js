@@ -87,12 +87,13 @@ describe('StakeManager', function () {
       await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
+      const selectorType = 0;
       const name = 'test';
       const power = -2;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+      while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
 
-      while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
+      while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
       const Cname = 'Test Collection';
       for (let i = 1; i <= 8; i++) {
@@ -782,7 +783,6 @@ describe('StakeManager', function () {
         await mineToNextState();
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
-
         await blockManager.connect(signers[4]).propose(epoch,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,

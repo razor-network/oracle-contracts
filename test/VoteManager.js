@@ -73,12 +73,13 @@ describe('VoteManager', function () {
         await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
+        const selectorType = 0;
         const name = 'test';
         const power = -2;
         let i = 0;
-        while (i < 9) { await assetManager.createJob(power, name, selector, url); i++; }
+        while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
 
-        while (Number(await parameters.getState()) !== 3) { await mineToNextState(); }
+        while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
         const Cname = 'Test Collection';
         for (let i = 1; i <= 8; i++) {
@@ -190,7 +191,7 @@ describe('VoteManager', function () {
         // // Correct Reveal
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         //
@@ -274,7 +275,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         await voteManager.connect(signers[4]).reveal(epoch, votes2,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
@@ -414,7 +415,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
-        assertBNEqual((await voteManager.getVoteValue(1, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
+        assertBNEqual((await voteManager.getVoteValue(0, stakerIdAcc3)), toBigNumber('100'), 'Vote not equal to 100');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
@@ -692,7 +693,7 @@ describe('VoteManager', function () {
 
         const sortedVotes = [toBigNumber('0')];
 
-        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
+        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
 
         await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
       });
@@ -745,7 +746,7 @@ describe('VoteManager', function () {
         //
         const sortedVotes = [toBigNumber('0')];
         //
-        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
+        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
         //
         await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
       });
@@ -773,7 +774,7 @@ describe('VoteManager', function () {
         await mineToNextState();
         // dispute state
         const sortedVotes = [];
-        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
+        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
         assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
@@ -801,6 +802,7 @@ describe('VoteManager', function () {
         const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
         const iteration = await getIteration(voteManager, stakeManager, staker);
         await blockManager.connect(signers[3]).propose(epoch,
+
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);

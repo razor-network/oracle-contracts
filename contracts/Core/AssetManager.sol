@@ -2,17 +2,28 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
+import "./interface/IAssetManager.sol";
 import "./storage/AssetStorage.sol";
 import "./storage/Constants.sol";
 import "./StateManager.sol";
 import "./ACL.sol";
 
-contract AssetManager is ACL, AssetStorage, Constants, StateManager {
+contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
     IParameters public parameters;
 
-    event JobCreated(uint8 id, int8 power, address creator, uint32 epoch, uint256 timestamp, string name, string selector, string url);
+    event JobCreated(
+        uint8 id,
+        JobSelectorType selectorType,
+        int8 power,
+        address creator,
+        uint32 epoch,
+        uint256 timestamp,
+        string name,
+        string selector,
+        string url
+    );
 
-    event JobUpdated(uint8 id, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
+    event JobUpdated(uint8 id, JobSelectorType selectorType, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
 
     event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
@@ -46,6 +57,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
     function createJob(
         int8 power,
+        JobSelectorType selectorType,
         string calldata name,
         string calldata selector,
         string calldata url
@@ -53,31 +65,44 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(true, numAssets, uint8(AssetTypes.Job), power, epoch, msg.sender, name, selector, url);
+        jobs[numAssets] = Structs.Job(
+            true,
+            numAssets,
+            uint8(AssetTypes.Job),
+            uint8(selectorType),
+            power,
+            epoch,
+            msg.sender,
+            name,
+            selector,
+            url
+        );
 
-        emit JobCreated(numAssets, power, msg.sender, epoch, block.timestamp, name, selector, url);
+        emit JobCreated(numAssets, selectorType, power, msg.sender, epoch, block.timestamp, name, selector, url);
     }
 
     function updateJob(
         uint8 jobID,
         int8 power,
+        JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) notCommitState(State.Commit, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
         require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
 
         uint32 epoch = parameters.getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
+        jobs[jobID].selectorType = uint8(selectorType);
         jobs[jobID].power = power;
-        emit JobUpdated(jobID, epoch, power, block.timestamp, selector, url);
+        emit JobUpdated(jobID, selectorType, epoch, power, block.timestamp, selector, url);
     }
 
     function setAssetStatus(bool assetStatus, uint8 id)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength())
+        checkState(State.Confirm, parameters.epochLength())
     {
         require(id != 0, "ID cannot be 0");
 
@@ -90,12 +115,26 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
 
             emit JobActivityStatus(jobs[id].active, id, epoch, block.timestamp);
         } else {
-            collections[id].active = assetStatus;
             if (assetStatus) {
-                numActiveAssets = numActiveAssets + 1;
+                if (!collections[id].active) {
+                    activeAssets.push(id);
+                    collections[id].assetIndex = uint8(activeAssets.length);
+                }
             } else {
-                numActiveAssets = numActiveAssets - 1;
+                if (collections[id].active) {
+                    uint8 assetIndex = collections[id].assetIndex;
+                    if (assetIndex == activeAssets.length) {
+                        activeAssets.pop();
+                    } else {
+                        activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+                        collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
+                        activeAssets.pop();
+                    }
+                    collections[id].assetIndex = 0;
+                }
             }
+
+            collections[id].active = assetStatus;
 
             emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         }
@@ -106,13 +145,12 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         uint32 aggregationMethod,
         int8 power,
         string calldata name
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkDisputeOrConfirmState(State.Dispute, State.Confirm, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, parameters.epochLength()) {
         require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
 
         require(jobIDs.length > 1, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        numActiveAssets = numActiveAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
         collections[numAssets].id = numAssets;
@@ -134,13 +172,15 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         collections[numAssets].active = true;
         collections[numAssets].assetType = uint8(AssetTypes.Collection);
         collections[numAssets].creator = msg.sender;
+        activeAssets.push(numAssets);
+        collections[numAssets].assetIndex = uint8(activeAssets.length);
         emit CollectionCreated(true, numAssets, power, epoch, aggregationMethod, jobIDs, msg.sender, block.timestamp, name);
     }
 
     function addJobToCollection(uint8 collectionID, uint8 jobID)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        notCommitState(State.Commit, parameters.epochLength())
+        notState(State.Commit, parameters.epochLength())
     {
         require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
 
@@ -172,7 +212,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
-        notCommitState(State.Commit, parameters.epochLength())
+        notState(State.Commit, parameters.epochLength())
     {
         require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
 
@@ -200,7 +240,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         uint8 collectionID,
         uint32 aggregationMethod,
         int8 power
-    ) external onlyRole(ASSET_MODIFIER_ROLE) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
         require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
 
@@ -235,8 +275,10 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
     function getJob(uint8 id)
         external
         view
+        override
         returns (
             bool active,
+            uint8 selectorType,
             int8 power,
             string memory name,
             string memory selector,
@@ -246,12 +288,13 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         require(jobs[id].assetType == uint8(AssetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
-        return (job.active, job.power, job.name, job.selector, job.url);
+        return (job.active, job.selectorType, job.power, job.name, job.selector, job.url);
     }
 
     function getCollection(uint8 id)
         external
         view
+        override
         returns (
             bool active,
             int8 power,
@@ -271,7 +314,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         );
     }
 
-    function getAssetType(uint8 id) external view returns (uint8) {
+    function getAssetType(uint8 id) external view override returns (uint8) {
         require(id != 0, "ID cannot be 0");
 
         require(id <= numAssets, "ID does not exist");
@@ -295,11 +338,21 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager {
         }
     }
 
+    function getAssetIndex(uint8 id) external view override returns (uint8) {
+        require(collections[id].assetType == uint8(AssetTypes.Collection), "ID needs to be a collection");
+
+        return collections[id].assetIndex;
+    }
+
     function getNumAssets() external view returns (uint8) {
         return numAssets;
     }
 
-    function getNumActiveAssets() external view returns (uint8) {
-        return numActiveAssets;
+    function getNumActiveAssets() external view override returns (uint8) {
+        return uint8(activeAssets.length);
+    }
+
+    function getActiveAssets() external view override returns (uint8[] memory) {
+        return activeAssets;
     }
 }

@@ -13,6 +13,7 @@ const {
   assertBNEqual,
   assertRevert,
   mineToNextState,
+  mineToNextEpoch,
 } = require('./helpers/testHelpers');
 
 const { toBigNumber } = require('./helpers/utils');
@@ -30,34 +31,44 @@ describe('AssetManager', function () {
     it('Admin role should be granted', async () => {
       assert(await assetManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
-    it('should be able to create Job', async function () {
+    it('should be able to create Job with JSON selector', async function () {
       await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
-      const name = 'test';
+      const selectorType = 0;
+      const name = 'testJSON';
       const power = -2;
-      await assetManager.createJob(power, name, selector, url);
+      await assetManager.createJob(power, selectorType, name, selector, url);
       const job = await assetManager.jobs(1);
       assert(job.url === url);
       assert(job.selector === selector);
+      assertBNEqual(job.selectorType, toBigNumber('0'));
       assertBNEqual(job.assetType, toBigNumber('1'));
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('1'));
     });
 
-    it('should be able to create a Collection', async function () {
+    it('should be able to create Job with XHTML selector', async function () {
+      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com/2';
       const selector = 'selector/2';
-      const name = 'test2';
+      const selectorType = 1;
+      const name = 'testXHTML';
+      const power = 2;
+      await assetManager.createJob(power, selectorType, name, selector, url);
+      const job = await assetManager.jobs(2);
+      assert(job.url === url);
+      assert(job.selector === selector);
+      assertBNEqual(job.selectorType, toBigNumber('1'));
+      assertBNEqual(job.assetType, toBigNumber('1'));
+      assertBNEqual((await assetManager.getNumAssets()), toBigNumber('2'));
+    });
+
+    it('should be able to create a Collection', async function () {
       const power = 3;
-      await assetManager.createJob(
-        power,
-        name,
-        selector,
-        url
-      );
       await mineToNextState();// reveal
       await mineToNextState();// propose
       await mineToNextState();// dispute
+      await mineToNextState();// confirm
       const collectionName = 'Test Collection';
       await assetManager.createCollection([1, 2], 1, power, collectionName);
       const collection = await assetManager.getCollection(3);
@@ -65,14 +76,18 @@ describe('AssetManager', function () {
       assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
       assert((collection.jobIDs).length === 2);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('3'));
+      assertBNEqual((await assetManager.getNumActiveAssets()), toBigNumber('1'));
+      const activeAssets = await assetManager.getActiveAssets();
+      assert(activeAssets[0] === 3);
     });
 
     it('should be able to add a job to a collection', async function () {
       const url = 'http://testurl.com/3';
       const selector = 'selector/3';
+      const selectorType = 0;
       const name = 'test3';
       const power = -6;
-      await assetManager.createJob(power, name, selector, url);
+      await assetManager.createJob(power, selectorType, name, selector, url);
 
       await assetManager.addJobToCollection(3, 4);
       const collection = await assetManager.getCollection(3);
@@ -100,8 +115,8 @@ describe('AssetManager', function () {
     });
 
     it('should be able to update Job', async function () {
-      await assetManager.createJob(6, 'test4', 'selector/4', 'http://testurl.com/4');
-      await assetManager.updateJob(5, 4, 'selector/5', 'http://testurl.com/5');
+      await assetManager.createJob(6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
+      await assetManager.updateJob(5, 4, 0, 'selector/5', 'http://testurl.com/5');
       const job = await assetManager.jobs(5);
       assert(job.url === 'http://testurl.com/5');
       assert(job.selector === 'selector/5');
@@ -117,7 +132,8 @@ describe('AssetManager', function () {
     it('should be able to get a job', async function () {
       const job = await assetManager.getJob(1);
       assertBNEqual(job.active, 'true', 'job should be active');
-      assertBNEqual(job.name, 'test', 'job name should be "test"');
+      assert(job.name, 'testJSON');
+      assertBNEqual(job.selectorType, toBigNumber('0'));
       assertBNEqual(job.selector, 'selector', 'job selector should be "selector"');
       assertBNEqual(job.url, 'http://testurl.com', 'job url should be "http://testurl.com"');
     });
@@ -163,12 +179,14 @@ describe('AssetManager', function () {
       await assetManager.setAssetStatus(false, 6);
       const collectionIsActive = await assetManager.getActiveStatus(6);
       assert(collectionIsActive === false);
+      assertBNEqual(await assetManager.getAssetIndex(6), toBigNumber('0'), 'Incorrect index assignment');
     });
 
     it('should be able to reactivate collection', async function () {
       await assetManager.setAssetStatus(true, 6);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === true);
+      assertBNEqual(await assetManager.getAssetIndex(6), toBigNumber('2'), 'Incorrect index assignment');
       await assetManager.setAssetStatus(false, 6);
     });
 
@@ -183,7 +201,7 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to update job if job does not exist', async function () {
-      const tx = assetManager.updateJob(9, 2, 'http://testurl.com/4', 'selector/4');
+      const tx = assetManager.updateJob(9, 2, 0, 'http://testurl.com/4', 'selector/4');
       await assertRevert(tx, 'Job ID not present');
     });
 
@@ -281,18 +299,59 @@ describe('AssetManager', function () {
       assertRevert(tx, 'Collection is inactive');
     });
 
-    it('updateJob, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
-      await mineToNextState(); // confirm
-      await mineToNextState(); // commit
+    it('getAssetindex should only work if the id is a collection', async function () {
+      const tx1 = assetManager.getAssetIndex(100);
+      assertRevert(tx1, 'ID needs to be a collection');
+      const tx2 = assetManager.getAssetIndex(1);
+      assertRevert(tx2, 'ID needs to be a collection');
+    });
 
-      const tx = assetManager.updateJob(5, 4, 'selector/6', 'http://testurl.com/6');
+    it('updateJob, updateCollection, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
+      await mineToNextEpoch();
+
+      const tx = assetManager.updateJob(5, 4, 0, 'selector/6', 'http://testurl.com/6');
       assertRevert(tx, 'incorrect state');
 
       const tx1 = assetManager.addJobToCollection(3, 1);
       assertRevert(tx1, 'incorrect state');
 
-      const tx2 = assetManager.removeJobFromCollection(5, 4);
+      const tx2 = assetManager.updateCollection(3, 2, 5);
       assertRevert(tx2, 'incorrect state');
+
+      const tx3 = assetManager.addJobToCollection(3, 1);
+      assertRevert(tx3, 'incorrect state');
+
+      const tx4 = assetManager.removeJobFromCollection(5, 4);
+      assertRevert(tx4, 'incorrect state');
+    });
+
+    it('assetIndex should alloted properly after deactivating a collection', async function () {
+      await mineToNextEpoch();
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      const Cname = 'Test Collection';
+      for (let i = 1; i <= 8; i++) {
+        await assetManager.createCollection([1, 2], 1, 3, Cname);
+      }
+      // Deactivating an asset with index 0
+      await assetManager.setAssetStatus(false, 7);
+      assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(14), toBigNumber('1'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
+
+      // Deactivating an asset with index between 0 and length - 1
+      await assetManager.setAssetStatus(false, 10);
+      assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('4'), 'Incorrect index assignment');
+    });
+
+    it('should not add or remove from a collection from activeAssets when it is activated/deactivated', async function () {
+      await assetManager.setAssetStatus(true, 8);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been added again');
+      await assetManager.setAssetStatus(false, 7);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been removed again');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
