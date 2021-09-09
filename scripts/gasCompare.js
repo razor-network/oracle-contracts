@@ -46,7 +46,7 @@ let compareValue = (gas_usage_current,gas_usage_master) => {
 // method to compare the gas Consumption.
 
 let gasCompare = async () => {
-    let coloumn = ['contract','method','change%','current','master'];
+    let coloumn = ['Contract','Method','Change%','Current','Master'];
     let gasChangeData = [];
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
@@ -55,20 +55,20 @@ let gasCompare = async () => {
             let change = compareValue(calculateMedianValue(gasDataI[i].gasData),calculateMedianValue(gasDataII[i].gasData));        
             if(calculateMedianValue(gasDataI[i].gasData) && change!=0)
             {
-                let obj = {'contract': gasDataI[i].contract, 
-                'method':gasDataI[i].method, 
-                'current':calculateMedianValue(gasDataI[i].gasData),
-                'master' :calculateMedianValue(gasDataII[i].gasData),
-                'change%': change > 0 ? '(+)' + change.toFixed(2).toString() :'(-)' + Math.abs(change.toFixed(2)),}
+                let obj = {'Contract': gasDataI[i].contract, 
+                'Method':gasDataI[i].method, 
+                'Current':calculateMedianValue(gasDataI[i].gasData),
+                'Master' :calculateMedianValue(gasDataII[i].gasData),
+                'Change%': change > 0 ? '(+)' + change.toFixed(2).toString() :'(-)' + Math.abs(change.toFixed(2)),}
                 gasChangeData.push(obj);
             }
         }
         else{
-            let obj = {'contract': gasDataI[i].contract, 
-                'method':gasDataI[i].method, 
-                'current':calculateMedianValue(gasDataI[i].gasData),
-                'master' :0,
-                'change%':0,}
+            let obj = {'Contract': gasDataI[i].contract, 
+                'Method':gasDataI[i].method, 
+                'Current':calculateMedianValue(gasDataI[i].gasData),
+                'Master' :0,
+                'Change%':0,}
                 gasChangeData.push(obj);
 
             }
