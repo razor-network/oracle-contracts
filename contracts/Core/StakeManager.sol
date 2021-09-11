@@ -28,11 +28,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
-    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event Staked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
@@ -69,7 +69,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
-        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+        emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
             numStakers = numStakers + (1);
@@ -164,7 +164,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
-        emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
 
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
@@ -207,7 +207,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Reset lock
         _resetLock(stakerId);
 
-        emit Withdrew(epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
+        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
