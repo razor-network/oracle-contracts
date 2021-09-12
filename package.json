@@ -23,7 +23,8 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
     "test": "hardhat test",
-    "gas": "CI=true npm run test && node scripts/gasAnalyze.js"
+    "gas": "CI=true npm run test && node scripts/gasAnalyze.js",
+    "gasCompare": "node scripts/gasCompare.js"
   },
   "repository": {
     "type": "git",
@@ -35,8 +36,11 @@
   },
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.2.0",
-    "hardhat-abi-exporter": "^2.2.1",
+    "circleci-pr-commenter": "^0.1.2",
+    "fs": "^0.0.1-security",
+    "json-to-markdown-table": "^1.0.0",
+    "@openzeppelin/contracts": "^4.3.1",
+    "hardhat-abi-exporter": "^2.3.0",
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {
@@ -45,22 +49,22 @@
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
     "@nomiclabs/hardhat-web3": "^2.0.0",
     "@tenderly/hardhat-tenderly": "^1.0.12",
-    "chai": "^4.3.0",
+    "chai": "^4.3.4",
     "coveralls": "^3.1.1",
-    "dotenv": "8.2.0",
+    "dotenv": "10.0.0",
     "elliptic": "^6.5.4",
-    "eslint": "^5.16.0",
+    "eslint": "^7.32.0",
     "eslint-config-airbnb-base": "^14.2.1",
-    "eslint-plugin-import": "^2.22.1",
-    "ethers": "^5.0.31",
+    "eslint-plugin-import": "^2.24.2",
+    "ethers": "^5.4.6",
     "get-json": "^1.0.1",
-    "hardhat": "2.5.0",
+    "hardhat": "2.6.3",
     "hardhat-gas-reporter": "1.0.4",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "solhint": "~3.3.6",
     "solhint-plugin-prettier": "^0.0.5",
-    "solidity-coverage": "^0.7.16"
+    "solidity-coverage": "^0.7.17"
   },
   "engines": {
     "node": ">=15.3.0"
