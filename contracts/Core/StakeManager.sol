@@ -28,11 +28,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
-    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event Staked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
@@ -69,6 +69,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
+        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
+        emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this)));
@@ -90,7 +93,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
             sToken.mint(msg.sender, toMint);
         }
 
-        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+        emit Staked(msg.sender,epoch, stakerId, stakers[stakerId].stake, block.timestamp);
     }
 
     /// @notice Delegation
@@ -141,8 +144,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
 
-        emit Unstaked(epoch, stakerId, sAmount, staker.stake, block.timestamp);
         //emit event here
+        emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
+
+        require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -189,18 +194,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         // Function to Reset the lock
         _resetLock(stakerId);
 
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            uint256 commission = (rAmount * staker.commission) / 100;
-            require(razor.transfer(staker._address, commission), "couldnt transfer");
-            rAmount = rAmount - commission;
-        }
-
-        //Transfer stake
-        require(razor.transfer(msg.sender, rAmount), "couldnt transfer");
-
-        emit Withdrew(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Withdrew(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
