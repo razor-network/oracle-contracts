@@ -438,6 +438,15 @@ describe('Access Control Test', async () => {
     await assertRevert(delegator.connect(signers[1]).initialize(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).initialize(ZERO_ADDRESS, ZERO_ADDRESS, ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).initialize(ZERO_ADDRESS, signers[2].address, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).initialize(signers[2].address, ZERO_ADDRESS, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).initialize(signers[2].address, signers[2].address, ZERO_ADDRESS), 'Zero Address check');
+  });
+  it('Only Admin should be able to call upgradeDelegator in assetManager', async () => {
+    assert(await assetManager.connect(signers[0]).upgradeDelegator(signers[2].address));
+    await assertRevert(assetManager.connect(signers[1]).upgradeDelegator(signers[2].address), expectedRevertMessage);
+  });
+  it('upgradeDelegator should not accept zero Address', async function () {
+    await assertRevert(assetManager.connect(signers[0]).upgradeDelegator(ZERO_ADDRESS), 'Zero Address check');
   });
 });
