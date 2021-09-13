@@ -60,6 +60,7 @@ library Structs {
         bool active;
         uint8 id;
         uint8 assetType;
+        uint8 assetIndex;
         int8 power;
         uint32 epoch;
         uint32 aggregationMethod;

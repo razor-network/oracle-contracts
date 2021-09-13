@@ -83,6 +83,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
+        uint8 assetIndex = assetManager.getAssetIndex(assetId);
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].assetId = assetId;
         } else {
@@ -95,7 +96,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
-            uint48 value = vote.values[assetId - 1];
+            uint48 value = vote.values[assetIndex - 1];
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;
@@ -159,7 +160,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         require(median > 0, "median can not be zero");
         uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
-        require(proposedBlocks[epoch][blockId].medians[assetId - 1] != median, "Proposed Alternate block is identical to proposed block");
+        uint8 assetIndex = assetManager.getAssetIndex(assetId);
+        require(
+            proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
+            "Proposed Alternate block is identical to proposed block"
+        );
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
         sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
         sortedProposedBlockIds[epoch].pop();

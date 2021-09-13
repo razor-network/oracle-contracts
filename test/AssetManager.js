@@ -13,6 +13,7 @@ const {
   assertBNEqual,
   assertRevert,
   mineToNextState,
+  mineToNextEpoch,
 } = require('./helpers/testHelpers');
 
 const { toBigNumber } = require('./helpers/utils');
@@ -67,6 +68,7 @@ describe('AssetManager', function () {
       await mineToNextState();// reveal
       await mineToNextState();// propose
       await mineToNextState();// dispute
+      await mineToNextState();// confirm
       const collectionName = 'Test Collection';
       await assetManager.createCollection([1, 2], 1, power, collectionName);
       const collection = await assetManager.getCollection(3);
@@ -74,6 +76,9 @@ describe('AssetManager', function () {
       assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
       assert((collection.jobIDs).length === 2);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('3'));
+      assertBNEqual((await assetManager.getNumActiveAssets()), toBigNumber('1'));
+      const activeAssets = await assetManager.getActiveAssets();
+      assert(activeAssets[0] === 3);
     });
 
     it('should be able to add a job to a collection', async function () {
@@ -174,12 +179,14 @@ describe('AssetManager', function () {
       await assetManager.setAssetStatus(false, 6);
       const collectionIsActive = await assetManager.getActiveStatus(6);
       assert(collectionIsActive === false);
+      assertBNEqual(await assetManager.getAssetIndex(6), toBigNumber('0'), 'Incorrect index assignment');
     });
 
     it('should be able to reactivate collection', async function () {
       await assetManager.setAssetStatus(true, 6);
       const collection = await assetManager.getCollection(6);
       assert(collection.active === true);
+      assertBNEqual(await assetManager.getAssetIndex(6), toBigNumber('2'), 'Incorrect index assignment');
       await assetManager.setAssetStatus(false, 6);
     });
 
@@ -292,9 +299,15 @@ describe('AssetManager', function () {
       assertRevert(tx, 'Collection is inactive');
     });
 
+    it('getAssetindex should only work if the id is a collection', async function () {
+      const tx1 = assetManager.getAssetIndex(100);
+      assertRevert(tx1, 'ID needs to be a collection');
+      const tx2 = assetManager.getAssetIndex(1);
+      assertRevert(tx2, 'ID needs to be a collection');
+    });
+
     it('updateJob, updateCollection, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
-      await mineToNextState(); // confirm
-      await mineToNextState(); // commit
+      await mineToNextEpoch();
 
       const tx = assetManager.updateJob(5, 4, 0, 'selector/6', 'http://testurl.com/6');
       assertRevert(tx, 'incorrect state');
@@ -310,6 +323,35 @@ describe('AssetManager', function () {
 
       const tx4 = assetManager.removeJobFromCollection(5, 4);
       assertRevert(tx4, 'incorrect state');
+    });
+
+    it('assetIndex should alloted properly after deactivating a collection', async function () {
+      await mineToNextEpoch();
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      const Cname = 'Test Collection';
+      for (let i = 1; i <= 8; i++) {
+        await assetManager.createCollection([1, 2], 1, 3, Cname);
+      }
+      // Deactivating an asset with index 0
+      await assetManager.setAssetStatus(false, 7);
+      assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(14), toBigNumber('1'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
+
+      // Deactivating an asset with index between 0 and length - 1
+      await assetManager.setAssetStatus(false, 10);
+      assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('4'), 'Incorrect index assignment');
+    });
+
+    it('should not add or remove from a collection from activeAssets when it is activated/deactivated', async function () {
+      await assetManager.setAssetStatus(true, 8);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been added again');
+      await assetManager.setAssetStatus(false, 7);
+      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been removed again');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
