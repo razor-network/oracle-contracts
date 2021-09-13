@@ -9,6 +9,13 @@ contract Constants {
         Dispute,
         Confirm
     }
+
+    enum StakeChanged {
+        BlockReward,
+        InactivityPenalty,
+        Slashed
+    }
+
     uint8 public constant NUM_STATES = 5;
 
     // keccak256("BLOCK_CONFIRMER_ROLE")

@@ -24,7 +24,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
-    event StakeChange(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event StakeChange(uint32 epoch, uint32 indexed stakerId, Constants.StakeChanged reason, uint256 newStake, uint256 timestamp);
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
@@ -37,6 +37,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
+
+    event ResetLock(address staker, uint32 epoch);
 
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
@@ -278,9 +280,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        Constants.StakeChanged reason,
         uint256 _stake
     ) external onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerStake(_epoch, _id, _stake);
+        _setStakerStake(_epoch, _id, reason, _stake);
     }
 
     /// @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
@@ -300,7 +303,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         if (halfPenalty == 0) return 0;
 
-        _setStakerStake(epoch, stakerId, _stake);
+        _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
 
         //reward half the amount to bounty hunter
         bountyCounter = bountyCounter + 1;
@@ -384,10 +387,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     function _setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        Constants.StakeChanged reason,
         uint256 _stake
     ) internal {
         stakers[_id].stake = _stake;
-        emit StakeChange(_epoch, _id, _stake, block.timestamp);
+        emit StakeChange(_epoch, _id, reason, _stake, block.timestamp);
     }
 
     /// @return maturity of staker
@@ -428,5 +432,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
+        emit ResetLock(msg.sender, parameters.getEpoch());
     }
 }

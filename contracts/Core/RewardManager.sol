@@ -51,7 +51,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(epoch, stakerId, newStake);
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
     }
 
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
@@ -106,7 +106,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
-            stakeManager.setStakerStake(epoch, stakerId, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
