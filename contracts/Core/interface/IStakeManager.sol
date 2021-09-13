@@ -29,6 +29,7 @@ interface IStakeManager {
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        uint8 reason,
         uint256 _stake
     ) external;
 
