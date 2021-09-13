@@ -900,18 +900,10 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
-      // await razor.transfer(signers[12].address, tokenAmount('423000'));
-      // await razor.transfer(signers[13].address, tokenAmount('422000'));
       await razor.transfer(signers[14].address, tokenAmount('421000'));
       await razor.transfer(signers[15].address, tokenAmount('420000'));
       await razor.transfer(signers[16].address, tokenAmount('419000'));
       await razor.transfer(signers[17].address, tokenAmount('418000'));
-
-      // await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('423000'));
-      // await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('423000'));
-      //
-      // await razor.connect(signers[13]).approve(stakeManager.address, tokenAmount('422000'));
-      // await stakeManager.connect(signers[13]).stake(epoch, tokenAmount('422000'));
 
       await razor.connect(signers[14]).approve(stakeManager.address, tokenAmount('421000'));
       await stakeManager.connect(signers[14]).stake(epoch, tokenAmount('421000'));
