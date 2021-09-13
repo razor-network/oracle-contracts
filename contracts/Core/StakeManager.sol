@@ -324,12 +324,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
         require(bountyLocks[bountyId].redeemAfter <= epoch, "Redeem epoch not reached");
         delete bountyLocks[bountyId];
-
-        //reward half the amount to bounty hunter
-        //please note that since slashing is a critical part of consensus algorithm,
-        //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
-        //tx should complete.
-        razor.transfer(msg.sender, bounty);
+        require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
 
     function setStakerAge(
