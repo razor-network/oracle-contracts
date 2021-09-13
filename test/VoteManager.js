@@ -358,7 +358,7 @@ describe('VoteManager', function () {
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
+        await parameters.setSlashPenaltyNum(5000);
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
@@ -371,6 +371,17 @@ describe('VoteManager', function () {
         assertBNEqual(bountyLock.bountyHunter, signers[10].address);
         assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
         assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+      });
+
+      it('staker should not be snitched on multiple times for same mal activity irrespective of slashPenalty', async function () {
+        const epoch = await getEpoch();
+
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
+          signers[4].address);
+        await parameters.setSlashPenaltyNum(10000); // Restoring the slashPenaltyNum again
+        await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('staker should not be able to snitch from himself', async function () {
