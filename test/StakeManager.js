@@ -1202,7 +1202,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000'));
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('2000'));
       staker = await stakeManager.stakers(stakerId);
 
       // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
@@ -1343,7 +1343,7 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       const sToken = await stakedToken.attach(staker.tokenAddress);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('2000')); // Staker Rewarded
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('2000')); // Staker Rewarded
 
       // Step 2 : Delegation 1
       const delegation1 = tokenAmount('2000');
@@ -1363,7 +1363,7 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('2000'), 'withdrawable mismatch');
 
       // Step 3 : Delegation 2
-      await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('6000')); // Staker Rewarded
+      await stakeManager.setStakerStake(epoch, stakerId,1, tokenAmount('6000')); // Staker Rewarded
 
       const delegation2 = tokenAmount('3000');
       await razor.transfer(signers[13].address, delegation2);
@@ -1382,7 +1382,7 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('6000'), 'withdrawable mismatch');
 
       // Step 4 : Delegation 3
-      await stakeManager.setStakerStake(epoch, stakerId, tokenAmount('3000')); // Staker Slashed
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('3000')); // Staker Slashed
 
       const delegation3 = tokenAmount('3000');
       await razor.transfer(signers[13].address, delegation3);
