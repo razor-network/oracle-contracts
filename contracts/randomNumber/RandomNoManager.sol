@@ -31,7 +31,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other states
     /// @return requestId : unique request id
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epochLength = parameters.epochLength();
+        uint16 epochLength = parameters.epochLength();
         uint32 epoch = getEpoch(epochLength);
         State state = getState(epochLength);
         nonce[msg.sender] = nonce[msg.sender] + 1;
