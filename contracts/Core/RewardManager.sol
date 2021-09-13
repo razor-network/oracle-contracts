@@ -49,7 +49,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 blockReward = parameters.blockReward();
+        uint256 blockReward = parameters.getBlockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
         stakeManager.setStakerStake(epoch, stakerId, newStake);
     }

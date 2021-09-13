@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IStakeManager.sol";
 import "./interface/IParameters.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
@@ -17,7 +18,7 @@ import "../Pause.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
+contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, IStakeManager {
     IParameters public parameters;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
@@ -62,6 +63,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param amount The amount in RZR
     function stake(uint32 epoch, uint256 amount)
         external
+        override
         initialized
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
@@ -101,7 +103,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external initialized override checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
@@ -131,7 +133,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -182,6 +184,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
     function withdraw(uint32 epoch, uint32 stakerId)
         external
+        override
         initialized
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
@@ -211,7 +214,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice remove all funds in case of emergency
-    function escape(address _address) external initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
+    function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
         if (parameters.escapeHatchEnabled()) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
@@ -220,7 +223,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
-    function setDelegationAcceptance(bool status) external {
+    function setDelegationAcceptance(bool status) override external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission != 0, "comission not set");
@@ -229,7 +232,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice Used by staker to set commision for delegation
-    function setCommission(uint8 commission) external {
+    function setCommission(uint8 commission) override external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
@@ -238,7 +241,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint8 commission) external {
+    function decreaseCommission(uint8 commission) override external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");
@@ -248,7 +251,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-    function resetLock(uint32 stakerId) external initialized whenNotPaused {
+    function resetLock(uint32 stakerId) external override initialized whenNotPaused {
         // Lock should be expired if you want to reset
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
 
@@ -279,7 +282,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 _epoch,
         uint32 _id,
         uint256 _stake
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_epoch, _id, _stake);
     }
 
@@ -292,7 +295,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
@@ -314,44 +317,44 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 _epoch,
         uint32 _id,
         uint32 _age
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
         emit AgeChange(_epoch, _id, _age, block.timestamp);
     }
 
     /// @param _address Address of the staker
     /// @return The staker ID
-    function getStakerId(address _address) external view returns (uint32) {
+    function getStakerId(address _address) external override view returns (uint32) {
         return (stakerIds[_address]);
     }
 
     /// @param _id The staker ID
     /// @return staker The Struct of staker information
-    function getStaker(uint32 _id) external view returns (Structs.Staker memory staker) {
+    function getStaker(uint32 _id) external override view returns (Structs.Staker memory staker) {
         return (stakers[_id]);
     }
 
     /// @return The number of stakers in the razor network
-    function getNumStakers() external view returns (uint32) {
+    function getNumStakers() external override view returns (uint32) {
         return (numStakers);
     }
 
     /// @return age of staker
-    function getAge(uint32 stakerId) external view returns (uint32) {
+    function getAge(uint32 stakerId) external override view returns (uint32) {
         return stakers[stakerId].age;
     }
 
     /// @return influence of staker
-    function getInfluence(uint32 stakerId) external view returns (uint256) {
+    function getInfluence(uint32 stakerId) external override view returns (uint256) {
         return _getMaturity(stakerId) * stakers[stakerId].stake;
     }
 
     /// @return stake of staker
-    function getStake(uint32 stakerId) external view returns (uint256) {
+    function getStake(uint32 stakerId) external override view returns (uint256) {
         return stakers[stakerId].stake;
     }
 
-    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
+    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external override view returns (uint32) {
         return stakers[stakerId].epochLastUnstakedOrFirstStaked;
     }
 

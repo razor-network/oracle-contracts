@@ -16,27 +16,20 @@ interface IBlockManager {
     // stakers with lower iteration do not propose for some reason
     function propose(
         uint32 epoch,
-        uint32[] memory ids,
         uint32[] memory medians,
         uint256 iteration,
-        uint256 biggestInfluencerId
+        uint32 biggestInfluencerId
     ) external;
 
     //anyone can give sorted votes in batches in dispute state
 
     function giveSorted(
-        uint8 assetId,
         uint32 epoch,
-        uint32[] calldata sorted
+        uint8 assetId,
+        uint32[] memory sortedStakers
     ) external;
 
     function resetDispute(uint32 epoch) external;
-
-    function isElectedProposer(
-        uint32 stakerId,
-        uint256 iteration,
-        uint256 biggestInfluencerId
-    ) external;
 
     function claimBlockReward() external;
 
@@ -46,7 +39,7 @@ interface IBlockManager {
 
     function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
 
-    function getProposedBlockMedians(uint32 epoch, uint256 proposedBlock) external view returns (uint32[] memory _blockMedians);
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians);
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint8);
 

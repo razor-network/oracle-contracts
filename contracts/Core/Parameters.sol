@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IParameters.sol";
 import "./ACL.sol";
 import "./storage/Constants.sol";
 
-contract Parameters is ACL, Constants {
+contract Parameters is ACL, Constants, IParameters {
     uint8 public withdrawLockPeriod = 1;
     uint8 public maxAltBlocks = 5;
     uint8 public aggregationRange = 3;
@@ -112,12 +113,32 @@ contract Parameters is ACL, Constants {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view returns (uint32) {
+    function getEpoch() external override view returns (uint32) {
         return (uint32(block.number) / (epochLength));
     }
 
-    function getState() external view returns (uint8) {
+    function getState() external override view returns (uint8) {
         uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
         return (state);
+    }
+
+    function getEpochLength() external override view returns (uint16) {
+        return epochLength;
+    }
+
+    function getMinStake() external override view returns (uint256) {
+        return minStake;
+    }
+
+    function getAggregationRange() external override view returns (uint8) {
+        return aggregationRange;
+    }
+
+    function getMaxAltBlocks() external override view returns (uint8){
+        return maxAltBlocks;
+    }
+
+    function getBlockReward() external override view returns (uint256){
+        return blockReward;
     }
 }

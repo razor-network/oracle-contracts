@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IBlockManager.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
@@ -12,7 +13,7 @@ import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
+contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -52,10 +53,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external initialized checkEpochAndState(State.Propose, epoch, parameters.epochLength()) {
+    ) external override initialized checkEpochAndState(State.Propose, epoch, parameters.getEpochLength()) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
-        require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
+        require(stakeManager.getStake(proposerId) >= parameters.getMinStake(), "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
@@ -75,7 +76,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sortedStakers
-    ) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
+    ) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength()) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -103,12 +104,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
+    function resetDispute(uint32 epoch) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength()) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
     //O(1)
-    function claimBlockReward() external initialized checkState(State.Confirm, parameters.epochLength()) {
+    function claimBlockReward() external override initialized checkState(State.Confirm, parameters.getEpochLength()) {
         uint32 epoch = parameters.getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
@@ -124,7 +125,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         rewardManager.giveBlockReward(stakerId, epoch);
     }
 
-    function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
+    function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
         if (sortedProposedBlockIds[epoch - 1].length == 0) return;
 
@@ -145,7 +146,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
-        checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
+        checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength())
     {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -168,11 +169,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
-    function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {
+    function getBlock(uint32 epoch) external override view returns (Structs.Block memory _block) {
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians) {
+    function getBlockMedians(uint32 epoch) external override view returns (uint32[] memory _blockMedians) {
         _blockMedians = blocks[epoch].medians;
         return (_blockMedians);
     }
@@ -186,16 +187,16 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         return (_block, _block.medians);
     }
 
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians) {
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external override view returns (uint32[] memory _blockMedians) {
         _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
         return (_blockMedians);
     }
 
-    function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {
+    function getNumProposedBlocks(uint32 epoch) external override view returns (uint8) {
         return (uint8(sortedProposedBlockIds[epoch].length));
     }
 
-    function isBlockConfirmed(uint32 epoch) external view returns (bool) {
+    function isBlockConfirmed(uint32 epoch) external override view returns (bool) {
         return (blocks[epoch].proposerId != 0);
     }
 
@@ -252,7 +253,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
 
         sortedProposedBlockIds[epoch][pushAt] = blockId;
 
-        if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
+        if (sortedProposedBlockIds[epoch].length > parameters.getMaxAltBlocks()) {
             sortedProposedBlockIds[epoch].pop();
         }
     }

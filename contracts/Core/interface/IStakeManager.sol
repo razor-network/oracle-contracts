@@ -4,8 +4,6 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IStakeManager {
-    function updateCommitmentEpoch(uint32 stakerId) external;
-
     function stake(uint32 epoch, uint256 amount) external;
 
     function delegate(
@@ -14,9 +12,9 @@ interface IStakeManager {
         uint256 amount
     ) external;
 
-    function unstake(uint32 epoch) external;
+    function unstake(uint32 epoch, uint32 stakerId, uint256 sAmount) external;
 
-    function withdraw(uint32 epoch) external;
+    function withdraw(uint32 epoch, uint32 stakerId) external;
 
     function setDelegationAcceptance(bool status) external;
 
@@ -58,5 +56,5 @@ interface IStakeManager {
 
     function getStake(uint32 stakerId) external view returns (uint256);
 
-    function getEpochStaked(uint32 stakerId) external view returns (uint32);
+    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32);
 }
