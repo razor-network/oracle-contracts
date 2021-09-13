@@ -5,12 +5,8 @@ interface IRandomNoClient {
     /// @notice Allows Client to register for random number
     /// Per request a rquest id is generated, which is binded to one epoch
     /// this epoch is current epoch if Protocol is in commit state, or epoch + 1 if in any other state
-    /// @param requestId : unique request id
-    function register(bytes32 requestId) external;
-
-    /// @notice Allows Client to check first if given req id is avaialble before registering.
-    /// @param requestId : unique request id
-    function isReqIdAvailable(bytes32 requestId) external view returns (bool);
+    /// @return requestId : unique request id
+    function register() external returns (bytes32);
 
     /// @notice Allows client to pull random number once available
     /// Random no is generated from secret of that epoch and request id, its unique per requestid
