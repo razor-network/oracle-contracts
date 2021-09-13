@@ -1363,7 +1363,7 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('2000'), 'withdrawable mismatch');
 
       // Step 3 : Delegation 2
-      await stakeManager.setStakerStake(epoch, stakerId,1, tokenAmount('6000')); // Staker Rewarded
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('6000')); // Staker Rewarded
 
       const delegation2 = tokenAmount('3000');
       await razor.transfer(signers[13].address, delegation2);
