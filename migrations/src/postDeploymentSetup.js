@@ -94,7 +94,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
-  pendingTransactions.push(await stakeManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
+  pendingTransactions.push(await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManagerAddress));
   pendingTransactions.push(await assetManager.upgradeDelegator(delegatorAddress));
 
