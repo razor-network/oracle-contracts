@@ -38,6 +38,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
 
+    event ResetLock(address staker, uint32 epoch);
+
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -411,5 +413,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
+        emit ResetLock(msg.sender, parameters.getEpoch());
     }
 }
