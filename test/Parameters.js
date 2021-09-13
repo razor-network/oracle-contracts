@@ -33,7 +33,7 @@ describe('Parameters contract Tests', async () => {
   const aggregationRange = toBigNumber('3');
   const withdrawReleasePeriod = toBigNumber('5');
   const resetLockPenalty = toBigNumber('1');
-  const maxAge = toBigNumber('950000');
+  const maxAge = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);

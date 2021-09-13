@@ -18,7 +18,7 @@ contract Parameters is ACL, Constants {
     uint16 public epochLength = 300;
     uint16 public exposureDenominator = 1000;
     uint16 public gracePeriod = 8;
-    uint32 public maxAge = 95 * 10000;
+    uint32 public maxAge = 100 * 10000;
     uint256 public minStake = 1000 * (10**18);
     uint256 public blockReward = 100 * (10**18);
 
