@@ -239,7 +239,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
                 pushAt = i;
                 break;
             }
-            if (proposedBlocks[epoch][i].iteration > iteration) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 pushAt = i;
                 break;
             }
