@@ -38,6 +38,7 @@ describe('BlockManager', function () {
   let stakeManager;
   let rewardManager;
   let parameters;
+  let randomNoManager;
   let initializeContracts;
 
   before(async () => {
@@ -49,6 +50,7 @@ describe('BlockManager', function () {
       stakeManager,
       rewardManager,
       voteManager,
+      randomNoManager,
       initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
@@ -83,7 +85,8 @@ describe('BlockManager', function () {
         rewardManager.address,
         parameters.address,
         voteManager.address,
-        assetManager.address
+        assetManager.address,
+        randomNoManager.address
       );
       await assertRevert(tx, 'AccessControl');
     });

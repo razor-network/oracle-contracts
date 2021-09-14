@@ -6,6 +6,7 @@ import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
+import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
@@ -18,6 +19,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
     IAssetManager public assetManager;
+    IRandomNoProvider public randomNoProvider;
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
@@ -28,13 +30,15 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         address rewardManagerAddress,
         address voteManagerAddress,
         address assetManagerAddress,
-        address parametersAddress
+        address parametersAddress,
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
         parameters = IParameters(parametersAddress);
+        randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
     // elected proposer proposes block.
@@ -122,6 +126,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
+        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -137,8 +142,8 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             proposedBlocks[epoch - 1][blockId].medians,
             block.timestamp
         );
-
         rewardManager.giveBlockReward(stakerId, epoch - 1);
+        randomNoProvider.provideSecret(epoch - 1, voteManager.getRandaoHash());
     }
 
     // Complexity O(1)
