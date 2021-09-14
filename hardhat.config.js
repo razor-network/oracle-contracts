@@ -37,9 +37,20 @@ module.exports = {
     settings: {
       optimizer: {
         enabled: true,
-        runs: 50000,
+        runs: 100000,
       },
     },
+    overrides: {
+      "contracts/Core/StakeManager.sol": {
+        version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 50000,
+          },
+        }
+      }
+    }
   },
   networks: {
     local: {
