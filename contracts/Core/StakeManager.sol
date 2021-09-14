@@ -65,10 +65,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         external
         override
         initialized
-        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
+        checkEpochAndState(State.Commit, epoch, parameters.getEpochLength())
         whenNotPaused
     {
-        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
+        require(amount >= parameters.getMinStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
         emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -103,7 +103,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external initialized override checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.getEpochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
@@ -133,7 +133,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.getEpochLength()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -157,13 +157,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
-                uint8 maxCommission = parameters.maxCommission();
+                uint8 maxCommission = parameters.getMaxCommission();
                 uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
                 commission = (gain * commissionApplicable) / 100;
             }
         }
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.getWithdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -186,7 +186,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         external
         override
         initialized
-        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
+        checkEpochAndState(State.Commit, epoch, parameters.getEpochLength())
         whenNotPaused
     {
         Structs.Staker storage staker = stakers[stakerId];
@@ -195,7 +195,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(staker.id != 0, "staker doesnt exist");
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
-        require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
+        require(lock.withdrawAfter + parameters.getWithdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
         uint256 withdrawAmount = lock.amount;
 
@@ -215,7 +215,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @notice remove all funds in case of emergency
     function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
-        if (parameters.escapeHatchEnabled()) {
+        if (parameters.getEscapeHatchEnabled()) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
             revert("escape hatch is disabled");
@@ -223,7 +223,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
-    function setDelegationAcceptance(bool status) override external {
+    function setDelegationAcceptance(bool status) external override {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission != 0, "comission not set");
@@ -232,16 +232,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @notice Used by staker to set commision for delegation
-    function setCommission(uint8 commission) override external {
+    function setCommission(uint8 commission) external override {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
-        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
+        require(commission <= parameters.getMaxCommission(), "Commission exceeds maxlimit");
         stakers[stakerId].commission = commission;
     }
 
     /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint8 commission) override external {
+    function decreaseCommission(uint8 commission) external override {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");
@@ -260,7 +260,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         //Giving out the resetLock penalty
-        uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
+        uint256 penalty = (lockedAmount * parameters.getResetLockPenalty()) / 100;
         lockedAmount = lockedAmount - penalty;
 
         //Calculating the amount of sToken to be minted
@@ -297,7 +297,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
-        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        uint256 slashPenaltyAmount = (_stake * parameters.getSlashPenaltyNum()) / parameters.getSlashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
 
@@ -324,44 +324,44 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @param _address Address of the staker
     /// @return The staker ID
-    function getStakerId(address _address) external override view returns (uint32) {
+    function getStakerId(address _address) external view override returns (uint32) {
         return (stakerIds[_address]);
     }
 
     /// @param _id The staker ID
     /// @return staker The Struct of staker information
-    function getStaker(uint32 _id) external override view returns (Structs.Staker memory staker) {
+    function getStaker(uint32 _id) external view override returns (Structs.Staker memory staker) {
         return (stakers[_id]);
     }
 
     /// @return The number of stakers in the razor network
-    function getNumStakers() external override view returns (uint32) {
+    function getNumStakers() external view override returns (uint32) {
         return (numStakers);
     }
 
     /// @return age of staker
-    function getAge(uint32 stakerId) external override view returns (uint32) {
+    function getAge(uint32 stakerId) external view override returns (uint32) {
         return stakers[stakerId].age;
     }
 
     /// @return influence of staker
-    function getInfluence(uint32 stakerId) external override view returns (uint256) {
+    function getInfluence(uint32 stakerId) external view override returns (uint256) {
         return _getMaturity(stakerId) * stakers[stakerId].stake;
     }
 
     /// @return stake of staker
-    function getStake(uint32 stakerId) external override view returns (uint256) {
+    function getStake(uint32 stakerId) external view override returns (uint256) {
         return stakers[stakerId].stake;
     }
 
-    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external override view returns (uint32) {
+    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view override returns (uint32) {
         return stakers[stakerId].epochLastUnstakedOrFirstStaked;
     }
 
     /// @return isStakerActive : Activity < Grace
     function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        return ((epoch - epochLastRevealed) <= parameters.gracePeriod());
+        return ((epoch - epochLastRevealed) <= parameters.getGracePeriod());
     }
 
     /// @notice Internal function for setting stake of the staker

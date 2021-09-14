@@ -12,7 +12,11 @@ interface IStakeManager {
         uint256 amount
     ) external;
 
-    function unstake(uint32 epoch, uint32 stakerId, uint256 sAmount) external;
+    function unstake(
+        uint32 epoch,
+        uint32 stakerId,
+        uint256 sAmount
+    ) external;
 
     function withdraw(uint32 epoch, uint32 stakerId) external;
 

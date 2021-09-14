@@ -113,32 +113,80 @@ contract Parameters is ACL, Constants, IParameters {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external override view returns (uint32) {
+    function getEpoch() external view override returns (uint32) {
         return (uint32(block.number) / (epochLength));
     }
 
-    function getState() external override view returns (uint8) {
+    function getState() external view override returns (uint8) {
         uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
         return (state);
     }
 
-    function getEpochLength() external override view returns (uint16) {
+    function getEpochLength() external view override returns (uint16) {
         return epochLength;
     }
 
-    function getMinStake() external override view returns (uint256) {
+    function getMinStake() external view override returns (uint256) {
         return minStake;
     }
 
-    function getAggregationRange() external override view returns (uint8) {
+    function getAggregationRange() external view override returns (uint8) {
         return aggregationRange;
     }
 
-    function getMaxAltBlocks() external override view returns (uint8){
+    function getMaxAltBlocks() external view override returns (uint8) {
         return maxAltBlocks;
     }
 
-    function getBlockReward() external override view returns (uint256){
+    function getBlockReward() external view override returns (uint256) {
         return blockReward;
+    }
+
+    function getPenaltyNotRevealNum() external view override returns (uint16) {
+        return penaltyNotRevealNum;
+    }
+
+    function getPenaltyNotRevealDenom() external view override returns (uint16) {
+        return penaltyNotRevealDenom;
+    }
+
+    function getMaxCommission() external view override returns (uint8) {
+        return maxCommission;
+    }
+
+    function getWithdrawLockPeriod() external view override returns (uint8) {
+        return withdrawLockPeriod;
+    }
+
+    function getSlashPenaltyNum() external view override returns (uint16) {
+        return slashPenaltyNum;
+    }
+
+    function getSlashPenaltyDenom() external view override returns (uint16) {
+        return slashPenaltyDenom;
+    }
+
+    function getWithdrawReleasePeriod() external view override returns (uint8) {
+        return withdrawReleasePeriod;
+    }
+
+    function getGracePeriod() external view override returns (uint16) {
+        return gracePeriod;
+    }
+
+    function getEscapeHatchEnabled() external view override returns (bool) {
+        return escapeHatchEnabled;
+    }
+
+    function getMaxAge() external view override returns (uint32) {
+        return maxAge;
+    }
+
+    function getExposureDenominator() external view override returns (uint16) {
+        return exposureDenominator;
+    }
+
+    function getResetLockPenalty() external view override returns (uint8) {
+        return resetLockPenalty;
     }
 }

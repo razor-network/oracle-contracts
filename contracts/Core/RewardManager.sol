@@ -66,7 +66,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint256 stakeValue,
         uint32 ageValue
     ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue * (parameters.getPenaltyNotRevealNum()))) / parameters.getPenaltyNotRevealDenom();
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
@@ -97,11 +97,11 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
 
         // Not reveal penalty due to Randao
         if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
+            uint256 randaoPenalty = newStake < parameters.getBlockReward() ? newStake : parameters.getBlockReward();
             newStake = newStake - randaoPenalty;
         }
 
-        if (inactiveEpochs > parameters.gracePeriod()) {
+        if (inactiveEpochs > parameters.getGracePeriod()) {
             (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         }
         // uint256 currentStake = previousStake;
@@ -123,7 +123,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         uint32 age = thisStaker.age + 10000;
         // cap age to maxAge
-        uint32 maxAge = parameters.maxAge();
+        uint32 maxAge = parameters.getMaxAge();
         age = age > maxAge ? maxAge : age;
 
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
@@ -133,7 +133,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint32 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
+            uint48 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;

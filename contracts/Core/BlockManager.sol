@@ -104,7 +104,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength()) {
+    function resetDispute(uint32 epoch)
+        external
+        override
+        initialized
+        checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength())
+    {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
@@ -169,11 +174,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
-    function getBlock(uint32 epoch) external override view returns (Structs.Block memory _block) {
+    function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external override view returns (uint32[] memory _blockMedians) {
+    function getBlockMedians(uint32 epoch) external view override returns (uint32[] memory _blockMedians) {
         _blockMedians = blocks[epoch].medians;
         return (_blockMedians);
     }
@@ -187,16 +192,16 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (_block, _block.medians);
     }
 
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external override view returns (uint32[] memory _blockMedians) {
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view override returns (uint32[] memory _blockMedians) {
         _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
         return (_blockMedians);
     }
 
-    function getNumProposedBlocks(uint32 epoch) external override view returns (uint8) {
+    function getNumProposedBlocks(uint32 epoch) external view override returns (uint8) {
         return (uint8(sortedProposedBlockIds[epoch].length));
     }
 
-    function isBlockConfirmed(uint32 epoch) external override view returns (bool) {
+    function isBlockConfirmed(uint32 epoch) external view override returns (bool) {
         return (blocks[epoch].proposerId != 0);
     }
 
