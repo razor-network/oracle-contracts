@@ -57,10 +57,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external override initialized checkEpochAndState(State.Propose, epoch, parameters.getEpochLength()) {
+    ) external override initialized checkEpochAndState(State.Propose, epoch, parameters.epochLength()) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
-        require(stakeManager.getStake(proposerId) >= parameters.getMinStake(), "stake below minimum stake");
+        require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
@@ -80,7 +80,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sortedStakers
-    ) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength()) {
+    ) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -108,17 +108,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch)
-        external
-        override
-        initialized
-        checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength())
-    {
+    function resetDispute(uint32 epoch) external override initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
     //O(1)
-    function claimBlockReward() external override initialized checkState(State.Confirm, parameters.getEpochLength()) {
+    function claimBlockReward() external override initialized checkState(State.Confirm, parameters.epochLength()) {
         uint32 epoch = parameters.getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
@@ -156,7 +151,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
-        checkEpochAndState(State.Dispute, epoch, parameters.getEpochLength())
+        checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
     {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -263,7 +258,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         sortedProposedBlockIds[epoch][pushAt] = blockId;
 
-        if (sortedProposedBlockIds[epoch].length > parameters.getMaxAltBlocks()) {
+        if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
             sortedProposedBlockIds[epoch].pop();
         }
     }

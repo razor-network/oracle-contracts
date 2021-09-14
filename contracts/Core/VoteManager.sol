@@ -36,7 +36,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         external
         override
         initialized
-        checkEpochAndState(State.Commit, epoch, parameters.getEpochLength())
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
     {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
@@ -52,7 +52,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         rewardManager.givePenalties(epoch, stakerId);
 
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
-        if (thisStakerStake >= parameters.getMinStake()) {
+        if (thisStakerStake >= parameters.minStake()) {
             commitments[stakerId].epoch = epoch;
             commitments[stakerId].commitmentHash = commitment;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
@@ -63,11 +63,11 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret
-    ) external override initialized checkEpochAndState(State.Reveal, epoch, parameters.getEpochLength()) {
+    ) external override initialized checkEpochAndState(State.Reveal, epoch, parameters.epochLength()) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(stakeManager.getStake(stakerId) >= parameters.getMinStake(), "stake below minimum");
+        require(stakeManager.getStake(stakerId) >= parameters.minStake(), "stake below minimum");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
 
@@ -93,7 +93,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.getEpochLength()) {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");

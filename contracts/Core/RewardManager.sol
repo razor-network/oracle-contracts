@@ -49,7 +49,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 blockReward = parameters.getBlockReward();
+        uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
     }
@@ -66,7 +66,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint256 stakeValue,
         uint32 ageValue
     ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * (parameters.getPenaltyNotRevealNum()))) / parameters.getPenaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
@@ -97,11 +97,11 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
 
         // Not reveal penalty due to Randao
         if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < parameters.getBlockReward() ? newStake : parameters.getBlockReward();
+            uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
             newStake = newStake - randaoPenalty;
         }
 
-        if (inactiveEpochs > parameters.getGracePeriod()) {
+        if (inactiveEpochs > parameters.gracePeriod()) {
             (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         }
         // uint256 currentStake = previousStake;
@@ -123,7 +123,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         uint32 age = thisStaker.age + 10000;
         // cap age to maxAge
-        uint32 maxAge = parameters.getMaxAge();
+        uint32 maxAge = parameters.maxAge();
         age = age > maxAge ? maxAge : age;
 
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);

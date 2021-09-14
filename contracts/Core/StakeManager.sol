@@ -67,10 +67,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         external
         override
         initialized
-        checkEpochAndState(State.Commit, epoch, parameters.getEpochLength())
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
-        require(amount >= parameters.getMinStake(), "staked amount is less than minimum stake required");
+        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
@@ -105,7 +105,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.getEpochLength()) whenNotPaused {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
@@ -135,7 +135,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.getEpochLength()) whenNotPaused {
+    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -159,13 +159,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
-                uint8 maxCommission = parameters.getMaxCommission();
+                uint8 maxCommission = parameters.maxCommission();
                 uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
                 commission = (gain * commissionApplicable) / 100;
             }
         }
 
-        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.getWithdrawLockPeriod()));
+        locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
         //emit event here
         emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
@@ -188,7 +188,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         external
         override
         initialized
-        checkEpochAndState(State.Commit, epoch, parameters.getEpochLength())
+        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
         Structs.Staker storage staker = stakers[stakerId];
@@ -197,7 +197,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(staker.id != 0, "staker doesnt exist");
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
-        require(lock.withdrawAfter + parameters.getWithdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
+        require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
         uint256 withdrawAmount = lock.amount;
 
@@ -217,7 +217,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @notice remove all funds in case of emergency
     function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
-        if (parameters.getEscapeHatchEnabled()) {
+        if (parameters.escapeHatchEnabled()) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
             revert("escape hatch is disabled");
@@ -238,7 +238,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
-        require(commission <= parameters.getMaxCommission(), "Commission exceeds maxlimit");
+        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
         stakers[stakerId].commission = commission;
     }
 
@@ -262,7 +262,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         //Giving out the resetLock penalty
-        uint256 penalty = (lockedAmount * parameters.getResetLockPenalty()) / 100;
+        uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
         lockedAmount = lockedAmount - penalty;
 
         //Calculating the amount of sToken to be minted
@@ -300,7 +300,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
-        uint256 slashPenaltyAmount = (_stake * parameters.getSlashPenaltyNum()) / parameters.getSlashPenaltyDenom();
+        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
         uint256 halfPenalty = slashPenaltyAmount / 2;
 
@@ -364,7 +364,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @return isStakerActive : Activity < Grace
     function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        return ((epoch - epochLastRevealed) <= parameters.getGracePeriod());
+        return ((epoch - epochLastRevealed) <= parameters.gracePeriod());
     }
 
     /// @notice Internal function for setting stake of the staker

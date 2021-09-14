@@ -31,7 +31,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other states
     /// @return requestId : unique request id
     function register() external override initialized returns (bytes32 requestId) {
-        uint16 epochLength = parameters.getEpochLength();
+        uint16 epochLength = parameters.epochLength();
         uint32 epoch = getEpoch(epochLength);
         State state = getState(epochLength);
         nonce[msg.sender] = nonce[msg.sender] + 1;
@@ -67,7 +67,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// @notice Allows client to get generic random number of last epoch
     /// @return random number
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = getEpoch(parameters.getEpochLength());
+        uint32 epoch = getEpoch(parameters.epochLength());
         return _generateRandomNumber(epoch - 1, 0);
     }
 
