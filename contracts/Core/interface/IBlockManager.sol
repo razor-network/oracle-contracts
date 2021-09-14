@@ -37,11 +37,11 @@ interface IBlockManager {
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 
-    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
+    //function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
 
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians);
+    //function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians);
 
-    function getNumProposedBlocks(uint32 epoch) external view returns (uint8);
+    //function getNumProposedBlocks(uint32 epoch) external view returns (uint8);
 
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
 }

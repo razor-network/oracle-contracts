@@ -19,7 +19,7 @@ interface IVoteManager {
         address stakerAddress
     ) external;
 
-    function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment);
+    //function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment);
 
     function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint48);
 

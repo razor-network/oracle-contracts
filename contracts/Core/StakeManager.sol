@@ -343,7 +343,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @return age of staker
-    function getAge(uint32 stakerId) external view override returns (uint32) {
+    function getAge(uint32 stakerId) external view returns (uint32) {
         return stakers[stakerId].age;
     }
 
@@ -357,7 +357,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         return stakers[stakerId].stake;
     }
 
-    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view override returns (uint32) {
+    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
         return stakers[stakerId].epochLastUnstakedOrFirstStaked;
     }
 

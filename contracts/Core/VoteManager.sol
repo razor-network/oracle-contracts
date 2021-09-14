@@ -106,7 +106,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
-    function getCommitment(uint32 stakerId) external view override returns (Structs.Commitment memory commitment) {
+    function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);
     }

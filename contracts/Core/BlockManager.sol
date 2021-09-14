@@ -178,7 +178,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view override returns (uint32[] memory _blockMedians) {
+    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians) {
         _blockMedians = blocks[epoch].medians;
         return (_blockMedians);
     }
@@ -192,12 +192,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (_block, _block.medians);
     }
 
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view override returns (uint32[] memory _blockMedians) {
+    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians) {
         _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
         return (_blockMedians);
     }
 
-    function getNumProposedBlocks(uint32 epoch) external view override returns (uint8) {
+    function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {
         return (uint8(sortedProposedBlockIds[epoch].length));
     }
 
