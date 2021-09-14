@@ -292,7 +292,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     function getCollection(uint8 id)
         external
         view
-        override
         returns (
             bool active,
             int8 power,
@@ -312,7 +311,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         );
     }
 
-    function getAssetType(uint8 id) external view override returns (uint8) {
+    function getAssetType(uint8 id) external view returns (uint8) {
         require(id != 0, "ID cannot be 0");
 
         require(id <= numAssets, "ID does not exist");

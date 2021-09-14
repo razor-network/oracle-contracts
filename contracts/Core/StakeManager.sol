@@ -65,7 +65,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @param amount The amount in RZR
     function stake(uint32 epoch, uint256 amount)
         external
-        override
         initialized
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
@@ -105,7 +104,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
@@ -135,7 +134,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -186,7 +185,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
     function withdraw(uint32 epoch, uint32 stakerId)
         external
-        override
         initialized
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
@@ -225,7 +223,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
-    function setDelegationAcceptance(bool status) external override {
+    function setDelegationAcceptance(bool status) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission != 0, "comission not set");
@@ -234,7 +232,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @notice Used by staker to set commision for delegation
-    function setCommission(uint8 commission) external override {
+    function setCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission == 0, "Commission already intilised");
@@ -243,7 +241,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     }
 
     /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint8 commission) external override {
+    function decreaseCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(commission != 0, "Invalid Commission Update");
@@ -253,7 +251,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-    function resetLock(uint32 stakerId) external override initialized whenNotPaused {
+    function resetLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to reset
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
 

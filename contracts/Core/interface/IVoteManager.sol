@@ -4,20 +4,20 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IVoteManager {
-    function commit(uint32 epoch, bytes32 commitment) external;
+    //function commit(uint32 epoch, bytes32 commitment) external;
 
-    function reveal(
+    /* function reveal(
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret
-    ) external;
+    ) external; */
 
-    function snitch(
+    /*function snitch(
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external;
+    ) external;*/
 
     //function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment);
 

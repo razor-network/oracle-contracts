@@ -34,7 +34,6 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
 
     function commit(uint32 epoch, bytes32 commitment)
         external
-        override
         initialized
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
     {
@@ -63,7 +62,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret
-    ) external override initialized checkEpochAndState(State.Reveal, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Reveal, epoch, parameters.epochLength()) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
@@ -93,7 +92,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external override initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");

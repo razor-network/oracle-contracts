@@ -5,29 +5,29 @@ import "../../lib/Structs.sol";
 import "../storage/Constants.sol";
 
 interface IStakeManager {
-    function stake(uint32 epoch, uint256 amount) external;
+    //function stake(uint32 epoch, uint256 amount) external;
 
-    function delegate(
+    /* function delegate(
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external;
+    ) external;*/
 
-    function unstake(
+    /*function unstake(
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external;
+    ) external;*/
 
-    function withdraw(uint32 epoch, uint32 stakerId) external;
+    //function withdraw(uint32 epoch, uint32 stakerId) external;
 
-    function setDelegationAcceptance(bool status) external;
+    //function setDelegationAcceptance(bool status) external;
 
-    function setCommission(uint8 commission) external;
+    //function setCommission(uint8 commission) external;
 
-    function decreaseCommission(uint8 commission) external;
+    //function decreaseCommission(uint8 commission) external;
 
-    function resetLock(uint32 stakerId) external;
+    //function resetLock(uint32 stakerId) external;
 
     function setStakerStake(
         uint32 _epoch,

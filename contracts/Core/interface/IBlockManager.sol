@@ -14,24 +14,24 @@ interface IBlockManager {
     // note that only one staker or no stakers selected in each iteration.
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
-    function propose(
+    /*function propose(
         uint32 epoch,
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external;
+    ) external;*/
 
     //anyone can give sorted votes in batches in dispute state
 
-    function giveSorted(
+    /*function giveSorted(
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sortedStakers
-    ) external;
+    ) external;*/
 
-    function resetDispute(uint32 epoch) external;
+    //function resetDispute(uint32 epoch) external;
 
-    function claimBlockReward() external;
+    //function claimBlockReward() external;
 
     function confirmPreviousEpochBlock(uint32 stakerId) external;
 

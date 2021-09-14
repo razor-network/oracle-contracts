@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IAssetManager {
-    function getAssetType(uint8 id) external view returns (uint8);
+    //function getAssetType(uint8 id) external view returns (uint8);
 
     function getJob(uint8 id)
         external
@@ -16,7 +16,7 @@ interface IAssetManager {
             string memory url
         );
 
-    function getCollection(uint8 id)
+    /*function getCollection(uint8 id)
         external
         view
         returns (
@@ -25,7 +25,7 @@ interface IAssetManager {
             uint8[] memory jobIDs,
             uint32 aggregationMethod,
             string memory name
-        );
+        );*/
 
     function getNumActiveAssets() external view returns (uint8);
 
