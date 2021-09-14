@@ -28,7 +28,7 @@ interface IParameters {
 
     function maxAltBlocks() external view returns (uint8);
 
-    function epochLength() external view returns (uint32);
+    function epochLength() external view returns (uint16);
 
     function gracePeriod() external view returns (uint256);
 
