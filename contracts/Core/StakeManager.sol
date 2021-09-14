@@ -25,19 +25,21 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
-    event StakeChange(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event StakeChange(uint32 epoch, uint32 indexed stakerId, Constants.StakeChanged reason, uint256 newStake, uint256 timestamp);
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
-    event Staked(uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event Staked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
-    event Unstaked(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Withdrew(uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
 
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
+
+    event ResetLock(address staker, uint32 epoch);
 
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
@@ -71,7 +73,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(amount >= parameters.getMinStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
-        emit Staked(epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+        emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
             numStakers = numStakers + (1);
@@ -166,7 +168,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.getWithdrawLockPeriod()));
 
         //emit event here
-        emit Unstaked(epoch, stakerId, rAmount, staker.stake, block.timestamp);
+        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
 
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
@@ -210,7 +212,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         // Reset lock
         _resetLock(stakerId);
 
-        emit Withdrew(epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
+        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
@@ -281,9 +283,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        Constants.StakeChanged reason,
         uint256 _stake
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerStake(_epoch, _id, _stake);
+        _setStakerStake(_epoch, _id, reason, _stake);
     }
 
     /// @notice The function is used by the Votemanager reveal function
@@ -303,7 +306,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         if (halfPenalty == 0) return;
 
-        _setStakerStake(epoch, stakerId, _stake);
+        _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
         //reward half the amount to bounty hunter
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
@@ -370,10 +373,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     function _setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        Constants.StakeChanged reason,
         uint256 _stake
     ) internal {
         stakers[_id].stake = _stake;
-        emit StakeChange(_epoch, _id, _stake, block.timestamp);
+        emit StakeChange(_epoch, _id, reason, _stake, block.timestamp);
     }
 
     /// @return maturity of staker
@@ -414,5 +418,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
+        emit ResetLock(msg.sender, parameters.getEpoch());
     }
 }

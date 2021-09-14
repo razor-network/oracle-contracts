@@ -9,6 +9,13 @@ contract Constants {
         Dispute,
         Confirm
     }
+
+    enum StakeChanged {
+        BlockReward,
+        InactivityPenalty,
+        Slashed
+    }
+
     uint8 public constant NUM_STATES = 5;
 
     // keccak256("BLOCK_CONFIRMER_ROLE")
@@ -31,6 +38,9 @@ contract Constants {
 
     // keccak256("VOTE_MODIFIER_ROLE")
     bytes32 public constant VOTE_MODIFIER_ROLE = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5;
+
+    // keccak256("SECRETS_MODIFIER_ROLE")
+    bytes32 public constant SECRETS_MODIFIER_ROLE = 0x46aaf8a125792dfff6db03d74f94fe1acaf55c8cab22f65297c15809c364465c;
 
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 }

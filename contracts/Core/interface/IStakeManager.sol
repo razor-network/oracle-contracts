@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "../../lib/Structs.sol";
+import "../storage/Constants.sol";
 
 interface IStakeManager {
     function stake(uint32 epoch, uint256 amount) external;
@@ -31,6 +32,7 @@ interface IStakeManager {
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
+        Constants.StakeChanged reason,
         uint256 _stake
     ) external;
 
