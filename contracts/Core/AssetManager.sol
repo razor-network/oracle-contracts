@@ -22,7 +22,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string selector,
         string url
     );
-
     event JobUpdated(uint8 id, JobSelectorType selectorType, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
 
     event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
@@ -257,18 +256,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             collections[collectionID].name
         );
     }
-
-    // function getResult(uint8 id) external view returns (uint32 result) {
-    //     require(id != 0, "ID cannot be 0");
-    //
-    //     require(id <= numAssets, "ID does not exist");
-    //
-    //     if (jobs[id].assetType == uint8(AssetTypes.Job)) {
-    //         return jobs[id].result;
-    //     } else {
-    //         return collections[id].result;
-    //     }
-    // }
 
     function getJob(uint8 id)
         external
