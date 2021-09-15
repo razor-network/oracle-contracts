@@ -147,7 +147,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
 
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
-        staker.epochLastUnstakedOrFirstStaked = epoch;
 
         // Transfer commission in case of delegators
         // Check commission rate >0
@@ -266,6 +265,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
 
         //Updating Staker Stake
+        if(staker.stake < parameters.minStake()) {
+            staker.epochStakedOrLastPenalized = parameters.getEpoch();
+        }
         staker.stake = staker.stake + lockedAmount;
 
         _resetLock(stakerId);
@@ -313,6 +315,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         razor.transfer(BURN_ADDRESS, halfPenalty);
     }
 
+    /// @notice External function for setting epochLastPenalized of the staker
+    /// Used by RewardManager
+    /// @param _id of the staker
+    function setStakerEpochStakedOrLastPenalized(
+        uint32 _epoch,
+        uint32 _id
+    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+        stakers[_id].epochStakedOrLastPenalized = _epoch;
+    }
+
     function setStakerAge(
         uint32 _epoch,
         uint32 _id,
@@ -354,8 +366,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         return stakers[stakerId].stake;
     }
 
-    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
-        return stakers[stakerId].epochLastUnstakedOrFirstStaked;
+    function getEpochStakedOrLastPenalized(uint32 stakerId) external view returns (uint32) {
+        return stakers[stakerId].epochStakedOrLastPenalized;
     }
 
     /// @return isStakerActive : Activity < Grace

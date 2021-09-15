@@ -6,7 +6,7 @@ const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
-
+  WITHDRAW_RELEASE_PERIOD,
   STAKE_MODIFIER_ROLE,
 
 } = require('./helpers/constants');
@@ -203,7 +203,7 @@ describe('StakeManager', function () {
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
       assertBNEqual(newAge, age1, 'age is incorrect');
-      assertBNEqual(await stakeManager.getEpochLastUnstakedOrFirstStaked(stakerId), epoch, 'epoch staked is incorrect');
+      assertBNEqual(await stakeManager.getEpochStakedOrLastPenalized(stakerId), epoch, 'epoch staked is incorrect');
       assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
@@ -1316,6 +1316,22 @@ describe('StakeManager', function () {
       assertBNLessThan((staker.stake).add(rAmount), prevStake, 'Inactivity penalties have not been applied');
     });
 
+    it('should not levy inactivity penalities during commit if it has been given out during unstake', async function () {
+      let staker = await stakeManager.getStaker(4);
+      const prevStake = staker.stake;
+      // commit
+      const epoch = await getEpoch();
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment);
+      staker = await stakeManager.getStaker(4);
+      assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
+      await stakeManager.connect(signers[4]).resetLock(staker.id);
+    });
+
     // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
     it('Scenario Test : Delegation Gain and Quotient ', async function () {
       let epoch = await getEpoch();
@@ -1401,19 +1417,69 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('5000'), 'withdrawable mismatch');
     });
 
-    it('should not levy inactivity penalities during commit if it has been given out during unstake', async function () {
-      let staker = await stakeManager.getStaker(4);
-      const prevStake = staker.stake;
-      // commit
-      const epoch = await getEpoch();
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[4]).commit(epoch, commitment);
-      staker = await stakeManager.getStaker(4);
-      assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
+    it('should not levy inactivity penalities when he unstakes his entire stake and then resets lock ', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      const stake = tokenAmount('10500');
+      const amount = tokenAmount('10000');
+      await razor.transfer(signers[15].address, stake);
+      await razor.connect(signers[15]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[15]).stake(epoch, stake);
+      const stakerId = await stakeManager.stakerIds(signers[15].address);
+      await mineToNextEpoch();
+
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+
+      const epochsJumped = WITHDRAW_LOCK_PERIOD + WITHDRAW_RELEASE_PERIOD + 4;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+      await stakeManager.connect(signers[15]).resetLock(stakerId);
+      const staker = await stakeManager.getStaker(stakerId);
+      epoch = await getEpoch();
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
+      await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
+      assertBNEqual(rAmount, lock.amount, 'Inactivity penalties have been applied');
+      await stakeManager.connect(signers[15]).resetLock(stakerId);
+    });
+    it('should not be able to escape inactivity penalties by unstaking multiple times', async function () {
+      await mineToNextEpoch();
+      const amount = tokenAmount('1');
+      const epochsJumped = GRACE_PERIOD + 2;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+      let epoch = await getEpoch();
+      const epochPenalized = epoch;
+      const stakerId = await stakeManager.stakerIds(signers[15].address);
+      await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+      let staker = await stakeManager.getStaker(stakerId);
+      assertBNEqual(staker.epochStakedOrLastPenalized, epochPenalized, 'Staker not penalized');
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[15]).withdraw(epoch, stakerId);
+      for (let i = 0; i < Math.ceil(GRACE_PERIOD / WITHDRAW_LOCK_PERIOD); i++) {
+        epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+        for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
+          await mineToNextEpoch();
+        }
+        epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).withdraw(epoch, stakerId);
+        staker = await stakeManager.getStaker(stakerId);
+        assertBNEqual(staker.epochStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
+      }
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+      staker = await stakeManager.getStaker(stakerId);
+      assertBNEqual(staker.epochStakedOrLastPenalized, epoch, 'Staker not penalized');
     });
   });
 });

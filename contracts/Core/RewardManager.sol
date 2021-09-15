@@ -81,9 +81,9 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-        uint32 epochLastActive = thisStaker.epochLastUnstakedOrFirstStaked < epochLastRevealed
-            ? epochLastRevealed
-            : thisStaker.epochLastUnstakedOrFirstStaked;
+        uint32 epochLastActive = thisStaker.epochStakedOrLastPenalized < epochLastRevealed 
+        ? epochLastRevealed 
+        : thisStaker.epochStakedOrLastPenalized;
 
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
@@ -106,6 +106,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
+            stakeManager.setStakerEpochStakedOrLastPenalized(epoch, stakerId);
             stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
         }
         if (newAge < previousAge) {
