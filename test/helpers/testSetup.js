@@ -64,7 +64,7 @@ const setupContracts = async () => {
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, parameters.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, parameters.address),
-    delegator.initialize(assetManager.address, blockManager.address, parameters.address),
+    delegator.updateAddress(assetManager.address, blockManager.address, parameters.address),
     assetManager.upgradeDelegator(delegator.address),
     randomNoManager.initialize(blockManager.address, parameters.address),
     assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManager.address),

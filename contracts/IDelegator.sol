@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IDelegator {
-    function initialize(
+    function updateAddress(
         address newDelegateAddress,
         address newResultAddres,
         address parametersAddress
@@ -36,4 +36,6 @@ interface IDelegator {
         );
 
     function getNumActiveAssets() external view returns (uint8);
+
+    function getActiveAssets() external view returns (uint8[] memory);
 }

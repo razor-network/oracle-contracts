@@ -8,24 +8,22 @@ import "./Core/storage/Constants.sol";
 import "./Core/ACL.sol";
 
 contract Delegator is ACL, Constants {
-    address public delegate;
     mapping(bytes32 => uint8) public ids;
 
     IParameters public parameters;
     IAssetManager public assetManager;
     IBlockManager public blockManager;
 
-    function initialize(
+    function updateAddress(
         address newDelegateAddress,
-        address newResultAddres,
+        address newResultAddress,
         address parametersAddress
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegateAddress != address(0x0), "Zero Address check");
-        require(newResultAddres != address(0x0), "Zero Address check");
+        require(newResultAddress != address(0x0), "Zero Address check");
         require(parametersAddress != address(0x0), "Zero Address check");
-        delegate = newDelegateAddress;
         assetManager = IAssetManager(newDelegateAddress);
-        blockManager = IBlockManager(newResultAddres);
+        blockManager = IBlockManager(newResultAddress);
         parameters = IParameters(parametersAddress);
     }
 
@@ -65,6 +63,10 @@ contract Delegator is ACL, Constants {
 
     function getNumActiveAssets() external view returns (uint8) {
         return assetManager.getNumActiveAssets();
+    }
+
+    function getActiveAssets() external view returns (uint8[] memory) {
+        return assetManager.getActiveAssets();
     }
 
     function getResult(bytes32 _name) public view returns (uint32) {

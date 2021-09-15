@@ -433,14 +433,14 @@ describe('Access Control Test', async () => {
     // New admin should be able to assign roles
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
-  it('Only Admin should be able to call initialize in Delegator', async () => {
-    assert(await delegator.connect(signers[0]).initialize(signers[2].address, signers[2].address, signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).initialize(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
+  it('Only Admin should be able to call updateAddress in Delegator', async () => {
+    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).initialize(ZERO_ADDRESS, signers[2].address, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).initialize(signers[2].address, ZERO_ADDRESS, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).initialize(signers[2].address, signers[2].address, ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, ZERO_ADDRESS), 'Zero Address check');
   });
   it('Only Admin should be able to call upgradeDelegator in assetManager', async () => {
     assert(await assetManager.connect(signers[0]).upgradeDelegator(signers[2].address));
