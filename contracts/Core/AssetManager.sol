@@ -11,18 +11,7 @@ import "./ACL.sol";
 contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
     IParameters public parameters;
 
-    event JobCreated(
-        uint8 id,
-        JobSelectorType selectorType,
-        uint8 weight,
-        int8 power,
-        address creator,
-        uint32 epoch,
-        uint256 timestamp,
-        string name,
-        string selector,
-        string url
-    );
+    event JobCreated(Structs.Job job, uint256 timestamp);
 
     event JobUpdated(
         uint8 id,
@@ -91,7 +80,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             url
         );
 
-        emit JobCreated(numAssets, selectorType, weight, power, msg.sender, epoch, block.timestamp, name, selector, url);
+        emit JobCreated(jobs[numAssets], block.timestamp);
     }
 
     function updateJob(
