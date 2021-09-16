@@ -1416,5 +1416,35 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
     });
+    it('should not levy inactivity penalities if stake less than minStake ', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      const stake = tokenAmount('10000');
+      await razor.transfer(signers[16].address, stake);
+      await razor.connect(signers[16]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[16]).stake(epoch, stake);
+      const stakerId = await stakeManager.stakerIds(signers[16].address);
+      await mineToNextEpoch();
+
+      epoch = await getEpoch();
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('500'));
+
+      const epochsJumped = GRACE_PERIOD + 4;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+
+      epoch = await getEpoch();
+      const staker = await stakeManager.getStaker(stakerId);
+
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const amount = await sToken.balanceOf(signers[16].address);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
+
+      await stakeManager.connect(signers[16]).unstake(epoch, stakerId, amount);
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
+      assertBNEqual(lock.amount, rAmount, 'Inactivity Penalites have been levied');
+    });
   });
 });
