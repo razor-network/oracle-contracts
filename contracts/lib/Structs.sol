@@ -28,6 +28,12 @@ library Structs {
         uint256 withdrawAfter;
     }
 
+    struct BountyLock {
+        address bountyHunter;
+        uint256 amount; //amount in RZR
+        uint256 redeemAfter;
+    }
+
     struct Block {
         uint32 proposerId;
         uint32[] medians;
