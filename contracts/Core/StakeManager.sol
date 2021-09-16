@@ -298,23 +298,19 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        (uint16 slashPenaltyNum, uint16 slashPenaltyDenom) = parameters.getSlashNumDenom();
+        uint256 slashPenaltyAmount = (_stake * slashPenaltyNum) / slashPenaltyDenom;
         _stake = _stake - slashPenaltyAmount;
-        uint256 halfPenalty = slashPenaltyAmount / 2;
 
-        if (halfPenalty == 0) return 0;
+        (uint16 bountyNum, uint16 bountyDenom) = parameters.getBountyNumDenom();
+        uint256 bounty = (slashPenaltyAmount * bountyNum) / bountyDenom;
+
+        if (bounty == 0) return 0;
 
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
 
-        //reward half the amount to bounty hunter
         bountyCounter = bountyCounter + 1;
-        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, halfPenalty, epoch + (parameters.withdrawLockPeriod()));
-
-        //burn half the amount
-        //please note that since slashing is a critical part of consensus algorithm,
-        //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
-        //tx should complete.
-        razor.transfer(BURN_ADDRESS, halfPenalty);
+        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + (parameters.withdrawLockPeriod()));
 
         return bountyCounter;
     }

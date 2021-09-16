@@ -14,7 +14,6 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   STAKE_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
-  BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
 
 } = require('./helpers/constants');
@@ -294,7 +293,6 @@ describe('BlockManager', function () {
 
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
-      const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
       let blockId;
       let block;
@@ -313,15 +311,15 @@ describe('BlockManager', function () {
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
-      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')), 'half slashed amount didnt get burnt');
 
       // Bounty should be locked
       assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
       const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+      const bounty = (slashPenaltyAmount.mul(await parameters.bountyNum())).div(await parameters.bountyDenom());
       epoch = await getEpoch();
       assertBNEqual(bountyLock.bountyHunter, signers[19].address);
       assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-      assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+      assertBNEqual(bountyLock.amount, bounty);
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
