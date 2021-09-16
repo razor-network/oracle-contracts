@@ -22,6 +22,7 @@ contract StakedToken is ERC20, IStakedToken {
     }
 
     constructor(address stakeManagerAddress, uint32 _stakerID) ERC20("sRZR", "sRZR") {
+        require(stakeManagerAddress != address(0), "zero Address Check");
         _owner = stakeManagerAddress;
         stakeManager = IStakeManager(stakeManagerAddress);
         stakerID = _stakerID;
