@@ -82,7 +82,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
             // Minting
-            sToken.mint(msg.sender, amount, amount); // as 1RZR = 1 sRZR
+            require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
@@ -92,7 +92,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint, amount);
+            require(sToken.mint(msg.sender, toMint, amount));
         }
     }
 
@@ -120,7 +120,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        sToken.mint(msg.sender, toMint, amount);
+        require(sToken.mint(msg.sender, toMint, amount));
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -203,11 +203,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             withdrawAmount = lock.amount - lock.commission;
             require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
         }
+        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
 
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
-
-        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
 
         // Reset lock
         _resetLock(stakerId);
@@ -271,7 +270,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         _resetLock(stakerId);
 
-        sToken.mint(msg.sender, sAmount, lockedAmount);
+        require(sToken.mint(msg.sender, sAmount, lockedAmount));
     }
 
     /// @notice External function for setting stake of the staker
