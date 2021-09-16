@@ -5,10 +5,12 @@ import "../../lib/Structs.sol";
 
 contract StakeStorage {
     uint32 public numStakers;
+    uint32 public bountyCounter;
 
     mapping(address => uint32) public stakerIds;
     mapping(uint32 => Structs.Staker) public stakers;
     mapping(address => mapping(address => Structs.Lock)) public locks;
+    mapping(uint32 => Structs.BountyLock) public bountyLocks;
     //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
     uint16[] public maturities = [
         50,
