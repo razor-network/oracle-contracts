@@ -5,28 +5,6 @@ import "../../lib/Structs.sol";
 import "../storage/Constants.sol";
 
 interface IStakeManager {
-    function updateCommitmentEpoch(uint32 stakerId) external;
-
-    function stake(uint32 epoch, uint256 amount) external;
-
-    function delegate(
-        uint32 epoch,
-        uint32 stakerId,
-        uint256 amount
-    ) external;
-
-    function unstake(uint32 epoch) external;
-
-    function withdraw(uint32 epoch) external;
-
-    function setDelegationAcceptance(bool status) external;
-
-    function setCommission(uint8 commission) external;
-
-    function decreaseCommission(uint8 commission) external;
-
-    function resetLock(uint32 stakerId) external;
-
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
@@ -54,11 +32,7 @@ interface IStakeManager {
 
     function getNumStakers() external view returns (uint32);
 
-    function getAge(uint32 stakerId) external view returns (uint32);
-
     function getInfluence(uint32 stakerId) external view returns (uint256);
 
     function getStake(uint32 stakerId) external view returns (uint256);
-
-    function getEpochStaked(uint32 stakerId) external view returns (uint32);
 }

@@ -1,28 +1,29 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IParameters.sol";
 import "./ACL.sol";
 import "./storage/Constants.sol";
 
-contract Parameters is ACL, Constants {
-    uint8 public withdrawLockPeriod = 1;
-    uint8 public maxAltBlocks = 5;
-    uint8 public aggregationRange = 3;
-    uint8 public withdrawReleasePeriod = 5;
-    uint8 public resetLockPenalty = 1;
-    uint8 public maxCommission = 20;
-    uint16 public penaltyNotRevealNum = 1;
-    uint16 public penaltyNotRevealDenom = 10000;
-    uint16 public slashPenaltyNum = 10000;
-    uint16 public slashPenaltyDenom = 10000;
-    uint16 public epochLength = 300;
-    uint16 public exposureDenominator = 1000;
-    uint16 public gracePeriod = 8;
-    uint32 public maxAge = 100 * 10000;
-    uint256 public minStake = 1000 * (10**18);
-    uint256 public blockReward = 100 * (10**18);
+contract Parameters is ACL, Constants, IParameters {
+    uint8 public override withdrawLockPeriod = 1;
+    uint8 public override maxAltBlocks = 5;
+    uint8 public override aggregationRange = 3;
+    uint8 public override withdrawReleasePeriod = 5;
+    uint8 public override resetLockPenalty = 1;
+    uint8 public override maxCommission = 20;
+    uint16 public override penaltyNotRevealNum = 1;
+    uint16 public override penaltyNotRevealDenom = 10000;
+    uint16 public override slashPenaltyNum = 10000;
+    uint16 public override slashPenaltyDenom = 10000;
+    uint16 public override epochLength = 300;
+    uint16 public override exposureDenominator = 1000;
+    uint16 public override gracePeriod = 8;
+    uint32 public override maxAge = 100 * 10000;
+    uint256 public override minStake = 1000 * (10**18);
+    uint256 public override blockReward = 100 * (10**18);
 
-    bool public escapeHatchEnabled = true;
+    bool public override escapeHatchEnabled = true;
 
     //event to be emitted when any governance parameter value changes.
     event ParameterChanged(address admin, string parameterName, uint256 valueChangedFrom, uint256 valueChangedTo, uint256 timestamp);
@@ -112,11 +113,11 @@ contract Parameters is ACL, Constants {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view returns (uint32) {
+    function getEpoch() external view override returns (uint32) {
         return (uint32(block.number) / (epochLength));
     }
 
-    function getState() external view returns (uint8) {
+    function getState() external view override returns (uint8) {
         uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
         return (state);
     }
