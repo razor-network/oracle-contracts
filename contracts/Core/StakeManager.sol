@@ -207,10 +207,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
 
+        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
+
         // Reset lock
         _resetLock(stakerId);
-
-        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
     }
 
     /// @notice remove all funds in case of emergency
