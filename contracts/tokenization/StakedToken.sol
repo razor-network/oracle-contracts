@@ -3,10 +3,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./IStakedToken.sol";
-
-interface IStakeManager {
-    function getStake(uint32 stakerId) external view returns (uint256);
-}
+import "../Core/interface/IStakeManager.sol";
 
 contract StakedToken is ERC20, IStakedToken {
     address private _owner;
