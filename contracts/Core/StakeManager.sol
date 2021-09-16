@@ -296,7 +296,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
