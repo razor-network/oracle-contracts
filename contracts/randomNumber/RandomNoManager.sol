@@ -74,7 +74,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// @notice Allows client to get generic random number of any epoch
     /// @param epoch random no of which epoch
     /// @return random number
-    function getGenericRandomNumber(uint32 epoch) public view override returns (uint256) {
+    function getGenericRandomNumber(uint32 epoch) external view override returns (uint256) {
         return _generateRandomNumber(epoch, 0);
     }
 
