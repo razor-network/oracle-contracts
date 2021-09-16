@@ -6,10 +6,6 @@ interface IParameters {
 
     function getState() external view returns (uint8);
 
-    function getSlashNumDenom() external view returns (uint16, uint16);
-
-    function getBountyNumDenom() external view returns (uint16, uint16);
-
     function epochLength() external view returns (uint16);
 
     function minStake() external view returns (uint256);
@@ -27,6 +23,10 @@ interface IParameters {
     function bountyNum() external view returns (uint16);
 
     function bountyDenom() external view returns (uint16);
+
+    function burnSlashNum() external view returns (uint16);
+
+    function burnSlashDenom() external view returns (uint16);
 
     function maxCommission() external view returns (uint8);
 

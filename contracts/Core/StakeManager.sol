@@ -298,12 +298,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        (uint16 slashPenaltyNum, uint16 slashPenaltyDenom) = parameters.getSlashNumDenom();
-        uint256 slashPenaltyAmount = (_stake * slashPenaltyNum) / slashPenaltyDenom;
+        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
 
-        (uint16 bountyNum, uint16 bountyDenom) = parameters.getBountyNumDenom();
-        uint256 bounty = (slashPenaltyAmount * bountyNum) / bountyDenom;
+        uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
 
         if (bounty == 0) return 0;
 
@@ -311,6 +309,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         bountyCounter = bountyCounter + 1;
         bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + (parameters.withdrawLockPeriod()));
+
+        uint256 amountToBeBurned = ((slashPenaltyAmount - bounty) * parameters.burnSlashNum())/ parameters.burnSlashDenom();
+
+        //please note that since slashing is a critical part of consensus algorithm,
+        //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
+        //tx should complete.
+        razor.transfer(BURN_ADDRESS, amountToBeBurned);
 
         return bountyCounter;
     }

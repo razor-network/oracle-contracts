@@ -14,6 +14,7 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   STAKE_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
+  BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
 
 } = require('./helpers/constants');
@@ -293,6 +294,7 @@ describe('BlockManager', function () {
 
       const stakerIdAccount = await stakeManager.stakerIds(signers[5].address);
       const stakeBeforeAcc5 = (await stakeManager.getStaker(stakerIdAccount)).stake;
+      const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
       let blockId;
       let block;
@@ -320,6 +322,10 @@ describe('BlockManager', function () {
       assertBNEqual(bountyLock.bountyHunter, signers[19].address);
       assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
       assertBNEqual(bountyLock.amount, bounty);
+
+      // From the remaining amount, appropriate amount should be burned
+      const amountToBeBurned = ((slashPenaltyAmount.sub(bounty)).mul(await parameters.burnSlashNum())).div(await parameters.burnSlashDenom());
+      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(amountToBeBurned));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
