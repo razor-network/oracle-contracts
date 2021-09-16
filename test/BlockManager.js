@@ -100,8 +100,9 @@ describe('BlockManager', function () {
       const name = 'test';
       const power = -2;
       const selectorType = 0;
+      const weight = 50;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
+      while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
 
       await mineToNextEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));

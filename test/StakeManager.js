@@ -90,8 +90,9 @@ describe('StakeManager', function () {
       const selectorType = 0;
       const name = 'test';
       const power = -2;
+      const weight = 50;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
+      while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
 
       while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 

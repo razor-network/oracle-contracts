@@ -134,7 +134,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint32 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
+            uint48 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;
