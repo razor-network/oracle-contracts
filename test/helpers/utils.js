@@ -92,12 +92,11 @@ const getEpoch = async () => {
   return blockNumber.div(EPOCH_LENGTH).toNumber();
 };
 
-const getIteration = async (voteManager, stakeManager, staker) => {
+const getIteration = async (voteManager, stakeManager, staker, biggestInfluence) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const influence = await stakeManager.getInfluence(stakerId);
 
-  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
   const randaoHash = await voteManager.getRandaoHash();
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);

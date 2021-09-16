@@ -122,8 +122,8 @@ describe('RandomNoManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [],
