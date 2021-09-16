@@ -1,23 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IBlockManager.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
+import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
+contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
     IAssetManager public assetManager;
+    IRandomNoProvider public randomNoProvider;
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
@@ -28,13 +31,15 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         address rewardManagerAddress,
         address voteManagerAddress,
         address assetManagerAddress,
-        address parametersAddress
+        address parametersAddress,
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
         parameters = IParameters(parametersAddress);
+        randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
     // elected proposer proposes block.
@@ -122,9 +127,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
+        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
-    function confirmPreviousEpochBlock(uint32 stakerId) external initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
+    function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
         if (sortedProposedBlockIds[epoch - 1].length == 0) return;
 
@@ -137,8 +143,8 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
             proposedBlocks[epoch - 1][blockId].medians,
             block.timestamp
         );
-
         rewardManager.giveBlockReward(stakerId, epoch - 1);
+        randomNoProvider.provideSecret(epoch - 1, voteManager.getRandaoHash());
     }
 
     // Complexity O(1)
@@ -169,7 +175,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         return stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
-    function getBlock(uint32 epoch) external view returns (Structs.Block memory _block) {
+    function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
         return (blocks[epoch]);
     }
 
@@ -196,7 +202,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager {
         return (uint8(sortedProposedBlockIds[epoch].length));
     }
 
-    function isBlockConfirmed(uint32 epoch) external view returns (bool) {
+    function isBlockConfirmed(uint32 epoch) external view override returns (bool) {
         return (blocks[epoch].proposerId != 0);
     }
 

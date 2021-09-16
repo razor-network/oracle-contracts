@@ -52,8 +52,9 @@ library Structs {
     struct Job {
         bool active;
         uint8 id;
-        uint8 assetType;
-        uint8 selectorType;
+        uint8 assetType; // 0-1
+        uint8 selectorType; // 0-1
+        uint8 weight; // 1-100
         int8 power;
         uint32 epoch;
         address creator;
