@@ -266,7 +266,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
 
         //Updating Staker Stake
-        if(staker.stake < parameters.minStake()) {
+        if (staker.stake < parameters.minStake()) {
             staker.epochStakedOrLastPenalized = parameters.getEpoch();
         }
         staker.stake = staker.stake + lockedAmount;
@@ -336,10 +336,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @notice External function for setting epochLastPenalized of the staker
     /// Used by RewardManager
     /// @param _id of the staker
-    function setStakerEpochStakedOrLastPenalized(
-        uint32 _epoch,
-        uint32 _id
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    function setStakerEpochStakedOrLastPenalized(uint32 _epoch, uint32 _id) external override onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].epochStakedOrLastPenalized = _epoch;
     }
 
