@@ -931,142 +931,52 @@ describe('BlockManager', function () {
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
+      const base = 12;
+      const maxAltBlocks = Number(await parameters.maxAltBlocks());
 
-      await razor.transfer(signers[14].address, tokenAmount('421000'));
-      await razor.transfer(signers[15].address, tokenAmount('420000'));
-      await razor.transfer(signers[16].address, tokenAmount('419000'));
-      await razor.transfer(signers[17].address, tokenAmount('418000'));
-
-      await razor.connect(signers[14]).approve(stakeManager.address, tokenAmount('421000'));
-      await stakeManager.connect(signers[14]).stake(epoch, tokenAmount('421000'));
-
-      await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('420000'));
-
-      await razor.connect(signers[16]).approve(stakeManager.address, tokenAmount('419000'));
-      await stakeManager.connect(signers[16]).stake(epoch, tokenAmount('419000'));
-
-      await razor.connect(signers[17]).approve(stakeManager.address, tokenAmount('418000'));
-      await stakeManager.connect(signers[17]).stake(epoch, tokenAmount('418000'));
+      for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
+        await razor.transfer(signers[base + i].address, tokenAmount('420000'));
+        await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
+        await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
+      }
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
+      const commitment = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
-      await voteManager.connect(signers[12]).commit(epoch, commitment1);
 
-      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[13]).commit(epoch, commitment2);
-
-      const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment3 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[14]).commit(epoch, commitment3);
-
-      const votes4 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment4 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes4, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[15]).commit(epoch, commitment4);
-
-      const votes5 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment5 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes5, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[16]).commit(epoch, commitment5);
-
-      const votes6 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment6 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes6, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[17]).commit(epoch, commitment6);
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await voteManager.connect(signers[base + i]).commit(epoch, commitment);
+      }
 
       await mineToNextState(); // reveal
 
-      await voteManager.connect(signers[12]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[13]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[14]).reveal(epoch, votes3,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[15]).reveal(epoch, votes4,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[16]).reveal(epoch, votes5,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[17]).reveal(epoch, votes6,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await voteManager.connect(signers[base + i]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      }
 
       await mineToNextState(); // propose state
 
-      const stakerIdAcc12 = await stakeManager.stakerIds(signers[12].address);
-      let staker = await stakeManager.getStaker(stakerIdAcc12);
-      let { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
+      let staker = await stakeManager.getStaker(stakerIdAcc);
+      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       let iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[12]).propose(epoch,
+      await blockManager.connect(signers[base]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestInfluencerId);
 
-      const stakerIdAcc13 = await stakeManager.stakerIds(signers[13].address);
-      staker = await stakeManager.getStaker(stakerIdAcc13);
-      biggestInfluencerId = (await getBiggestInfluenceAndId(stakeManager)).biggestInfluencerId;
-      iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[13]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
-      const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      biggestInfluencerId = (await getBiggestInfluenceAndId(stakeManager)).biggestInfluencerId;
-      iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[14]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
-      const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
-      staker = await stakeManager.getStaker(stakerIdAcc15);
-      biggestInfluencerId = (await getBiggestInfluenceAndId(stakeManager)).biggestInfluencerId;
-      iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[15]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
-      const stakerIdAcc16 = await stakeManager.stakerIds(signers[16].address);
-      staker = await stakeManager.getStaker(stakerIdAcc16);
-      biggestInfluencerId = (await getBiggestInfluenceAndId(stakeManager)).biggestInfluencerId;
-      iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[16]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
-      const stakerIdAcc17 = await stakeManager.stakerIds(signers[17].address);
-      staker = await stakeManager.getStaker(stakerIdAcc17);
-      biggestInfluencerId = (await getBiggestInfluenceAndId(stakeManager)).biggestInfluencerId;
-      iteration = await getIteration(voteManager, stakeManager, staker);
-      await blockManager.connect(signers[17]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
+      for (let i = 1; i < maxAltBlocks + 1; i++) {
+        stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
+        staker = await stakeManager.getStaker(stakerIdAcc);
+        iteration = await getIteration(voteManager, stakeManager, staker);
+        await blockManager.connect(signers[base + i]).propose(epoch,
+          [100, 201, 300, 400, 500, 600, 700, 800, 900],
+          iteration,
+          biggestInfluencerId);
+      }
       assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await parameters.maxAltBlocks());
     });
 
