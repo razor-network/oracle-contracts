@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IStakeManager.sol";
 import "./interface/IParameters.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
@@ -17,7 +18,7 @@ import "../Pause.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
+contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, IStakeManager {
     IParameters public parameters;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
@@ -213,7 +214,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @notice remove all funds in case of emergency
-    function escape(address _address) external initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
+    function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
         if (parameters.escapeHatchEnabled()) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
@@ -282,7 +283,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 _id,
         Constants.StakeChanged reason,
         uint256 _stake
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_epoch, _id, reason, _stake);
     }
 
@@ -295,7 +296,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
@@ -317,25 +318,25 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint32 _epoch,
         uint32 _id,
         uint32 _age
-    ) external onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
         emit AgeChange(_epoch, _id, _age, block.timestamp);
     }
 
     /// @param _address Address of the staker
     /// @return The staker ID
-    function getStakerId(address _address) external view returns (uint32) {
+    function getStakerId(address _address) external view override returns (uint32) {
         return (stakerIds[_address]);
     }
 
     /// @param _id The staker ID
     /// @return staker The Struct of staker information
-    function getStaker(uint32 _id) external view returns (Structs.Staker memory staker) {
+    function getStaker(uint32 _id) external view override returns (Structs.Staker memory staker) {
         return (stakers[_id]);
     }
 
     /// @return The number of stakers in the razor network
-    function getNumStakers() external view returns (uint32) {
+    function getNumStakers() external view override returns (uint32) {
         return (numStakers);
     }
 
@@ -345,12 +346,12 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
     }
 
     /// @return influence of staker
-    function getInfluence(uint32 stakerId) external view returns (uint256) {
+    function getInfluence(uint32 stakerId) external view override returns (uint256) {
         return _getMaturity(stakerId) * stakers[stakerId].stake;
     }
 
     /// @return stake of staker
-    function getStake(uint32 stakerId) external view returns (uint256) {
+    function getStake(uint32 stakerId) external view override returns (uint256) {
         return stakers[stakerId].stake;
     }
 
