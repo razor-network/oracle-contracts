@@ -310,7 +310,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         bountyCounter = bountyCounter + 1;
         bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + (parameters.withdrawLockPeriod()));
 
-        uint256 amountToBeBurned = ((slashPenaltyAmount - bounty) * parameters.burnSlashNum())/ parameters.burnSlashDenom();
+        uint256 amountToBeBurned = ((slashPenaltyAmount - bounty) * parameters.burnSlashNum()) / parameters.burnSlashDenom();
 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
