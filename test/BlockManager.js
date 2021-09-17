@@ -168,7 +168,7 @@ describe('BlockManager', function () {
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('9'));
+      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('9'));
       assertBNEqual(
         (await blockManager.getBlock(epoch - 1)).proposerId,
         await stakeManager.stakerIds(signers[5].address),

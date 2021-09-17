@@ -362,10 +362,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         return numAssets;
     }
 
-    function getNumActiveAssets() external view override returns (uint8) {
-        return uint8(activeAssets.length);
-    }
-
     function getActiveAssets() external view override returns (uint8[] memory) {
         return activeAssets;
     }

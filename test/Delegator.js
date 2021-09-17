@@ -60,7 +60,8 @@ describe('Delegator', function () {
       const selectorType = 0;
       const name = 'testJSON';
       const power = -2;
-      await assetManager.createJob(power, selectorType, name, selector, url);
+      const weight = 50;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
       const hName = utils.solidityKeccak256(['string'], [name]);
       const jobID = await delegator.ids(hName);
       assertBNEqual(jobID, toBigNumber('1'));
@@ -78,6 +79,7 @@ describe('Delegator', function () {
       assert(job.selector === selector);
       assertBNEqual(job.selectorType, toBigNumber('0'));
       assertBNEqual(job.power, toBigNumber('-2'));
+      assertBNEqual(job.weight, toBigNumber('50'));
     });
 
     it('should be able to get correct collectionID mapped to its hashed name', async function () {
@@ -86,7 +88,8 @@ describe('Delegator', function () {
       const selectorType = 1;
       const name = 'testXHTML';
       let power = 2;
-      await assetManager.createJob(power, selectorType, name, selector, url);
+      const weight = 50;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
       power = 3;
       await mineToNextState();// reveal
       await mineToNextState();// propose

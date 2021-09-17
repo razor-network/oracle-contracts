@@ -26,8 +26,6 @@ interface IAssetManager {
             string memory name
         );
 
-    function getNumActiveAssets() external view returns (uint8);
-
     function getActiveAssets() external view returns (uint8[] memory);
 
     function getAssetIndex(uint8 id) external view returns (uint8);

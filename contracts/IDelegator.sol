@@ -36,7 +36,7 @@ interface IDelegator {
             string memory name
         );
 
-    function getNumActiveAssets() external view returns (uint8);
+    function getNumActiveAssets() external view returns (uint256);
 
     function getActiveAssets() external view returns (uint8[] memory);
 }

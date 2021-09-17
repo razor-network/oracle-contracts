@@ -81,7 +81,7 @@ describe('AssetManager', function () {
       assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
       assert((collection.jobIDs).length === 2);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('3'));
-      assertBNEqual((await assetManager.getNumActiveAssets()), toBigNumber('1'));
+      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('1'));
       const activeAssets = await assetManager.getActiveAssets();
       assert(activeAssets[0] === 3);
     });
@@ -355,9 +355,9 @@ describe('AssetManager', function () {
 
     it('should not add or remove from a collection from activeAssets when it is activated/deactivated', async function () {
       await assetManager.setAssetStatus(true, 8);
-      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been added again');
+      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('6'), 'collection has been added again');
       await assetManager.setAssetStatus(false, 7);
-      assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been removed again');
+      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('6'), 'collection has been removed again');
     });
 
     it('Should not be able to set Weight of job beyond max : 100', async function () {
