@@ -41,7 +41,8 @@ describe('AssetManager', function () {
       const selectorType = 0;
       const name = 'testJSON';
       const power = -2;
-      await assetManager.createJob(power, selectorType, name, selector, url);
+      const weight = 50;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
       const job = await assetManager.jobs(1);
       assert(job.url === url);
       assert(job.selector === selector);
@@ -57,7 +58,8 @@ describe('AssetManager', function () {
       const selectorType = 1;
       const name = 'testXHTML';
       const power = 2;
-      await assetManager.createJob(power, selectorType, name, selector, url);
+      const weight = 50;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
       const job = await assetManager.jobs(2);
       assert(job.url === url);
       assert(job.selector === selector);
@@ -90,7 +92,8 @@ describe('AssetManager', function () {
       const selectorType = 0;
       const name = 'test3';
       const power = -6;
-      await assetManager.createJob(power, selectorType, name, selector, url);
+      const weight = 50;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
 
       await assetManager.addJobToCollection(3, 4);
       const collection = await assetManager.getCollection(3);
@@ -118,8 +121,8 @@ describe('AssetManager', function () {
     });
 
     it('should be able to update Job', async function () {
-      await assetManager.createJob(6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
-      await assetManager.updateJob(5, 4, 0, 'selector/5', 'http://testurl.com/5');
+      await assetManager.createJob(50, 6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
+      await assetManager.updateJob(5, 50, 4, 0, 'selector/5', 'http://testurl.com/5');
       const job = await assetManager.jobs(5);
       assert(job.url === 'http://testurl.com/5');
       assert(job.selector === 'selector/5');
@@ -204,7 +207,7 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to update job if job does not exist', async function () {
-      const tx = assetManager.updateJob(9, 2, 0, 'http://testurl.com/4', 'selector/4');
+      const tx = assetManager.updateJob(9, 50, 2, 0, 'http://testurl.com/4', 'selector/4');
       await assertRevert(tx, 'Job ID not present');
     });
 
@@ -312,7 +315,7 @@ describe('AssetManager', function () {
     it('updateJob, updateCollection, addJobToCollection, removeJobFromCollection should not work in commit state', async function () {
       await mineToNextEpoch();
 
-      const tx = assetManager.updateJob(5, 4, 0, 'selector/6', 'http://testurl.com/6');
+      const tx = assetManager.updateJob(5, 50, 4, 0, 'selector/6', 'http://testurl.com/6');
       assertRevert(tx, 'incorrect state');
 
       const tx1 = assetManager.addJobToCollection(3, 1);
@@ -355,6 +358,13 @@ describe('AssetManager', function () {
       assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been added again');
       await assetManager.setAssetStatus(false, 7);
       assertBNEqual(await assetManager.getNumActiveAssets(), toBigNumber('6'), 'collection has been removed again');
+    });
+
+    it('Should not be able to set Weight of job beyond max : 100', async function () {
+      const tx0 = assetManager.createJob(125, 0, 0, 'testName', 'testSelector', 'http://testurl.com/5');
+      const tx1 = assetManager.updateJob(5, 125, 0, 0, 'testSelector', 'http://testurl.com/5');
+      assertRevert(tx0, 'Weight beyond max');
+      assertRevert(tx1, 'Weight beyond max');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);

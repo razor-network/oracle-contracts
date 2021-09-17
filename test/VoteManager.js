@@ -7,6 +7,7 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
+  WITHDRAW_LOCK_PERIOD,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -76,8 +77,9 @@ describe('VoteManager', function () {
         const selectorType = 0;
         const name = 'test';
         const power = -2;
+        const weight = 50;
         let i = 0;
-        while (i < 9) { await assetManager.createJob(power, selectorType, name, selector, url); i++; }
+        while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
 
         while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
@@ -361,10 +363,15 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
-        const stakeAcc10 = await razor.connect(signers[10]).balanceOf(signers[10].address);
         const slashPenaltyAmount = (stakeBeforeAcc4.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
-        assertBNEqual(stakeAcc10, slashPenaltyAmount.div('2'), 'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+
+        // Bounty should be locked
+        const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+        assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
+        assertBNEqual(bountyLock.bountyHunter, signers[10].address);
+        assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+        assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
       });
 
       it('staker should not be snitched on multiple times for same mal activity irrespective of slashPenalty', async function () {
@@ -439,6 +446,32 @@ describe('VoteManager', function () {
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         await assertRevert(tx, 'Staker does not exist');
+      });
+
+      it('Once Lock Period is over, BountyHunter should be able to redeem bounty of snitch', async function () {
+        // Anyone shouldnt be able to redeem someones elses bounty
+        const tx = stakeManager.connect(signers[8]).redeemBounty(toBigNumber('1'));
+        assertRevert(tx, 'Incorrect Caller');
+
+        // Shouldnt be reedemable before withdrawlock period
+        const tx1 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
+        assertRevert(tx1, 'Redeem epoch not reached');
+        const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+
+        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+          await mineToNextEpoch();
+        }
+
+        // Should able to redeem
+        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
+        await stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(bountyLock.amount),
+          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+
+        // Should not able to redeem again
+        const tx2 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
+        assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('should not be able to commit if stake is below minstake', async function () {
@@ -599,25 +632,22 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[6]).commit(epoch, commitment3);
 
         const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
-        const stakeBeforeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-        const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
-
+        const bountyCounterBefore = await stakeManager.bountyCounter();
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[6].address);
-
-        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
-        const slashPenaltyAmount = stakeBeforeAcc6.mul(await parameters.slashPenaltyNum()).div(await parameters.slashPenaltyDenom());
         const stakeAcc6 = (await stakeManager.stakers(stakerIdAcc6)).stake;
         assertBNEqual(stakeAcc6, toBigNumber('0'), 'Stake of account 6 should be zero');
-        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
-          'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+
+        // As half of Penalty is zero, slash would have returned 0, which indicates nothing was awarded to bounty hunter
+        // hence bountyCounter shouldnt have changed
+        assertBNEqual(await stakeManager.bountyCounter(), bountyCounterBefore);
       });
 
-      it('Should be able to slash if stake is one', async function () {
-        const epoch = await getEpoch();
+      it('Snitch,Slash,RedeemBounty should work even for stake 1', async function () {
+        let epoch = await getEpoch();
         await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -639,12 +669,39 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
-        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
         const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
         assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
+
+        // Bounty should be locked
+        const bountyId = await stakeManager.bountyCounter();
+        const bountyLock = await stakeManager.bountyLocks(bountyId);
+        epoch = await getEpoch();
+        assertBNEqual(bountyLock.bountyHunter, signers[10].address);
+        assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+        assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+
+        // Anyone shouldnt be able to redeem someones elses bounty
+        const tx = stakeManager.connect(signers[8]).redeemBounty(bountyId);
+        assertRevert(tx, 'Incorrect Caller');
+
+        // Shouldnt be reedemable before withdrawlock period
+        const tx1 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
+        assertRevert(tx1, 'Redeem epoch not reached');
+
+        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+          await mineToNextEpoch();
+        }
+
+        // Should able to redeem
+        await stakeManager.connect(signers[10]).redeemBounty(bountyId);
+        const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
         assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
+
+        // Should not able to redeem again
+        const tx2 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
+        assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('if the revealed value is zero, staker should be able to reveal', async function () {

@@ -13,19 +13,18 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     IParameters public parameters;
     IDelegator public delegator;
 
-    event JobCreated(
+    event JobCreated(Structs.Job job, uint256 timestamp);
+
+    event JobUpdated(
         uint8 id,
         JobSelectorType selectorType,
-        int8 power,
-        address creator,
         uint32 epoch,
+        uint8 weight,
+        int8 power,
         uint256 timestamp,
-        string name,
         string selector,
         string url
     );
-
-    event JobUpdated(uint8 id, JobSelectorType selectorType, uint32 epoch, int8 power, uint256 timestamp, string selector, string url);
 
     event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
@@ -63,12 +62,14 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     }
 
     function createJob(
+        uint8 weight,
         int8 power,
         JobSelectorType selectorType,
         string calldata name,
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
+        require(weight <= 100, "Weight beyond max");
         numAssets = numAssets + 1;
         uint32 epoch = parameters.getEpoch();
 
@@ -77,6 +78,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             numAssets,
             uint8(AssetTypes.Job),
             uint8(selectorType),
+            weight,
             power,
             epoch,
             msg.sender,
@@ -85,27 +87,29 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             url
         );
 
-        emit JobCreated(numAssets, selectorType, power, msg.sender, epoch, block.timestamp, name, selector, url);
-
+        emit JobCreated(jobs[numAssets], block.timestamp);
         delegator.setIDName(name, numAssets);
     }
 
     function updateJob(
         uint8 jobID,
+        uint8 weight,
         int8 power,
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
         require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
+        require(weight <= 100, "Weight beyond max");
 
         uint32 epoch = parameters.getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
         jobs[jobID].selectorType = uint8(selectorType);
+        jobs[jobID].weight = weight;
         jobs[jobID].power = power;
-        emit JobUpdated(jobID, selectorType, epoch, power, block.timestamp, selector, url);
+        emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
     function setAssetStatus(bool assetStatus, uint8 id)
@@ -288,6 +292,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         returns (
             bool active,
             uint8 selectorType,
+            uint8 weight,
             int8 power,
             string memory name,
             string memory selector,
@@ -297,7 +302,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         require(jobs[id].assetType == uint8(AssetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
-        return (job.active, job.selectorType, job.power, job.name, job.selector, job.url);
+        return (job.active, job.selectorType, job.weight, job.power, job.name, job.selector, job.url);
     }
 
     function getCollection(uint8 id)
@@ -323,7 +328,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         );
     }
 
-    function getAssetType(uint8 id) external view override returns (uint8) {
+    function getAssetType(uint8 id) external view returns (uint8) {
         require(id != 0, "ID cannot be 0");
 
         require(id <= numAssets, "ID does not exist");
