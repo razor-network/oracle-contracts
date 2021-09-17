@@ -20,6 +20,7 @@ contract Delegator is ACL {
         returns (
             bool active,
             uint8 selectorType,
+            uint8 weight,
             int8 power,
             string memory name,
             string memory selector,
