@@ -8,5 +8,7 @@ interface IBlockManager {
 
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 
+    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians);
+
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
 }

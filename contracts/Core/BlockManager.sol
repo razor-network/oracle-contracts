@@ -179,7 +179,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians) {
+    function getBlockMedians(uint32 epoch) external view override returns (uint32[] memory _blockMedians) {
         _blockMedians = blocks[epoch].medians;
         return (_blockMedians);
     }
