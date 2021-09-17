@@ -14,7 +14,7 @@ interface IAssetManager {
             string memory selector,
             string memory url
         );
-    
+
     function getCollection(uint8 id)
         external
         view
