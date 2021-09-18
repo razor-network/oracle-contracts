@@ -41,20 +41,18 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
-
+        rewardManager.givePenalties(epoch, stakerId);
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
-
-        if (!blockManager.isBlockConfirmed(epoch - 1)) {
-            blockManager.confirmPreviousEpochBlock(stakerId);
-        }
-        rewardManager.givePenalties(epoch, stakerId);
-
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
         if (thisStakerStake >= parameters.minStake()) {
             commitments[stakerId].epoch = epoch;
             commitments[stakerId].commitmentHash = commitment;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
+        }
+
+        if (!blockManager.isBlockConfirmed(epoch - 1)) {
+            blockManager.confirmPreviousEpochBlock(stakerId);
         }
     }
 

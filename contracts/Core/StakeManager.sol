@@ -198,18 +198,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
 
         uint256 withdrawAmount = lock.amount;
-
+        uint256 commission = lock.commission;
         if (lock.commission > 0) {
-            withdrawAmount = lock.amount - lock.commission;
-            require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
+            withdrawAmount = withdrawAmount - commission;
         }
+        //Reset Lock
+        _resetLock(stakerId);
         emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
-
+        require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
-
-        // Reset lock
-        _resetLock(stakerId);
     }
 
     /// @notice remove all funds in case of emergency
