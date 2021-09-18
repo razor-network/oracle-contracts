@@ -151,7 +151,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Transfer commission in case of delegators
         // Check commission rate >0
-        uint256 commission;
+        uint256 commission = 0;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
