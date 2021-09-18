@@ -69,7 +69,9 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         require(stakeManager.getStake(stakerId) >= parameters.minStake(), "stake below minimum");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
-
+        for (uint256 i = 0; i < 1000; i++) {
+            i = i + 1;
+        }
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
         //below require was changed from 0 to minstake because someone with very low stake can manipulate randao
