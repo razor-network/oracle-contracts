@@ -18,20 +18,14 @@ let getFileData = (filePath) => {
     }  
 
 }
-//method to calculate median value
+//method to calculate maximum value
 
-let calculateMedianValue = (numbers) => {
+let calculateMaximumValue = (numbers) => {
     if(numbers.length===0){
         return 0
     }
-    const sorted = numbers.slice().sort((a, b) => a - b);
-    const middle = Math.floor(sorted.length / 2);
 
-    if (sorted.length % 2 === 0) {
-        return (sorted[middle - 1] + sorted[middle]) / 2;
-    }
-
-    return sorted[middle];
+    return numbers[numbers.length-1];
 
 }
 //method to compare gas values before and after.
@@ -55,14 +49,14 @@ let gasCompare = async () => {
     const gasDataII = getFileData(arguments[3]);
     for(i in gasDataI){
         if(i in gasDataII){        
-            let change = compareValue(calculateMedianValue(gasDataI[i].gasData),calculateMedianValue(gasDataII[i].gasData));  
-            let diff = calculateMedianValue(gasDataI[i].gasData)-calculateMedianValue(gasDataII[i].gasData);
-            if(calculateMedianValue(gasDataI[i].gasData) && change!=0)
+            let change = compareValue(calculateMaximumValue(gasDataI[i].gasData),calculateMaximumValue(gasDataII[i].gasData));  
+            let diff = calculateMaximumValue(gasDataI[i].gasData)-calculateMaximumValue(gasDataII[i].gasData);
+            if(calculateMaximumValue(gasDataI[i].gasData) && change!=0)
             {
                 let obj = {'Contract': gasDataI[i].contract, 
                 'Method':gasDataI[i].method, 
-                'Current':calculateMedianValue(gasDataI[i].gasData),
-                'Master' :calculateMedianValue(gasDataII[i].gasData),
+                'Current':calculateMaximumValue(gasDataI[i].gasData),
+                'Master' :calculateMaximumValue(gasDataII[i].gasData),
                 'Change%': change > 0 ? '+' + change.toFixed(2).toString() :'-' + Math.abs(change.toFixed(2)),
                 'Diff' : diff > 0 ? '+' + diff.toFixed(2).toString() :'-' + Math.abs(diff.toFixed(2))
                 }
