@@ -71,9 +71,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
-        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
-
         if (stakerId == 0) {
             numStakers = numStakers + (1);
             stakerId = numStakers;
@@ -94,6 +92,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             require(sToken.mint(msg.sender, toMint, amount));
         }
+        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
     /// @notice Delegation
