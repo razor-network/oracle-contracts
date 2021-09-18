@@ -152,6 +152,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         external
         initialized
         checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
+        returns (uint32)
     {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
@@ -171,7 +172,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         sortedProposedBlockIds[epoch].pop();
 
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        stakeManager.slash(epoch, proposerId, msg.sender);
+        return stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
     function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
@@ -241,11 +242,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         uint8 pushAt = uint8(sortedProposedBlockIds[epoch].length);
         for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
-            if (proposedBlocks[epoch][i].biggestInfluence < biggestInfluence) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
                 pushAt = i;
                 break;
             }
-            if (proposedBlocks[epoch][i].iteration > iteration) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 pushAt = i;
                 break;
             }
