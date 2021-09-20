@@ -242,11 +242,11 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         uint8 pushAt = uint8(sortedProposedBlockIds[epoch].length);
         for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
-            if (proposedBlocks[epoch][i].biggestInfluence < biggestInfluence) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
                 pushAt = i;
                 break;
             }
-            if (proposedBlocks[epoch][i].iteration > iteration) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 pushAt = i;
                 break;
             }
