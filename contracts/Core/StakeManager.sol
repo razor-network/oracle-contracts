@@ -71,7 +71,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
-        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
@@ -82,7 +81,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
             // Minting
-            sToken.mint(msg.sender, amount, amount); // as 1RZR = 1 sRZR
+            require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
         } else {
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
@@ -92,8 +91,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint, amount);
+            require(sToken.mint(msg.sender, toMint, amount));
         }
+        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
     /// @notice Delegation
@@ -120,7 +120,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        sToken.mint(msg.sender, toMint, amount);
+        require(sToken.mint(msg.sender, toMint, amount));
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -152,7 +152,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Transfer commission in case of delegators
         // Check commission rate >0
-        uint256 commission;
+        uint256 commission = 0;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
@@ -265,7 +265,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         _resetLock(stakerId);
 
-        sToken.mint(msg.sender, sAmount, lockedAmount);
+        require(sToken.mint(msg.sender, sAmount, lockedAmount));
     }
 
     /// @notice External function for setting stake of the staker
