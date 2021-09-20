@@ -313,15 +313,19 @@ describe('BlockManager', function () {
       const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
-      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(slashPenaltyAmount.div('2')), 'half slashed amount didnt get burnt');
 
       // Bounty should be locked
       assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
       const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
+      const bounty = (slashPenaltyAmount.mul(await parameters.bountyNum())).div(await parameters.bountyDenom());
       epoch = await getEpoch();
       assertBNEqual(bountyLock.bountyHunter, signers[19].address);
       assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-      assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+      assertBNEqual(bountyLock.amount, bounty);
+
+      // From the remaining amount, appropriate amount should be burned
+      const amountToBeBurned = ((slashPenaltyAmount.sub(bounty)).mul(await parameters.burnSlashNum())).div(await parameters.burnSlashDenom());
+      assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(amountToBeBurned));
     });
 
     it('block proposed by account 6 should be confirmed', async function () {
