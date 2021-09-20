@@ -267,7 +267,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         //Updating Staker Stake
         if (staker.stake < parameters.minStake()) {
-            staker.epochStakedOrLastPenalized = parameters.getEpoch();
+            staker.epochFirstStakedOrLastPenalized = parameters.getEpoch();
         }
         staker.stake = staker.stake + lockedAmount;
 
@@ -336,8 +336,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @notice External function for setting epochLastPenalized of the staker
     /// Used by RewardManager
     /// @param _id of the staker
-    function setStakerEpochStakedOrLastPenalized(uint32 _epoch, uint32 _id) external override onlyRole(STAKE_MODIFIER_ROLE) {
-        stakers[_id].epochStakedOrLastPenalized = _epoch;
+    function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external override onlyRole(STAKE_MODIFIER_ROLE) {
+        stakers[_id].epochFirstStakedOrLastPenalized = _epoch;
     }
 
     function setStakerAge(
@@ -381,8 +381,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         return stakers[stakerId].stake;
     }
 
-    function getEpochStakedOrLastPenalized(uint32 stakerId) external view override returns (uint32) {
-        return stakers[stakerId].epochStakedOrLastPenalized;
+    function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view override returns (uint32) {
+        return stakers[stakerId].epochFirstStakedOrLastPenalized;
     }
 
     /// @return isStakerActive : Activity < Grace

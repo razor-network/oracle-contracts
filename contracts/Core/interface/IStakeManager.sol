@@ -24,7 +24,7 @@ interface IStakeManager {
         uint32 _age
     ) external;
 
-    function setStakerEpochStakedOrLastPenalized(uint32 _epoch, uint32 _id) external;
+    function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external;
 
     function escape(address _address) external;
 
@@ -38,5 +38,5 @@ interface IStakeManager {
 
     function getStake(uint32 stakerId) external view returns (uint256);
 
-    function getEpochStakedOrLastPenalized(uint32 stakerId) external view returns (uint32);
+    function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view returns (uint32);
 }

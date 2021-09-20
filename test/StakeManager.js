@@ -204,7 +204,7 @@ describe('StakeManager', function () {
       assertBNEqual(staker.id, toBigNumber('1'));
       assertBNEqual(staker.stake, stake1, 'Change in stake is incorrect');
       assertBNEqual(newAge, age1, 'age is incorrect');
-      assertBNEqual(await stakeManager.getEpochStakedOrLastPenalized(stakerId), epoch, 'epoch staked is incorrect');
+      assertBNEqual(await stakeManager.getEpochFirstStakedOrLastPenalized(stakerId), epoch, 'epoch staked is incorrect');
       assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
@@ -1459,7 +1459,7 @@ describe('StakeManager', function () {
       const stakerId = await stakeManager.stakerIds(signers[15].address);
       await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
       let staker = await stakeManager.getStaker(stakerId);
-      assertBNEqual(staker.epochStakedOrLastPenalized, epochPenalized, 'Staker not penalized');
+      assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker not penalized');
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
@@ -1474,13 +1474,13 @@ describe('StakeManager', function () {
         epoch = await getEpoch();
         await stakeManager.connect(signers[15]).withdraw(epoch, stakerId);
         staker = await stakeManager.getStaker(stakerId);
-        assertBNEqual(staker.epochStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
+        assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
       }
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
       staker = await stakeManager.getStaker(stakerId);
-      assertBNEqual(staker.epochStakedOrLastPenalized, epoch, 'Staker not penalized');
+      assertBNEqual(staker.epochFirstStakedOrLastPenalized, epoch, 'Staker not penalized');
     });
   });
 });
