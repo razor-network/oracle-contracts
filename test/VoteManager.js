@@ -364,12 +364,14 @@ describe('VoteManager', function () {
         const slashPenaltyAmount = (stakeBeforeAcc4.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
 
+        const bounty = (slashPenaltyAmount.mul(await parameters.bountyNum())).div(await parameters.bountyDenom());
+        assertBNEqual(bounty, slashPenaltyAmount.div(toBigNumber('20'))); // To check if contract calculation is working as expected
         // Bounty should be locked
         const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
         assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
         assertBNEqual(bountyLock.bountyHunter, signers[10].address);
         assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-        assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+        assertBNEqual(bountyLock.amount, bounty);
       });
 
       it('staker should not be snitched on multiple times for same mal activity irrespective of slashPenalty', async function () {
@@ -674,10 +676,11 @@ describe('VoteManager', function () {
         // Bounty should be locked
         const bountyId = await stakeManager.bountyCounter();
         const bountyLock = await stakeManager.bountyLocks(bountyId);
+        const bounty = (slashPenaltyAmount.mul(await parameters.bountyNum())).div(await parameters.bountyDenom());
         epoch = await getEpoch();
         assertBNEqual(bountyLock.bountyHunter, signers[10].address);
         assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-        assertBNEqual(bountyLock.amount, slashPenaltyAmount.div(toBigNumber('2')));
+        assertBNEqual(bountyLock.amount, bounty);
 
         // Anyone shouldnt be able to redeem someones elses bounty
         const tx = stakeManager.connect(signers[8]).redeemBounty(bountyId);
@@ -694,7 +697,7 @@ describe('VoteManager', function () {
         // Should able to redeem
         await stakeManager.connect(signers[10]).redeemBounty(bountyId);
         const balanceAfterAcc10 = await razor.balanceOf(signers[10].address);
-        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(slashPenaltyAmount.div('2')),
+        assertBNEqual(balanceAfterAcc10, balanceBeforeAcc10.add(bounty),
           'the bounty hunter should receive half of the slashPenaltyAmount of account 4');
 
         // Should not able to redeem again
