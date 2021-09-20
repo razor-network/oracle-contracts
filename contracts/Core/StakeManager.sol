@@ -302,21 +302,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
-        uint256 halfPenalty = slashPenaltyAmount / 2;
 
-        if (halfPenalty == 0) return 0;
+        uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
+
+        if (bounty == 0) return 0;
 
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
 
-        //reward half the amount to bounty hunter
         bountyCounter = bountyCounter + 1;
-        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, halfPenalty, epoch + (parameters.withdrawLockPeriod()));
+        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + (parameters.withdrawLockPeriod()));
 
-        //burn half the amount
+        uint256 amountToBeBurned = ((slashPenaltyAmount - bounty) * parameters.burnSlashNum()) / parameters.burnSlashDenom();
+
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
-        razor.transfer(BURN_ADDRESS, halfPenalty);
+        razor.transfer(BURN_ADDRESS, amountToBeBurned);
 
         return bountyCounter;
     }
