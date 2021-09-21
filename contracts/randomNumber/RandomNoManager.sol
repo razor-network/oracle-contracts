@@ -36,7 +36,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
         State state = getState(epochLength);
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
-        //slither-disable-next-line dangerous-strict-equalities
+        // slither-disable-next-line dangerous-strict-equalities
         if (state == State.Commit) {
             requests[requestId] = epoch;
         } else {

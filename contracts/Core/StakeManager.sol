@@ -140,8 +140,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(staker.stake > 0, "Nonpositive stake");
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
-        //slither-disable-next-line reentrancy-vulnerabilities-1
-        //slither-disable-next-line reentrancy-vulnerabilities-3
+        // slither-disable-next-line reentrancy-vulnerabilities-1
+        // slither-disable-next-line reentrancy-vulnerabilities-3
         rewardManager.giveInactivityPenalties(epoch, stakerId);
 
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
