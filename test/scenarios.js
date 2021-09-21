@@ -101,9 +101,9 @@ describe('Scenarios', async () => {
     stakes = [];
   });
 
-  it('50 epochs of constant voting and participation', async () => {
+  it('100 epochs of constant voting and participation', async () => {
     let epoch = await getEpoch();
-    for (let i = 1; i <= 50; i++) {
+    for (let i = 1; i <= 100; i++) {
       // commit
       for (let j = 1; j <= 5; j++) {
         epoch = await getEpoch();
@@ -156,7 +156,7 @@ describe('Scenarios', async () => {
     }
   }).timeout(400000);
 
-  it('Inactivity Penalties should be levied if inactive for more than the grace period', async () => {
+  it('Staker is initially active and then becomes inactive more than the GRACE PERIOD', async () => {
     let epoch = await getEpoch();
     // commit
     for (let j = 1; j <= 5; j++) {
