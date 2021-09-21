@@ -77,6 +77,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
+            // slither-disable-next-line reentrancy-no-eth
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
@@ -291,10 +292,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+        uint256 slashPenaltyAmount = ((_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom());
         _stake = _stake - slashPenaltyAmount;
 
-        uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
+        uint256 bounty = ((slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom());
 
         if (bounty == 0) return 0;
 
