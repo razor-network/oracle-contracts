@@ -70,27 +70,27 @@ describe('Scenarios', async () => {
     await razor.transfer(signers[4].address, razors);
     await razor.transfer(signers[5].address, razors);
 
-    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000) + 1000)));
+    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
     await razor.connect(signers[1]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[1]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 441000) + 1000)));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
     await razor.connect(signers[2]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[2]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 441000) + 1000)));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
     await razor.connect(signers[3]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[3]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 441000) + 1000)));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
     await razor.connect(signers[4]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[4]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 441000) + 1000)));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
     await razor.connect(signers[5]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[5]).stake(epoch, stake);
     stakes.push(stake);
