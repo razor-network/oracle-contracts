@@ -263,5 +263,5 @@ describe('Scenarios', async () => {
     await voteManager.connect(signers[5]).commit(epoch, commitment);
     const stakeAfter = await stakeManager.getStake(5);
     assertBNLessThan(stakeAfter, stakeBefore, 'Inactivity Penalties have not been levied');
-  });
+  }).timeout(50000);
 });
