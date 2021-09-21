@@ -94,10 +94,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         for (uint16 i = 0; i < sortedStakers.length; i++) {
             require(sortedStakers[i] > lastVisitedStaker, "sorted[i] is not greater than lastVisited");
             lastVisitedStaker = sortedStakers[i];
+            //slither-disable-next-line calls-inside-a-loop
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
             uint48 value = vote.values[assetIndex - 1];
+            //slither-disable-next-line calls-inside-a-loop
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;

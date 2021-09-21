@@ -140,7 +140,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(staker.stake > 0, "Nonpositive stake");
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
-
+        //slither-disable-next-line reentrancy-vulnerabilities-1
+        //slither-disable-next-line reentrancy-vulnerabilities-3
         rewardManager.giveInactivityPenalties(epoch, stakerId);
 
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
@@ -307,6 +308,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
+        ////slither-disable-next-line unchecked-transfer
         razor.transfer(BURN_ADDRESS, amountToBeBurned);
 
         return bountyCounter;
