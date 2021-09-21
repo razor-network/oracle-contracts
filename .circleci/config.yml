@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Slither
           command: | 
-              slither . --filter-paths "node_modules" --disable-color --triage-mode
+              slither . --filter-paths "node_modules" --disable-color
               
   gasCompare:
     docker:
