@@ -4,7 +4,9 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract StakeStorage {
+    // slither-disable-next-line constable-states
     uint32 public numStakers;
+    // slither-disable-next-line constable-states
     uint32 public bountyCounter;
 
     mapping(address => uint32) public stakerIds;
