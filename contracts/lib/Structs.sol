@@ -39,6 +39,7 @@ library Structs {
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
+        bool valid;
     }
 
     struct Dispute {
