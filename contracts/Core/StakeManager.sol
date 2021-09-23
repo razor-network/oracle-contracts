@@ -69,8 +69,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
-        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
+        require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
