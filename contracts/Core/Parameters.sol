@@ -16,6 +16,10 @@ contract Parameters is ACL, Constants, IParameters {
     uint16 public override penaltyNotRevealDenom = 10000;
     uint16 public override slashPenaltyNum = 10000;
     uint16 public override slashPenaltyDenom = 10000;
+    uint16 public override bountyNum = 500; // by 20, 5 %
+    uint16 public override bountyDenom = 10000;
+    uint16 public override burnSlashNum = 10000; // 100 %
+    uint16 public override burnSlashDenom = 10000;
     uint16 public override epochLength = 300;
     uint16 public override exposureDenominator = 1000;
     uint16 public override gracePeriod = 8;
@@ -46,6 +50,26 @@ contract Parameters is ACL, Constants, IParameters {
     function setSlashPenaltyDenom(uint16 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "slashPenaltyDenom", slashPenaltyDenom, _slashPenaltyDenominator, block.timestamp);
         slashPenaltyDenom = _slashPenaltyDenominator;
+    }
+
+    function setBurnSlashNum(uint16 _burnSlashNum) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "burnSlashNum", burnSlashNum, _burnSlashNum, block.timestamp);
+        burnSlashNum = _burnSlashNum;
+    }
+
+    function setBurnSlashDenom(uint16 _burnSlashDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "burnSlashDenom", burnSlashDenom, _burnSlashDenom, block.timestamp);
+        burnSlashDenom = _burnSlashDenom;
+    }
+
+    function setBountyNum(uint16 _bountyNum) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "bountyNum", bountyNum, _bountyNum, block.timestamp);
+        bountyNum = _bountyNum;
+    }
+
+    function setBountyDenom(uint16 _bountyDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "bountyDenom", bountyDenom, _bountyDenom, block.timestamp);
+        bountyDenom = _bountyDenom;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
