@@ -292,10 +292,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line divide-before-multiply
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line divide-before-multiply
         uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
 
         if (bounty == 0) return 0;
