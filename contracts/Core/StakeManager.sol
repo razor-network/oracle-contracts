@@ -69,8 +69,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
-        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
+        require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
@@ -292,9 +292,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
+        // slither-disable-next-line incorrect-equality
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
-        // prettier ignore
+        // slither-disable-next-line incorrect-equality
         uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
 
         if (bounty == 0) return 0;
