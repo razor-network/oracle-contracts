@@ -29,6 +29,7 @@ contract Delegator is ACL, Constants {
 
     function setIDName(string calldata name, uint8 _id) external onlyRole(DELEGATOR_MODIFIER_ROLE) {
         bytes32 _name = keccak256(abi.encodePacked(name));
+        require(ids[_name] == 0, "Similar collection exists");
         ids[_name] = _id;
     }
 
@@ -73,7 +74,7 @@ contract Delegator is ACL, Constants {
     function getResult(bytes32 _name) public view returns (uint32) {
         uint8 index = assetManager.getAssetIndex(ids[_name]);
         uint32 epoch = parameters.getEpoch();
-        uint32[] memory medians = blockManager.getBlockMedians(epoch - 1);
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         return medians[index - 1];
     }
 }

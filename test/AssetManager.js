@@ -16,15 +16,28 @@ const {
   mineToNextEpoch,
 } = require('./helpers/testHelpers');
 
-const { toBigNumber } = require('./helpers/utils');
+const {
+  toBigNumber,
+  getEpoch,
+  tokenAmount,
+} = require('./helpers/utils');
 
 describe('AssetManager', function () {
   let signers;
+  let blockManager;
   let assetManager;
+  let razor;
+  let stakeManager;
   let initializeContracts;
 
   before(async () => {
-    ({ assetManager, initializeContracts } = await setupContracts());
+    ({
+      assetManager,
+      blockManager,
+      stakeManager,
+      razor,
+      initializeContracts,
+    } = await setupContracts());
     signers = await ethers.getSigners();
   });
 
@@ -75,12 +88,13 @@ describe('AssetManager', function () {
       await mineToNextState();// dispute
       await mineToNextState();// confirm
       const collectionName = 'Test Collection';
+      const collectionName2 = 'Test Collection2';
       await assetManager.createCollection([1, 2], 1, power, collectionName);
-      await assetManager.createCollection([1], 2, power, collectionName);
+      await assetManager.createCollection([1], 2, power, collectionName2);
       const collection1 = await assetManager.getCollection(3);
       const collection2 = await assetManager.getCollection(4);
       assert(collection1.name === collectionName);
-      assert(collection2.name === collectionName);
+      assert(collection2.name === collectionName2);
       assertBNEqual(collection1.aggregationMethod, toBigNumber('1'));
       assertBNEqual(collection2.aggregationMethod, toBigNumber('2'));
       assert((collection1.jobIDs).length === 2);
@@ -186,9 +200,23 @@ describe('AssetManager', function () {
     });
 
     it('should be able to inactivate collection', async function () {
+      let epoch = await getEpoch();
       const collectionName = 'Test Collection6';
       await assetManager.createCollection([1, 2], 2, 0, collectionName);
       await assetManager.setAssetStatus(false, 7);
+      const pendingDeactivations = await assetManager.getPendingDeactivations(epoch);
+      assert(pendingDeactivations.length === 1);
+      await mineToNextEpoch(); // commit
+      await razor.transfer(signers[5].address, tokenAmount('423000'));
+      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
       const collectionIsActive = await assetManager.getActiveStatus(7);
       assert(collectionIsActive === false);
       assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('0'), 'Incorrect index assignment');
@@ -200,6 +228,12 @@ describe('AssetManager', function () {
       assert(collection.active === true);
       assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('3'), 'Incorrect index assignment');
       await assetManager.setAssetStatus(false, 7);
+      await mineToNextEpoch(); // commit
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
     });
 
     it('should not be able to remove or add job to collection if the collection has been inactivated', async function () {
@@ -274,6 +308,12 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Duplicate JobIDs sent');
     });
 
+    it('should not create collection if same named collection exists', async function () {
+      const collectionName = 'Test Collection2';
+      const tx = assetManager.createCollection([1, 2], 1, 0, collectionName);
+      await assertRevert(tx, 'Similar collection exists');
+    });
+
     it('should not add jobID to a collection if the collectionID specified is not a collection', async function () {
       const tx = assetManager.addJobToCollection(5, 4);
       await assertRevert(tx, 'Collection ID not present');
@@ -305,6 +345,12 @@ describe('AssetManager', function () {
 
     it('updateCollection should only work for collections which are currently active', async function () {
       await assetManager.setAssetStatus(false, 3);
+      await mineToNextEpoch(); // commit
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
       const tx = assetManager.updateCollection(3, 2, 5);
       assertRevert(tx, 'Collection is inactive');
     });
@@ -341,18 +387,31 @@ describe('AssetManager', function () {
       await mineToNextState(); // propose
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
-      const Cname = 'Test Collection';
+      let Cname;
       for (let i = 1; i <= 8; i++) {
+        Cname = `Test Collection1${String(i)}`;
         await assetManager.createCollection([1, 2], 1, 3, Cname);
       }
       // Deactivating an asset with index 0
       await assetManager.setAssetStatus(false, 8);
+      await mineToNextEpoch(); // commit
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
       assertBNEqual(await assetManager.getAssetIndex(8), toBigNumber('0'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(14), toBigNumber('8'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
 
       // Deactivating an asset with index between 0 and length - 1
       await assetManager.setAssetStatus(false, 10);
+      await mineToNextEpoch(); // commit
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
       assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');
       assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
     });

@@ -119,11 +119,26 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        if (sortedProposedBlockIds[epoch].length == 0) return;
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 1);
+        if (sortedProposedBlockIds[epoch].length == 0) {
+            for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            }
+            return;
+        }
 
         uint8 blockId = sortedProposedBlockIds[epoch][0];
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
+        for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            if (index == proposedBlocks[epoch][blockId].medians.length) {
+                proposedBlocks[epoch][blockId].medians.pop();
+            } else {
+                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[proposedBlocks[epoch][blockId].medians.length - 1];
+                proposedBlocks[epoch][blockId].medians.pop();
+            }
+        }
         emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
@@ -132,9 +147,24 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
-        if (sortedProposedBlockIds[epoch - 1].length == 0) return;
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 2);
+        if (sortedProposedBlockIds[epoch - 1].length == 0) {
+            for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            }
+            return;
+        }
 
         uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
+        for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            if (index == proposedBlocks[epoch - 1][blockId].medians.length) {
+                proposedBlocks[epoch - 1][blockId].medians.pop();
+            } else {
+                proposedBlocks[epoch - 1][blockId].medians[index - 1] = proposedBlocks[epoch - 1][blockId].medians[proposedBlocks[epoch - 1][blockId].medians.length - 1];
+                proposedBlocks[epoch - 1][blockId].medians.pop();
+            }
+        }
         blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
 
         emit BlockConfirmed(
@@ -179,23 +209,13 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view override returns (uint32[] memory _blockMedians) {
-        _blockMedians = blocks[epoch].medians;
-        return (_blockMedians);
-    }
-
     function getProposedBlock(uint32 epoch, uint8 proposedBlock)
         external
         view
-        returns (Structs.Block memory _block, uint32[] memory _blockMedians)
+        returns (Structs.Block memory _block)
     {
         _block = proposedBlocks[epoch][proposedBlock];
-        return (_block, _block.medians);
-    }
-
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians) {
-        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
-        return (_blockMedians);
+        return (_block);
     }
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {

@@ -132,25 +132,38 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
                 if (!collections[id].active) {
                     activeAssets.push(id);
                     collections[id].assetIndex = uint8(activeAssets.length);
+                    collections[id].active = assetStatus;
+                    emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
                 }
             } else {
                 if (collections[id].active) {
-                    uint8 assetIndex = collections[id].assetIndex;
-                    if (assetIndex == activeAssets.length) {
-                        activeAssets.pop();
-                    } else {
-                        activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
-                        collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
-                        activeAssets.pop();
-                    }
-                    collections[id].assetIndex = 0;
+                    pendingDeactivationsPerEpoch[epoch].push(id);
                 }
             }
-
-            collections[id].active = assetStatus;
-
-            emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         }
+    }
+
+    function deactivateCollection(
+        uint32 epoch,
+        uint8 id
+    ) 
+        external
+        override
+        onlyRole(ASSET_CONFIRMER_ROLE)
+        returns(uint8)
+    {
+        uint8 assetIndex = collections[id].assetIndex;
+        if (assetIndex == activeAssets.length) {
+            activeAssets.pop();
+        } else {
+            activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+            collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
+            activeAssets.pop();
+        }
+        collections[id].assetIndex = 0;
+        collections[id].active = false;
+        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        return assetIndex;
     }
 
     function createCollection(
@@ -364,5 +377,9 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
     function getActiveAssets() external view override returns (uint8[] memory) {
         return activeAssets;
+    }
+
+    function getPendingDeactivations(uint32 epoch) external view override returns (uint8[] memory) {
+        return pendingDeactivationsPerEpoch[epoch];
     }
 }

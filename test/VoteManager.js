@@ -74,21 +74,28 @@ describe('VoteManager', function () {
         await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
-        const selectorType = 0;
-        const name = 'test';
+        let name;
         const power = -2;
+        const selectorType = 0;
         const weight = 50;
         let i = 0;
-        while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
+        while (i < 9) {
+          name = `test${i}`;
+          await assetManager.createJob(weight, power, selectorType, name, selector, url);
+          i++;
+        }
 
         while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
-        const Cname = 'Test Collection';
+        let Cname;
         for (let i = 1; i <= 8; i++) {
+          Cname = `Test Collection${String(i)}`;
           await assetManager.createCollection([i, i + 1], 1, 3, Cname);
         }
+        Cname = 'Test Collection10';
         await assetManager.createCollection([9, 1], 1, 3, Cname);
 
+        await mineToNextEpoch();
         await mineToNextEpoch();
         await razor.transfer(signers[3].address, tokenAmount('423000'));
         await razor.transfer(signers[4].address, tokenAmount('19000'));

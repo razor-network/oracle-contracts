@@ -98,13 +98,18 @@ describe('BlockManager', function () {
       await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
-      const name = 'test';
+      let name;
       const power = -2;
       const selectorType = 0;
       const weight = 50;
       let i = 0;
-      while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
+      while (i < 9) {
+        name = `test${i}`;
+        await assetManager.createJob(weight, power, selectorType, name, selector, url);
+        i++;
+      }
 
+      await mineToNextEpoch();
       await mineToNextEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.transfer(signers[6].address, tokenAmount('19000'));
@@ -158,10 +163,12 @@ describe('BlockManager', function () {
       await mineToNextState();
       await mineToNextState();
 
-      const Cname = 'Test Collection';
+      let Cname;
       for (let i = 1; i <= 8; i++) {
+        Cname = `Test Collection${String(i)}`;
         await assetManager.createCollection([i, i + 1], 1, 3, Cname);
       }
+      Cname = 'Test Collection9';
       await assetManager.createCollection([9, 1], 1, 3, Cname);
 
       await blockManager.connect(signers[5]).claimBlockReward();
@@ -771,30 +778,29 @@ describe('BlockManager', function () {
         medians,
         iteration,
         biggestInfluencerId);
-      const block = await blockManager.proposedBlocks(await getEpoch(), 0);
-      const median = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      const block = await blockManager.getProposedBlock(await getEpoch(), 0);
       assertBNEqual(block.proposerId, stakerIdAcc2, 'ID should be equal');
-      assertDeepEqual(median, medians, 'medians should be equal');
+      assertDeepEqual(block.medians, medians, 'medians should be equal');
       assertBNEqual(block.iteration, iteration, 'iteration should be equal');
       assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
       await mineToNextState();// dispute
       await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
 
-      const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
-      assertRevert(tx, 'median can not be zero');
+      const tx1 = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      assertRevert(tx1, 'median can not be zero');
     });
     it('should be able to return correct data for getBlockMedians', async function () {
-      const tx = await blockManager.connect(signers[19]).getBlockMedians(await getEpoch());
+      const tx = (await blockManager.connect(signers[19]).getBlock(await getEpoch())).medians;
       assertDeepEqual(tx, [], 'transaction should return correct data');
     });
     it('getProposedBlock Function should work as expected', async function () {
-      const tx = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
-      const medians = await blockManager.connect(signers[19]).getProposedBlockMedians(await getEpoch(), 0);
+      const block = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
+      const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       const { proposerId, iteration, biggestInfluence } = await blockManager.proposedBlocks(await getEpoch(), 0);
-      assertBNEqual(tx._block.proposerId, proposerId, 'it should return correct value');
-      assertDeepEqual(tx._block.medians, medians, 'it should return correct value');
-      assertBNEqual(tx._block.iteration, iteration, 'it should return correct value');
-      assertBNEqual(tx._block.biggestInfluence, biggestInfluence, 'it should return correct value');
+      assertBNEqual(block.proposerId, proposerId, 'it should return correct value');
+      assertDeepEqual(block.medians, medians, 'it should return correct value');
+      assertBNEqual(block.iteration, iteration, 'it should return correct value');
+      assertBNEqual(block.biggestInfluence, biggestInfluence, 'it should return correct value');
     });
     it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
       // commit

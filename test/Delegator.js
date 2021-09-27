@@ -144,8 +144,8 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100],
@@ -155,11 +155,56 @@ describe('Delegator', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-
       await mineToNextEpoch();
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       assertBNEqual(await delegator.getResult(hName), toBigNumber('100'));
+    });
+
+    it('getResult should give the right value after deactivation of asset', async function () {
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      const collectionName = 'Test Collection2';
+      await assetManager.createCollection([1, 2], 1, 2, collectionName);
+      await assetManager.setAssetStatus(false, 3);
+      await mineToNextEpoch();
+
+      const epoch = await getEpoch();
+
+      const votes = [100, 200];
+
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      await voteManager.connect(signers[5]).commit(epoch, commitment1);
+
+      await mineToNextState();
+
+      await voteManager.connect(signers[5]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      await mineToNextState();
+      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc5);
+
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+
+      await blockManager.connect(signers[5]).propose(epoch,
+        [100, 200],
+        iteration,
+        biggestInfluencerId);
+
+      await mineToNextState();
+      await mineToNextState();
+      await blockManager.connect(signers[5]).claimBlockReward();
+      await mineToNextEpoch();
+      const hName = utils.solidityKeccak256(['string'], [collectionName]);
+      assertBNEqual(await delegator.getResult(hName), toBigNumber('200'));
     });
   });
 });
