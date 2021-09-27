@@ -266,9 +266,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
 
         //Updating Staker Stake
-        if (staker.stake < parameters.minStake()) {
-            staker.epochFirstStakedOrLastPenalized = parameters.getEpoch();
-        }
+        staker.epochFirstStakedOrLastPenalized = parameters.getEpoch();
         staker.stake = staker.stake + lockedAmount;
 
         _resetLock(stakerId);

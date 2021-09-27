@@ -1298,13 +1298,13 @@ describe('StakeManager', function () {
     });
 
     it('should be given out inactivity penalties at the time of unstaking', async function () {
+      let staker = await stakeManager.getStaker(4);
+      await stakeManager.connect(signers[4]).resetLock(staker.id);
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
       }
 
-      let staker = await stakeManager.getStaker(4);
-      await stakeManager.connect(signers[4]).resetLock(staker.id);
       staker = await stakeManager.getStaker(4);
       const prevStake = staker.stake;
       const amount = tokenAmount('100');
