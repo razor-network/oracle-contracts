@@ -123,7 +123,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 1);
         if (sortedProposedBlockIds[epoch].length == 0) {
-            for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
                 assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
             }
             return;
@@ -132,12 +132,14 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint8 blockId = sortedProposedBlockIds[epoch][0];
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-        for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+        for (uint8 i = 0; i < deactivatedAssets.length; i++) {
             uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
             if (index == proposedBlocks[epoch][blockId].medians.length) {
                 proposedBlocks[epoch][blockId].medians.pop();
             } else {
-                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[proposedBlocks[epoch][blockId].medians.length - 1];
+                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[
+                    proposedBlocks[epoch][blockId].medians.length - 1
+                ];
                 proposedBlocks[epoch][blockId].medians.pop();
             }
         }
@@ -151,19 +153,21 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32 epoch = parameters.getEpoch();
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 2);
         if (sortedProposedBlockIds[epoch - 1].length == 0) {
-            for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
                 assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
             }
             return;
         }
 
         uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
-        for(uint8 i = 0; i < deactivatedAssets.length; i++) {
+        for (uint8 i = 0; i < deactivatedAssets.length; i++) {
             uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
             if (index == proposedBlocks[epoch - 1][blockId].medians.length) {
                 proposedBlocks[epoch - 1][blockId].medians.pop();
             } else {
-                proposedBlocks[epoch - 1][blockId].medians[index - 1] = proposedBlocks[epoch - 1][blockId].medians[proposedBlocks[epoch - 1][blockId].medians.length - 1];
+                proposedBlocks[epoch - 1][blockId].medians[index - 1] = proposedBlocks[epoch - 1][blockId].medians[
+                    proposedBlocks[epoch - 1][blockId].medians.length - 1
+                ];
                 proposedBlocks[epoch - 1][blockId].medians.pop();
             }
         }
@@ -211,11 +215,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (blocks[epoch]);
     }
 
-    function getProposedBlock(uint32 epoch, uint8 proposedBlock)
-        external
-        view
-        returns (Structs.Block memory _block)
-    {
+    function getProposedBlock(uint32 epoch, uint8 proposedBlock) external view returns (Structs.Block memory _block) {
         _block = proposedBlocks[epoch][proposedBlock];
         return (_block);
     }
