@@ -70,10 +70,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         whenNotPaused
     {
         uint32 stakerId = stakerIds[msg.sender];
-        require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
+            require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
