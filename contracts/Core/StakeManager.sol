@@ -84,6 +84,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
         } else {
+            require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
