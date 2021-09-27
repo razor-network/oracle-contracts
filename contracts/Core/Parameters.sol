@@ -13,13 +13,9 @@ contract Parameters is ACL, Constants, IParameters {
     uint8 public override resetLockPenalty = 1;
     uint8 public override maxCommission = 20;
     uint16 public override penaltyNotRevealNum = 1;
-    uint16 public override penaltyNotRevealDenom = 10000;
-    uint16 public override slashPenaltyNum = 10000;
-    uint16 public override slashPenaltyDenom = 10000;
     uint16 public override bountyNum = 500; // by 20, 5 %
-    uint16 public override bountyDenom = 10000;
-    uint16 public override burnSlashNum = 10000; // 100 %
-    uint16 public override burnSlashDenom = 10000;
+    uint16 public override burnSlashNum = 9500; // 100 %
+    uint16 public override baseDenominator = 10000;
     uint16 public override epochLength = 300;
     uint16 public override exposureDenominator = 1000;
     uint16 public override gracePeriod = 8;
@@ -37,29 +33,9 @@ contract Parameters is ACL, Constants, IParameters {
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
-    function setPenaltyNotRevealDeom(uint16 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "penaltyNotRevealDenom", penaltyNotRevealDenom, _penaltyNotRevealDenom, block.timestamp);
-        penaltyNotRevealDenom = _penaltyNotRevealDenom;
-    }
-
-    function setSlashPenaltyNum(uint16 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "slashPenaltyNum", slashPenaltyNum, _slashPenaltyNumerator, block.timestamp);
-        slashPenaltyNum = _slashPenaltyNumerator;
-    }
-
-    function setSlashPenaltyDenom(uint16 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "slashPenaltyDenom", slashPenaltyDenom, _slashPenaltyDenominator, block.timestamp);
-        slashPenaltyDenom = _slashPenaltyDenominator;
-    }
-
     function setBurnSlashNum(uint16 _burnSlashNum) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "burnSlashNum", burnSlashNum, _burnSlashNum, block.timestamp);
         burnSlashNum = _burnSlashNum;
-    }
-
-    function setBurnSlashDenom(uint16 _burnSlashDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "burnSlashDenom", burnSlashDenom, _burnSlashDenom, block.timestamp);
-        burnSlashDenom = _burnSlashDenom;
     }
 
     function setBountyNum(uint16 _bountyNum) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -67,9 +43,9 @@ contract Parameters is ACL, Constants, IParameters {
         bountyNum = _bountyNum;
     }
 
-    function setBountyDenom(uint16 _bountyDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "bountyDenom", bountyDenom, _bountyDenom, block.timestamp);
-        bountyDenom = _bountyDenom;
+    function setBaseDenominator(uint16 _baseDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "baseDenom", baseDenominator, _baseDenominator, block.timestamp);
+        baseDenominator = _baseDenominator;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {

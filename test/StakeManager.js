@@ -347,10 +347,13 @@ describe('StakeManager', function () {
       assertBNEqual(stakeAfterAcc1, stakeBeforeAcc1.add(stake), 'Stake did not increase on staking after withdraw');
 
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await parameters.setSlashPenaltyNum(5000); // slashing only half stake
+      await parameters.setBurnSlashNum(4500); // slashing only half stake
       await stakeManager.slash(epoch, stakerIdAcc1, signers[10].address); // slashing signers[1]
 
-      const slashPenaltyAmount = (stakeAfterAcc1.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
+      const amountToBeBurned = stakeAfterAcc1.mul(await parameters.burnSlashNum()).div(await parameters.baseDenominator());
+      const bounty = stakeAfterAcc1.mul(await parameters.bountyNum()).div(await parameters.baseDenominator());
+      const slashPenaltyAmount = amountToBeBurned.add(bounty);
+
       let staker = await stakeManager.getStaker(stakerIdAcc1);
       const stakeAfterSlash = staker.stake;
       assertBNEqual(stakeAfterSlash, stakeAfterAcc1.sub(slashPenaltyAmount), 'Stake should be less by slashPenalty');
@@ -1043,7 +1046,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[7]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[7]).stake(epoch, stake1);
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
-      await parameters.setSlashPenaltyNum(10000);
+      await parameters.setBurnSlashNum(9500);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
       const stake2 = tokenAmount('20000');

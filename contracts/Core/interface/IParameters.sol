@@ -18,25 +18,17 @@ interface IParameters {
 
     function penaltyNotRevealNum() external view returns (uint16);
 
-    function penaltyNotRevealDenom() external view returns (uint16);
-
     function bountyNum() external view returns (uint16);
-
-    function bountyDenom() external view returns (uint16);
 
     function burnSlashNum() external view returns (uint16);
 
-    function burnSlashDenom() external view returns (uint16);
+    function baseDenominator() external view returns (uint16);
 
     function maxCommission() external view returns (uint8);
 
     function withdrawLockPeriod() external view returns (uint8);
 
     function withdrawReleasePeriod() external view returns (uint8);
-
-    function slashPenaltyNum() external view returns (uint16);
-
-    function slashPenaltyDenom() external view returns (uint16);
 
     function escapeHatchEnabled() external view returns (bool);
 
