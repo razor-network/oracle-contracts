@@ -299,12 +299,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Done for stack too deep issue
         {
-        (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum, uint16 baseDenominator) =
-        parameters.getAllSlashParams();
+            (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum, uint16 baseDenominator) = parameters.getAllSlashParams();
 
-        bounty = (_stake * bountyNum) / baseDenominator;
-        amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
-        amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
+            bounty = (_stake * bountyNum) / baseDenominator;
+            amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
+            amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
         }
 
         uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;

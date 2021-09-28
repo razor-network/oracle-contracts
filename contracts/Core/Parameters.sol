@@ -6,10 +6,10 @@ import "./ACL.sol";
 import "./storage/Constants.sol";
 
 contract Parameters is ACL, Constants, IParameters {
-    struct SlashNums
-    {   uint16 bounty;
+    struct SlashNums {
+        uint16 bounty;
         uint16 burn;
-        uint16 keep; 
+        uint16 keep;
     }
     uint8 public override withdrawLockPeriod = 1;
     uint8 public override maxAltBlocks = 5;
@@ -38,12 +38,16 @@ contract Parameters is ACL, Constants, IParameters {
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
-    function setSlashParams(uint16 _bounty, uint16 _burn, uint16 _keep) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setSlashParams(
+        uint16 _bounty,
+        uint16 _burn,
+        uint16 _keep
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_bounty + _burn + _keep <= 10000, "Slash nums addtion exceeds 10000");
         emit ParameterChanged(msg.sender, "bountySlashNum", slashNums.bounty, _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", slashNums.burn, _burn, block.timestamp);
         emit ParameterChanged(msg.sender, "keepSlashNum", slashNums.keep, _keep, block.timestamp);
-        slashNums = SlashNums (_bounty, _burn, _keep);
+        slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
     function setBaseDenominator(uint16 _baseDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -125,7 +129,16 @@ contract Parameters is ACL, Constants, IParameters {
         return (state);
     }
 
-    function getAllSlashParams() external view override returns (uint16,uint16,uint16, uint16)
+    function getAllSlashParams()
+        external
+        view
+        override
+        returns (
+            uint16,
+            uint16,
+            uint16,
+            uint16
+        )
     {
         return (slashNums.bounty, slashNums.burn, slashNums.keep, baseDenominator);
     }

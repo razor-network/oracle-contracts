@@ -6,7 +6,15 @@ interface IParameters {
 
     function getState() external view returns (uint8);
 
-    function getAllSlashParams() external view returns (uint16,uint16,uint16, uint16);
+    function getAllSlashParams()
+        external
+        view
+        returns (
+            uint16,
+            uint16,
+            uint16,
+            uint16
+        );
 
     function epochLength() external view returns (uint16);
 
