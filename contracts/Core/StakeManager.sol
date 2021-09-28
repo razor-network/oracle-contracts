@@ -142,7 +142,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(sAmount, epoch + (parameters.withdrawLockPeriod()));
         //emit event here
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
-    
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -185,10 +184,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
         require(sToken.burn(msg.sender, lock.amount), "Token burn Failed");
         staker.stake = staker.stake - rAmount;
-        
+
         // Function to Reset the lock
         _resetLock(stakerId);
-        
+
         // Transfer commission in case of delegators
         // Check commission rate >0
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
