@@ -69,8 +69,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause {
         require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         require(razor.transferFrom(msg.sender, address(this), amount), "sch transfer failed");
         uint32 stakerId = stakerIds[msg.sender];
-        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
-        emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
             numStakers = numStakers + (1);
