@@ -9,7 +9,6 @@ contract Constants {
         Dispute,
         Confirm
     }
-
     enum StakeChanged {
         BlockReward,
         InactivityPenalty,
