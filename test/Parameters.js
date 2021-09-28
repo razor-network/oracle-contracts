@@ -19,8 +19,6 @@ describe('Parameters contract Tests', async () => {
   const expectedRevertMessage = 'AccessControl';
 
   const penaltyNotRevealNumerator = toBigNumber('1');
-  const bountyNumerator = toBigNumber('500');
-  const burnSlashNumerator = toBigNumber('9500');
   const baseDenominator = toBigNumber('10000');
 
   const withdrawLockPeriod = toBigNumber('1');
@@ -78,10 +76,7 @@ describe('Parameters contract Tests', async () => {
     let tx = parameters.connect(signers[1]).setPenaltyNotRevealNum(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setBurnSlashNum(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
-    tx = parameters.connect(signers[1]).setBountyNum(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setBaseDenominator(toBigNumber('1'));
@@ -170,13 +165,11 @@ describe('Parameters contract Tests', async () => {
     const maxCommission = await parameters.maxCommission();
     assertBNEqual(maxCommission, toBigNumber('19'));
 
-    await parameters.setBurnSlashNum(toBigNumber('22'));
-    const burnSlashNum = await parameters.burnSlashNum();
-    assertBNEqual(burnSlashNum, toBigNumber('22'));
-
-    await parameters.setBountyNum(toBigNumber('24'));
-    const bountyNum = await parameters.bountyNum();
-    assertBNEqual(bountyNum, toBigNumber('24'));
+    await parameters.setSlashParams(toBigNumber('22'), toBigNumber('23'), toBigNumber('24'));
+    const slashNums = await parameters.slashNums();
+    assertBNEqual(slashNums.bounty, toBigNumber('22'));
+    assertBNEqual(slashNums.burn, toBigNumber('23'));
+    assertBNEqual(slashNums.keep, toBigNumber('24'));
 
     await parameters.setBaseDenominator(toBigNumber('1'));
     const baseDenom = await parameters.baseDenominator();
@@ -190,11 +183,10 @@ describe('Parameters contract Tests', async () => {
     const penaltyNotRevealNumValue = await parameters.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
 
-    const bountyNumValue = await parameters.bountyNum();
-    assertBNEqual(bountyNumerator, bountyNumValue);
-
-    const burnSlashNumValue = await parameters.burnSlashNum();
-    assertBNEqual(burnSlashNumerator, burnSlashNumValue);
+    const slashParams = await parameters.getAllSlashParams();
+    assertBNEqual(slashParams[0], toBigNumber('500'));
+    assertBNEqual(slashParams[1], toBigNumber('9500'));
+    assertBNEqual(slashParams[2], toBigNumber('0'));
 
     const baseDenom = await parameters.baseDenominator();
     assertBNEqual(baseDenom, baseDenominator);

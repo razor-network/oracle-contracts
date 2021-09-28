@@ -292,11 +292,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        // prettier ignore
-        uint256 bounty = (_stake * parameters.bountyNum()) / parameters.baseDenominator();
-        uint256 amountToBeBurned = (_stake * parameters.burnSlashNum()) / parameters.baseDenominator();
-        uint256 slashPenaltyAmount = bounty + amountToBeBurned;
 
+        uint256 bounty;
+        uint256 amountToBeBurned;
+        uint256 amountToBeKept;
+
+        // Done for stack too deep issue
+        {
+        (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum, uint16 baseDenominator) =
+        parameters.getAllSlashParams();
+
+        bounty = (_stake * bountyNum) / baseDenominator;
+        amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
+        amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
+        }
+
+        uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;
         _stake = _stake - slashPenaltyAmount;
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
 

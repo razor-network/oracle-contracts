@@ -6,6 +6,8 @@ interface IParameters {
 
     function getState() external view returns (uint8);
 
+    function getAllSlashParams() external view returns (uint16,uint16,uint16, uint16);
+
     function epochLength() external view returns (uint16);
 
     function minStake() external view returns (uint256);
@@ -17,10 +19,6 @@ interface IParameters {
     function blockReward() external view returns (uint256);
 
     function penaltyNotRevealNum() external view returns (uint16);
-
-    function bountyNum() external view returns (uint16);
-
-    function burnSlashNum() external view returns (uint16);
 
     function baseDenominator() external view returns (uint16);
 

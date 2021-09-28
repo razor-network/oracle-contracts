@@ -357,14 +357,21 @@ describe('VoteManager', function () {
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        await parameters.setBurnSlashNum(4500);
+        await parameters.setSlashParams(500, 4500, 0);
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const amountToBeBurned = stakeBeforeAcc4.mul(await parameters.burnSlashNum()).div(await parameters.baseDenominator());
-        const bounty = stakeBeforeAcc4.mul(await parameters.bountyNum()).div(await parameters.baseDenominator());
-        const slashPenaltyAmount = amountToBeBurned.add(bounty);
+        const slashNums = await parameters.getAllSlashParams();
+        const bountySlashNum = slashNums[0];
+        const burnSlashNum = slashNums[1];
+        const keepSlashNum = slashNums[2];
+        const baseDeno = slashNums[3];
+        const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
+        const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
+        const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
+        const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
+
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
         assertBNEqual(bounty, slashPenaltyAmount.div(toBigNumber('10'))); // To check if contract calculation is working as expected
         // Bounty should be locked
@@ -382,7 +389,7 @@ describe('VoteManager', function () {
         const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
-        await parameters.setBurnSlashNum(9500); // Restoring the slashPenaltyNum again
+        await parameters.setSlashParams(500, 9500, 0);// Restoring the slashPenaltyNum again
         await assertRevert(tx, 'incorrect secret/value');
       });
 
@@ -482,7 +489,7 @@ describe('VoteManager', function () {
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setBurnSlashNum(4500);
+        await parameters.setSlashParams(500, 4500, 0);
         await stakeManager.slash(epoch, stakerId, signers[11].address);
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -607,7 +614,7 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setBurnSlashNum(9500);
+        await parameters.setSlashParams(500, 9500, 0);
         await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
 
         await mineToNextState(); // reveal
@@ -670,9 +677,15 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
-        const amountToBeBurned = stakeBeforeAcc5.mul(await parameters.burnSlashNum()).div(await parameters.baseDenominator());
-        const bounty = stakeBeforeAcc5.mul(await parameters.bountyNum()).div(await parameters.baseDenominator());
-        const slashPenaltyAmount = amountToBeBurned.add(bounty);
+        const slashNums = await parameters.getAllSlashParams();
+        const bountySlashNum = slashNums[0];
+        const burnSlashNum = slashNums[1];
+        const keepSlashNum = slashNums[2];
+        const baseDeno = slashNums[3];
+        const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
+        const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
+        const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+        const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
         assertBNEqual(stakeAfterAcc5, stakeBeforeAcc5.sub(slashPenaltyAmount), 'Stake of account 5 should lessen by slashPenaltyAmount');
