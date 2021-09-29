@@ -50,7 +50,7 @@ contract RewardManager is Initializable, ACL, Constants {
     function giveBlockReward(uint32 stakerId, uint32 epoch) external onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(epoch, stakerId, newStake);
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
     }
 
     /// @notice Calculates the stake and age inactivity penalties of the staker
@@ -99,7 +99,7 @@ contract RewardManager is Initializable, ACL, Constants {
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
-            stakeManager.setStakerStake(epoch, stakerId, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
