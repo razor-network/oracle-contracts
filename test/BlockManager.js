@@ -1354,6 +1354,7 @@ describe('BlockManager', function () {
       const newStake = (prevStake.add(reward)).sub(randaoPenalty);
       staker = await stakeManager.getStaker(stakerIdAcc14);
       assertBNEqual(newStake, prevStake, 'Penalties have not been applied correctly');
+      assertBNEqual(staker.age, toBigNumber('0'), 'Age shoud be zero due to randaoPenalty');
     });
   });
 });
