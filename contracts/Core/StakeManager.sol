@@ -69,11 +69,11 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
-        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
+            require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
@@ -84,6 +84,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
         } else {
+            require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
