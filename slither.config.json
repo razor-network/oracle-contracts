@@ -1,5 +1,4 @@
 {
-        "detectors_to_exclude": "calls-inside-a-loop,missing-zero-address-validation,reentrancy,solc-version,incorrect-equality,conformance-to-solidity-naming-conventions,unchecked-transfer,unused-return",
-        "exclude_low": "true",
+        "detectors_to_exclude": "solc-version,conformance-to-solidity-naming-conventions",
         "filter_paths": "node_modules"
 }

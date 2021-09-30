@@ -68,8 +68,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence);
-
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
 
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
@@ -94,10 +93,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         for (uint16 i = 0; i < sortedStakers.length; i++) {
             require(sortedStakers[i] > lastVisitedStaker, "sorted[i] is not greater than lastVisited");
             lastVisitedStaker = sortedStakers[i];
+            // slither-disable-next-line calls-loop
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
             uint48 value = vote.values[assetIndex - 1];
+            // slither-disable-next-line calls-loop
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
             accWeight = accWeight + influence;
@@ -119,9 +120,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        if (sortedProposedBlockIds[epoch].length == 0) return;
+        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) return;
 
-        uint8 blockId = sortedProposedBlockIds[epoch][0];
+        uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
         emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
@@ -132,9 +133,8 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
-        if (sortedProposedBlockIds[epoch - 1].length == 0) return;
-
-        uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
+        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) return;
+        uint8 blockId = sortedProposedBlockIds[epoch - 1][uint8(blockIndexToBeConfirmed)];
         blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
 
         emit BlockConfirmed(
@@ -160,16 +160,31 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         );
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
-        uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        uint8 assetId = disputes[epoch][msg.sender].assetId;
         uint8 assetIndex = assetManager.getAssetIndex(assetId);
         require(
             proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
-        sortedProposedBlockIds[epoch][blockIndex] = sortedProposedBlockIds[epoch][numProposedBlocks - 1];
-        sortedProposedBlockIds[epoch].pop();
+
+        proposedBlocks[epoch][blockId].valid = false;
+
+        if (uint8(blockIndexToBeConfirmed) == blockIndex) {
+            // If the chosen one only is the culprit one, find successor
+            // O(maxAltBlocks)
+
+            blockIndexToBeConfirmed = -1;
+            for (uint8 i = blockIndex + 1; i < numProposedBlocks; i++) {
+                uint8 _blockId = sortedProposedBlockIds[epoch][i];
+                if (proposedBlocks[epoch][_blockId].valid) {
+                    blockIndexToBeConfirmed = int8(i);
+                    break;
+                }
+            }
+        }
 
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
         return stakeManager.slash(epoch, proposerId, msg.sender);
@@ -237,6 +252,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     ) internal {
         if (sortedProposedBlockIds[epoch].length == 0) {
             sortedProposedBlockIds[epoch].push(0);
+            blockIndexToBeConfirmed = 0;
             return;
         }
 

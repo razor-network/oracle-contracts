@@ -69,21 +69,22 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         checkEpochAndState(State.Commit, epoch, parameters.epochLength())
         whenNotPaused
     {
-        require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
         uint32 stakerId = stakerIds[msg.sender];
-        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
         emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
 
         if (stakerId == 0) {
+            require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
+            // slither-disable-next-line reentrancy-no-eth
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
             // Minting
-            sToken.mint(msg.sender, amount, amount); // as 1RZR = 1 sRZR
+            require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
         } else {
+            require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             uint256 totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
@@ -92,8 +93,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            sToken.mint(msg.sender, toMint, amount);
+            require(sToken.mint(msg.sender, toMint, amount));
         }
+        require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
     /// @notice Delegation
@@ -120,7 +122,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
         // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        sToken.mint(msg.sender, toMint, amount);
+        require(sToken.mint(msg.sender, toMint, amount));
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -141,6 +143,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
 
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         rewardManager.giveInactivityPenalties(epoch, stakerId);
 
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
@@ -151,7 +154,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Transfer commission in case of delegators
         // Check commission rate >0
-        uint256 commission;
+        uint256 commission = 0;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
             uint256 initial = sToken.getRZRDeposited(msg.sender, sAmount);
@@ -167,7 +170,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         //emit event here
         emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
-
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
     }
 
@@ -195,21 +197,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
         require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
-
-        uint256 withdrawAmount = lock.amount;
-
-        if (lock.commission > 0) {
-            withdrawAmount = lock.amount - lock.commission;
-            require(razor.transfer(staker._address, lock.commission), "couldnt transfer");
-        }
-
-        //Transfer Razor Back
-        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
-
+        uint256 commission = lock.commission;
+        uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
-
         emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
+        require(razor.transfer(staker._address, commission), "couldnt transfer");
+        //Transfer Razor Back
+        require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
     /// @notice remove all funds in case of emergency
@@ -271,7 +266,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         _resetLock(stakerId);
 
-        sToken.mint(msg.sender, sAmount, lockedAmount);
+        require(sToken.mint(msg.sender, sAmount, lockedAmount));
     }
 
     /// @notice External function for setting stake of the staker
@@ -300,7 +295,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 _stake = stakers[stakerId].stake;
         uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
         _stake = _stake - slashPenaltyAmount;
-
+        // prettier ignore
         uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
 
         if (bounty == 0) return 0;
@@ -315,6 +310,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
+        // slither-disable-next-line unchecked-transfer
         razor.transfer(BURN_ADDRESS, amountToBeBurned);
 
         return bountyCounter;

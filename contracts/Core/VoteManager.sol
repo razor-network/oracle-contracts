@@ -42,14 +42,14 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
 
-        // Switch to call confirm block only when block in previous epoch has not been confirmed
-        // and if previous epoch do have proposed blocks
-
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         if (!blockManager.isBlockConfirmed(epoch - 1)) {
             blockManager.confirmPreviousEpochBlock(stakerId);
         }
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         rewardManager.givePenalties(epoch, stakerId);
-
+        // Switch to call confirm block only when block in previous epoch has not been confirmed
+        // and if previous epoch do have proposed blocks
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
         if (thisStakerStake >= parameters.minStake()) {
             commitments[stakerId].epoch = epoch;

@@ -9,6 +9,8 @@ contract BlockStorage {
     mapping(uint32 => mapping(uint8 => Structs.Block)) public proposedBlocks;
     //epoch->blockId
     mapping(uint32 => uint8[]) public sortedProposedBlockIds;
+
+    int8 public blockIndexToBeConfirmed; // Index in sortedProposedBlockIds
     // epoch -> blocks
     mapping(uint32 => Structs.Block) public blocks;
 }
