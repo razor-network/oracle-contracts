@@ -6,7 +6,6 @@ interface IAssetManager {
         external
         view
         returns (
-            bool active,
             uint8 selectorType,
             uint8 weight,
             int8 power,
