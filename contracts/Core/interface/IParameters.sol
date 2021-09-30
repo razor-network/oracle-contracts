@@ -46,5 +46,5 @@ interface IParameters {
 
     function exposureDenominator() external view returns (uint16);
 
-    function resetLockPenalty() external view returns (uint8);
+    function extendLockPenalty() external view returns (uint8);
 }
