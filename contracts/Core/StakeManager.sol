@@ -255,7 +255,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 penalty = (lock.amount * parameters.extendLockPenalty()) / 100;
         lock.amount = lock.amount - penalty;
         lock.withdrawAfter = parameters.getEpoch();
-
     }
 
     /// @notice External function for setting stake of the staker

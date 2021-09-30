@@ -6,7 +6,6 @@ const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
-  WITHDRAW_RELEASE_PERIOD,
   STAKE_MODIFIER_ROLE,
 
 } = require('./helpers/constants');
