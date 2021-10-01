@@ -109,7 +109,7 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setWithdrawReleasePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setextendLockPenalty(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setExtendLockPenalty(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
@@ -178,7 +178,7 @@ describe('Parameters contract Tests', async () => {
     const withdrawReleasePeriod = await parameters.withdrawReleasePeriod();
     assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
 
-    await parameters.setextendLockPenalty(toBigNumber('17'));
+    await parameters.setExtendLockPenalty(toBigNumber('17'));
     const extendLockPenalty = await parameters.extendLockPenalty();
     assertBNEqual(extendLockPenalty, toBigNumber('17'));
 

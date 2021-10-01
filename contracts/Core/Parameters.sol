@@ -82,7 +82,7 @@ contract Parameters is ACL, Constants, IParameters {
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
-    function setextendLockPenalty(uint8 _extendLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setExtendLockPenalty(uint8 _extendLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", extendLockPenalty, _extendLockPenalty, block.timestamp);
         extendLockPenalty = _extendLockPenalty;
     }
