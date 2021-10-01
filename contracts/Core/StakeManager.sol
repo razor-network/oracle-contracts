@@ -247,26 +247,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function resetLock(uint32 stakerId) external initialized whenNotPaused {
-        // Lock should be expired if you want to reset
+        // Existing lock should exist
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
 
-        Structs.Staker storage staker = stakers[stakerId];
         uint256 lockedAmount = locks[msg.sender][stakers[stakerId].tokenAddress].amount;
-        IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
-        //Giving out the resetLock penalty
+        // Giving out the resetLock penalty
         uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
         lockedAmount = lockedAmount - penalty;
 
-        //Calculating the amount of sToken to be minted
-        uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
-
-        //Updating Staker Stake
-        staker.stake = staker.stake + lockedAmount;
-
-        _resetLock(stakerId);
-
-        require(sToken.mint(msg.sender, sAmount, lockedAmount));
+        //updating the lock
+        locks[msg.sender][stakers[stakerId].tokenAddress].amount = lockedAmount;
+        // amount gets updated after penalty
+        locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter = parameters.getEpoch() + parameters.withdrawLockPeriod();
+        // withdrawAfter gets updated with current Epoch + Withdraw_Lock_Period
     }
 
     /// @notice External function for setting stake of the staker
