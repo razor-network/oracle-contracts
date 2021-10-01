@@ -7,6 +7,7 @@ const { assert } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
+  WITHDRAW_RELEASE_PERIOD,
 
 } = require('./helpers/constants');
 const {
@@ -1327,6 +1328,10 @@ describe('StakeManager', function () {
       await voteManager.connect(signers[4]).commit(epoch, commitment);
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
+      const epochsJumped = WITHDRAW_RELEASE_PERIOD + 1;
+      for (let i = 0; i <= epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
       await stakeManager.connect(signers[4]).extendLock(staker.id);
     });
 

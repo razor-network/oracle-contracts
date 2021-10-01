@@ -247,14 +247,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function extendLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
+        uint32 epoch = parameters.getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
+        require(locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + parameters.withdrawReleasePeriod() < epoch, "Release Period Not yet passed");
 
         Structs.Lock storage lock = locks[msg.sender][stakers[stakerId].tokenAddress];
 
         //Giving out the extendLock penalty
         uint256 penalty = (lock.amount * parameters.extendLockPenalty()) / 100;
         lock.amount = lock.amount - penalty;
-        lock.withdrawAfter = parameters.getEpoch();
+        lock.withdrawAfter = epoch;
     }
 
     /// @notice External function for setting stake of the staker
