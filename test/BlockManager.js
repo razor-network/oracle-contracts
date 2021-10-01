@@ -362,7 +362,7 @@ describe('BlockManager', function () {
       assertRevert(tx2, 'Incorrect Caller');
     });
 
-    it('all blocks being disputed', async function () {
+    it('all blocks being disputed and should not able to dispute same block again', async function () {
       await mineToNextEpoch();
 
       await razor.connect(signers[0]).transfer(signers[7].address, tokenAmount('20000'));
@@ -451,6 +451,9 @@ describe('BlockManager', function () {
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
 
+      const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+
+      assertRevert(tx, 'Block already has been disputed');
       const res2 = await calculateDisputesData(12,
         voteManager,
         stakeManager,
@@ -465,7 +468,7 @@ describe('BlockManager', function () {
       assertBNEqual(secondDispute.accWeight, res2.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(secondDispute.lastVisitedStaker, res2.sortedStakers[res2.sortedStakers.length - 1], 'lastVisited should match');
 
-      await blockManager.connect(signers[15]).finalizeDispute(epoch, 0);
+      await blockManager.connect(signers[15]).finalizeDispute(epoch, 1);
       // assertBNEqual(secondDispute2.median, res2.median, 'median should match');
       // assert((await proposedBlock.valid) === false);
     });
@@ -1302,59 +1305,86 @@ describe('BlockManager', function () {
       assertBNEqual(staker.stake, stake);
     });
 
-    it('Penalties should be applied correctly if a block is not confirmed in the confirm state', async function () {
+    it('BlockToBeConfirmed should always have lowest iteration and should be valid', async function () {
       await mineToNextEpoch();
-      let epoch = await getEpoch();
-      const base = 15;
+      const epoch = await getEpoch();
+      const base = 14;
+
+      for (let i = 0; i < 4; i++) { // i=2 since [base+1] has already staked
+        await razor.transfer(signers[base + i].address, tokenAmount('420000'));
+        await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
+        await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
+      }
+
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const commitment = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
       );
-      await voteManager.connect(signers[base - 1]).commit(epoch, commitment); // (base-1 is commiting but not revealing)
-      for (let i = 0; i < 3; i++) {
+
+      for (let i = 0; i < 4; i++) {
         await voteManager.connect(signers[base + i]).commit(epoch, commitment);
       }
+
       await mineToNextState(); // reveal
 
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 4; i++) {
         await voteManager.connect(signers[base + i]).reveal(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       }
+
       await mineToNextState(); // propose state
 
-      let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
-      let staker = await stakeManager.getStaker(stakerIdAcc);
       const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
-      let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
-      await blockManager.connect(signers[base]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
-
-      for (let i = 1; i < 3; i++) {
-        stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
-        staker = await stakeManager.getStaker(stakerIdAcc);
+      let iteration;
+      for (let i = 0; i < 4; i++) {
+        const stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc);
         iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         await blockManager.connect(signers[base + i]).propose(epoch,
           [100, 201, 300, 400, 500, 600, 700, 800, 900],
           iteration,
           biggestInfluencerId);
       }
+
       await mineToNextState(); // dispute state
-      await mineToNextState(); // confirm state (intentionally not confirming block)
-      await mineToNextState(); // commit state
-      epoch = await getEpoch();
-      const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      const prevStake = staker.stake;
-      await voteManager.connect(signers[base - 1]).commit(epoch, commitment); // (base-1 gets block reward as well as randaoPenalty)
-      const reward = await parameters.blockReward();
-      const randaoPenalty = await parameters.blockReward();
-      const newStake = (prevStake.add(reward)).sub(randaoPenalty);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      assertBNEqual(newStake, prevStake, 'Penalties have not been applied correctly');
-      assertBNEqual(staker.age, toBigNumber('0'), 'Age shoud be zero due to randaoPenalty');
+      // okay so now we have 4 invalid blcoks
+      // lets say sortedProposedBlockId is [A,B,C,D]
+      let blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      //  should be 0
+      assertBNEqual(blockIndexToBeConfirmed, toBigNumber('0'));
+
+      // we dispute A - 0
+      const res = await calculateDisputesData(11,
+        voteManager,
+        stakeManager,
+        assetManager,
+        epoch);
+
+      await blockManager.giveSorted(epoch, 11, res.sortedStakers);
+
+      await blockManager.finalizeDispute(epoch, 0);
+      blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      // should be 1
+      assertBNEqual(blockIndexToBeConfirmed, toBigNumber('1'));
+
+      // we dispute C - 2
+      await blockManager.finalizeDispute(epoch, 2);
+      blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      // should not change, be 1 only
+      assertBNEqual(blockIndexToBeConfirmed, toBigNumber('1'));
+
+      // we dispute B - 1
+      await blockManager.finalizeDispute(epoch, 1);
+      blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      // should change to 3
+      assertBNEqual(blockIndexToBeConfirmed, toBigNumber('3'));
+
+      // we dispute D - 3
+      await blockManager.finalizeDispute(epoch, 3);
+      blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      // should change to -1 ;
+      assertBNEqual(Number(blockIndexToBeConfirmed), -1);
     });
   });
 });

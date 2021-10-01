@@ -24,8 +24,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string url
     );
 
-    event JobActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
-
     event CollectionCreated(
         bool active,
         uint8 id,
@@ -67,7 +65,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         uint32 epoch = parameters.getEpoch();
 
         jobs[numAssets] = Structs.Job(
-            true,
             numAssets,
             uint8(AssetTypes.Job),
             uint8(selectorType),
@@ -104,45 +101,36 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
-    function setAssetStatus(bool assetStatus, uint8 id)
+    function setCollectionStatus(bool assetStatus, uint8 id)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
         checkState(State.Confirm, parameters.epochLength())
     {
-        require(id != 0, "ID cannot be 0");
-
-        require(id <= numAssets, "ID does not exist");
+        require(collections[id].assetType == uint8(AssetTypes.Collection), "Asset is not a collection");
 
         uint32 epoch = parameters.getEpoch();
-
-        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
-            jobs[id].active = assetStatus;
-
-            emit JobActivityStatus(jobs[id].active, id, epoch, block.timestamp);
-        } else {
-            if (assetStatus) {
-                if (!collections[id].active) {
-                    activeAssets.push(id);
-                    collections[id].assetIndex = uint8(activeAssets.length);
-                }
-            } else {
-                if (collections[id].active) {
-                    uint8 assetIndex = collections[id].assetIndex;
-                    if (assetIndex == activeAssets.length) {
-                        activeAssets.pop();
-                    } else {
-                        activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
-                        collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
-                        activeAssets.pop();
-                    }
-                    collections[id].assetIndex = 0;
-                }
+        if (assetStatus) {
+            if (!collections[id].active) {
+                activeAssets.push(id);
+                collections[id].assetIndex = uint8(activeAssets.length);
             }
-
-            collections[id].active = assetStatus;
-
-            emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        } else {
+            if (collections[id].active) {
+                uint8 assetIndex = collections[id].assetIndex;
+                if (assetIndex == activeAssets.length) {
+                    activeAssets.pop();
+                } else {
+                    activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+                    collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
+                    activeAssets.pop();
+                }
+                collections[id].assetIndex = 0;
+            }
         }
+
+        collections[id].active = assetStatus;
+
+        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
     }
 
     function createCollection(
@@ -165,8 +153,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         collections[numAssets].name = name;
         for (uint8 i = 0; i < jobIDs.length; i++) {
             require(jobs[jobIDs[i]].assetType == uint8(AssetTypes.Job), "Job ID not present");
-
-            require(jobs[jobIDs[i]].active, "Job ID not active");
 
             require(!collections[numAssets].jobIDExist[jobIDs[i]], "Duplicate JobIDs sent");
 
@@ -192,8 +178,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         require(collections[collectionID].active, "Collection is inactive");
 
         require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
-
-        require(jobs[jobID].active, "Job ID not active");
 
         require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
 
@@ -280,7 +264,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         view
         override
         returns (
-            bool active,
             uint8 selectorType,
             uint8 weight,
             int8 power,
@@ -292,7 +275,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         require(jobs[id].assetType == uint8(AssetTypes.Job), "ID is not a job");
 
         Structs.Job memory job = jobs[id];
-        return (job.active, job.selectorType, job.weight, job.power, job.name, job.selector, job.url);
+        return (job.selectorType, job.weight, job.power, job.name, job.selector, job.url);
     }
 
     function getCollection(uint8 id)
@@ -329,16 +312,9 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         }
     }
 
-    function getActiveStatus(uint8 id) external view returns (bool) {
-        require(id != 0, "ID cannot be 0");
-
-        require(id <= numAssets, "ID does not exist");
-
-        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
-            return jobs[id].active;
-        } else {
-            return collections[id].active;
-        }
+    function getCollectionStatus(uint8 id) external view returns (bool) {
+        require(collections[id].assetType == uint8(AssetTypes.Collection), "Asset is not a collection");
+        return collections[id].active;
     }
 
     function getAssetIndex(uint8 id) external view override returns (uint8) {

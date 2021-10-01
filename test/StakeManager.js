@@ -1416,5 +1416,15 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
     });
+    it('staker should be able to increase stake by any number of RZR token', async () => {
+      let staker = await stakeManager.getStaker(4);
+      const epoch = await getEpoch();
+      const amount = tokenAmount('1');
+      const prevStake = staker.stake;
+      await razor.connect(signers[4]).approve(stakeManager.address, amount);
+      await stakeManager.connect(signers[4]).stake(epoch, amount);
+      staker = await stakeManager.getStaker(4);
+      assertBNEqual(prevStake.add(amount), staker.stake, 'stakeAmount should increase');
+    });
   });
 });

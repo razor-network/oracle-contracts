@@ -39,6 +39,7 @@ library Structs {
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
+        bool valid;
     }
 
     struct Dispute {
@@ -50,7 +51,6 @@ library Structs {
     }
 
     struct Job {
-        bool active;
         uint8 id;
         uint8 assetType; // 0-1
         uint8 selectorType; // 0-1
