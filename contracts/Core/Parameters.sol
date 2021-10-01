@@ -43,7 +43,7 @@ contract Parameters is ACL, Constants, IParameters {
         uint16 _burn,
         uint16 _keep
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_bounty + _burn + _keep <= 10000, "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
         emit ParameterChanged(msg.sender, "bountySlashNum", slashNums.bounty, _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", slashNums.burn, _burn, block.timestamp);
         emit ParameterChanged(msg.sender, "keepSlashNum", slashNums.keep, _keep, block.timestamp);

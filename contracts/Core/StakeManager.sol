@@ -297,7 +297,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 amountToBeBurned;
         uint256 amountToBeKept;
 
+        // Block Scoping
         // Done for stack too deep issue
+        // https://soliditydeveloper.com/stacktoodeep
         {
             (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum, uint16 baseDenominator) = parameters.getAllSlashParams();
 
