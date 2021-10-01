@@ -1413,7 +1413,6 @@ describe('StakeManager', function () {
     it('staker should be able to increase stake by any number of RZR token', async () => {
       let staker = await stakeManager.getStaker(4);
       const epoch = await getEpoch();
-      console.log(Number(staker.stake));
       const amount = tokenAmount('1');
       const prevStake = staker.stake;
       await razor.connect(signers[4]).approve(stakeManager.address, amount);
