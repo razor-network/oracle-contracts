@@ -1386,5 +1386,60 @@ describe('BlockManager', function () {
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
     });
+
+    it('Penalties should be applied correctly if a block is not confirmed in the confirm state', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      const base = 15;
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[base - 1]).commit(epoch, commitment); // (base-1 is commiting but not revealing)
+      for (let i = 0; i < 3; i++) {
+        await voteManager.connect(signers[base + i]).commit(epoch, commitment);
+      }
+      await mineToNextState(); // reveal
+
+      for (let i = 0; i < 3; i++) {
+        await voteManager.connect(signers[base + i]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      }
+      await mineToNextState(); // propose state
+
+      let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
+      let staker = await stakeManager.getStaker(stakerIdAcc);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      await blockManager.connect(signers[base]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        biggestInfluencerId);
+
+      for (let i = 1; i < 3; i++) {
+        stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
+        staker = await stakeManager.getStaker(stakerIdAcc);
+        iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        await blockManager.connect(signers[base + i]).propose(epoch,
+          [100, 201, 300, 400, 500, 600, 700, 800, 900],
+          iteration,
+          biggestInfluencerId);
+      }
+      await mineToNextState(); // dispute state
+      await mineToNextState(); // confirm state (intentionally not confirming block)
+      await mineToNextState(); // commit state
+      epoch = await getEpoch();
+      const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
+      staker = await stakeManager.getStaker(stakerIdAcc14);
+      const prevStake = staker.stake;
+      await voteManager.connect(signers[base - 1]).commit(epoch, commitment); // (base-1 gets block reward as well as randaoPenalty)
+      const reward = await parameters.blockReward();
+      const randaoPenalty = await parameters.blockReward();
+      const newStake = (prevStake.add(reward)).sub(randaoPenalty);
+      staker = await stakeManager.getStaker(stakerIdAcc14);
+      assertBNEqual(newStake, prevStake, 'Penalties have not been applied correctly');
+      assertBNEqual(staker.age, toBigNumber('0'), 'Age shoud be zero due to randaoPenalty');
+    });
   });
 });
