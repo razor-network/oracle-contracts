@@ -249,7 +249,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         // Lock should be expired if you want to extend
         uint32 epoch = parameters.getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + parameters.withdrawReleasePeriod() < epoch, "Release Period Not yet passed");
+        require(
+            locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + parameters.withdrawReleasePeriod() < epoch,
+            "Release Period Not yet passed"
+        );
 
         Structs.Lock storage lock = locks[msg.sender][stakers[stakerId].tokenAddress];
 
