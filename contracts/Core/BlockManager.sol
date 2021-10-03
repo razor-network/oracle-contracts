@@ -13,7 +13,6 @@ import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
-import "hardhat/console.sol";
 
 contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockManager {
     IParameters public parameters;
@@ -169,7 +168,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
-        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
 
         proposedBlocks[epoch][blockId].valid = false;
 
@@ -178,7 +177,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             // O(maxAltBlocks)
 
             blockIndexToBeConfirmed = -1;
-            for (uint8 i = blockIndex + 1; i < numProposedBlocks; i++) {
+            for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
                 uint8 _blockId = sortedProposedBlockIds[epoch][i];
                 if (proposedBlocks[epoch][_blockId].valid) {
                     blockIndexToBeConfirmed = int8(i);
