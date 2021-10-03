@@ -13,6 +13,7 @@ import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
+import "hardhat/console.sol";
 
 contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockManager {
     IParameters public parameters;
@@ -67,10 +68,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
-        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
-
+        numProposedBlocks++;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
@@ -256,27 +257,37 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             return;
         }
 
-        uint8 pushAt = uint8(sortedProposedBlockIds[epoch].length);
-        for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
-            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
-                pushAt = i;
+        for (uint8 i = 0; i <= sortedProposedBlockIds[epoch].length; i++) {
+            // Push at last, have worst itr
+            if (i == sortedProposedBlockIds[epoch].length && sortedProposedBlockIds[epoch].length < parameters.maxAltBlocks()) {
+                sortedProposedBlockIds[epoch].push(blockId);
                 break;
             }
-            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
-                pushAt = i;
+            // Replace : New Block has better biggest influence
+            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
+                sortedProposedBlockIds[epoch][i] = blockId;
                 break;
             }
-        }
+            // Revert : New Block has lesser biggest Influence
+            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence > biggestInfluence) {
+                revert("Incorrect Biggest Influencer ID");
+            }
+            // Push and Shift
+            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
+                sortedProposedBlockIds[epoch].push(blockId);
 
-        sortedProposedBlockIds[epoch].push(blockId);
-        for (uint256 j = sortedProposedBlockIds[epoch].length - 1; j > (pushAt); j--) {
-            sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
-        }
+                for (uint256 j = sortedProposedBlockIds[epoch].length - 1; j > i; j--) {
+                    sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
+                }
 
-        sortedProposedBlockIds[epoch][pushAt] = blockId;
+                sortedProposedBlockIds[epoch][i] = blockId;
 
-        if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
-            sortedProposedBlockIds[epoch].pop();
+                if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
+                    sortedProposedBlockIds[epoch].pop();
+                }
+
+                break;
+            }
         }
     }
 }
