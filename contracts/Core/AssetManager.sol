@@ -26,7 +26,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string url
     );
 
-    event AssetActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
+    event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
     event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
 
@@ -50,7 +50,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         require(weight <= 100, "Weight beyond max");
         numAssets = numAssets + 1;
 
-        jobs[numAssets] = Structs.Job(true, numAssets, uint8(selectorType), weight, power, name, selector, url);
+        jobs[numAssets] = Structs.Job(numAssets, uint8(selectorType), weight, power, name, selector, url);
 
         emit AssetCreated(jobs[numAssets], Structs.Collection(false, 0, 0, 0, 0, new uint8[](0), ""), block.timestamp);
         delegator.setIDName(name, numAssets);
@@ -77,14 +77,13 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
-    function setAssetStatus(bool assetStatus, uint8 id)
+    function setCollectionStatus(bool assetStatus, uint8 id)
         external
         onlyRole(ASSET_MODIFIER_ROLE)
         checkState(State.Confirm, parameters.epochLength())
     {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets, "ID does not exist");
-        require(collections[id].id == id, "incorrect id being deactivated");
+        require(collections[id].id == id, "Asset is not a collection");
 
         uint32 epoch = parameters.getEpoch();
         if (assetStatus) {
@@ -92,7 +91,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
                 activeAssets.push(id);
                 collections[id].assetIndex = uint8(activeAssets.length);
                 collections[id].active = assetStatus;
-                emit AssetActivityStatus(collections[id].active, id, epoch, block.timestamp);
+                emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
         } else {
             if (collections[id].active) {
@@ -112,7 +111,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         }
         collections[id].assetIndex = 0;
         collections[id].active = false;
-        emit AssetActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         pendingDeactivations.pop();
         return assetIndex;
     }
@@ -135,7 +134,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
         activeAssets.push(numAssets);
         collections[numAssets] = Structs.Collection(true, numAssets, uint8(activeAssets.length), power, aggregationMethod, jobIDs, name);
-        emit AssetCreated(Structs.Job(false, 0, 0, 0, 0, "", "", ""), collections[numAssets], block.timestamp);
+        emit AssetCreated(Structs.Job(0, 0, 0, 0, "", "", ""), collections[numAssets], block.timestamp);
 
         delegator.setIDName(name, numAssets);
     }
@@ -185,15 +184,22 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         return (jobs[id], collections[id]);
     }
 
-    function getActiveStatus(uint8 id) external view returns (bool) {
+    function getCollectionStatus(uint8 id) external view returns (bool) {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets, "ID does not exist");
+        require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].active;
     }
 
     function getAssetIndex(uint8 id) external view override returns (uint8) {
         return collections[id].assetIndex;
+    }
+
+    function getCollectionPower(uint8 id) external view override returns (int8) {
+        require(id != 0, "ID cannot be 0");
+        require(collections[id].id == id, "Asset is not a collection");
+
+        return collections[id].power;
     }
 
     function getNumAssets() external view returns (uint8) {

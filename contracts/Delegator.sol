@@ -41,10 +41,11 @@ contract Delegator is ACL, Constants {
         return assetManager.getActiveAssets();
     }
 
-    function getResult(bytes32 _name) public view returns (uint32) {
+    function getResult(bytes32 _name) public view returns (uint32, int8) {
         uint8 index = assetManager.getAssetIndex(ids[_name]);
         uint32 epoch = parameters.getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
-        return medians[index - 1];
+        int8 power = assetManager.getCollectionPower(ids[_name]);
+        return (medians[index - 1], power);
     }
 }

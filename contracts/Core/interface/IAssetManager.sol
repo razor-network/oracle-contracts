@@ -11,4 +11,6 @@ interface IAssetManager {
     function getAssetIndex(uint8 id) external view returns (uint8);
 
     function getNumActiveAssets() external view returns (uint256);
+
+    function getCollectionPower(uint8 id) external view returns (int8);
 }

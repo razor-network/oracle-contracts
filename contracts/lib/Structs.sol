@@ -18,7 +18,7 @@ library Structs {
         address tokenAddress;
         uint32 id;
         uint32 age;
-        uint32 epochLastUnstakedOrFirstStaked;
+        uint32 epochFirstStakedOrLastPenalized;
         uint256 stake;
     }
 
@@ -39,6 +39,7 @@ library Structs {
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
+        bool valid;
     }
 
     struct Dispute {
@@ -50,7 +51,6 @@ library Structs {
     }
 
     struct Job {
-        bool active;
         uint8 id;
         uint8 selectorType; // 0-1
         uint8 weight; // 1-100
