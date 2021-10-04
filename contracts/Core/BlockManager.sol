@@ -180,6 +180,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             for (uint8 i = blockIndex + 1; i < numProposedBlocks; i++) {
                 uint8 _blockId = sortedProposedBlockIds[epoch][i];
                 if (proposedBlocks[epoch][_blockId].valid) {
+                    // slither-disable-next-line costly-loop
                     blockIndexToBeConfirmed = int8(i);
                     break;
                 }
