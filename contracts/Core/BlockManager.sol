@@ -250,10 +250,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
                 proposedBlocks[epoch][blockId].medians.pop();
             }
         }
-        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         blocks[epoch] = proposedBlocks[epoch][blockId];
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
     }
 
     function _insertAppropriately(
