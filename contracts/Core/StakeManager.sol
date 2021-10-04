@@ -239,9 +239,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
                 "Invalid epoch for updation"
             );
             require(commission <= (stakers[stakerId].commission * parameters.commissionChangeNum()) / parameters.baseDenominator());
-            stakers[stakerId].commission = commission;
             stakers[stakerId].epochCommissionLastUpdated = epoch;
         }
+        stakers[stakerId].commission = commission;
     } 
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
