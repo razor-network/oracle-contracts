@@ -310,21 +310,26 @@ describe('BlockManager', function () {
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, blockIndex);
 
-      const slashPenaltyAmount = (stakeBeforeAcc5.mul((await parameters.slashPenaltyNum()))).div(await parameters.slashPenaltyDenom());
+      const slashNums = await parameters.getAllSlashParams();
+      const bountySlashNum = slashNums[0];
+      const burnSlashNum = slashNums[1];
+      const keepSlashNum = slashNums[2];
+      const baseDeno = slashNums[3];
+      const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
+      const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
+      const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
 
       // Bounty should be locked
       assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
       const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
-      const bounty = (slashPenaltyAmount.mul(await parameters.bountyNum())).div(await parameters.bountyDenom());
       epoch = await getEpoch();
       assertBNEqual(bountyLock.bountyHunter, signers[19].address);
       assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
       assertBNEqual(bountyLock.amount, bounty);
 
-      // From the remaining amount, appropriate amount should be burned
-      const amountToBeBurned = ((slashPenaltyAmount.sub(bounty)).mul(await parameters.burnSlashNum())).div(await parameters.burnSlashDenom());
       assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(amountToBeBurned));
     });
 
@@ -691,7 +696,7 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await parameters.setSlashPenaltyNum(9500);
+      await parameters.setSlashParams(4750, 4750, 0);
       await stakeManager.slash(epoch, stakerIdAcc2, signers[11].address);
       const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
