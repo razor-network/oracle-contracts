@@ -257,7 +257,7 @@ describe('AssetManager', function () {
 
     it('updateCollection should only work for collections which exists', async function () {
       const tx = assetManager.updateCollection(10, 2, 5, [1]);
-      assertRevert(tx, 'Collection ID not present');
+      await assertRevert(tx, 'Collection ID not present');
     });
 
     it('updateCollection should only work for collections which are currently active', async function () {
@@ -272,21 +272,14 @@ describe('AssetManager', function () {
       assertRevert(tx, 'Collection is inactive');
     });
 
-    it('getAssetindex should only work if the id is a collection', async function () {
-      const tx1 = assetManager.getAssetIndex(100);
-      assertRevert(tx1, 'ID needs to be a collection');
-      const tx2 = assetManager.getAssetIndex(1);
-      assertRevert(tx2, 'ID needs to be a collection');
-    });
-
     it('updateJob, updateCollection should not work in commit state', async function () {
       await mineToNextEpoch();
 
       const tx = assetManager.updateJob(5, 50, 4, 0, 'selector/6', 'http://testurl.com/6');
-      assertRevert(tx, 'incorrect state');
+      await assertRevert(tx, 'incorrect state');
 
       const tx2 = assetManager.updateCollection(3, 2, 5, [1, 2, 5]);
-      assertRevert(tx2, 'incorrect state');
+      await assertRevert(tx2, 'incorrect state');
     });
 
     it('assetIndex should alloted properly after deactivating a collection', async function () {
@@ -334,8 +327,8 @@ describe('AssetManager', function () {
     it('Should not be able to set Weight of job beyond max : 100', async function () {
       const tx0 = assetManager.createJob(125, 0, 0, 'testName', 'testSelector', 'http://testurl.com/5');
       const tx1 = assetManager.updateJob(5, 125, 0, 0, 'testSelector', 'http://testurl.com/5');
-      assertRevert(tx0, 'Weight beyond max');
-      assertRevert(tx1, 'Weight beyond max');
+      await assertRevert(tx0, 'Weight beyond max');
+      await assertRevert(tx1, 'Weight beyond max');
     });
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(assetManager.address);
