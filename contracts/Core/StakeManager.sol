@@ -286,19 +286,29 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address bountyHunter
     ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
         uint256 _stake = stakers[stakerId].stake;
-        uint256 slashPenaltyAmount = (_stake * parameters.slashPenaltyNum()) / parameters.slashPenaltyDenom();
+
+        uint256 bounty;
+        uint256 amountToBeBurned;
+        uint256 amountToBeKept;
+
+        // Block Scoping
+        // Done for stack too deep issue
+        // https://soliditydeveloper.com/stacktoodeep
+        {
+            (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum, uint16 baseDenominator) = parameters.getAllSlashParams();
+
+            bounty = (_stake * bountyNum) / baseDenominator;
+            amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
+            amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
+        }
+
+        uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;
         _stake = _stake - slashPenaltyAmount;
-        // prettier ignore
-        uint256 bounty = (slashPenaltyAmount * parameters.bountyNum()) / parameters.bountyDenom();
-
-        if (bounty == 0) return 0;
-
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
 
+        if (bounty == 0) return 0;
         bountyCounter = bountyCounter + 1;
         bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + (parameters.withdrawLockPeriod()));
-
-        uint256 amountToBeBurned = ((slashPenaltyAmount - bounty) * parameters.burnSlashNum()) / parameters.burnSlashDenom();
 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing

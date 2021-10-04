@@ -66,7 +66,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint256 stakeValue,
         uint32 ageValue
     ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.baseDenominator();
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
