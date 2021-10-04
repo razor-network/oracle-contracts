@@ -251,7 +251,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint256 iteration,
         uint256 biggestInfluence
     ) internal {
-
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
         if (sortedProposedBlockslength == 0) {
