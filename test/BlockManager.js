@@ -1081,7 +1081,7 @@ describe('BlockManager', function () {
       }
     });
 
-    it('If Biggest Influence of subquecent, block is larger; it should replace, if smaller; should revert', async function () {
+    it('If Biggest Influence of subquecent, block is larger; it should replace, if smaller; should place it as per itr', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
