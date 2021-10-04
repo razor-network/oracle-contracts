@@ -70,7 +70,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
-        numProposedBlocks++;
+        numProposedBlocks = numProposedBlocks + 1;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
@@ -251,13 +251,17 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint256 iteration,
         uint256 biggestInfluence
     ) internal {
-        if (sortedProposedBlockIds[epoch].length == 0) {
+
+        uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
+
+        if (sortedProposedBlockslength == 0) {
             sortedProposedBlockIds[epoch].push(0);
             blockIndexToBeConfirmed = 0;
             return;
         }
         uint8 maxAltBlocks = parameters.maxAltBlocks();
-        for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
+
+        for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
             // Replace : New Block has better biggest influence
             if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
                 sortedProposedBlockIds[epoch][i] = blockId;
@@ -267,7 +271,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 sortedProposedBlockIds[epoch].push(blockId);
 
-                for (uint256 j = sortedProposedBlockIds[epoch].length - 1; j > i; j--) {
+                sortedProposedBlockslength = sortedProposedBlockslength + 1;
+
+                for (uint256 j = sortedProposedBlockslength - 1; j > i; j--) {
                     sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
                 }
 
