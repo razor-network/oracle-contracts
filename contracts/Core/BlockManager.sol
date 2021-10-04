@@ -255,21 +255,12 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             blockIndexToBeConfirmed = 0;
             return;
         }
-
-        for (uint8 i = 0; i <= sortedProposedBlockIds[epoch].length; i++) {
-            // Push at last, have worst itr
-            if (i == sortedProposedBlockIds[epoch].length && sortedProposedBlockIds[epoch].length < parameters.maxAltBlocks()) {
-                sortedProposedBlockIds[epoch].push(blockId);
-                break;
-            }
+        uint8 maxAltBlocks = parameters.maxAltBlocks();
+        for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
             // Replace : New Block has better biggest influence
-            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
                 sortedProposedBlockIds[epoch][i] = blockId;
-                break;
-            }
-            // Revert : New Block has lesser biggest Influence
-            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence > biggestInfluence) {
-                revert("Incorrect Biggest Influencer ID");
+                return;
             }
             // Push and Shift
             else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
@@ -281,12 +272,16 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
                 sortedProposedBlockIds[epoch][i] = blockId;
 
-                if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
+                if (sortedProposedBlockIds[epoch].length > maxAltBlocks) {
                     sortedProposedBlockIds[epoch].pop();
                 }
 
-                break;
+                return;
             }
+        }
+        // Worst Iteration and for all other blocks, influence was >=
+        if (sortedProposedBlockIds[epoch].length < maxAltBlocks) {
+            sortedProposedBlockIds[epoch].push(blockId);
         }
     }
 }

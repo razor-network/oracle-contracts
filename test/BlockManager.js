@@ -1153,7 +1153,7 @@ describe('BlockManager', function () {
       let staker = await stakeManager.getStaker(stakerIdAcc12);
 
       // Block with Mid Influence
-      let iteration = await getIteration(voteManager, stakeManager, staker, influenceMid);
+      const iteration = await getIteration(voteManager, stakeManager, staker, influenceMid);
       await blockManager.connect(signers[12]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration,
@@ -1165,22 +1165,29 @@ describe('BlockManager', function () {
       const stakerIdAcc13 = await stakeManager.stakerIds(signers[13].address);
       staker = await stakeManager.getStaker(stakerIdAcc13);
 
-      iteration = await getIteration(voteManager, stakeManager, staker, influenceLargest);
+      const iteration1 = await getIteration(voteManager, stakeManager, staker, influenceLargest);
       await blockManager.connect(signers[13]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
+        iteration1,
         influencerIds[0]);
       assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
 
-      // Block with smaller influence, should revert
+      // Block with smaller influence, should be placed as per iteration
       const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
       staker = await stakeManager.getStaker(stakerIdAcc14);
-      iteration = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
-      const tx = blockManager.connect(signers[14]).propose(epoch,
+      const iteration2 = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
+      await blockManager.connect(signers[14]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
+        iteration2,
         influencerIds[1]);
-      assertRevert(tx, 'Incorrect Biggest Influencer ID');
+
+      if (iteration1 > iteration2) {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('1'));
+      } else {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
+      }
     });
 
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
