@@ -10,7 +10,7 @@ contract Parameters is ACL, Constants, IParameters {
     uint8 public override maxAltBlocks = 5;
     uint8 public override aggregationRange = 3;
     uint8 public override withdrawReleasePeriod = 5;
-    uint8 public override resetLockPenalty = 1;
+    uint8 public override extendLockPenalty = 1;
     uint8 public override maxCommission = 20;
     uint16 public override penaltyNotRevealNum = 1;
     uint16 public override penaltyNotRevealDenom = 10000;
@@ -82,9 +82,9 @@ contract Parameters is ACL, Constants, IParameters {
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
-    function setResetLockPenalty(uint8 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "resetLockPenalty", resetLockPenalty, _resetLockPenalty, block.timestamp);
-        resetLockPenalty = _resetLockPenalty;
+    function setExtendLockPenalty(uint8 _extendLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "extendLockPenalty", extendLockPenalty, _extendLockPenalty, block.timestamp);
+        extendLockPenalty = _extendLockPenalty;
     }
 
     function setMaxAltBlocks(uint8 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {

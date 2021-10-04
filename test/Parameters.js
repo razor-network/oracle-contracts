@@ -36,7 +36,7 @@ describe('Parameters contract Tests', async () => {
   const blockReward = tokenAmount('100');
   const aggregationRange = toBigNumber('3');
   const withdrawReleasePeriod = toBigNumber('5');
-  const resetLockPenalty = toBigNumber('1');
+  const extendLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
 
@@ -109,7 +109,7 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setWithdrawReleasePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setResetLockPenalty(toBigNumber('1'));
+    tx = parameters.connect(signers[1]).setExtendLockPenalty(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAltBlocks(toBigNumber('1'));
@@ -178,9 +178,9 @@ describe('Parameters contract Tests', async () => {
     const withdrawReleasePeriod = await parameters.withdrawReleasePeriod();
     assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
 
-    await parameters.setResetLockPenalty(toBigNumber('17'));
-    const resetLockPenalty = await parameters.resetLockPenalty();
-    assertBNEqual(resetLockPenalty, toBigNumber('17'));
+    await parameters.setExtendLockPenalty(toBigNumber('17'));
+    const extendLockPenalty = await parameters.extendLockPenalty();
+    assertBNEqual(extendLockPenalty, toBigNumber('17'));
 
     await parameters.setMaxAge(toBigNumber('18'));
     const maxAge = await parameters.maxAge();
@@ -255,8 +255,8 @@ describe('Parameters contract Tests', async () => {
     const withdrawReleasePeriodValue = await parameters.withdrawReleasePeriod();
     assertBNEqual(withdrawReleasePeriod, withdrawReleasePeriodValue);
 
-    const resetLockPenaltyValue = await parameters.resetLockPenalty();
-    assertBNEqual(resetLockPenalty, resetLockPenaltyValue);
+    const extendLockPenaltyValue = await parameters.extendLockPenalty();
+    assertBNEqual(extendLockPenalty, extendLockPenaltyValue);
 
     const maxAltBlocksValue = await parameters.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);

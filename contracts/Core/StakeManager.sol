@@ -128,7 +128,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
     // and should wait for params.withdraw_after period
     // after which she can call withdraw() in withdrawReleasePeriod.
-    // If this period pass, lock expires and she will have to resetLock() to able to withdraw again
+    // If this period pass, lock expires and she will have to extendLock() to able to withdraw again
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
@@ -151,7 +151,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
-        staker.epochLastUnstakedOrFirstStaked = epoch;
 
         // Transfer commission in case of delegators
         // Check commission rate >0
@@ -182,7 +181,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     // For Delegator, there is no such restriction
     // Both Staker and Delegator should have their locked funds(sRZR) present in
     //their wallet at time of if not withdraw reverts
-    // And they have to use resetLock()
+    // And they have to use extendLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
     function withdraw(uint32 epoch, uint32 stakerId)
@@ -197,7 +196,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(staker.id != 0, "staker doesnt exist");
         require(lock.withdrawAfter != 0, "Did not unstake");
         require(lock.withdrawAfter <= epoch, "Withdraw epoch not reached");
-        require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ResetLock
+        require(lock.withdrawAfter + parameters.withdrawReleasePeriod() >= epoch, "Release Period Passed"); // Can Use ExtendLock
         uint256 commission = lock.commission;
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
@@ -246,27 +245,21 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-    function resetLock(uint32 stakerId) external initialized whenNotPaused {
-        // Lock should be expired if you want to reset
+    function extendLock(uint32 stakerId) external initialized whenNotPaused {
+        // Lock should be expired if you want to extend
+        uint32 epoch = parameters.getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
+        require(
+            locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + parameters.withdrawReleasePeriod() < epoch,
+            "Release Period Not yet passed"
+        );
 
-        Structs.Staker storage staker = stakers[stakerId];
-        uint256 lockedAmount = locks[msg.sender][stakers[stakerId].tokenAddress].amount;
-        IStakedToken sToken = IStakedToken(staker.tokenAddress);
+        Structs.Lock storage lock = locks[msg.sender][stakers[stakerId].tokenAddress];
 
-        //Giving out the resetLock penalty
-        uint256 penalty = (lockedAmount * parameters.resetLockPenalty()) / 100;
-        lockedAmount = lockedAmount - penalty;
-
-        //Calculating the amount of sToken to be minted
-        uint256 sAmount = _convertRZRtoSRZR(lockedAmount, staker.stake, sToken.totalSupply());
-
-        //Updating Staker Stake
-        staker.stake = staker.stake + lockedAmount;
-
-        _resetLock(stakerId);
-
-        require(sToken.mint(msg.sender, sAmount, lockedAmount));
+        //Giving out the extendLock penalty
+        uint256 penalty = (lock.amount * parameters.extendLockPenalty()) / 100;
+        lock.amount = lock.amount - penalty;
+        lock.withdrawAfter = epoch;
     }
 
     /// @notice External function for setting stake of the staker
@@ -328,6 +321,13 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
 
+    /// @notice External function for setting epochLastPenalized of the staker
+    /// Used by RewardManager
+    /// @param _id of the staker
+    function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external override onlyRole(STAKE_MODIFIER_ROLE) {
+        stakers[_id].epochFirstStakedOrLastPenalized = _epoch;
+    }
+
     function setStakerAge(
         uint32 _epoch,
         uint32 _id,
@@ -369,8 +369,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         return stakers[stakerId].stake;
     }
 
-    function getEpochLastUnstakedOrFirstStaked(uint32 stakerId) external view returns (uint32) {
-        return stakers[stakerId].epochLastUnstakedOrFirstStaked;
+    function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view override returns (uint32) {
+        return stakers[stakerId].epochFirstStakedOrLastPenalized;
     }
 
     /// @return isStakerActive : Activity < Grace
