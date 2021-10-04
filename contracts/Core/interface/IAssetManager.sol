@@ -6,7 +6,9 @@ interface IAssetManager {
 
     function getActiveAssets() external view returns (uint8[] memory);
 
-    function getPendingDeactivations(uint32 epoch) external view returns (uint8[] memory);
+    function getPendingDeactivations() external view returns (uint8[] memory);
 
     function getAssetIndex(uint8 id) external view returns (uint8);
+
+    function getNumActiveAssets() external view returns (uint256);
 }

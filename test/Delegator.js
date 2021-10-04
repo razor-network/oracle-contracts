@@ -128,22 +128,17 @@ describe('Delegator', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
+  
+      let collectionName = 'Test Collection2';
+      await assetManager.createCollection([1, 2], 1, 2, collectionName);
+      await assetManager.setAssetStatus(false, 3);
       await mineToNextEpoch();
-      const collectionName = 'Test Collection';
+      collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       assertBNEqual(await delegator.getResult(hName), toBigNumber('100'));
     });
 
     it('getResult should give the right value after deactivation of asset', async function () {
-      await mineToNextState();
-      await mineToNextState();
-      await mineToNextState();
-      await mineToNextState();
-      const collectionName = 'Test Collection2';
-      await assetManager.createCollection([1, 2], 1, 2, collectionName);
-      await assetManager.setAssetStatus(false, 3);
-      await mineToNextEpoch();
-
       const epoch = await getEpoch();
 
       const votes = [100, 200];
@@ -176,6 +171,7 @@ describe('Delegator', function () {
       await mineToNextState();
       await blockManager.connect(signers[5]).claimBlockReward();
       await mineToNextEpoch();
+      const collectionName = 'Test Collection2';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       assertBNEqual(await delegator.getResult(hName), toBigNumber('200'));
     });

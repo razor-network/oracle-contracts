@@ -96,7 +96,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             }
         } else {
             if (collections[id].active) {
-                pendingDeactivationsPerEpoch[epoch].push(id);
+                pendingDeactivations.push(id);
             }
         }
     }
@@ -113,6 +113,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         collections[id].assetIndex = 0;
         collections[id].active = false;
         emit AssetActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        pendingDeactivations.pop();
         return assetIndex;
     }
 
@@ -203,7 +204,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         return activeAssets;
     }
 
-    function getPendingDeactivations(uint32 epoch) external view override returns (uint8[] memory) {
-        return pendingDeactivationsPerEpoch[epoch];
+    function getNumActiveAssets() external view override returns (uint256) {
+        return activeAssets.length;
+    }
+
+    function getPendingDeactivations() external view override returns (uint8[] memory) {
+        return pendingDeactivations;
     }
 }

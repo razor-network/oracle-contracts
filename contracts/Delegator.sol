@@ -34,7 +34,7 @@ contract Delegator is ACL, Constants {
     }
 
     function getNumActiveAssets() external view returns (uint256) {
-        return (assetManager.getActiveAssets()).length;
+        return assetManager.getNumActiveAssets();
     }
 
     function getActiveAssets() external view returns (uint8[] memory) {

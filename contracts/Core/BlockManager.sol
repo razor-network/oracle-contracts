@@ -64,7 +64,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
-        require(medians.length == (assetManager.getActiveAssets()).length, "invalid block proposed");
+        require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
         uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
@@ -121,66 +121,23 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 1);
-        if (sortedProposedBlockIds[epoch].length == 0) {
-            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            }
-            return;
-        }
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+        uint8 check = _checkBlockAvailablity(epoch, deactivatedAssets);
 
-        uint8 blockId = sortedProposedBlockIds[epoch][0];
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-        for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            if (index == proposedBlocks[epoch][blockId].medians.length) {
-                proposedBlocks[epoch][blockId].medians.pop();
-            } else {
-                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[
-                    proposedBlocks[epoch][blockId].medians.length - 1
-                ];
-                proposedBlocks[epoch][blockId].medians.pop();
-            }
+        if(check == 0){
+            uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].proposerId;
+            require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
+            _confirmBlock(epoch, deactivatedAssets, proposerId);
         }
-        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        blocks[epoch] = proposedBlocks[epoch][blockId];
-        rewardManager.giveBlockReward(stakerId, epoch);
-        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
-        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations(epoch - 2);
-        if (sortedProposedBlockIds[epoch - 1].length == 0) {
-            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            }
-            return;
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+        uint8 check = _checkBlockAvailablity(epoch, deactivatedAssets);
+        if(check == 0){
+            _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
         }
-
-        uint8 blockId = sortedProposedBlockIds[epoch - 1][0];
-        for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            if (index == proposedBlocks[epoch - 1][blockId].medians.length) {
-                proposedBlocks[epoch - 1][blockId].medians.pop();
-            } else {
-                proposedBlocks[epoch - 1][blockId].medians[index - 1] = proposedBlocks[epoch - 1][blockId].medians[
-                    proposedBlocks[epoch - 1][blockId].medians.length - 1
-                ];
-                proposedBlocks[epoch - 1][blockId].medians.pop();
-            }
-        }
-        blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
-
-        emit BlockConfirmed(
-            epoch - 1,
-            proposedBlocks[epoch - 1][blockId].proposerId,
-            proposedBlocks[epoch - 1][blockId].medians,
-            block.timestamp
-        );
-        rewardManager.giveBlockReward(stakerId, epoch - 1);
-        randomNoProvider.provideSecret(epoch - 1, voteManager.getRandaoHash());
     }
 
     // Complexity O(1)
@@ -249,6 +206,35 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint256 influence = stakeManager.getInfluence(stakerId);
         if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
         return true;
+    }
+
+    function _checkBlockAvailablity(uint32 epoch, uint8[] memory deactivatedAssets) internal returns(uint8) {
+        if (sortedProposedBlockIds[epoch].length == 0) {
+            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
+                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            }
+            return 1;
+        }
+        return 0;
+    }
+
+    function _confirmBlock(uint32 epoch, uint8[] memory deactivatedAssets, uint32 stakerId) internal {
+        uint8 blockId = sortedProposedBlockIds[epoch][0];
+        for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
+            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i - 1]);
+            if (index == proposedBlocks[epoch][blockId].medians.length) {
+                proposedBlocks[epoch][blockId].medians.pop();
+            } else {
+                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[
+                    proposedBlocks[epoch][blockId].medians.length - 1
+                ];
+                proposedBlocks[epoch][blockId].medians.pop();
+            }
+        }
+        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        blocks[epoch] = proposedBlocks[epoch][blockId];
+        rewardManager.giveBlockReward(stakerId, epoch);
+        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
     function _insertAppropriately(

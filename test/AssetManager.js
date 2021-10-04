@@ -167,7 +167,7 @@ describe('AssetManager', function () {
       const collectionName = 'Test Collection6';
       await assetManager.createCollection([1, 2], 2, 0, collectionName);
       await assetManager.setAssetStatus(false, 7);
-      const pendingDeactivations = await assetManager.getPendingDeactivations(epoch);
+      const pendingDeactivations = await assetManager.getPendingDeactivations();
       assert(pendingDeactivations.length === 1);
       await mineToNextEpoch(); // commit
       await razor.transfer(signers[5].address, tokenAmount('423000'));
@@ -250,7 +250,7 @@ describe('AssetManager', function () {
     });
 
     it('updateCollection should only work for collections which exists', async function () {
-      const tx = assetManager.updateCollection(10, 2, 5);
+      const tx = assetManager.updateCollection(10, 2, 5, [1]);
       assertRevert(tx, 'Collection ID not present');
     });
 

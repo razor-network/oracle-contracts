@@ -315,6 +315,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();
     await mineToNextState();
     await assetManager.createCollection([1, 2], 1, 0, 'test');
+    await assetManager.setAssetStatus(false, 3)
     await assetManager.deactivateCollection(1, 3);
     await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
     await assertRevert(assetManager.deactivateCollection(1, 2), expectedRevertMessage);
