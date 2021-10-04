@@ -67,21 +67,6 @@ describe('Delegator', function () {
       assertBNEqual(jobID, toBigNumber('1'));
     });
 
-    it('should be able to get correct job details from delegator', async function () {
-      const url = 'http://testurl.com';
-      const selector = 'selector';
-      const name = 'testJSON';
-      const hName = utils.solidityKeccak256(['string'], [name]);
-      const job = await delegator.getJob(hName);
-      assert(job.active === true);
-      assert(job.name === name);
-      assert(job.url === url);
-      assert(job.selector === selector);
-      assertBNEqual(job.selectorType, toBigNumber('0'));
-      assertBNEqual(job.power, toBigNumber('-2'));
-      assertBNEqual(job.weight, toBigNumber('50'));
-    });
-
     it('should be able to get correct collectionID mapped to its hashed name', async function () {
       const url = 'http://testurl.com/2';
       const selector = 'selector/2';
@@ -100,18 +85,6 @@ describe('Delegator', function () {
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('3'));
-    });
-
-    it('should be able to get correct collection details from delegator', async function () {
-      const collectionName = 'Test Collection';
-      const hName = utils.solidityKeccak256(['string'], [collectionName]);
-      const collection = await delegator.getCollection(hName);
-      assert(collection.active === true);
-      assert(collection.name === collectionName);
-      assertBNEqual(collection.power, toBigNumber('3'));
-      assertBNEqual(collection.aggregationMethod, toBigNumber('1'));
-      assertBNEqual(collection.jobIDs[0], toBigNumber('1'));
-      assertBNEqual(collection.jobIDs[1], toBigNumber('2'));
     });
 
     it('should be able to get the correct number of active assets from delegator', async function () {

@@ -33,36 +33,6 @@ contract Delegator is ACL, Constants {
         ids[_name] = _id;
     }
 
-    function getJob(bytes32 _name)
-        external
-        view
-        returns (
-            bool active,
-            uint8 selectorType,
-            uint8 weight,
-            int8 power,
-            string memory name,
-            string memory selector,
-            string memory url
-        )
-    {
-        return assetManager.getJob(ids[_name]);
-    }
-
-    function getCollection(bytes32 _name)
-        external
-        view
-        returns (
-            bool active,
-            int8 power,
-            uint8[] memory jobIDs,
-            uint32 aggregationMethod,
-            string memory name
-        )
-    {
-        return assetManager.getCollection(ids[_name]);
-    }
-
     function getNumActiveAssets() external view returns (uint256) {
         return (assetManager.getActiveAssets()).length;
     }

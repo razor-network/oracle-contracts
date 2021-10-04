@@ -36,11 +36,11 @@
   },
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
+    "@openzeppelin/contracts": "^4.3.1",
     "circleci-pr-commenter": "^0.1.2",
     "fs": "^0.0.1-security",
-    "json-to-markdown-table": "^1.0.0",
-    "@openzeppelin/contracts": "^4.3.1",
     "hardhat-abi-exporter": "^2.3.0",
+    "json-to-markdown-table": "^1.0.0",
     "jsonfile": "^6.1.0"
   },
   "devDependencies": {

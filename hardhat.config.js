@@ -53,15 +53,6 @@ module.exports = {
           },
         },
       },
-      'contracts/Core/AssetManager.sol': {
-        version: '0.8.4',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 30000,
-          },
-        },
-      },
       'contracts/Core/BlockManager.sol': {
         version: '0.8.4',
         settings: {
