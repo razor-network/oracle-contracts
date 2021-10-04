@@ -19,6 +19,7 @@ library Structs {
         uint32 id;
         uint32 age;
         uint32 epochFirstStakedOrLastPenalized;
+        uint32 epochCommissionLastUpdated;
         uint256 stake;
     }
 

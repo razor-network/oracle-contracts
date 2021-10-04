@@ -79,7 +79,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-no-eth
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
+            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, 0, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
@@ -225,23 +225,24 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
 
-    /// @notice Used by staker to set commision for delegation
-    function setCommission(uint8 commission) external {
-        uint32 stakerId = stakerIds[msg.sender];
-        require(stakerId != 0, "staker id = 0");
-        require(stakers[stakerId].commission == 0, "Commission already intilised");
-        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
-        stakers[stakerId].commission = commission;
-    }
-
-    /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint8 commission) external {
-        uint32 stakerId = stakerIds[msg.sender];
-        require(stakerId != 0, "staker id = 0");
+    /// @notice Used by staker to update commision for delegation
+    function updateCommission(uint8 commission) external {
         require(commission != 0, "Invalid Commission Update");
-        require(stakers[stakerId].commission > commission, "Invalid Commission Update");
-        stakers[stakerId].commission = commission;
-    }
+        require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
+        uint32 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker id = 0");
+        uint32 epoch = parameters.getEpoch();
+         if (stakers[stakerId].epochCommissionLastUpdated == 0) stakers[stakerId].epochCommissionLastUpdated = epoch;
+        else {
+            require(
+                (stakers[stakerId].epochCommissionLastUpdated + parameters.epochLimitForUpdateCommission()) <= epoch,
+                "Invalid epoch for updation"
+            );
+            require(commission <= (stakers[stakerId].commission * parameters.commissionChangeNum()) / parameters.baseDenominator());
+            stakers[stakerId].commission = commission;
+            stakers[stakerId].epochCommissionLastUpdated = epoch;
+        }
+    } 
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack

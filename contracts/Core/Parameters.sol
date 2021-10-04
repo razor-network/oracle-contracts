@@ -18,6 +18,7 @@ contract Parameters is ACL, Constants, IParameters {
     uint8 public override extendLockPenalty = 1;
     uint8 public override maxCommission = 20;
     uint16 public override penaltyNotRevealNum = 1;
+    uint16 public override commissionChangeNum = 1000;  // 10 %
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
     uint16 public override baseDenominator = 10000;
@@ -25,6 +26,7 @@ contract Parameters is ACL, Constants, IParameters {
     uint16 public override exposureDenominator = 1000;
     uint16 public override gracePeriod = 8;
     uint32 public override maxAge = 100 * 10000;
+    uint32 public override epochLimitForUpdateCommission = 100;
     uint256 public override minStake = 1000 * (10**18);
     uint256 public override blockReward = 100 * (10**18);
 
@@ -36,6 +38,11 @@ contract Parameters is ACL, Constants, IParameters {
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", penaltyNotRevealNum, _penaltyNotRevealNumerator, block.timestamp);
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
+    }
+    
+    function setCommissionChangeNum(uint16 _commissionChangeNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "commissionChangeNum", commissionChangeNum, _commissionChangeNumerator, block.timestamp);
+        commissionChangeNum = _commissionChangeNumerator;
     }
 
     function setSlashParams(
@@ -113,6 +120,12 @@ contract Parameters is ACL, Constants, IParameters {
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         emit ParameterChanged(msg.sender, "maxCommission", maxCommission, _maxCommission, block.timestamp);
         maxCommission = _maxCommission;
+    }
+    
+    function setEpochLimitForUpdateCommission(uint8 _epochLimitForUpdateCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_epochLimitForUpdateCommission >= 100, "Invalid Limit");
+        emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", epochLimitForUpdateCommission, _epochLimitForUpdateCommission, block.timestamp);
+        epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
     }
 
     function disableEscapeHatch() external onlyRole(DEFAULT_ADMIN_ROLE) {
