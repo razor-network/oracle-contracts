@@ -100,7 +100,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         }
     }
 
-    function deactivateCollection(uint32 epoch, uint8 id) external override onlyRole(ASSET_CONFIRMER_ROLE) returns (uint8) {
+    function deactivateCollection(uint32 epoch, uint8 id) external override onlyRole(ASSET_CONFIRMER_ROLE) {
         uint8 assetIndex = collections[id].assetIndex;
         if (assetIndex == activeAssets.length) {
             activeAssets.pop();
@@ -113,7 +113,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         collections[id].active = false;
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         pendingDeactivations.pop();
-        return assetIndex;
     }
 
     function createCollection(

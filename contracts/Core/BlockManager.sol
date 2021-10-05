@@ -226,6 +226,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     function _checkBlockAvailablity(uint32 epoch, uint8[] memory deactivatedAssets) internal returns (uint8) {
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
             for (uint8 i = 0; i < deactivatedAssets.length; i++) {
+                // slither-disable-next-line calls-loop
                 assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
             }
             return 1;
@@ -240,7 +241,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     ) internal {
         uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
-            uint8 index = assetManager.deactivateCollection(epoch, deactivatedAssets[i - 1]);
+            uint8 index = assetManager.getAssetIndex(deactivatedAssets[i - 1]);
             if (index == proposedBlocks[epoch][blockId].medians.length) {
                 proposedBlocks[epoch][blockId].medians.pop();
             } else {
@@ -251,9 +252,13 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             }
         }
         blocks[epoch] = proposedBlocks[epoch][blockId];
+        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
+            // slither-disable-next-line calls-loop
+            assetManager.deactivateCollection(epoch, deactivatedAssets[i - 1]);
+        }
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
-        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
     }
 
     function _insertAppropriately(
