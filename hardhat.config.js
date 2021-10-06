@@ -64,7 +64,6 @@ module.exports = {
         auto: true,
         interval : 2000,
       },
-
     },
     mumbai: {
       url: PROVIDER_URL || '',
