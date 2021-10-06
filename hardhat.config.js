@@ -60,6 +60,10 @@ module.exports = {
       url: `http://${PROVIDER_HOST}:${PROVIDER_PORT}`,
       chainId: 31337,
       logger: console,
+      mining: {
+        auto: true,
+        interval: 2000,
+      },
     },
     mumbai: {
       url: PROVIDER_URL || '',
