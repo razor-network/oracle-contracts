@@ -5,20 +5,13 @@ import "./storage/Constants.sol";
 
 contract StateManager is Constants {
     modifier checkState(State state, uint32 epochLength) {
+        // slither-disable-next-line incorrect-equality
         require(state == getState(epochLength), "incorrect state");
         _;
     }
 
-    modifier checkDisputeOrConfirmState(
-        State dispute,
-        State confirm,
-        uint32 epochLength
-    ) {
-        require(dispute == getState(epochLength) || confirm == getState(epochLength), "incorrect state");
-        _;
-    }
-
-    modifier notCommitState(State state, uint32 epochLength) {
+    modifier notState(State state, uint32 epochLength) {
+        // slither-disable-next-line incorrect-equality
         require(state != getState(epochLength), "incorrect state");
         _;
     }
@@ -28,7 +21,9 @@ contract StateManager is Constants {
         uint32 epoch,
         uint32 epochLength
     ) {
+        // slither-disable-next-line incorrect-equality
         require(epoch == getEpoch(epochLength), "incorrect epoch");
+        // slither-disable-next-line incorrect-equality
         require(state == getState(epochLength), "incorrect state");
         _;
     }

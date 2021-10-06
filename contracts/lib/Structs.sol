@@ -18,7 +18,7 @@ library Structs {
         address tokenAddress;
         uint32 id;
         uint32 age;
-        uint32 epochLastUnstakedOrFirstStaked;
+        uint32 epochFirstStakedOrLastPenalized;
         uint256 stake;
     }
 
@@ -28,11 +28,18 @@ library Structs {
         uint256 withdrawAfter;
     }
 
+    struct BountyLock {
+        address bountyHunter;
+        uint256 amount; //amount in RZR
+        uint256 redeemAfter;
+    }
+
     struct Block {
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
+        bool valid;
     }
 
     struct Dispute {
@@ -44,9 +51,10 @@ library Structs {
     }
 
     struct Job {
-        bool active;
         uint8 id;
-        uint8 assetType;
+        uint8 assetType; // 0-1
+        uint8 selectorType; // 0-1
+        uint8 weight; // 1-100
         int8 power;
         uint32 epoch;
         address creator;
@@ -59,6 +67,7 @@ library Structs {
         bool active;
         uint8 id;
         uint8 assetType;
+        uint8 assetIndex;
         int8 power;
         uint32 epoch;
         uint32 aggregationMethod;

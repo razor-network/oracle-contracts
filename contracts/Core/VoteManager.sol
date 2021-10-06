@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IVoteManager.sol";
 import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
@@ -10,7 +11,7 @@ import "./StateManager.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
+contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteManager {
     IParameters public parameters;
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -41,14 +42,14 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
 
-        // Switch to call confirm block only when block in previous epoch has not been confirmed
-        // and if previous epoch do have proposed blocks
-
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         if (!blockManager.isBlockConfirmed(epoch - 1)) {
             blockManager.confirmPreviousEpochBlock(stakerId);
         }
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         rewardManager.givePenalties(epoch, stakerId);
-
+        // Switch to call confirm block only when block in previous epoch has not been confirmed
+        // and if previous epoch do have proposed blocks
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
         if (thisStakerStake >= parameters.minStake()) {
             commitments[stakerId].epoch = epoch;
@@ -91,7 +92,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) returns (uint32) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
@@ -101,7 +102,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        stakeManager.slash(epoch, thisStakerId, msg.sender);
+        return stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
@@ -109,35 +110,36 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager {
         return (commitments[stakerId]);
     }
 
-    function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote) {
+    function getVote(uint32 stakerId) external view override returns (Structs.Vote memory vote) {
         //stakerid->votes
         return (votes[stakerId]);
     }
 
-    function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint48) {
+    function getVoteValue(uint8 assetIndex, uint32 stakerId) external view override returns (uint48) {
+        //uint8 assetIndex = assetManager.getAssetIndex(assetId);
         //stakerid -> assetid -> vote
-        return (votes[stakerId].values[assetId - 1]);
+        return (votes[stakerId].values[assetIndex]);
     }
 
-    function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256) {
+    function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
         //epoch -> stakerId
         return (influenceSnapshot[epoch][stakerId]);
     }
 
-    function getTotalInfluenceRevealed(uint32 epoch) external view returns (uint256) {
+    function getTotalInfluenceRevealed(uint32 epoch) external view override returns (uint256) {
         // epoch -> asset -> stakeWeight
         return (totalInfluenceRevealed[epoch]);
     }
 
-    function getEpochLastCommitted(uint32 stakerId) external view returns (uint32) {
+    function getEpochLastCommitted(uint32 stakerId) external view override returns (uint32) {
         return commitments[stakerId].epoch;
     }
 
-    function getEpochLastRevealed(uint32 stakerId) external view returns (uint32) {
+    function getEpochLastRevealed(uint32 stakerId) external view override returns (uint32) {
         return votes[stakerId].epoch;
     }
 
-    function getRandaoHash() external view returns (bytes32) {
+    function getRandaoHash() external view override returns (bytes32) {
         return (secrets);
     }
 }

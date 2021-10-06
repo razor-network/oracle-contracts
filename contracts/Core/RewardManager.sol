@@ -51,7 +51,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(epoch, stakerId, newStake);
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
     }
 
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
@@ -66,7 +66,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint256 stakeValue,
         uint32 ageValue
     ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.penaltyNotRevealDenom();
+        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.baseDenominator();
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
@@ -81,9 +81,9 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
-        uint32 epochLastActive = thisStaker.epochLastUnstakedOrFirstStaked < epochLastRevealed
+        uint32 epochLastActive = thisStaker.epochFirstStakedOrLastPenalized < epochLastRevealed
             ? epochLastRevealed
-            : thisStaker.epochLastUnstakedOrFirstStaked;
+            : thisStaker.epochFirstStakedOrLastPenalized;
 
         // penalize or reward if last active more than epoch - 1
         uint32 inactiveEpochs = (epoch - epochLastActive == 0) ? 0 : epoch - epochLastActive - 1;
@@ -106,7 +106,8 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
-            stakeManager.setStakerStake(epoch, stakerId, newStake);
+            stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
@@ -133,7 +134,8 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
-            uint32 voteValueLastEpoch = voteManager.getVoteValue(i + 1, stakerId);
+            // slither-disable-next-line calls-loop
+            uint48 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;

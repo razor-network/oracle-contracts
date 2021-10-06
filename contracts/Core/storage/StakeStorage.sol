@@ -4,11 +4,15 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract StakeStorage {
+    // slither-disable-next-line constable-states
     uint32 public numStakers;
+    // slither-disable-next-line constable-states
+    uint32 public bountyCounter;
 
     mapping(address => uint32) public stakerIds;
     mapping(uint32 => Structs.Staker) public stakers;
     mapping(address => mapping(address => Structs.Lock)) public locks;
+    mapping(uint32 => Structs.BountyLock) public bountyLocks;
     //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
     uint16[] public maturities = [
         50,
@@ -109,6 +113,8 @@ contract StakeStorage {
         489,
         492,
         494,
-        497
+        497,
+        500,
+        502
     ];
 }

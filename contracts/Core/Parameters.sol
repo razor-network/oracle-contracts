@@ -1,28 +1,34 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
+import "./interface/IParameters.sol";
 import "./ACL.sol";
 import "./storage/Constants.sol";
 
-contract Parameters is ACL, Constants {
-    uint8 public withdrawLockPeriod = 1;
-    uint8 public maxAltBlocks = 5;
-    uint8 public aggregationRange = 3;
-    uint8 public withdrawReleasePeriod = 5;
-    uint8 public resetLockPenalty = 1;
-    uint8 public maxCommission = 20;
-    uint16 public penaltyNotRevealNum = 1;
-    uint16 public penaltyNotRevealDenom = 10000;
-    uint16 public slashPenaltyNum = 10000;
-    uint16 public slashPenaltyDenom = 10000;
-    uint16 public epochLength = 300;
-    uint16 public exposureDenominator = 1000;
-    uint16 public gracePeriod = 8;
-    uint32 public maxAge = 100 * 10000;
-    uint256 public minStake = 1000 * (10**18);
-    uint256 public blockReward = 100 * (10**18);
+contract Parameters is ACL, Constants, IParameters {
+    struct SlashNums {
+        uint16 bounty;
+        uint16 burn;
+        uint16 keep;
+    }
+    uint8 public override withdrawLockPeriod = 1;
+    uint8 public override maxAltBlocks = 5;
+    uint8 public override aggregationRange = 3;
+    uint8 public override withdrawReleasePeriod = 5;
+    uint8 public override extendLockPenalty = 1;
+    uint8 public override maxCommission = 20;
+    uint16 public override penaltyNotRevealNum = 1;
+    SlashNums public slashNums = SlashNums(500, 9500, 0);
+    // Slash Penalty = bounty + burned + kept
+    uint16 public override baseDenominator = 10000;
+    uint16 public override epochLength = 300;
+    uint16 public override exposureDenominator = 1000;
+    uint16 public override gracePeriod = 8;
+    uint32 public override maxAge = 100 * 10000;
+    uint256 public override minStake = 1000 * (10**18);
+    uint256 public override blockReward = 100 * (10**18);
 
-    bool public escapeHatchEnabled = true;
+    bool public override escapeHatchEnabled = true;
 
     //event to be emitted when any governance parameter value changes.
     event ParameterChanged(address admin, string parameterName, uint256 valueChangedFrom, uint256 valueChangedTo, uint256 timestamp);
@@ -32,19 +38,21 @@ contract Parameters is ACL, Constants {
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
-    function setPenaltyNotRevealDeom(uint16 _penaltyNotRevealDenom) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "penaltyNotRevealDenom", penaltyNotRevealDenom, _penaltyNotRevealDenom, block.timestamp);
-        penaltyNotRevealDenom = _penaltyNotRevealDenom;
+    function setSlashParams(
+        uint16 _bounty,
+        uint16 _burn,
+        uint16 _keep
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
+        emit ParameterChanged(msg.sender, "bountySlashNum", slashNums.bounty, _bounty, block.timestamp);
+        emit ParameterChanged(msg.sender, "burnSlashNum", slashNums.burn, _burn, block.timestamp);
+        emit ParameterChanged(msg.sender, "keepSlashNum", slashNums.keep, _keep, block.timestamp);
+        slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
-    function setSlashPenaltyNum(uint16 _slashPenaltyNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "slashPenaltyNum", slashPenaltyNum, _slashPenaltyNumerator, block.timestamp);
-        slashPenaltyNum = _slashPenaltyNumerator;
-    }
-
-    function setSlashPenaltyDenom(uint16 _slashPenaltyDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "slashPenaltyDenom", slashPenaltyDenom, _slashPenaltyDenominator, block.timestamp);
-        slashPenaltyDenom = _slashPenaltyDenominator;
+    function setBaseDenominator(uint16 _baseDenominator) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "baseDenom", baseDenominator, _baseDenominator, block.timestamp);
+        baseDenominator = _baseDenominator;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -57,9 +65,9 @@ contract Parameters is ACL, Constants {
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
-    function setResetLockPenalty(uint8 _resetLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "resetLockPenalty", resetLockPenalty, _resetLockPenalty, block.timestamp);
-        resetLockPenalty = _resetLockPenalty;
+    function setExtendLockPenalty(uint8 _extendLockPenalty) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "extendLockPenalty", extendLockPenalty, _extendLockPenalty, block.timestamp);
+        extendLockPenalty = _extendLockPenalty;
     }
 
     function setMaxAltBlocks(uint8 _maxAltBlocks) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -112,12 +120,26 @@ contract Parameters is ACL, Constants {
         escapeHatchEnabled = false;
     }
 
-    function getEpoch() external view returns (uint32) {
+    function getEpoch() external view override returns (uint32) {
         return (uint32(block.number) / (epochLength));
     }
 
-    function getState() external view returns (uint8) {
+    function getState() external view override returns (uint8) {
         uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
         return (state);
+    }
+
+    function getAllSlashParams()
+        external
+        view
+        override
+        returns (
+            uint16,
+            uint16,
+            uint16,
+            uint16
+        )
+    {
+        return (slashNums.bounty, slashNums.burn, slashNums.keep, baseDenominator);
     }
 }

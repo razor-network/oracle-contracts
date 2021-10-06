@@ -18,8 +18,9 @@ contract Delegator is ACL {
         external
         view
         returns (
-            bool repeat,
-            uint32 result,
+            uint8 selectorType,
+            uint8 weight,
+            int8 power,
             string memory name,
             string memory selector,
             string memory url

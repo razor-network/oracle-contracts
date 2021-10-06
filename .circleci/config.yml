@@ -94,7 +94,31 @@ jobs:
       - run:
           name: Slither
           command: | 
-              slither . --filter-paths "node_modules" --disable-color 
+              slither . --filter-paths "node_modules" --disable-color
+              
+  gasCompare:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run GasCompare
+          command: |
+              if [ "$CIRCLE_BRANCH" == 'master' ]; then
+              exit 0
+              fi
+              CI=true npm run test
+              mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+              git checkout master
+              CI=true npm run test
+              mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+              git checkout $CIRCLE_BRANCH
+              npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+              
+
+
 notify:
   webhooks:
     - url: >-
@@ -116,5 +140,8 @@ workflows:
           requires:
           - install_dependencies
       - lint:
+          requires:
+          - install_dependencies
+      - gasCompare:
           requires:
           - install_dependencies
