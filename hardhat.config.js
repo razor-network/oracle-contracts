@@ -62,7 +62,7 @@ module.exports = {
       logger: console,
       mining: {
         auto: true,
-        interval : 2000,
+        interval: 2000,
       },
     },
     mumbai: {
