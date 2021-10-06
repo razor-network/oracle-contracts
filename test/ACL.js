@@ -255,34 +255,36 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
   });
 
-  it('setAssetStatus() should not be accessable by anyone besides AssetCreator', async () => {
+  it('setCollectionStatus() should not be accessable by anyone besides AssetCreator', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setCollectionStatus(true, 1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setCollectionStatus(true, 1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setCollectionStatus(true, 1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setCollectionStatus(true, 1), expectedRevertMessage);
   });
 
-  it('setAssetStatus() should be accessable by only AssetCreator', async () => {
+  it('setCollectionStatus() should be accessable by only AssetCreator', async () => {
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
+    const collectionName = 'Test Collection2';
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
-    await assetManager.setAssetStatus(true, 1);
+    await assetManager.createCollection([1], 1, 0, collectionName);
+    await assetManager.setCollectionStatus(true, 2);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
-    await assertRevert(assetManager.setAssetStatus(true, 1), expectedRevertMessage);
+    await assertRevert(assetManager.setCollectionStatus(true, 2), expectedRevertMessage);
   });
 
   it('createCollection() should not be accessable by anyone besides AssetCreator', async () => {
