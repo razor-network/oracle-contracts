@@ -156,11 +156,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestInfluence = stakeManager.getInfluence(correctBiggestInfluencerId);
         require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
-
-        proposedBlocks[epoch][blockId].valid = false;
-        _findNextBlockToBeConfirmed(epoch, blockIndex);
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        return stakeManager.slash(epoch, proposerId, msg.sender);
+        return _executeDispute(epoch, blockIndex, blockId);
     }
 
     // Complexity O(1)
@@ -184,11 +180,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
-
-        proposedBlocks[epoch][blockId].valid = false;
-        _findNextBlockToBeConfirmed(epoch, blockIndex);
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        return stakeManager.slash(epoch, proposerId, msg.sender);
+        return _executeDispute(epoch, blockIndex, blockId);
     }
 
     function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
@@ -291,9 +283,14 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         }
     }
 
-    function _findNextBlockToBeConfirmed(uint32 epoch, uint8 blockIndex) internal {
-        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
+    function _executeDispute(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint8 blockId
+    ) internal returns (uint32) {
+        proposedBlocks[epoch][blockId].valid = false;
 
+        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
         if (uint8(blockIndexToBeConfirmed) == blockIndex) {
             // If the chosen one only is the culprit one, find successor
             // O(maxAltBlocks)
@@ -308,5 +305,8 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
                 }
             }
         }
+
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        return stakeManager.slash(epoch, proposerId, msg.sender);
     }
 }
