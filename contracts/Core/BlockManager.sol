@@ -121,22 +121,29 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
-        uint8 check = _checkBlockAvailablity(epoch, deactivatedAssets);
-
-        if (check == 0) {
-            uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
-            require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-            _confirmBlock(epoch, deactivatedAssets, proposerId);
+        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
+            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
+                // slither-disable-next-line calls-loop
+                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
+            }
+            return;
         }
+        uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
+        require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
+        _confirmBlock(epoch, deactivatedAssets, proposerId);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
-        uint8 check = _checkBlockAvailablity(epoch - 1, deactivatedAssets);
-        if (check == 0) {
-            _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
+        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
+            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
+                // slither-disable-next-line calls-loop
+                assetManager.deactivateCollection(epoch - 1, deactivatedAssets[i]);
+            }
+            return;
         }
+        _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
     }
 
     // Complexity O(1)
@@ -223,17 +230,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return true;
     }
 
-    function _checkBlockAvailablity(uint32 epoch, uint8[] memory deactivatedAssets) internal returns (uint8) {
-        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
-            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-                // slither-disable-next-line calls-loop
-                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            }
-            return 1;
-        }
-        return 0;
-    }
-
     function _confirmBlock(
         uint32 epoch,
         uint8[] memory deactivatedAssets,
@@ -241,6 +237,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     ) internal {
         uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
+            // slither-disable-next-line calls-loop
             uint8 index = assetManager.getAssetIndex(deactivatedAssets[i - 1]);
             if (index == proposedBlocks[epoch][blockId].medians.length) {
                 proposedBlocks[epoch][blockId].medians.pop();
