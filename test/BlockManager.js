@@ -1087,7 +1087,7 @@ describe('BlockManager', function () {
       }
     });
 
-    it('Blocks should be sorted properly based on biggestInfluence and iteration', async function () {
+    it('If Biggest Influence of subquecent, block is larger; it should replace, if smaller; should place it as per itr', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -1155,98 +1155,49 @@ describe('BlockManager', function () {
 
       await mineToNextState(); // propose state
 
-      let sortedProposedBlockId;
-
       const influencerIds = [10, 11, 12, 13, 14];
-      const proposedBlocksIteration = [];
-      const proposedBlocksInfluence = [];
+      const influenceLargest = (await stakeManager.getInfluence(influencerIds[0]));
+      const influenceSmallest = (await stakeManager.getInfluence(influencerIds[1]));
+      const influenceMid = (await stakeManager.getInfluence(influencerIds[2]));
 
       const stakerIdAcc12 = await stakeManager.stakerIds(signers[12].address);
       let staker = await stakeManager.getStaker(stakerIdAcc12);
-      let influence = (await stakeManager.getInfluence(influencerIds[3]));
-      let iteration = await getIteration(voteManager, stakeManager, staker, influence);
-      proposedBlocksInfluence.push(influence);
-      proposedBlocksIteration.push(iteration);
+
+      // Block with Mid Influence
+      const iteration = await getIteration(voteManager, stakeManager, staker, influenceMid);
       await blockManager.connect(signers[12]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        influencerIds[3]);
-
-      const stakerIdAcc13 = await stakeManager.stakerIds(signers[13].address);
-      staker = await stakeManager.getStaker(stakerIdAcc13);
-      influence = (await stakeManager.getInfluence(influencerIds[4]));
-      iteration = await getIteration(voteManager, stakeManager, staker, influence);
-      proposedBlocksInfluence.push(influence);
-      proposedBlocksIteration.push(iteration);
-      await blockManager.connect(signers[13]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        influencerIds[4]);
-
-      const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      influence = (await stakeManager.getInfluence(influencerIds[0]));
-      iteration = await getIteration(voteManager, stakeManager, staker, influence);
-      proposedBlocksInfluence.push(influence);
-      proposedBlocksIteration.push(iteration);
-      await blockManager.connect(signers[14]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        influencerIds[0]);
-
-      const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
-      staker = await stakeManager.getStaker(stakerIdAcc15);
-      influence = (await stakeManager.getInfluence(influencerIds[2]));
-      iteration = await getIteration(voteManager, stakeManager, staker, influence);
-      proposedBlocksInfluence.push(influence);
-      proposedBlocksIteration.push(iteration);
-      await blockManager.connect(signers[15]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         influencerIds[2]);
 
-      const stakerIdAcc16 = await stakeManager.stakerIds(signers[16].address);
-      staker = await stakeManager.getStaker(stakerIdAcc16);
-      influence = (await stakeManager.getInfluence(influencerIds[1]));
-      iteration = await getIteration(voteManager, stakeManager, staker, influence);
-      proposedBlocksInfluence.push(influence);
-      proposedBlocksIteration.push(iteration);
-      await blockManager.connect(signers[16]).propose(epoch,
+      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
+
+      // Block With Largest Influence, Should Replace Previous one
+      const stakerIdAcc13 = await stakeManager.stakerIds(signers[13].address);
+      staker = await stakeManager.getStaker(stakerIdAcc13);
+
+      const iteration1 = await getIteration(voteManager, stakeManager, staker, influenceLargest);
+      await blockManager.connect(signers[13]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
+        iteration1,
+        influencerIds[0]);
+      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
+
+      // Block with smaller influence, should be placed as per iteration
+      const stakerIdAcc14 = await stakeManager.stakerIds(signers[14].address);
+      staker = await stakeManager.getStaker(stakerIdAcc14);
+      const iteration2 = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
+      await blockManager.connect(signers[14]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration2,
         influencerIds[1]);
 
-      const proposedBlocksLength = await blockManager.getNumProposedBlocks(epoch);
-
-      const sortedBlockIds = [];
-      let pushAt;
-      for (let i = 0; i < proposedBlocksIteration.length; i++) {
-        if (sortedBlockIds.length === 0) {
-          sortedBlockIds.push(0);
-          // eslint-disable-next-line no-continue
-          continue;
-        }
-        pushAt = sortedBlockIds.length;
-        for (let j = 0; j < sortedBlockIds.length; j++) {
-          if (proposedBlocksInfluence[sortedBlockIds[j]] < proposedBlocksInfluence[i]) {
-            pushAt = j;
-            break;
-          }
-          if (proposedBlocksIteration[sortedBlockIds[j]] > proposedBlocksIteration[i]) {
-            pushAt = j;
-            break;
-          }
-        }
-        sortedBlockIds.push(i);
-        for (let j = sortedBlockIds.length - 1; j > (pushAt); j--) {
-          sortedBlockIds[j] = sortedBlockIds[j - 1];
-        }
-        sortedBlockIds[pushAt] = i;
-      }
-
-      for (let i = 0; i < proposedBlocksLength; i++) { // 20341
-        sortedProposedBlockId = await blockManager.sortedProposedBlockIds(epoch, i);
-        assertBNEqual(sortedBlockIds[i], sortedProposedBlockId, 'Not sorted properly');
+      if (iteration1 > iteration2) {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('1'));
+      } else {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
       }
     });
 

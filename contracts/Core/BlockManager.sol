@@ -67,10 +67,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
 
         uint256 biggestInfluence = stakeManager.getInfluence(biggestInfluencerId);
-        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
-
+        numProposedBlocks = numProposedBlocks + 1;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
@@ -167,7 +167,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
-        uint8 numProposedBlocks = uint8(sortedProposedBlockIds[epoch].length);
+        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
 
         proposedBlocks[epoch][blockId].valid = false;
 
@@ -176,7 +176,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             // O(maxAltBlocks)
 
             blockIndexToBeConfirmed = -1;
-            for (uint8 i = blockIndex + 1; i < numProposedBlocks; i++) {
+            for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
                 uint8 _blockId = sortedProposedBlockIds[epoch][i];
                 if (proposedBlocks[epoch][_blockId].valid) {
                     // slither-disable-next-line costly-loop
@@ -264,33 +264,43 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint256 iteration,
         uint256 biggestInfluence
     ) internal {
-        if (sortedProposedBlockIds[epoch].length == 0) {
+        uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
+
+        if (sortedProposedBlockslength == 0) {
             sortedProposedBlockIds[epoch].push(0);
             blockIndexToBeConfirmed = 0;
             return;
         }
+        uint8 maxAltBlocks = parameters.maxAltBlocks();
 
-        uint8 pushAt = uint8(sortedProposedBlockIds[epoch].length);
-        for (uint8 i = 0; i < sortedProposedBlockIds[epoch].length; i++) {
+        for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
+            // Replace : New Block has better biggest influence
             if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
-                pushAt = i;
-                break;
+                sortedProposedBlockIds[epoch][i] = blockId;
+                return;
             }
-            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
-                pushAt = i;
-                break;
+            // Push and Shift
+            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
+                sortedProposedBlockIds[epoch].push(blockId);
+
+                sortedProposedBlockslength = sortedProposedBlockslength + 1;
+
+                for (uint256 j = sortedProposedBlockslength - 1; j > i; j--) {
+                    sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
+                }
+
+                sortedProposedBlockIds[epoch][i] = blockId;
+
+                if (sortedProposedBlockIds[epoch].length > maxAltBlocks) {
+                    sortedProposedBlockIds[epoch].pop();
+                }
+
+                return;
             }
         }
-
-        sortedProposedBlockIds[epoch].push(blockId);
-        for (uint256 j = sortedProposedBlockIds[epoch].length - 1; j > (pushAt); j--) {
-            sortedProposedBlockIds[epoch][j] = sortedProposedBlockIds[epoch][j - 1];
-        }
-
-        sortedProposedBlockIds[epoch][pushAt] = blockId;
-
-        if (sortedProposedBlockIds[epoch].length > parameters.maxAltBlocks()) {
-            sortedProposedBlockIds[epoch].pop();
+        // Worst Iteration and for all other blocks, influence was >=
+        if (sortedProposedBlockIds[epoch].length < maxAltBlocks) {
+            sortedProposedBlockIds[epoch].push(blockId);
         }
     }
 }
