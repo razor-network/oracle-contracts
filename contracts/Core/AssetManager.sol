@@ -139,7 +139,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         int8 power,
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, parameters.epochLength()) {
-        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
+        require(aggregationMethod > 0 && aggregationMethod <= 2, "Aggregation range out of bounds");
 
         require(jobIDs.length > 0, "Number of jobIDs low to create collection");
 

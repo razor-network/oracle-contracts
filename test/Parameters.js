@@ -28,7 +28,6 @@ describe('Parameters contract Tests', async () => {
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('1000');
   const blockReward = tokenAmount('100');
-  const aggregationRange = toBigNumber('3');
   const withdrawReleasePeriod = toBigNumber('5');
   const extendLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
@@ -106,9 +105,6 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = parameters.connect(signers[1]).setAggregationRange(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
     tx = parameters.connect(signers[1]).setMaxAge(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -144,10 +140,6 @@ describe('Parameters contract Tests', async () => {
     await parameters.setGracePeriod(toBigNumber('14'));
     const gracePeriod = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, toBigNumber('14'));
-
-    await parameters.setAggregationRange(toBigNumber('15'));
-    const aggregationRange = await parameters.aggregationRange();
-    assertBNEqual(aggregationRange, toBigNumber('15'));
 
     await parameters.setWithdrawReleasePeriod(toBigNumber('16'));
     const withdrawReleasePeriod = await parameters.withdrawReleasePeriod();
@@ -241,8 +233,5 @@ describe('Parameters contract Tests', async () => {
 
     const gracePeriodValue = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, gracePeriodValue);
-
-    const aggregationRangeValue = await parameters.aggregationRange();
-    assertBNEqual(aggregationRange, aggregationRangeValue);
   });
 });
