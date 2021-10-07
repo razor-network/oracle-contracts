@@ -4,3 +4,7 @@ services:
     build: .
     ports:
       - "8545:8545"
+    volumes:
+      - type: bind
+        source: ./deployed
+        target: /usr/src/app/deployed
