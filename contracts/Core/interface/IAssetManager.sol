@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IAssetManager {
-    function deactivateCollection(uint32 epoch, uint8 id) external;
+    function executePendingDeactivations(uint32 epoch) external;
 
     function getActiveAssets() external view returns (uint8[] memory);
 

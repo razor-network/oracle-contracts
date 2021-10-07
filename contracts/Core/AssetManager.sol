@@ -13,7 +13,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     IParameters public parameters;
     IDelegator public delegator;
 
-    event AssetCreated(Structs.Job job, Structs.Collection collection, uint256 timestamp);
+    event AssetCreated(string assetType, uint8 id, uint256 timestamp);
 
     event JobUpdated(
         uint8 id,
@@ -52,7 +52,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
         jobs[numAssets] = Structs.Job(numAssets, uint8(selectorType), weight, power, name, selector, url);
 
-        emit AssetCreated(jobs[numAssets], Structs.Collection(false, 0, 0, 0, 0, new uint8[](0), ""), block.timestamp);
+        emit AssetCreated("Job", numAssets, block.timestamp);
         delegator.setIDName(name, numAssets);
     }
 
@@ -100,19 +100,26 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         }
     }
 
-    function deactivateCollection(uint32 epoch, uint8 id) external override onlyRole(ASSET_CONFIRMER_ROLE) {
-        uint8 assetIndex = collections[id].assetIndex;
-        if (assetIndex == activeAssets.length) {
-            activeAssets.pop();
-        } else {
-            activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
-            collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
-            activeAssets.pop();
+    function executePendingDeactivations(uint32 epoch) external override onlyRole(ASSET_CONFIRMER_ROLE) {
+        for (uint8 i = uint8(pendingDeactivations.length); i > 0; i--) {
+            uint8 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
+            if (assetIndex == activeAssets.length) {
+                activeAssets.pop();
+            } else {
+                activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+                collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
+                activeAssets.pop();
+            }
+            collections[pendingDeactivations[i - 1]].assetIndex = 0;
+            collections[pendingDeactivations[i - 1]].active = false;
+            emit CollectionActivityStatus(
+                collections[pendingDeactivations[i - 1]].active,
+                pendingDeactivations[i - 1],
+                epoch,
+                block.timestamp
+            );
+            pendingDeactivations.pop();
         }
-        collections[id].assetIndex = 0;
-        collections[id].active = false;
-        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
-        pendingDeactivations.pop();
     }
 
     function createCollection(
@@ -133,7 +140,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
         activeAssets.push(numAssets);
         collections[numAssets] = Structs.Collection(true, numAssets, uint8(activeAssets.length), power, aggregationMethod, jobIDs, name);
-        emit AssetCreated(Structs.Job(0, 0, 0, 0, "", "", ""), collections[numAssets], block.timestamp);
+        emit AssetCreated("Collection", numAssets, block.timestamp);
 
         delegator.setIDName(name, numAssets);
     }

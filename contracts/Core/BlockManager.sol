@@ -122,10 +122,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
 
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
-            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-                // slither-disable-next-line calls-loop
-                assetManager.deactivateCollection(epoch, deactivatedAssets[i]);
-            }
+            assetManager.executePendingDeactivations(epoch);
             return;
         }
         uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
@@ -137,10 +134,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32 epoch = parameters.getEpoch();
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
-            for (uint8 i = 0; i < deactivatedAssets.length; i++) {
-                // slither-disable-next-line calls-loop
-                assetManager.deactivateCollection(epoch - 1, deactivatedAssets[i]);
-            }
+            assetManager.executePendingDeactivations(epoch);
             return;
         }
         _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
@@ -250,10 +244,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         }
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
-            // slither-disable-next-line calls-loop
-            assetManager.deactivateCollection(epoch, deactivatedAssets[i - 1]);
-        }
+        assetManager.executePendingDeactivations(epoch);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }

@@ -287,21 +287,21 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.setCollectionStatus(true, 2), expectedRevertMessage);
   });
 
-  it('deactivateCollection() should not be accessable by anyone besides AssetConfirmer', async () => {
+  it('executePendingDeactivations() should not be accessable by anyone besides AssetConfirmer', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.deactivateCollection(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.executePendingDeactivations(1), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(assetManager.deactivateCollection(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.executePendingDeactivations(1), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(assetManager.deactivateCollection(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.executePendingDeactivations(1), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(assetManager.deactivateCollection(1, 1), expectedRevertMessage);
+    await assertRevert(assetManager.executePendingDeactivations(1), expectedRevertMessage);
   });
 
   it('deactivateCollection() should be accessable by only AssetConfirmer', async () => {
@@ -317,9 +317,9 @@ describe('Access Control Test', async () => {
     await mineToNextState();
     await assetManager.createCollection([1, 2], 1, 0, 'test');
     await assetManager.setCollectionStatus(false, 3);
-    await assetManager.deactivateCollection(1, 3);
+    await assetManager.executePendingDeactivations(1);
     await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
-    await assertRevert(assetManager.deactivateCollection(1, 2), expectedRevertMessage);
+    await assertRevert(assetManager.executePendingDeactivations(1), expectedRevertMessage);
   });
 
   it('createCollection() should not be accessable by anyone besides AssetCreator', async () => {
