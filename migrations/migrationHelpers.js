@@ -2,10 +2,6 @@
 const jsonfile = require('jsonfile');
 const hre = require('hardhat');
 
-const {
-  NETWORK
-} = process.env;
-
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
@@ -64,11 +60,12 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
     });
 
     await hre.tenderly.verify({
-        name: "Greeter",
-        address: greeter.address,
-    })
-  } catch (e) {}
-
+      name: contractName,
+      address: contract.address,
+    });
+  } catch (err) {
+    console.log('Error pushing to tenderly:', err);
+  }
 
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);
