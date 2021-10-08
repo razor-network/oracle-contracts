@@ -11,6 +11,7 @@ const {
 } = process.env;
 
 module.exports = async () => {
+  const MINING_INTERVAL = 2000;
   const signers = await ethers.getSigners();
 
   const {
@@ -74,6 +75,12 @@ module.exports = async () => {
       const tx = await RAZOR.transfer(stakerAddressList[i], SEED_AMOUNT);
       pendingTransactions.push(tx);
     }
+  }
+
+  if (NETWORK === 'local' || NETWORK === 'hardhat') {
+    // Set interval mining to 2 seconds. This is to enable using razor-go with interval mining without affecting hardhat config.
+    await ethers.provider.send("evm_setAutomine", [false]);
+    await ethers.provider.send("evm_setIntervalMining", [MINING_INTERVAL]);
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,

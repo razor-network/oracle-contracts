@@ -14,6 +14,7 @@
     "codechecks": "npx codechecks",
     "coverage": "hardhat coverage && npm run coverage:check",
     "coverage:check": "istanbul check-coverage --statements 90 --branches 60 --functions 85 --lines 86",
+    "start:local": "./node_modules/.bin/hardhat node",
     "deploy:local": "./scripts/deploy.sh local",
     "deploy:mumbai": "./scripts/deploy.sh mumbai",
     "lint": "npm run lint:sol && npm run lint:js",

@@ -5,6 +5,8 @@ ENV=$1
 # Exit immediately if a command exits with a non-zero status.
 set -e
 
+cd /usr/src/app;
+
 # Copy address from previous deployment, if it exists
 if [[ -f "deployed/$ENV/addresses.json" ]]
 then
