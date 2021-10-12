@@ -140,6 +140,18 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
     }
 
+    function disputeBiggestInfluenceProposed(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 correctBiggestInfluencerId
+    ) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) returns (uint32) {
+        uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        uint256 correctBiggestInfluence = stakeManager.getInfluence(correctBiggestInfluencerId);
+        require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
+        return _executeDispute(epoch, blockIndex, blockId);
+    }
+
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
@@ -161,27 +173,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
-        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
-
-        proposedBlocks[epoch][blockId].valid = false;
-
-        if (uint8(blockIndexToBeConfirmed) == blockIndex) {
-            // If the chosen one only is the culprit one, find successor
-            // O(maxAltBlocks)
-
-            blockIndexToBeConfirmed = -1;
-            for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
-                uint8 _blockId = sortedProposedBlockIds[epoch][i];
-                if (proposedBlocks[epoch][_blockId].valid) {
-                    // slither-disable-next-line costly-loop
-                    blockIndexToBeConfirmed = int8(i);
-                    break;
-                }
-            }
-        }
-
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        return stakeManager.slash(epoch, proposerId, msg.sender);
+        return _executeDispute(epoch, blockIndex, blockId);
     }
 
     function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
@@ -293,5 +285,32 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         if (sortedProposedBlockIds[epoch].length < maxAltBlocks) {
             sortedProposedBlockIds[epoch].push(blockId);
         }
+    }
+
+    function _executeDispute(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint8 blockId
+    ) internal returns (uint32) {
+        proposedBlocks[epoch][blockId].valid = false;
+
+        uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
+        if (uint8(blockIndexToBeConfirmed) == blockIndex) {
+            // If the chosen one only is the culprit one, find successor
+            // O(maxAltBlocks)
+
+            blockIndexToBeConfirmed = -1;
+            for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
+                uint8 _blockId = sortedProposedBlockIds[epoch][i];
+                if (proposedBlocks[epoch][_blockId].valid) {
+                    // slither-disable-next-line costly-loop
+                    blockIndexToBeConfirmed = int8(i);
+                    break;
+                }
+            }
+        }
+
+        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        return stakeManager.slash(epoch, proposerId, msg.sender);
     }
 }

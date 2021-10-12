@@ -1200,6 +1200,42 @@ describe('BlockManager', function () {
         assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
       }
     });
+    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
+      const epoch = await getEpoch();
+      await mineToNextState();
+      const stakerId = await stakeManager.stakerIds(signers[14].address);
+      const staker = await stakeManager.getStaker(stakerId);
+      const stakeBefore = staker.stake;
+      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
+      await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
+
+      const slashNums = await parameters.getAllSlashParams();
+      const bountySlashNum = slashNums[0];
+      const burnSlashNum = slashNums[1];
+      const keepSlashNum = slashNums[2];
+      const baseDeno = slashNums[3];
+      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(baseDeno);
+      const bounty = stakeBefore.mul(bountySlashNum).div(baseDeno);
+      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(baseDeno);
+      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
+
+      assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');
+
+      // Bounty should be locked
+      const bountyId = await stakeManager.bountyCounter();
+      const bountyLock = await stakeManager.bountyLocks(bountyId);
+      assertBNEqual(bountyLock.bountyHunter, signers[0].address);
+      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+      assertBNEqual(bountyLock.amount, bounty);
+
+      const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      assertRevert(tx, 'Block already has been disputed');
+
+      // Disputing valid block
+      const tx1 = blockManager.disputeBiggestInfluenceProposed(epoch, 1, 10);
+      assertRevert(tx1, 'Invalid dispute : Influence');
+    });
 
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
       await mineToNextEpoch();
