@@ -120,31 +120,24 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) return;
-
-        uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
-        uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
+            assetManager.executePendingDeactivations(epoch);
+            return;
+        }
+        uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-        emit BlockConfirmed(epoch, proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        blocks[epoch] = proposedBlocks[epoch][blockId];
-        rewardManager.giveBlockReward(stakerId, epoch);
-        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        _confirmBlock(epoch, deactivatedAssets, proposerId);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = parameters.getEpoch();
-        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) return;
-        uint8 blockId = sortedProposedBlockIds[epoch - 1][uint8(blockIndexToBeConfirmed)];
-        blocks[epoch - 1] = proposedBlocks[epoch - 1][blockId];
-
-        emit BlockConfirmed(
-            epoch - 1,
-            proposedBlocks[epoch - 1][blockId].proposerId,
-            proposedBlocks[epoch - 1][blockId].medians,
-            block.timestamp
-        );
-        rewardManager.giveBlockReward(stakerId, epoch - 1);
-        randomNoProvider.provideSecret(epoch - 1, voteManager.getRandaoHash());
+        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
+            assetManager.executePendingDeactivations(epoch);
+            return;
+        }
+        _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
     }
 
     function disputeBiggestInfluenceProposed(
@@ -187,23 +180,9 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         return (blocks[epoch]);
     }
 
-    function getBlockMedians(uint32 epoch) external view returns (uint32[] memory _blockMedians) {
-        _blockMedians = blocks[epoch].medians;
-        return (_blockMedians);
-    }
-
-    function getProposedBlock(uint32 epoch, uint8 proposedBlock)
-        external
-        view
-        returns (Structs.Block memory _block, uint32[] memory _blockMedians)
-    {
+    function getProposedBlock(uint32 epoch, uint8 proposedBlock) external view returns (Structs.Block memory _block) {
         _block = proposedBlocks[epoch][proposedBlock];
-        return (_block, _block.medians);
-    }
-
-    function getProposedBlockMedians(uint32 epoch, uint8 proposedBlock) external view returns (uint32[] memory _blockMedians) {
-        _blockMedians = proposedBlocks[epoch][proposedBlock].medians;
-        return (_blockMedians);
+        return (_block);
     }
 
     function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {
@@ -235,6 +214,31 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint256 influence = stakeManager.getInfluence(stakerId);
         if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
         return true;
+    }
+
+    function _confirmBlock(
+        uint32 epoch,
+        uint8[] memory deactivatedAssets,
+        uint32 stakerId
+    ) internal {
+        uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
+        for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
+            // slither-disable-next-line calls-loop
+            uint8 index = assetManager.getAssetIndex(deactivatedAssets[i - 1]);
+            if (index == proposedBlocks[epoch][blockId].medians.length) {
+                proposedBlocks[epoch][blockId].medians.pop();
+            } else {
+                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[
+                    proposedBlocks[epoch][blockId].medians.length - 1
+                ];
+                proposedBlocks[epoch][blockId].medians.pop();
+            }
+        }
+        blocks[epoch] = proposedBlocks[epoch][blockId];
+        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        assetManager.executePendingDeactivations(epoch);
+        rewardManager.giveBlockReward(stakerId, epoch);
+        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
 
     function _insertAppropriately(
