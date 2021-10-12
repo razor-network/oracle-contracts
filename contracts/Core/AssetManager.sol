@@ -13,7 +13,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     IParameters public parameters;
     IDelegator public delegator;
 
-    event AssetCreated(string assetType, uint8 id, uint256 timestamp);
+    event AssetCreated(AssetType assetType, uint8 id, uint256 timestamp);
 
     event JobUpdated(
         uint8 id,
@@ -52,7 +52,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
         jobs[numAssets] = Structs.Job(numAssets, uint8(selectorType), weight, power, name, selector, url);
 
-        emit AssetCreated("Job", numAssets, block.timestamp);
+        emit AssetCreated(AssetType.Job, numAssets, block.timestamp);
         delegator.setIDName(name, numAssets);
     }
 
@@ -64,6 +64,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
+        require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
@@ -134,13 +135,9 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
 
         numAssets = numAssets + 1;
 
-        for (uint8 i = 0; i < jobIDs.length; i++) {
-            require(jobs[jobIDs[i]].id == jobIDs[i], "Job ID not present");
-        }
-
         activeAssets.push(numAssets);
         collections[numAssets] = Structs.Collection(true, numAssets, uint8(activeAssets.length), power, aggregationMethod, jobIDs, name);
-        emit AssetCreated("Collection", numAssets, block.timestamp);
+        emit AssetCreated(AssetType.Collection, numAssets, block.timestamp);
 
         delegator.setIDName(name, numAssets);
     }
@@ -156,9 +153,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         uint32 epoch = parameters.getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].aggregationMethod = aggregationMethod;
-        for (uint8 i = 0; i < jobIDs.length; i++) {
-            require(jobs[jobIDs[i]].id == jobIDs[i], "Job ID not present");
-        }
         collections[collectionID].jobIDs = jobIDs;
 
         emit CollectionUpdated(
@@ -191,7 +185,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     }
 
     function getCollectionStatus(uint8 id) external view returns (bool) {
-        require(id != 0, "ID cannot be 0");
         require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].active;
@@ -202,7 +195,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     }
 
     function getCollectionPower(uint8 id) external view override returns (int8) {
-        require(id != 0, "ID cannot be 0");
         require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].power;

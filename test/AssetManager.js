@@ -149,8 +149,6 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to get the active status of any asset is not a collection', async function () {
-      const tx1 = assetManager.getCollectionStatus(0);
-      await assertRevert(tx1, 'ID cannot be 0');
       const numAssets = await assetManager.getNumAssets();
       const tx2 = assetManager.getCollectionStatus(numAssets + 1);
       await assertRevert(tx2, 'Asset is not a collection');
@@ -213,17 +211,9 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to get power of any asset if not a collection', async function () {
-      const tx1 = assetManager.getCollectionPower(0);
-      await assertRevert(tx1, 'ID cannot be 0');
       const numAssets = await assetManager.getNumAssets();
       const tx2 = assetManager.getCollectionPower(numAssets + 1);
       await assertRevert(tx2, 'Asset is not a collection');
-    });
-
-    it('should not create a collection if one of the jobIDs is not a job', async function () {
-      const collectionName = 'Test Collection2';
-      const tx = assetManager.createCollection([1, 2, 3], 2, 0, collectionName);
-      await assertRevert(tx, 'Job ID not present');
     });
 
     it('should not create collection if it does not have any jobIDs', async function () {
@@ -244,15 +234,6 @@ describe('AssetManager', function () {
       const collectionName = 'Test Collection2';
       const tx = assetManager.createCollection([1, 2], 1, 0, collectionName);
       await assertRevert(tx, 'Similar collection exists');
-    });
-
-    it('should not add jobID to a collection if the jobID specified is not a Job', async function () {
-      // jobID does not exist
-      const tx = assetManager.updateCollection(3, 2, 5, [1, 2, 5, 7]);
-      await assertRevert(tx, 'Job ID not present');
-      // jobID specified is a collection
-      const tx1 = assetManager.updateCollection(3, 2, 5, [1, 2, 5, 4]);
-      await assertRevert(tx1, 'Job ID not present');
     });
 
     it('updateCollection should only work for collections which exists', async function () {
