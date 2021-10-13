@@ -1,8 +1,5 @@
 {
-    "extends": [
-      "airbnb-base",
-      "prettier"
-    ],
+    "extends": "airbnb-base",
     "globals": {
       "artifacts": true,
       "web3": true,
