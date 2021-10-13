@@ -7,11 +7,9 @@ const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
 const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
 
-const readOldDeploymentFile = async () =>
-  jsonfile.readFile(OLD_DEPLOYMENT_FILE);
+const readOldDeploymentFile = async () => jsonfile.readFile(OLD_DEPLOYMENT_FILE);
 
-const writeDeploymentFile = async (data) =>
-  jsonfile.writeFile(DEPLOYMENT_FILE, data);
+const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
 
 const appendDeploymentFile = async (data) => {
   let deployments = {};
@@ -83,7 +81,7 @@ const deployContract = async (
     constructorArguments: [...constructorParams],
   };
 
-// We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  // We need to set explicitly for these as it was causing conflicts with OpenZeplin
   if (contractName === 'Structs') {
     config.contract = 'contracts/lib/Structs.sol:Structs';
   }
