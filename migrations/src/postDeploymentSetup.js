@@ -11,6 +11,7 @@ const {
 } = process.env;
 
 module.exports = async () => {
+  const MINING_INTERVAL = 2000;
   const signers = await ethers.getSigners();
 
   const {
@@ -48,6 +49,9 @@ module.exports = async () => {
   // keccak256("VOTE_MODIFIER_ROLE")
   const VOTE_MODIFIER_ROLE = '0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5';
 
+  // keccak256("DELEGATOR_MODIFIER_ROLE")
+  const DELEGATOR_MODIFIER_ROLE = '0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597';
+
   const randomLibraryDependency = { Random: randomAddress };
 
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
@@ -76,11 +80,18 @@ module.exports = async () => {
     }
   }
 
+  if (NETWORK === 'local' || NETWORK === 'hardhat') {
+    // Set interval mining to 2 seconds. This is to enable using razor-go with interval mining without affecting hardhat config.
+    await ethers.provider.send('evm_setAutomine', [false]);
+    await ethers.provider.send('evm_setIntervalMining', [MINING_INTERVAL]);
+  }
+
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, parametersAddress, randomNoManagerAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
+  pendingTransactions.push(await delegator.updateAddress(assetManagerAddress, blockManagerAddress, parametersAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress, parametersAddress));
 
   pendingTransactions.push(await assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManagerAddress));
@@ -94,7 +105,8 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
-  pendingTransactions.push(await delegator.upgradeDelegate(assetManagerAddress));
+  pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManagerAddress));
+  pendingTransactions.push(await assetManager.upgradeDelegator(delegatorAddress));
 
   // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');

@@ -10,7 +10,9 @@ contract BlockStorage {
     //epoch->blockId
     mapping(uint32 => uint8[]) public sortedProposedBlockIds;
 
+    // slither-disable-next-line constable-states
     uint8 public numProposedBlocks;
+    // slither-disable-next-line constable-states
     int8 public blockIndexToBeConfirmed; // Index in sortedProposedBlockIds
     // epoch -> blocks
     mapping(uint32 => Structs.Block) public blocks;

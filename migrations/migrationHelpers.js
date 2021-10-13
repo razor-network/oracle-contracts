@@ -48,15 +48,24 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
 
   await contract.deployed();
 
-  await hre.tenderly.persistArtifacts({
-    name: contractName,
-    address: contract.address,
-  });
+  try {
+    await hre.tenderly.persistArtifacts({
+      name: contractName,
+      address: contract.address,
+    });
 
-  await hre.tenderly.push({
-    name: contractName,
-    address: contract.address,
-  });
+    await hre.tenderly.push({
+      name: contractName,
+      address: contract.address,
+    });
+
+    await hre.tenderly.verify({
+      name: contractName,
+      address: contract.address,
+    });
+  } catch (err) {
+    console.log('Error pushing to tenderly:', err);
+  }
 
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);

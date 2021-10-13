@@ -52,12 +52,9 @@ library Structs {
 
     struct Job {
         uint8 id;
-        uint8 assetType; // 0-1
         uint8 selectorType; // 0-1
         uint8 weight; // 1-100
         int8 power;
-        uint32 epoch;
-        address creator;
         string name;
         string selector;
         string url;
@@ -66,14 +63,10 @@ library Structs {
     struct Collection {
         bool active;
         uint8 id;
-        uint8 assetType;
         uint8 assetIndex;
         int8 power;
-        uint32 epoch;
         uint32 aggregationMethod;
         uint8[] jobIDs;
-        address creator;
-        mapping(uint8 => bool) jobIDExist;
         string name;
     }
 }
