@@ -75,12 +75,24 @@ const deployContract = async (
     console.log('Error pushing to tenderly:', err);
   }
 
-  await hre.run('verify:verify', {
-    address: contract.address,
-  });
-
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);
+
+  const config = {
+    address: contract.address,
+    constructorArguments: [...constructorParams],
+  };
+
+// We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  if (contractName === 'Structs') {
+    config.contract = 'contracts/lib/Structs.sol:Structs';
+  }
+
+  if (contractName === 'RAZOR') {
+    config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  }
+
+  await hre.run('verify:verify', config);
 
   return contract;
 };
