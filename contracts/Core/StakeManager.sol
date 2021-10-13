@@ -371,7 +371,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @return influence of staker
     function getInfluence(uint32 stakerId) external view override returns (uint256) {
-        return _getMaturity(stakerId) * stakers[stakerId].stake;
+      // bitwise right shift of 74 is done to reduce stake by approx 10**21 orders of magnitude (minstake)
+        return _getMaturity(stakerId) * stakers[stakerId].stake<<70;
     }
 
     /// @return stake of staker

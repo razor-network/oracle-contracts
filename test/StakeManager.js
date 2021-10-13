@@ -192,7 +192,7 @@ describe('StakeManager', function () {
       const stake1 = tokenAmount('420000');
       const age1 = 10000;
       const maturity1 = await maturity(age1);
-      const influence1 = stake1.mul(toBigNumber(maturity1));
+      const influence1 = stake1.mul(toBigNumber(maturity1))<<70;
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
