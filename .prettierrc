@@ -1,11 +1,15 @@
 {
-    "overrides": [
-      {
-        "files": "*.sol",
-        "options": {
-          "printWidth": 140,
-          "explicitTypes": "always"
-        }
+  "overrides": [
+    {
+      "files": "*.sol",
+      "options": {
+        "printWidth": 140,
+        "explicitTypes": "always"
       }
-    ]
-  }
+    }
+  ],
+  "singleQuote": true,
+  "trailingComma": "es5",
+  "requirePragma": false,
+  "arrowParens": "always"
+}
