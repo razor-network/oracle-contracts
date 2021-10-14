@@ -1,0 +1,12 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity ^0.8.0;
+import "../interfaces/IAssetManagerParams.sol";
+import "./utils/GovernanceACL.sol";
+
+abstract contract AssetManagerParams is GovernanceACL, IAssetManagerParams {
+    uint16 public epochLength = 300;
+
+    function setEpochLength(uint16 _epochLength) external override onlyGovernance {
+        epochLength = _epochLength;
+    }
+}

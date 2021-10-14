@@ -8,6 +8,7 @@ const {
   REWARD_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
   ZERO_ADDRESS,
+  GOVERNER_ROLE,
 } = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
@@ -21,7 +22,7 @@ describe('Access Control Test', async () => {
   let signers;
   let snapShotId;
   let blockManager;
-  let parameters;
+  let governance;
   let assetManager;
   let stakeManager;
   let rewardManager;
@@ -31,7 +32,7 @@ describe('Access Control Test', async () => {
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
+      blockManager, governance, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -387,9 +388,10 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
   });
 
-  it('Only Default Admin should able to update Block Reward', async () => {
-    await assertRevert(parameters.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
-    assert(await parameters.setBlockReward(5500), 'Admin not able to update BlockReward');
+  it('Only Governer should able to update Block Reward', async () => {
+    await assertRevert(governance.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
+    await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+    assert(await governance.setBlockReward(5500), 'Admin not able to update BlockReward');
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {

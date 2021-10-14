@@ -30,14 +30,14 @@ describe('RandomNoManager', function () {
   let voteManager;
   let razor;
   let stakeManager;
-  let parameters;
+  let governance;
   let randomNoManager;
   let initializeContracts;
 
   before(async () => {
     ({
       blockManager,
-      parameters,
+      governance,
       razor,
       stakeManager,
       voteManager,
@@ -55,7 +55,7 @@ describe('RandomNoManager', function () {
     it('should not be able to initiliaze randomNoManager contract without admin role', async () => {
       const tx = randomNoManager.connect(signers[1]).initialize(
         blockManager.address,
-        parameters.address
+        governance.address
       );
       await assertRevert(tx, 'AccessControl');
     });

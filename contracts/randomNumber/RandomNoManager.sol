@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "../Core/interface/IParameters.sol";
+import "../Core/parameters/child/RandomNoManagerParams.sol";
 import "./IRandomNoClient.sol";
 import "./IRandomNoProvider.sol";
 import "../Initializable.sol";
@@ -14,16 +14,14 @@ import "./RandomNoStorage.sol";
  *  @notice : Allows clients to register for random no, and pull it once available
  */
 
-contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, IRandomNoClient, IRandomNoProvider {
-    IParameters public parameters;
-
+contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
     event RandomNumberAvailable(uint32 epoch);
 
     /// @param blockManagerAddress The address of the BlockManager Contract
-    /// @param parametersAddress The address of the Parameters contract
-    function initialize(address blockManagerAddress, address parametersAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    /// @param governanceAddress The address of the Governance contract
+    function initialize(address blockManagerAddress, address governanceAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(SECRETS_MODIFIER_ROLE, blockManagerAddress);
-        parameters = IParameters(parametersAddress);
+        governance = governanceAddress;
     }
 
     /// @notice Allows Client to register for random number
@@ -31,7 +29,6 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other states
     /// @return requestId : unique request id
     function register() external override initialized returns (bytes32 requestId) {
-        uint16 epochLength = parameters.epochLength();
         uint32 epoch = getEpoch(epochLength);
         State state = getState(epochLength);
         nonce[msg.sender] = nonce[msg.sender] + 1;
@@ -68,7 +65,7 @@ contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, I
     /// @notice Allows client to get generic random number of last epoch
     /// @return random number
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = getEpoch(parameters.epochLength());
+        uint32 epoch = getEpoch(epochLength);
         return _generateRandomNumber(epoch - 1, 0);
     }
 

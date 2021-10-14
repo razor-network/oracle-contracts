@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IParameters.sol";
 import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IRewardManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
+import "./parameters/child/RewardManagerParams.sol";
 import "./ACL.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL, Constants, IRewardManager {
-    IParameters public parameters;
+contract RewardManager is Initializable, ACL, Constants, RewardManagerParams, IRewardManager {
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
@@ -22,17 +21,17 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
-    /// @param parametersAddress The address of the StateManager contract
+    /// @param governanceAddress The address of the Governance contract
     function initialize(
         address stakeManagerAddress,
         address voteManagersAddress,
         address blockManagerAddress,
-        address parametersAddress
+        address governanceAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        parameters = IParameters(parametersAddress);
+        governance = governanceAddress;
     }
 
     /// @notice gives penalty to stakers for failing to reveal or
@@ -49,7 +48,6 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 blockReward = parameters.blockReward();
         uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
     }
@@ -66,7 +64,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint256 stakeValue,
         uint32 ageValue
     ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * (parameters.penaltyNotRevealNum()))) / parameters.baseDenominator();
+        uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / baseDenominator;
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
@@ -97,11 +95,11 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
 
         // Not reveal penalty due to Randao
         if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < parameters.blockReward() ? newStake : parameters.blockReward();
+            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
             newStake = newStake - randaoPenalty;
         }
 
-        if (inactiveEpochs > parameters.gracePeriod()) {
+        if (inactiveEpochs > gracePeriod) {
             (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         }
         // uint256 currentStake = previousStake;
@@ -124,7 +122,6 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         }
         uint32 age = thisStaker.age + 10000;
         // cap age to maxAge
-        uint32 maxAge = parameters.maxAge();
         age = age > maxAge ? maxAge : age;
 
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);

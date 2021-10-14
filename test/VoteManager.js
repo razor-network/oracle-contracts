@@ -8,6 +8,7 @@ const {
   ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
+  GOVERNER_ROLE,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -29,7 +30,7 @@ describe('VoteManager', function () {
   describe('BlockManager', function () {
     let signers;
     let blockManager;
-    let parameters;
+    let governance;
     let razor;
     let stakeManager;
     let rewardManager;
@@ -39,7 +40,7 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, governance, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -64,7 +65,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, governance.address);
         await assertRevert(tx, 'AccessControl');
       });
 
@@ -85,7 +86,7 @@ describe('VoteManager', function () {
           i++;
         }
 
-        while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
+        while (Number(await assetManager.getState(await assetManager.epochLength())) !== 4) { await mineToNextState(); }
 
         let Cname;
         for (let i = 1; i <= 8; i++) {
@@ -115,7 +116,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, governance.address);
         await assertRevert(tx, 'Initializable: contract is already initialized');
       });
 
@@ -364,16 +365,17 @@ describe('VoteManager', function () {
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        await parameters.setSlashParams(500, 4500, 0);
+        await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+        await governance.setSlashParams(500, 4500, 0);
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const slashNums = await parameters.getAllSlashParams();
+        const slashNums = await stakeManager.slashNums();
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = slashNums[3];
+        const baseDeno = await stakeManager.baseDenominator();
         const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
@@ -396,7 +398,7 @@ describe('VoteManager', function () {
         const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
-        await parameters.setSlashParams(500, 9500, 0);// Restoring the slashPenaltyNum again
+        await governance.setSlashParams(500, 9500, 0);// Restoring the slashPenaltyNum again
         await assertRevert(tx, 'incorrect secret/value');
       });
 
@@ -496,7 +498,7 @@ describe('VoteManager', function () {
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setSlashParams(500, 4500, 0);
+        await governance.setSlashParams(500, 4500, 0);
         await stakeManager.slash(epoch, stakerId, signers[11].address);
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -621,7 +623,7 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setSlashParams(500, 9500, 0);
+        await governance.setSlashParams(500, 9500, 0);
         await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
 
         await mineToNextState(); // reveal
@@ -634,7 +636,7 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
 
-        await parameters.setMinStake(0);
+        await governance.setMinStake(0);
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -684,11 +686,11 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
-        const slashNums = await parameters.getAllSlashParams();
+        const slashNums = await stakeManager.slashNums();
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = slashNums[3];
+        const baseDeno = await stakeManager.baseDenominator();
         const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);

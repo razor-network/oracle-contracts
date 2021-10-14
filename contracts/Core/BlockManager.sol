@@ -2,20 +2,19 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IBlockManager.sol";
-import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IAssetManager.sol";
 import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
+import "./parameters/child/BlockManagerParams.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "./ACL.sol";
 
-contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockManager {
-    IParameters public parameters;
+contract BlockManager is Initializable, ACL, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
@@ -31,15 +30,15 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         address rewardManagerAddress,
         address voteManagerAddress,
         address assetManagerAddress,
-        address parametersAddress,
-        address randomNoManagerAddress
+        address randomNoManagerAddress,
+        address governanceAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
-        parameters = IParameters(parametersAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
+        governance = governanceAddress;
     }
 
     // elected proposer proposes block.
@@ -57,10 +56,10 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestInfluencerId
-    ) external initialized checkEpochAndState(State.Propose, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Propose, epoch, epochLength) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(isElectedProposer(iteration, biggestInfluencerId, proposerId), "not elected");
-        require(stakeManager.getStake(proposerId) >= parameters.minStake(), "stake below minimum stake");
+        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
@@ -79,7 +78,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32 epoch,
         uint8 assetId,
         uint32[] memory sortedStakers
-    ) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -109,13 +108,13 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
     //O(1)
-    function claimBlockReward() external initialized checkState(State.Confirm, parameters.epochLength()) {
-        uint32 epoch = parameters.getEpoch();
+    function claimBlockReward() external initialized checkState(State.Confirm, epochLength) {
+        uint32 epoch = getEpoch(epochLength);
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
@@ -131,7 +130,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        uint32 epoch = parameters.getEpoch();
+        uint32 epoch = getEpoch(epochLength);
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
             assetManager.executePendingDeactivations(epoch);
@@ -144,7 +143,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestInfluencerId
-    ) external initialized checkEpochAndState(State.Dispute, epoch, parameters.epochLength()) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestInfluence = stakeManager.getInfluence(correctBiggestInfluencerId);
@@ -156,7 +155,7 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
-        checkEpochAndState(State.Dispute, epoch, parameters.epochLength())
+        checkEpochAndState(State.Dispute, epoch, epochLength)
         returns (uint32)
     {
         require(
@@ -254,7 +253,6 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, IBlockM
             blockIndexToBeConfirmed = 0;
             return;
         }
-        uint8 maxAltBlocks = parameters.maxAltBlocks();
 
         for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
             // Replace : New Block has better biggest influence
