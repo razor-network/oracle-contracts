@@ -25,6 +25,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, VoteManag
         address blockManagerAddress,
         address governanceAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(governanceAddress != address(0x0), "Zero Address check");
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);

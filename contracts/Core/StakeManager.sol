@@ -51,6 +51,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         address stakedTokenFactoryAddress,
         address governanceAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(governanceAddress != address(0x0), "Zero Address check");
         razor = IERC20(razorAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);

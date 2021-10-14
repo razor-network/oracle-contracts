@@ -30,6 +30,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, AssetManage
     event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
 
     constructor(address governanceAddress) {
+        require(governanceAddress != address(0x0), "Zero Address check");
         governance = governanceAddress;
     }
 

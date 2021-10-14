@@ -31,39 +31,48 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
         uint16 _keep
     ) external override onlyGovernance {
         require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
+        // slither-disable-next-line events-access
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
     function setBaseDenominator(uint16 _baseDenominator) external override onlyGovernance {
+        // slither-disable-next-line events-access
         baseDenominator = _baseDenominator;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyGovernance {
+        // slither-disable-next-line events-access
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
     function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyGovernance {
+        // slither-disable-next-line events-access
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
     function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyGovernance {
+        // slither-disable-next-line events-access
         extendLockPenalty = _extendLockPenalty;
     }
 
     function setMinStake(uint256 _minStake) external override onlyGovernance {
+        // slither-disable-next-line events-access
         minStake = _minStake;
     }
 
     function setGracePeriod(uint16 _gracePeriod) external override onlyGovernance {
+        // slither-disable-next-line events-access
         gracePeriod = _gracePeriod;
     }
 
     function setMaxCommission(uint8 _maxCommission) external override onlyGovernance {
+        // slither-disable-next-line events-access
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         maxCommission = _maxCommission;
     }
 
     function disableEscapeHatch() external override onlyGovernance {
+        // slither-disable-next-line events-access
         escapeHatchEnabled = false;
     }
 }

@@ -28,6 +28,7 @@ contract RewardManager is Initializable, ACL, Constants, RewardManagerParams, IR
         address blockManagerAddress,
         address governanceAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(governanceAddress != address(0x0), "Zero Address check");
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);

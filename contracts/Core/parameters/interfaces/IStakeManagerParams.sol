@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IStakeManagerParams {
-    function baseDenominator() external view returns (uint16);
-
     function setEpochLength(uint16 _epochLength) external;
 
     function setSlashParams(
@@ -27,4 +25,6 @@ interface IStakeManagerParams {
     function setMaxCommission(uint8 _maxCommission) external;
 
     function disableEscapeHatch() external;
+
+    function baseDenominator() external view returns (uint16);
 }

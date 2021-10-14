@@ -10,6 +10,7 @@ import "./interfaces/IDelegatorParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
 import "../ACL.sol";
 
+// slither-disable-next-line missing-inheritance
 contract Governance is Initializable, ACL {
     IBlockManagerParams public blockManagerParams;
     IRewardManagerParams public rewardManagerParams;
@@ -20,6 +21,9 @@ contract Governance is Initializable, ACL {
     IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
+
+    //event to be emitted when any governance parameter value changes.
+    event ParameterChanged(address admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
 
     function initialize(
         address blockManagerAddress,
@@ -38,9 +42,6 @@ contract Governance is Initializable, ACL {
         delegatorParams = IDelegatorParams(delegatorAddress);
         randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
-
-    //event to be emitted when any governance parameter value changes.
-    event ParameterChanged(address admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", _penaltyNotRevealNumerator, block.timestamp);
