@@ -23,7 +23,11 @@ const appendDeploymentFile = async (data) => {
   await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
 };
 
-const deployContract = async (contractName, linkDependecies = [], constructorParams = []) => {
+const deployContract = async (
+  contractName,
+  linkDependecies = [],
+  constructorParams = []
+) => {
   let Contract;
 
   if (linkDependecies.length !== 0) {
@@ -44,7 +48,9 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
   }
   const contract = await Contract.deploy(...constructorParams);
 
-  console.log(`${contractName} deployment tx.hash = ${contract.deployTransaction.hash} ...`);
+  console.log(
+    `${contractName} deployment tx.hash = ${contract.deployTransaction.hash} ...`
+  );
 
   await contract.deployed();
 
@@ -70,10 +76,30 @@ const deployContract = async (contractName, linkDependecies = [], constructorPar
   await appendDeploymentFile({ [contractName]: contract.address });
   console.log(`${contractName} deployed to: ${contract.address}`);
 
+  const config = {
+    address: contract.address,
+    constructorArguments: [...constructorParams],
+  };
+
+  // We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  if (contractName === 'Structs') {
+    config.contract = 'contracts/lib/Structs.sol:Structs';
+  }
+
+  if (contractName === 'RAZOR') {
+    config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  }
+
+  await hre.run('verify:verify', config);
+
   return contract;
 };
 
-const getdeployedContractInstance = async (contractName, contractAddress, linkDependecies = {}) => {
+const getdeployedContractInstance = async (
+  contractName,
+  contractAddress,
+  linkDependecies = {}
+) => {
   let Contract;
 
   if (Object.keys(linkDependecies).length !== 0) {
