@@ -10,22 +10,8 @@ const {
 } = require('./constants');
 
 const setupContracts = async () => {
-  const Random = await ethers.getContractFactory('Random');
-  const random = await Random.deploy();
-  await random.deployed();
-
-  const BlockManager = await ethers.getContractFactory('BlockManager', {
-    libraries: {
-      Random: random.address,
-    },
-  });
-
-  const RandomNoManager = await ethers.getContractFactory('RandomNoManager', {
-    libraries: {
-      Random: random.address,
-    },
-  });
-
+  const BlockManager = await ethers.getContractFactory('BlockManager');
+  const RandomNoManager = await ethers.getContractFactory('RandomNoManager');
   const Parameters = await ethers.getContractFactory('Parameters');
   const Delegator = await ethers.getContractFactory('Delegator');
   const AssetManager = await ethers.getContractFactory('AssetManager');
@@ -84,7 +70,6 @@ const setupContracts = async () => {
     parameters,
     delegator,
     assetManager,
-    random,
     razor,
     stakeManager,
     rewardManager,
