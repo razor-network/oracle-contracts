@@ -94,15 +94,14 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         whenNotPaused
     {
         uint32 stakerId = stakerIds[msg.sender];
-        // slither-disable-next-line uninitialized-local
-        uint256 totalSupply;
+        uint256 totalSupply = 0;
 
         if (stakerId == 0) {
             require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
-            // slither-disable-next-line reentrancy-benign
+            // slither-disable-next-line reentrancy-no-eth
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
@@ -119,9 +118,8 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             require(sToken.mint(msg.sender, toMint, amount));
-            totalSupply += toMint;
+            totalSupply = totalSupply + toMint;
         }
-        // slither-disable-next-line reentrancy-events
         emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, stakers[stakerId].stake, totalSupply, block.timestamp);
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
@@ -148,9 +146,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         require(sToken.mint(msg.sender, toMint, amount));
+        totalSupply += toMint;
 
-        // slither-disable-next-line reentrancy-events
-        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, sToken.totalSupply(), block.timestamp);
+        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
 
         // Step 4:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
@@ -200,7 +198,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
-
         //emit event here
         emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
