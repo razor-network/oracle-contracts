@@ -7,7 +7,10 @@ abstract contract AssetManagerParams is GovernanceACL, IAssetManagerParams {
     uint16 public epochLength = 300;
 
     function setEpochLength(uint16 _epochLength) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-reason: Disabled across all params childs
+        // as they are being called by governance contract only
+        // and their before setting, we are emitting event
+        // slither-disable-next-line missing-events-arithmetic
         epochLength = _epochLength;
     }
 }

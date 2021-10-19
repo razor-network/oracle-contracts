@@ -31,48 +31,48 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
         uint16 _keep
     ) external override onlyGovernance {
         require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
     function setBaseDenominator(uint16 _baseDenominator) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         baseDenominator = _baseDenominator;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
     function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
     function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         extendLockPenalty = _extendLockPenalty;
     }
 
     function setMinStake(uint256 _minStake) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         minStake = _minStake;
     }
 
     function setGracePeriod(uint16 _gracePeriod) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         gracePeriod = _gracePeriod;
     }
 
     function setMaxCommission(uint8 _maxCommission) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         maxCommission = _maxCommission;
     }
 
     function disableEscapeHatch() external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         escapeHatchEnabled = false;
     }
 }

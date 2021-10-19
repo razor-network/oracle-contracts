@@ -12,32 +12,32 @@ abstract contract RewardManagerParams is GovernanceACL, IRewardManagerParams {
     uint256 public blockReward = 100 * (10**18);
 
     function setEpochLength(uint16 _epochLength) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         epochLength = _epochLength;
     }
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external override onlyGovernance {
-        // slither-disable-next-line events-accesss
+        // slither-disable-next-line missing-events-arithmetics
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
 
     function setBaseDenominator(uint16 _baseDenominator) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         baseDenominator = _baseDenominator;
     }
 
     function setBlockReward(uint256 _blockReward) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         blockReward = _blockReward;
     }
 
     function setGracePeriod(uint16 _gracePeriod) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         gracePeriod = _gracePeriod;
     }
 
     function setMaxAge(uint32 _maxAge) external override onlyGovernance {
-        // slither-disable-next-line events-access
+        // slither-disable-next-line missing-events-arithmetic
         maxAge = _maxAge;
     }
 }
