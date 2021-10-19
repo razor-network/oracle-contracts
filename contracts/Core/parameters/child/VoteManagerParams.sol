@@ -7,13 +7,13 @@ abstract contract VoteManagerParams is GovernanceACL, IVoteManagerParams {
     uint256 public minStake = 1000 * (10**18);
     uint16 public epochLength = 300;
 
+    // slither-disable-next-line missing-events-arithmetic
     function setEpochLength(uint16 _epochLength) external override onlyGovernance {
-        // slither-disable-next-line missing-events-arithmetic
         epochLength = _epochLength;
     }
 
+    // slither-disable-next-line missing-events-arithmetic
     function setMinStake(uint256 _minStake) external override onlyGovernance {
-        // slither-disable-next-line missing-events-arithmetic
         minStake = _minStake;
     }
 }
