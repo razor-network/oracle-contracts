@@ -29,13 +29,37 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
-    event Staked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 newStake, uint256 timestamp);
+    event Staked(
+        address staker,
+        address sToken,
+        uint32 epoch,
+        uint32 indexed stakerId,
+        uint256 newStake,
+        uint256 totalSupply,
+        uint256 timestamp
+    );
 
-    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(
+        address staker,
+        uint32 epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 totalSupply,
+        uint256 timestamp
+    );
 
     event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
-    event Delegated(address delegator, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Delegated(
+        address delegator,
+        uint32 epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 totalSupply,
+        uint256 timestamp
+    );
 
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
 
@@ -70,23 +94,24 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         whenNotPaused
     {
         uint32 stakerId = stakerIds[msg.sender];
-        emit Staked(msg.sender, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
+        uint256 totalSupply = 0;
 
         if (stakerId == 0) {
             require(amount >= parameters.minStake(), "staked amount is less than minimum stake required");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
-            // slither-disable-next-line reentrancy-no-eth
+            // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
+            totalSupply = amount;
         } else {
             require(amount + stakers[stakerId].stake >= parameters.minStake(), "staked amount is less than minimum stake required");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
-            uint256 totalSupply = sToken.totalSupply();
+            totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
             // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
             // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
@@ -94,7 +119,10 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
             require(sToken.mint(msg.sender, toMint, amount));
+            totalSupply = totalSupply + toMint;
         }
+        // slither-disable-next-line reentrancy-events
+        emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, stakers[stakerId].stake, totalSupply, block.timestamp);
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
@@ -117,12 +145,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         // Step 2: Increase given stakers stake by : Amount
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
-        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, block.timestamp);
-        // Step 3:  Razor Token Transfer : Amount
-        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
 
-        // Step 4:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+        // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
         require(sToken.mint(msg.sender, toMint, amount));
+        totalSupply = totalSupply + toMint;
+
+        // slither-disable-next-line reentrancy-events
+        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
+
+        // Step 4:  Razor Token Transfer : Amount
+        require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
     }
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
@@ -168,9 +200,9 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         locks[msg.sender][staker.tokenAddress] = Structs.Lock(rAmount, commission, epoch + (parameters.withdrawLockPeriod()));
 
-        //emit event here
-        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
+        //emit event here
+        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
