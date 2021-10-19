@@ -27,13 +27,13 @@ interface IParameters {
     function blockReward() external view returns (uint256);
 
     function penaltyNotRevealNum() external view returns (uint16);
-    
-    function commissionChangeNum() external view returns (uint16);
+
+    function deltaCommission() external view returns (uint16);
 
     function baseDenominator() external view returns (uint16);
 
     function maxCommission() external view returns (uint8);
-    
+
     function epochLimitForUpdateCommission() external view returns (uint32);
 
     function withdrawLockPeriod() external view returns (uint8);

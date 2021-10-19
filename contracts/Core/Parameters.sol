@@ -18,7 +18,7 @@ contract Parameters is ACL, Constants, IParameters {
     uint8 public override extendLockPenalty = 1;
     uint8 public override maxCommission = 20;
     uint16 public override penaltyNotRevealNum = 1;
-    uint16 public override commissionChangeNum = 1000;  // 10 %
+    uint16 public override deltaCommission = 3; // by 3 %
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
     uint16 public override baseDenominator = 10000;
@@ -39,10 +39,10 @@ contract Parameters is ACL, Constants, IParameters {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", penaltyNotRevealNum, _penaltyNotRevealNumerator, block.timestamp);
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
-    
-    function setCommissionChangeNum(uint16 _commissionChangeNumerator) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "commissionChangeNum", commissionChangeNum, _commissionChangeNumerator, block.timestamp);
-        commissionChangeNum = _commissionChangeNumerator;
+
+    function setDeltaCommission(uint16 _deltaCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit ParameterChanged(msg.sender, "deltaCommission", deltaCommission, _deltaCommission, block.timestamp);
+        deltaCommission = _deltaCommission;
     }
 
     function setSlashParams(
@@ -121,10 +121,16 @@ contract Parameters is ACL, Constants, IParameters {
         emit ParameterChanged(msg.sender, "maxCommission", maxCommission, _maxCommission, block.timestamp);
         maxCommission = _maxCommission;
     }
-    
+
     function setEpochLimitForUpdateCommission(uint8 _epochLimitForUpdateCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_epochLimitForUpdateCommission >= 100, "Invalid Limit");
-        emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", epochLimitForUpdateCommission, _epochLimitForUpdateCommission, block.timestamp);
+        emit ParameterChanged(
+            msg.sender,
+            "epochLimitForUpdateCommission",
+            epochLimitForUpdateCommission,
+            _epochLimitForUpdateCommission,
+            block.timestamp
+        );
         epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
     }
 

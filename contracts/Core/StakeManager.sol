@@ -227,22 +227,20 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
     /// @notice Used by staker to update commision for delegation
     function updateCommission(uint8 commission) external {
-        require(commission != 0, "Invalid Commission Update");
         require(commission <= parameters.maxCommission(), "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         uint32 epoch = parameters.getEpoch();
-         if (stakers[stakerId].epochCommissionLastUpdated == 0) stakers[stakerId].epochCommissionLastUpdated = epoch;
-        else {
+        if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             require(
                 (stakers[stakerId].epochCommissionLastUpdated + parameters.epochLimitForUpdateCommission()) <= epoch,
-                "Invalid epoch for updation"
+                "Invalid Epoch For Updation"
             );
-            require(commission <= (stakers[stakerId].commission * parameters.commissionChangeNum()) / parameters.baseDenominator());
-            stakers[stakerId].epochCommissionLastUpdated = epoch;
+            require(commission <= (stakers[stakerId].commission + parameters.deltaCommission()), "Invalid Commission Update");
         }
+        stakers[stakerId].epochCommissionLastUpdated = epoch;
         stakers[stakerId].commission = commission;
-    } 
+    }
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
