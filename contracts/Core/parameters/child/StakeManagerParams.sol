@@ -67,8 +67,8 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
     }
 
     function setMaxCommission(uint8 _maxCommission) external override onlyGovernance {
-        // slither-disable-next-line events-maths
         require(_maxCommission <= 100, "Invalid Max Commission Update");
+        // slither-disable-next-line events-maths
         maxCommission = _maxCommission;
     }
 
