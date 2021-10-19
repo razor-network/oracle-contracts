@@ -6,8 +6,8 @@ import "./utils/GovernanceACL.sol";
 abstract contract RandomNoManagerParams is GovernanceACL, IRandomNoManagerParams {
     uint16 public epochLength = 300;
 
-    // slither-disable-next-line missing-events-arithmetic
     function setEpochLength(uint16 _epochLength) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         epochLength = _epochLength;
     }
 }

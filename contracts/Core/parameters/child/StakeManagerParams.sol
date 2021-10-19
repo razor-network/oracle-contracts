@@ -21,59 +21,59 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
     bool public escapeHatchEnabled = true;
     uint256 public minStake = 1000 * (10**18);
 
-    // slither-disable-next-line missing-events-arithmetic
     function setEpochLength(uint16 _epochLength) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         epochLength = _epochLength;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setSlashParams(
         uint16 _bounty,
         uint16 _burn,
         uint16 _keep
     ) external override onlyGovernance {
         require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
+        // slither-disable-next-line events-maths
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setBaseDenominator(uint16 _baseDenominator) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         baseDenominator = _baseDenominator;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
-    
-    // slither-disable-next-line missing-events-arithmetic
+
     function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         extendLockPenalty = _extendLockPenalty;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setMinStake(uint256 _minStake) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         minStake = _minStake;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setGracePeriod(uint16 _gracePeriod) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         gracePeriod = _gracePeriod;
     }
 
-    // slither-disable-next-line missing-events-arithmetic
     function setMaxCommission(uint8 _maxCommission) external override onlyGovernance {
+        // slither-disable-next-line events-maths
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         maxCommission = _maxCommission;
     }
-    
-    // slither-disable-next-line missing-events-arithmetic
+
     function disableEscapeHatch() external override onlyGovernance {
+        // slither-disable-next-line events-maths
         escapeHatchEnabled = false;
     }
 }
