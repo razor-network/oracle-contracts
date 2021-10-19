@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interface/IParameters.sol";
 import "./interface/IAssetManager.sol";
+import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
 import "./storage/Constants.sol";
 import "./StateManager.sol";
@@ -10,8 +11,9 @@ import "./ACL.sol";
 
 contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
     IParameters public parameters;
+    IDelegator public delegator;
 
-    event JobCreated(Structs.Job job, uint256 timestamp);
+    event AssetCreated(AssetType assetType, uint8 id, uint256 timestamp);
 
     event JobUpdated(
         uint8 id,
@@ -24,32 +26,17 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string url
     );
 
-    event CollectionCreated(
-        bool active,
-        uint8 id,
-        int8 power,
-        uint32 epoch,
-        uint32 aggregationMethod,
-        uint8[] jobIDs,
-        address creator,
-        uint256 timestamp,
-        string name
-    );
-
-    event CollectionUpdated(
-        uint8 id,
-        uint32 epoch,
-        uint32 aggregationMethod,
-        int8 power,
-        uint8[] updatedJobIDs,
-        uint256 timestamp,
-        string name
-    );
-
     event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
+
+    event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
 
     constructor(address parametersAddress) {
         parameters = IParameters(parametersAddress);
+    }
+
+    function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newDelegatorAddress != address(0x0), "Zero Address check");
+        delegator = IDelegator(newDelegatorAddress);
     }
 
     function createJob(
@@ -62,22 +49,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(weight <= 100, "Weight beyond max");
         numAssets = numAssets + 1;
-        uint32 epoch = parameters.getEpoch();
 
-        jobs[numAssets] = Structs.Job(
-            numAssets,
-            uint8(AssetTypes.Job),
-            uint8(selectorType),
-            weight,
-            power,
-            epoch,
-            msg.sender,
-            name,
-            selector,
-            url
-        );
+        jobs[numAssets] = Structs.Job(numAssets, uint8(selectorType), weight, power, name, selector, url);
 
-        emit JobCreated(jobs[numAssets], block.timestamp);
+        emit AssetCreated(AssetType.Job, numAssets, block.timestamp);
+        delegator.setIDName(name, numAssets);
     }
 
     function updateJob(
@@ -88,7 +64,8 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         string calldata selector,
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
-        require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
+        require(jobID != 0, "ID cannot be 0");
+        require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
         uint32 epoch = parameters.getEpoch();
@@ -106,31 +83,44 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         onlyRole(ASSET_MODIFIER_ROLE)
         checkState(State.Confirm, parameters.epochLength())
     {
-        require(collections[id].assetType == uint8(AssetTypes.Collection), "Asset is not a collection");
+        require(id != 0, "ID cannot be 0");
+        require(collections[id].id == id, "Asset is not a collection");
 
         uint32 epoch = parameters.getEpoch();
         if (assetStatus) {
             if (!collections[id].active) {
                 activeAssets.push(id);
                 collections[id].assetIndex = uint8(activeAssets.length);
+                collections[id].active = assetStatus;
+                emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
         } else {
             if (collections[id].active) {
-                uint8 assetIndex = collections[id].assetIndex;
-                if (assetIndex == activeAssets.length) {
-                    activeAssets.pop();
-                } else {
-                    activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
-                    collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
-                    activeAssets.pop();
-                }
-                collections[id].assetIndex = 0;
+                pendingDeactivations.push(id);
             }
         }
+    }
 
-        collections[id].active = assetStatus;
-
-        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
+    function executePendingDeactivations(uint32 epoch) external override onlyRole(ASSET_CONFIRMER_ROLE) {
+        for (uint8 i = uint8(pendingDeactivations.length); i > 0; i--) {
+            uint8 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
+            if (assetIndex == activeAssets.length) {
+                activeAssets.pop();
+            } else {
+                activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
+                collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
+                activeAssets.pop();
+            }
+            collections[pendingDeactivations[i - 1]].assetIndex = 0;
+            collections[pendingDeactivations[i - 1]].active = false;
+            emit CollectionActivityStatus(
+                collections[pendingDeactivations[i - 1]].active,
+                pendingDeactivations[i - 1],
+                epoch,
+                block.timestamp
+            );
+            pendingDeactivations.pop();
+        }
     }
 
     function createCollection(
@@ -144,97 +134,26 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         require(jobIDs.length > 0, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
-        uint32 epoch = parameters.getEpoch();
 
-        collections[numAssets].id = numAssets;
-        collections[numAssets].power = power;
-        collections[numAssets].epoch = epoch;
-        collections[numAssets].aggregationMethod = aggregationMethod;
-        collections[numAssets].name = name;
-        for (uint8 i = 0; i < jobIDs.length; i++) {
-            require(jobs[jobIDs[i]].assetType == uint8(AssetTypes.Job), "Job ID not present");
-
-            require(!collections[numAssets].jobIDExist[jobIDs[i]], "Duplicate JobIDs sent");
-
-            collections[numAssets].jobIDs.push(jobIDs[i]);
-
-            collections[numAssets].jobIDExist[jobIDs[i]] = true;
-        }
-        collections[numAssets].active = true;
-        collections[numAssets].assetType = uint8(AssetTypes.Collection);
-        collections[numAssets].creator = msg.sender;
         activeAssets.push(numAssets);
-        collections[numAssets].assetIndex = uint8(activeAssets.length);
-        emit CollectionCreated(true, numAssets, power, epoch, aggregationMethod, jobIDs, msg.sender, block.timestamp, name);
-    }
+        collections[numAssets] = Structs.Collection(true, numAssets, uint8(activeAssets.length), power, aggregationMethod, jobIDs, name);
+        emit AssetCreated(AssetType.Collection, numAssets, block.timestamp);
 
-    function addJobToCollection(uint8 collectionID, uint8 jobID)
-        external
-        onlyRole(ASSET_MODIFIER_ROLE)
-        notState(State.Commit, parameters.epochLength())
-    {
-        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
-
-        require(collections[collectionID].active, "Collection is inactive");
-
-        require(jobs[jobID].assetType == uint8(AssetTypes.Job), "Job ID not present");
-
-        require(!collections[collectionID].jobIDExist[jobID], "Job exists in this collection");
-
-        uint32 epoch = parameters.getEpoch();
-
-        collections[collectionID].jobIDs.push(jobID);
-
-        collections[collectionID].jobIDExist[jobID] = true;
-
-        emit CollectionUpdated(
-            collectionID,
-            epoch,
-            collections[collectionID].aggregationMethod,
-            collections[collectionID].power,
-            collections[collectionID].jobIDs,
-            block.timestamp,
-            collections[collectionID].name
-        );
-    }
-
-    function removeJobFromCollection(uint8 collectionID, uint8 jobIDIndex)
-        external
-        onlyRole(ASSET_MODIFIER_ROLE)
-        notState(State.Commit, parameters.epochLength())
-    {
-        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
-
-        require(collections[collectionID].jobIDs.length > jobIDIndex, "Index not in range");
-
-        uint32 epoch = parameters.getEpoch();
-
-        for (uint8 i = jobIDIndex; i < collections[collectionID].jobIDs.length - 1; i++) {
-            collections[collectionID].jobIDs[i] = collections[collectionID].jobIDs[i + 1];
-        }
-        collections[collectionID].jobIDs.pop();
-
-        emit CollectionUpdated(
-            collectionID,
-            epoch,
-            collections[collectionID].aggregationMethod,
-            collections[collectionID].power,
-            collections[collectionID].jobIDs,
-            block.timestamp,
-            collections[collectionID].name
-        );
+        delegator.setIDName(name, numAssets);
     }
 
     function updateCollection(
         uint8 collectionID,
         uint32 aggregationMethod,
-        int8 power
+        int8 power,
+        uint8[] memory jobIDs
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
-        require(collections[collectionID].assetType == uint8(AssetTypes.Collection), "Collection ID not present");
+        require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         uint32 epoch = parameters.getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].aggregationMethod = aggregationMethod;
+        collections[collectionID].jobIDs = jobIDs;
 
         emit CollectionUpdated(
             collectionID,
@@ -242,8 +161,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
             collections[collectionID].aggregationMethod,
             collections[collectionID].power,
             collections[collectionID].jobIDs,
-            block.timestamp,
-            collections[collectionID].name
+            block.timestamp
         );
     }
 
@@ -259,79 +177,42 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     //     }
     // }
 
-    function getJob(uint8 id)
-        external
-        view
-        override
-        returns (
-            uint8 selectorType,
-            uint8 weight,
-            int8 power,
-            string memory name,
-            string memory selector,
-            string memory url
-        )
-    {
-        require(jobs[id].assetType == uint8(AssetTypes.Job), "ID is not a job");
-
-        Structs.Job memory job = jobs[id];
-        return (job.selectorType, job.weight, job.power, job.name, job.selector, job.url);
-    }
-
-    function getCollection(uint8 id)
-        external
-        view
-        returns (
-            bool active,
-            int8 power,
-            uint8[] memory jobIDs,
-            uint32 aggregationMethod,
-            string memory name
-        )
-    {
-        require(collections[id].assetType == uint8(AssetTypes.Collection), "ID is not a collection");
-
-        return (
-            collections[id].active,
-            collections[id].power,
-            collections[id].jobIDs,
-            collections[id].aggregationMethod,
-            collections[id].name
-        );
-    }
-
-    function getAssetType(uint8 id) external view returns (uint8) {
+    function getAsset(uint8 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {
         require(id != 0, "ID cannot be 0");
-
         require(id <= numAssets, "ID does not exist");
 
-        if (jobs[id].assetType == uint8(AssetTypes.Job)) {
-            return uint8(AssetTypes.Job);
-        } else {
-            return uint8(AssetTypes.Collection);
-        }
+        return (jobs[id], collections[id]);
     }
 
     function getCollectionStatus(uint8 id) external view returns (bool) {
-        require(collections[id].assetType == uint8(AssetTypes.Collection), "Asset is not a collection");
+        require(collections[id].id == id, "Asset is not a collection");
+
         return collections[id].active;
     }
 
     function getAssetIndex(uint8 id) external view override returns (uint8) {
-        require(collections[id].assetType == uint8(AssetTypes.Collection), "ID needs to be a collection");
-
         return collections[id].assetIndex;
+    }
+
+    function getCollectionPower(uint8 id) external view override returns (int8) {
+        require(collections[id].id == id, "Asset is not a collection");
+
+        return collections[id].power;
     }
 
     function getNumAssets() external view returns (uint8) {
         return numAssets;
     }
 
-    function getNumActiveAssets() external view override returns (uint8) {
-        return uint8(activeAssets.length);
+    function getActiveAssets() external view override returns (uint8[] memory) {
+        return activeAssets;
     }
 
-    function getActiveAssets() external view returns (uint8[] memory) {
-        return activeAssets;
+    function getNumActiveAssets() external view override returns (uint256) {
+        return activeAssets.length;
+    }
+
+    function getPendingDeactivations() external view override returns (uint8[] memory) {
+        return pendingDeactivations;
     }
 }

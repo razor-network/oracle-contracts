@@ -1,0 +1,11 @@
+artifacts
+cache
+node_modules
+test
+*.log
+abi
+.circleci
+.github
+deployed
+deployments
+scripts

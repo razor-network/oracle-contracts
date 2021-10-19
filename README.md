@@ -25,6 +25,11 @@ Run `npm run lint`
 Run `npm run lint:sol:fix`
 
 # Deployment
+
+##### Using Docker
+The easiest way to get a local hardhat instance with deployed contracts is to run a docker container.
+ `$ docker-compose up`
+
 ##### Local Deployment using hardhat
 1. Create a copy of local environment `.env.local` from `.env.tpl` and set the environment variables accordingly
 2. Run hardhat node (`npx hardhat node`)
