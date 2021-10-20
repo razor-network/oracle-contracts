@@ -13,7 +13,6 @@ contract Parameters is ACL, Constants, IParameters {
     }
     uint8 public override withdrawLockPeriod = 1;
     uint8 public override maxAltBlocks = 5;
-    uint8 public override aggregationRange = 3;
     uint8 public override withdrawReleasePeriod = 5;
     uint8 public override extendLockPenalty = 1;
     uint8 public override maxCommission = 20;
@@ -97,11 +96,6 @@ contract Parameters is ACL, Constants, IParameters {
     function setGracePeriod(uint16 _gracePeriod) external onlyRole(DEFAULT_ADMIN_ROLE) {
         emit ParameterChanged(msg.sender, "gracePeriod", gracePeriod, _gracePeriod, block.timestamp);
         gracePeriod = _gracePeriod;
-    }
-
-    function setAggregationRange(uint8 _aggregationRange) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        emit ParameterChanged(msg.sender, "aggregationRange", aggregationRange, _aggregationRange, block.timestamp);
-        aggregationRange = _aggregationRange;
     }
 
     function setMaxAge(uint32 _maxAge) external onlyRole(DEFAULT_ADMIN_ROLE) {
