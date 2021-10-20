@@ -15,7 +15,6 @@ module.exports = async () => {
   const signers = await ethers.getSigners();
 
   const {
-    Random: randomAddress,
     Parameters: parametersAddress,
     BlockManager: blockManagerAddress,
     AssetManager: assetManagerAddress,
@@ -52,16 +51,14 @@ module.exports = async () => {
   // keccak256("DELEGATOR_MODIFIER_ROLE")
   const DELEGATOR_MODIFIER_ROLE = '0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597';
 
-  const randomLibraryDependency = { Random: randomAddress };
-
-  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
+  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
   const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
-  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress, randomLibraryDependency);
+  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
 
   const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
