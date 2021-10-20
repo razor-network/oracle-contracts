@@ -122,7 +122,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
             stakeManager.setStakerAge(epoch, thisStaker.id, 0);
             return;
         }
-        uint32 age = thisStaker.age + 10000;
+        uint64 age = thisStaker.age + 10000;
         // cap age to maxAge
         uint32 maxAge = parameters.maxAge();
         age = age > maxAge ? maxAge : age;
@@ -135,7 +135,7 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
         uint64 penalty = 0;
         for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
             // slither-disable-next-line calls-loop
-            uint48 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
+            uint64 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;
@@ -150,6 +150,6 @@ contract RewardManager is Initializable, ACL, Constants, IRewardManager {
 
         age = penalty > age ? 0 : age - uint32(penalty);
 
-        stakeManager.setStakerAge(epoch, thisStaker.id, age);
+        stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age));
     }
 }
