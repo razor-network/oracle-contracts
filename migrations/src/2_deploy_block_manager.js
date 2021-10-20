@@ -1,7 +1,7 @@
 const { deployContract } = require('../migrationHelpers');
 
 const deployBlockManager = async () => {
-  await deployContract('BlockManager', ['Random']);
+  await deployContract('BlockManager');
 };
 
 module.exports = async () => {

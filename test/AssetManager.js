@@ -222,14 +222,6 @@ describe('AssetManager', function () {
       await assertRevert(tx1, 'Number of jobIDs low to create collection');
     });
 
-    it('aggregationMethod should not be equal to 0 or greater than 3', async function () {
-      const collectionName = 'Test Collection2';
-      const tx1 = assetManager.createCollection([1, 2, 5], 4, 0, collectionName);
-      await assertRevert(tx1, 'Aggregation range out of bounds');
-      const tx2 = assetManager.createCollection([1, 2, 5], 0, 0, collectionName);
-      await assertRevert(tx2, 'Aggregation range out of bounds');
-    });
-
     it('should not create collection if same named collection exists', async function () {
       const collectionName = 'Test Collection2';
       const tx = assetManager.createCollection([1, 2], 1, 0, collectionName);

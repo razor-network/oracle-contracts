@@ -20,8 +20,6 @@ interface IParameters {
 
     function minStake() external view returns (uint256);
 
-    function aggregationRange() external view returns (uint8);
-
     function maxAltBlocks() external view returns (uint8);
 
     function blockReward() external view returns (uint256);
