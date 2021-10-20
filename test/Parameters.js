@@ -38,6 +38,7 @@ describe('Parameters contract Tests', async () => {
   const stakerActivityUpdaterHash = utils.solidityKeccak256(['string'], ['STAKER_ACTIVITY_UPDATER_ROLE']);
   const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
   const assetModifierHash = utils.solidityKeccak256(['string'], ['ASSET_MODIFIER_ROLE']);
+  const delegatorModifierHash = utils.solidityKeccak256(['string'], ['DELEGATOR_MODIFIER_ROLE']);
 
   before(async () => {
     ({ parameters } = await setupContracts());
@@ -230,6 +231,9 @@ describe('Parameters contract Tests', async () => {
 
     const assetModifierHashValue = await parameters.ASSET_MODIFIER_ROLE();
     assertBNEqual(assetModifierHash, assetModifierHashValue);
+
+    const delegatorModifierHashValue = await parameters.DELEGATOR_MODIFIER_ROLE();
+    assertBNEqual(delegatorModifierHash, delegatorModifierHashValue);
 
     const gracePeriodValue = await parameters.gracePeriod();
     assertBNEqual(gracePeriod, gracePeriodValue);

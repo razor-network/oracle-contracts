@@ -13,6 +13,7 @@ require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
 require('@tenderly/hardhat-tenderly');
+require('@nomiclabs/hardhat-etherscan');
 
 const {
   PROVIDER_HOST,
@@ -21,6 +22,7 @@ const {
   NETWORK,
   MNEMONIC,
   CMC_KEY,
+  ETHERSCAN_KEY,
 } = process.env;
 
 // Ref - https://chainid.network/chains.json
@@ -33,15 +35,16 @@ const ENV_CHAIN_IDS = {
 module.exports = {
   defaultNetwork: 'hardhat',
   solidity: {
-    compilers: [{
-      version: '0.8.4',
-      settings: {
-        optimizer: {
-          enabled: true,
-          runs: 100000,
+    compilers: [
+      {
+        version: '0.8.4',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 100000,
+          },
         },
       },
-    },
     ],
     overrides: {
       'contracts/Core/StakeManager.sol': {
@@ -50,6 +53,15 @@ module.exports = {
           optimizer: {
             enabled: true,
             runs: 50000,
+          },
+        },
+      },
+      'contracts/Core/BlockManager.sol': {
+        version: '0.8.4',
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 30000,
           },
         },
       },
@@ -70,6 +82,9 @@ module.exports = {
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
     },
+  },
+  etherscan: {
+    apiKey: ETHERSCAN_KEY,
   },
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
