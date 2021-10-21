@@ -24,12 +24,14 @@ describe('Parameters contract Tests', async () => {
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
+  const deltaCommission = toBigNumber('3');
   const exposureDenominator = toBigNumber('1000');
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('1000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
   const extendLockPenalty = toBigNumber('1');
+  const epochLimitForUpdateCommission = toBigNumber('100');
   const maxAge = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
 
@@ -79,6 +81,9 @@ describe('Parameters contract Tests', async () => {
     tx = parameters.connect(signers[1]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = parameters.connect(signers[1]).setDeltaCommission(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = parameters.connect(signers[1]).setBaseDenominator(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -104,6 +109,9 @@ describe('Parameters contract Tests', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setGracePeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = parameters.connect(signers[1]).setEpochLimitForUpdateCommission(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = parameters.connect(signers[1]).setMaxAge(toBigNumber('1'));
@@ -164,12 +172,23 @@ describe('Parameters contract Tests', async () => {
     assertBNEqual(slashNums.burn, toBigNumber('23'));
     assertBNEqual(slashNums.keep, toBigNumber('24'));
 
+    await parameters.setDeltaCommission(toBigNumber('25'));
+    const deltaCommission = await parameters.deltaCommission();
+    assertBNEqual(deltaCommission, toBigNumber('25'));
+
+    await parameters.setEpochLimitForUpdateCommission(toBigNumber('26'));
+    const epochLimitForUpdateCommission = await parameters.epochLimitForUpdateCommission();
+    assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
+
     await parameters.setBaseDenominator(toBigNumber('1'));
     const baseDenom = await parameters.baseDenominator();
     assertBNEqual(baseDenom, toBigNumber('1'));
 
-    const tx = parameters.setMaxCommission(toBigNumber('101'));
+    let tx = parameters.setMaxCommission(toBigNumber('101'));
     assertRevert(tx, 'Invalid Max Commission Update');
+
+    tx = parameters.setEpochLimitForUpdateCommission(toBigNumber('3'));
+    assertRevert(tx, 'Invalid Limit');
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -210,6 +229,12 @@ describe('Parameters contract Tests', async () => {
 
     const maxCommissionValue = await parameters.maxCommission();
     assertBNEqual(maxCommission, maxCommissionValue);
+
+    const deltaCommissionValue = await parameters.deltaCommission();
+    assertBNEqual(deltaCommission, deltaCommissionValue);
+
+    const epochLimitForUpdateCommissionValue = await parameters.epochLimitForUpdateCommission();
+    assertBNEqual(epochLimitForUpdateCommission, epochLimitForUpdateCommissionValue);
 
     const exposureDenominatorValue = await parameters.exposureDenominator();
     assertBNEqual(exposureDenominator, exposureDenominatorValue);
