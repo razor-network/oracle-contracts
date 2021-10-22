@@ -14,6 +14,8 @@ contract StakedToken is ERC20, IStakedToken {
     // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorDeposited/balOfsRZR()) * sRZRamount)
     // razorDeposited/balOfsRZR() indicates, for 1 sRZR, how much you had put in
 
+    event Mint(address to, uint256 amount);
+    event Burn(address from, uint256 amount);
     mapping(address => uint256) public razorDeposited;
 
     modifier onlyOwner() {
@@ -35,11 +37,13 @@ contract StakedToken is ERC20, IStakedToken {
     ) external override onlyOwner returns (bool) {
         razorDeposited[account] = razorDeposited[account] + _razorDeposited;
         _mint(account, amount);
+        emit Mint(account, amount);
         return true;
     }
 
     function burn(address account, uint256 amount) external override onlyOwner returns (bool) {
         _burn(account, amount);
+        emit Burn(account, amount);
         return true;
     }
 

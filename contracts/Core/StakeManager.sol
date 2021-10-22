@@ -35,7 +35,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 epoch,
         uint32 indexed stakerId,
         uint256 newStake,
-        uint256 totalSupply,
         uint256 timestamp
     );
 
@@ -45,7 +44,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 totalSupply,
         uint256 timestamp
     );
 
@@ -57,7 +55,6 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 totalSupply,
         uint256 timestamp
     );
 
@@ -122,7 +119,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
             totalSupply = totalSupply + toMint;
         }
         // slither-disable-next-line reentrancy-events
-        emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, stakers[stakerId].stake, totalSupply, block.timestamp);
+        emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, stakers[stakerId].stake, block.timestamp);
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
@@ -151,7 +148,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         totalSupply = totalSupply + toMint;
 
         // slither-disable-next-line reentrancy-events
-        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
+        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, block.timestamp);
 
         // Step 4:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
@@ -202,7 +199,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
 
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
         //emit event here
-        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
+        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, block.timestamp);
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
