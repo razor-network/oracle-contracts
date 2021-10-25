@@ -6,7 +6,6 @@ import "./IRandomNoProvider.sol";
 import "../Initializable.sol";
 import "../lib/Random.sol";
 import "../Core/StateManager.sol";
-import "../Core/ACL.sol";
 import "./RandomNoStorage.sol";
 
 /**
@@ -14,15 +13,12 @@ import "./RandomNoStorage.sol";
  *  @notice : Allows clients to register for random no, and pull it once available
  */
 
-contract RandomNoManager is Initializable, ACL, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
+contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
     event RandomNumberAvailable(uint32 epoch);
 
     /// @param blockManagerAddress The address of the BlockManager Contract
-    /// @param governanceAddress The address of the Governance contract
-    function initialize(address blockManagerAddress, address governanceAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
+    function initialize(address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(SECRETS_MODIFIER_ROLE, blockManagerAddress);
-        governance = governanceAddress;
     }
 
     /// @notice Allows Client to register for random number

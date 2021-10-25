@@ -65,7 +65,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, governance.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
         await assertRevert(tx, 'AccessControl');
       });
 
@@ -116,7 +116,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, governance.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
         await assertRevert(tx, 'Initializable: contract is already initialized');
       });
 

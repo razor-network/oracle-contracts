@@ -377,7 +377,6 @@ describe('Access Control Test', async () => {
 
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
     await mineToNextState();// confirm
@@ -408,13 +407,12 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
   it('Only Admin should be able to call updateAddress in Delegator', async () => {
-    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
+    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS), 'Zero Address check');
   });
   it('Only Admin should be able to call upgradeDelegator in assetManager', async () => {
     assert(await assetManager.connect(signers[0]).upgradeDelegator(signers[2].address));

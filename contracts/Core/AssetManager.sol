@@ -5,12 +5,9 @@ import "./interface/IAssetManager.sol";
 import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
 import "./parameters/child/AssetManagerParams.sol";
-import "./storage/Constants.sol";
 import "./StateManager.sol";
-import "./ACL.sol";
-import "../Initializable.sol";
 
-contract AssetManager is Initializable, ACL, AssetStorage, Constants, StateManager, AssetManagerParams, IAssetManager {
+contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
     IDelegator public delegator;
 
     event AssetCreated(AssetType assetType, uint8 id, uint256 timestamp);
@@ -29,11 +26,6 @@ contract AssetManager is Initializable, ACL, AssetStorage, Constants, StateManag
     event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
     event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
-
-    function initialize(address governanceAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
-        governance = governanceAddress;
-    }
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");

@@ -7,25 +7,18 @@ import "./Core/interface/IBlockManager.sol";
 import "./IDelegator.sol";
 import "./Core/parameters/child/DelegatorParams.sol";
 import "./Core/storage/Constants.sol";
-import "./Core/ACL.sol";
 
-contract Delegator is ACL, StateManager, DelegatorParams, IDelegator {
+contract Delegator is StateManager, DelegatorParams, IDelegator {
     mapping(bytes32 => uint8) public ids;
 
     IAssetManager public assetManager;
     IBlockManager public blockManager;
 
-    function updateAddress(
-        address newDelegateAddress,
-        address newResultAddress,
-        address governanceAddress
-    ) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function updateAddress(address newDelegateAddress, address newResultAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegateAddress != address(0x0), "Zero Address check");
         require(newResultAddress != address(0x0), "Zero Address check");
-        require(governanceAddress != address(0x0), "Zero Address check");
         assetManager = IAssetManager(newDelegateAddress);
         blockManager = IBlockManager(newResultAddress);
-        governance = governanceAddress;
     }
 
     function setIDName(string calldata name, uint8 _id) external override onlyRole(DELEGATOR_MODIFIER_ROLE) {

@@ -8,7 +8,7 @@ import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/IAssetManagerParams.sol";
 import "./interfaces/IDelegatorParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
-import "../ACL.sol";
+import "./ACL.sol";
 
 // slither-reason : Disabled as slither is suggesting to have params interfaces to be inherited here
 // Though function signatures are same, meaning is diff

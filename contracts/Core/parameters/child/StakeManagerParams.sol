@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 import "../interfaces/IStakeManagerParams.sol";
-import "./utils/GovernanceACL.sol";
+import "../ACL.sol";
 
-abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
+abstract contract StakeManagerParams is ACL, IStakeManagerParams {
     struct SlashNums {
         uint16 bounty;
         uint16 burn;
@@ -20,8 +20,9 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
     uint16 public epochLength = 300;
     bool public escapeHatchEnabled = true;
     uint256 public minStake = 1000 * (10**18);
+    bytes32 public constant GOVERNANCE_ROLE = 0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1;
 
-    function setEpochLength(uint16 _epochLength) external override onlyGovernance {
+    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         epochLength = _epochLength;
     }
@@ -30,49 +31,49 @@ abstract contract StakeManagerParams is GovernanceACL, IStakeManagerParams {
         uint16 _bounty,
         uint16 _burn,
         uint16 _keep
-    ) external override onlyGovernance {
+    ) external override onlyRole(GOVERNANCE_ROLE) {
         require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
         // slither-disable-next-line events-maths
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
-    function setBaseDenominator(uint16 _baseDenominator) external override onlyGovernance {
+    function setBaseDenominator(uint16 _baseDenominator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         baseDenominator = _baseDenominator;
     }
 
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyGovernance {
+    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyGovernance {
+    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         withdrawReleasePeriod = _withdrawReleasePeriod;
     }
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyGovernance {
+    function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         extendLockPenalty = _extendLockPenalty;
     }
 
-    function setMinStake(uint256 _minStake) external override onlyGovernance {
+    function setMinStake(uint256 _minStake) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         minStake = _minStake;
     }
 
-    function setGracePeriod(uint16 _gracePeriod) external override onlyGovernance {
+    function setGracePeriod(uint16 _gracePeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         gracePeriod = _gracePeriod;
     }
 
-    function setMaxCommission(uint8 _maxCommission) external override onlyGovernance {
+    function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         // slither-disable-next-line events-maths
         maxCommission = _maxCommission;
     }
 
-    function disableEscapeHatch() external override onlyGovernance {
+    function disableEscapeHatch() external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         escapeHatchEnabled = false;
     }

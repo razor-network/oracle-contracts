@@ -10,7 +10,6 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./storage/StakeStorage.sol";
 import "./parameters/child/StakeManagerParams.sol";
 import "../Initializable.sol";
-import "./ACL.sol";
 import "./StateManager.sol";
 import "../Pause.sol";
 
@@ -18,7 +17,7 @@ import "../Pause.sol";
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
 
-contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, StakeManagerParams, IStakeManager {
+contract StakeManager is Initializable, StakeStorage, StateManager, Pause, StakeManagerParams, IStakeManager {
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
     IERC20 public razor;
@@ -67,20 +66,16 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
-    /// @param governanceAddress The address of the Governance contract
     function initialize(
         address razorAddress,
         address rewardManagerAddress,
         address voteManagersAddress,
-        address stakedTokenFactoryAddress,
-        address governanceAddress
+        address stakedTokenFactoryAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
         razor = IERC20(razorAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         stakedTokenFactory = IStakedTokenFactory(stakedTokenFactoryAddress);
-        governance = governanceAddress;
     }
 
     /// @notice stake during commit state only

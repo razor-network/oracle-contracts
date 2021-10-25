@@ -8,12 +8,11 @@ import "./interface/IRewardManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
-import "./ACL.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
-contract RewardManager is Initializable, ACL, Constants, RewardManagerParams, IRewardManager {
+contract RewardManager is Initializable, Constants, RewardManagerParams, IRewardManager {
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
@@ -21,18 +20,14 @@ contract RewardManager is Initializable, ACL, Constants, RewardManagerParams, IR
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
     /// @param blockManagerAddress The address of the BlockManager contract
-    /// @param governanceAddress The address of the Governance contract
     function initialize(
         address stakeManagerAddress,
         address voteManagersAddress,
-        address blockManagerAddress,
-        address governanceAddress
+        address blockManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        governance = governanceAddress;
     }
 
     /// @notice gives penalty to stakers for failing to reveal or

@@ -86,10 +86,9 @@ describe('BlockManager', function () {
         rewardManager.address,
         voteManager.address,
         assetManager.address,
-        randomNoManager.address,
-        governance.address
+        randomNoManager.address
       );
-      governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
       await assertRevert(tx, 'AccessControl');
     });
 

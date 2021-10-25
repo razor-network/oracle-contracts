@@ -9,9 +9,8 @@ import "./storage/VoteStorage.sol";
 import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
-import "./ACL.sol";
 
-contract VoteManager is Initializable, ACL, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
+contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
@@ -22,14 +21,11 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, VoteManag
     function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
-        address blockManagerAddress,
-        address governanceAddress
+        address blockManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        governance = governanceAddress;
     }
 
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, epochLength) {

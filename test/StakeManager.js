@@ -76,8 +76,7 @@ describe('StakeManager', function () {
         razor.address,
         rewardManager.address,
         voteManager.address,
-        stakedTokenFactory.address,
-        governance.address
+        stakedTokenFactory.address
       );
       await assertRevert(tx, 'AccessControl');
     });

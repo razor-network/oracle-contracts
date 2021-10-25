@@ -12,9 +12,8 @@ import "./parameters/child/BlockManagerParams.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
-import "./ACL.sol";
 
-contract BlockManager is Initializable, ACL, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
+contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
@@ -30,16 +29,13 @@ contract BlockManager is Initializable, ACL, BlockStorage, StateManager, BlockMa
         address rewardManagerAddress,
         address voteManagerAddress,
         address assetManagerAddress,
-        address randomNoManagerAddress,
-        address governanceAddress
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(governanceAddress != address(0x0), "Zero Address check");
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         assetManager = IAssetManager(assetManagerAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
-        governance = governanceAddress;
     }
 
     // elected proposer proposes block.

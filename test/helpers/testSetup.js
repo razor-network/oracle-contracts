@@ -7,6 +7,7 @@ const {
   REWARD_MODIFIER_ROLE,
   ASSET_CONFIRMER_ROLE,
   DELEGATOR_MODIFIER_ROLE,
+  GOVERNANCE_ROLE,
 } = require('./constants');
 
 const setupContracts = async () => {
@@ -45,17 +46,17 @@ const setupContracts = async () => {
   await randomNoManager.deployed();
 
   const initializeContracts = async () => [
-    assetManager.initialize(governance.address),
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address,
-      randomNoManager.address, governance.address),
-    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, governance.address),
-    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address, governance.address),
-    rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, governance.address),
-    delegator.updateAddress(assetManager.address, blockManager.address, governance.address),
+      randomNoManager.address),
+    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address),
+    stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
+    rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address),
+    delegator.updateAddress(assetManager.address, blockManager.address),
     assetManager.upgradeDelegator(delegator.address),
-    randomNoManager.initialize(blockManager.address, governance.address),
+    randomNoManager.initialize(blockManager.address),
     governance.initialize(blockManager.address, rewardManager.address, stakeManager.address,
       voteManager.address, assetManager.address, delegator.address, randomNoManager.address),
+
     assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManager.address),
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
     delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManager.address),
@@ -66,6 +67,14 @@ const setupContracts = async () => {
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
+
+    assetManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    blockManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    rewardManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    stakeManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    voteManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    delegator.grantRole(GOVERNANCE_ROLE, governance.address),
+    randomNoManager.grantRole(GOVERNANCE_ROLE, governance.address),
   ];
 
   return {

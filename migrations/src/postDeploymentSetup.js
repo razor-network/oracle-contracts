@@ -54,6 +54,9 @@ module.exports = async () => {
   // keccak256("GOVERNER_ROLE")
   const GOVERNER_ROLE = '0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e';
 
+  // keccak256("GOVERNANCE_ROLE")
+  const GOVERNANCE_ROLE = '0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1';
+
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
@@ -87,16 +90,23 @@ module.exports = async () => {
     await ethers.provider.send('evm_setIntervalMining', [MINING_INTERVAL]);
   }
 
-  pendingTransactions.push(await assetManager.initialize(governanceAddress));
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
-    assetManagerAddress, randomNoManagerAddress, governanceAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, governanceAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress, governanceAddress));
-  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, governanceAddress));
-  pendingTransactions.push(await delegator.updateAddress(assetManagerAddress, blockManagerAddress, governanceAddress));
-  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress, governanceAddress));
+    assetManagerAddress, randomNoManagerAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await delegator.updateAddress(assetManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, assetManagerAddress, delegatorAddress, randomNoManagerAddress));
+
+  pendingTransactions.push(await assetManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await stakeManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await voteManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await delegator.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await randomNoManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
 
   pendingTransactions.push(await assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
