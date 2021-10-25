@@ -117,7 +117,6 @@ contract Parameters is ACL, Constants, IParameters {
     }
 
     function setEpochLimitForUpdateCommission(uint8 _epochLimitForUpdateCommission) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(_epochLimitForUpdateCommission >= 5, "Invalid Limit");
         emit ParameterChanged(
             msg.sender,
             "epochLimitForUpdateCommission",
