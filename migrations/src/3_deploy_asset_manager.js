@@ -1,8 +1,7 @@
-const { deployContract, readDeploymentFile } = require('../migrationHelpers');
+const { deployContract } = require('../migrationHelpers');
 
 const deployAssetManager = async () => {
-  const { Governance } = await readDeploymentFile();
-  await deployContract('AssetManager', [], [Governance]);
+  await deployContract('AssetManager');
 };
 
 module.exports = async () => {

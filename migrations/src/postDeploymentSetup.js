@@ -87,6 +87,7 @@ module.exports = async () => {
     await ethers.provider.send('evm_setIntervalMining', [MINING_INTERVAL]);
   }
 
+  pendingTransactions.push(await assetManager.initialize(governanceAddress));
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     assetManagerAddress, randomNoManagerAddress, governanceAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, governanceAddress));
