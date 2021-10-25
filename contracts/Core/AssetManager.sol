@@ -30,7 +30,7 @@ contract AssetManager is Initializable, ACL, AssetStorage, Constants, StateManag
 
     event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
 
-    function initialize (address governanceAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    function initialize(address governanceAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         require(governanceAddress != address(0x0), "Zero Address check");
         governance = governanceAddress;
     }
