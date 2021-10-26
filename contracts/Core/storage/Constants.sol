@@ -16,6 +16,12 @@ contract Constants {
         Slashed
     }
 
+    enum StakerActivities {
+        Delegated,
+        Unstaked,
+        Withdrew
+    }
+
     uint8 public constant NUM_STATES = 5;
 
     // keccak256("BLOCK_CONFIRMER_ROLE")
