@@ -8,6 +8,7 @@ const {
   REWARD_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
   ZERO_ADDRESS,
+  GOVERNER_ROLE,
 } = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
@@ -21,7 +22,7 @@ describe('Access Control Test', async () => {
   let signers;
   let snapShotId;
   let blockManager;
-  let parameters;
+  let governance;
   let assetManager;
   let stakeManager;
   let rewardManager;
@@ -31,7 +32,7 @@ describe('Access Control Test', async () => {
 
   before(async () => {
     ({
-      blockManager, parameters, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
+      blockManager, governance, assetManager, stakeManager, rewardManager, initializeContracts, delegator,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -376,7 +377,6 @@ describe('Access Control Test', async () => {
 
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();// reveal
     await mineToNextState();// propose
     await mineToNextState();// dispute
     await mineToNextState();// confirm
@@ -387,9 +387,10 @@ describe('Access Control Test', async () => {
     await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
   });
 
-  it('Only Default Admin should able to update Block Reward', async () => {
-    await assertRevert(parameters.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
-    assert(await parameters.setBlockReward(5500), 'Admin not able to update BlockReward');
+  it('Only Governer should able to update Block Reward', async () => {
+    await assertRevert(governance.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
+    await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+    assert(await governance.setBlockReward(5500), 'Admin not able to update BlockReward');
   });
 
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {
@@ -406,13 +407,12 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
   it('Only Admin should be able to call updateAddress in Delegator', async () => {
-    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address, signers[2].address), expectedRevertMessage);
+    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address, ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS), 'Zero Address check');
   });
   it('Only Admin should be able to call upgradeDelegator in assetManager', async () => {
     assert(await assetManager.connect(signers[0]).upgradeDelegator(signers[2].address));

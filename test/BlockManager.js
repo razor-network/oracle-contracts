@@ -14,9 +14,9 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   STAKE_MODIFIER_ROLE,
   ASSET_MODIFIER_ROLE,
+  GOVERNER_ROLE,
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
-
 } = require('./helpers/constants');
 const {
   calculateDisputesData,
@@ -38,14 +38,14 @@ describe('BlockManager', function () {
   let razor;
   let stakeManager;
   let rewardManager;
-  let parameters;
   let randomNoManager;
   let initializeContracts;
+  let governance;
 
   before(async () => {
     ({
       blockManager,
-      parameters,
+      governance,
       assetManager,
       razor,
       stakeManager,
@@ -84,11 +84,11 @@ describe('BlockManager', function () {
       const tx = blockManager.connect(signers[1]).initialize(
         stakeManager.address,
         rewardManager.address,
-        parameters.address,
         voteManager.address,
         assetManager.address,
         randomNoManager.address
       );
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
       await assertRevert(tx, 'AccessControl');
     });
 
@@ -316,12 +316,11 @@ describe('BlockManager', function () {
       }
 
       await blockManager.connect(signers[19]).finalizeDispute(epoch, blockIndex);
-
-      const slashNums = await parameters.getAllSlashParams();
+      const slashNums = await stakeManager.slashNums();
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = slashNums[3];
+      const baseDeno = await stakeManager.baseDenominator();
       const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
@@ -703,7 +702,7 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await parameters.setSlashParams(4750, 4750, 0);
+      await governance.setSlashParams(4750, 4750, 0);
       await stakeManager.slash(epoch, stakerIdAcc2, signers[11].address);
       const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
@@ -1210,11 +1209,11 @@ describe('BlockManager', function () {
       await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
       assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
 
-      const slashNums = await parameters.getAllSlashParams();
+      const slashNums = await stakeManager.slashNums();
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = slashNums[3];
+      const baseDeno = await stakeManager.baseDenominator();
       const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeBefore.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeBefore.mul(keepSlashNum).div(baseDeno);
@@ -1241,7 +1240,7 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
       const base = 12;
-      const maxAltBlocks = Number(await parameters.maxAltBlocks());
+      const maxAltBlocks = Number(await blockManager.maxAltBlocks());
 
       for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
         await razor.transfer(signers[base + i].address, tokenAmount('420000'));
@@ -1286,7 +1285,7 @@ describe('BlockManager', function () {
           iteration,
           biggestInfluencerId);
       }
-      assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await parameters.maxAltBlocks());
+      assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await blockManager.maxAltBlocks());
     });
 
     it('should not be able to claim block rewards if no blocks are proposed', async function () {
@@ -1472,8 +1471,8 @@ describe('BlockManager', function () {
       }
       const ageAcc17 = incorrectVotingPenalty > age ? 0 : age - incorrectVotingPenalty;
       staker17 = await stakeManager.getStaker(stakerIdAcc17);
-      const blockReward = await parameters.blockReward();
-      const randaoPenalty = await parameters.blockReward();
+      const blockReward = await blockManager.blockReward();
+      const randaoPenalty = await blockManager.blockReward();
       const staker14 = await stakeManager.getStaker(stakerIdAcc14);
       const staker16 = await stakeManager.getStaker(stakerIdAcc16);
       assertBNEqual(staker14.stake, prevStakeAcc14.sub(randaoPenalty), 'Penalty has not been applied correctly');
