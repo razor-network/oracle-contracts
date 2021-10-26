@@ -221,7 +221,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
-        emit StakerActivity(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, , Constants.StakerActivities.Withdrew, block.timestamp);
+        emit StakerActivity(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, 0, Constants.StakerActivities.Withdrew, block.timestamp);
         require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
