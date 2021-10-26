@@ -239,6 +239,7 @@ contract StakeManager is Initializable, ACL, StakeStorage, StateManager, Pause, 
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
+        
         emit StakerActivity(
             msg.sender,
             epoch,
