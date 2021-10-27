@@ -1489,12 +1489,12 @@ describe('StakeManager', function () {
       // Propose
       const stakerIdAcc = await stakeManager.stakerIds(signers[4].address);
       const tx = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
-      assertRevert(tx, 'Unstake: NA Propose');
+      await assertRevert(tx, 'Unstake: NA Propose');
       await mineToNextState();
 
       // Dispute
       const tx1 = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
-      assertRevert(tx1, 'Unstake: NA Dispute');
+      await assertRevert(tx1, 'Unstake: NA Dispute');
     });
   });
 });
