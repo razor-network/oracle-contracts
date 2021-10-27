@@ -8,6 +8,7 @@ const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
+  GOVERNER_ROLE,
 
 } = require('./helpers/constants');
 const {
@@ -35,7 +36,7 @@ describe('StakeManager', function () {
     let signers;
     let razor;
     let blockManager;
-    let parameters;
+    let governance;
     let stakeManager;
     let rewardManager;
     let voteManager;
@@ -51,7 +52,7 @@ describe('StakeManager', function () {
         assetManager,
         stakeManager,
         rewardManager,
-        parameters,
+        governance,
         voteManager,
         initializeContracts,
         stakedToken,
@@ -75,7 +76,6 @@ describe('StakeManager', function () {
         razor.address,
         rewardManager.address,
         voteManager.address,
-        parameters.address,
         stakedTokenFactory.address
       );
       await assertRevert(tx, 'AccessControl');
@@ -98,7 +98,7 @@ describe('StakeManager', function () {
         i++;
       }
 
-      while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
+      while (Number(await assetManager.getState(await assetManager.epochLength())) !== 4) { await mineToNextState(); }
 
       let Cname;
       for (let i = 1; i <= 8; i++) {
@@ -353,14 +353,15 @@ describe('StakeManager', function () {
       assertBNEqual(stakeAfterAcc1, stakeBeforeAcc1.add(stake), 'Stake did not increase on staking after withdraw');
 
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await parameters.setSlashParams(500, 4500, 0); // slashing only half stake
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.setSlashParams(500, 4500, 0); // slashing only half stake
       await stakeManager.slash(epoch, stakerIdAcc1, signers[10].address); // slashing signers[1]
 
-      const slashNums = await parameters.getAllSlashParams();
+      const slashNums = await stakeManager.slashNums();
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = slashNums[3];
+      const baseDeno = await stakeManager.baseDenominator();
       const amountToBeBurned = stakeAfterAcc1.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeAfterAcc1.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeAfterAcc1.mul(keepSlashNum).div(baseDeno);
@@ -596,7 +597,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to updateCommission if it exceeds maximum limit', async function () {
-      const commRate = await parameters.maxCommission();
+      const commRate = await stakeManager.maxCommission();
       const tx = stakeManager.connect(signers[4]).updateCommission(commRate + 1);
       await assertRevert(tx, 'Commission exceeds maxlimit');
     });
@@ -937,7 +938,7 @@ describe('StakeManager', function () {
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      const withdrawWithin = await parameters.withdrawReleasePeriod();
+      const withdrawWithin = await stakeManager.withdrawReleasePeriod();
 
       // Delegator withdraws
       for (let i = 0; i < withdrawWithin + 1; i++) {
@@ -959,7 +960,7 @@ describe('StakeManager', function () {
     it('Delegetor/Staker should be penalized when calling extend lock', async function () {
       let staker = await stakeManager.getStaker(4);
       let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
-      const extendLockPenalty = await parameters.extendLockPenalty();
+      const extendLockPenalty = await stakeManager.extendLockPenalty();
       let lockedAmount = lock.amount;
       const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
       lockedAmount = lockedAmount.sub(penalty);
@@ -1036,7 +1037,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[7]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[7]).stake(epoch, stake1);
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
-      await parameters.setSlashParams(500, 9500, 0);
+      await governance.setSlashParams(500, 9500, 0);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
       const stake2 = tokenAmount('20000');
@@ -1093,7 +1094,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       const balanceAdminBefore = await razor.balanceOf(signers[0].address);
-      await parameters.connect(signers[0]).disableEscapeHatch();
+      await governance.connect(signers[0]).disableEscapeHatch();
       const tx = stakeManager.connect(signers[0]).escape(signers[0].address);
       await assertRevert(tx, 'escape hatch is disabled');
       const balanceContractAfter = await razor.balanceOf(stakeManager.address);
@@ -1472,7 +1473,7 @@ describe('StakeManager', function () {
 
     it('staker should be able to decrease the commission by any amount not less than zero after epoch limit', async function () {
       let staker = await stakeManager.getStaker(4);
-      await parameters.connect(signers[0]).setEpochLimitForUpdateCommission(5);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(5);
       for (let i = 0; i < 5; i++) {
         await mineToNextEpoch();
       }
@@ -1484,7 +1485,7 @@ describe('StakeManager', function () {
     });
     it('staker should be able to increase the commission by only alloted commission increase percentage after epoch limit', async function () {
       let staker = await stakeManager.getStaker(4);
-      await parameters.connect(signers[0]).setEpochLimitForUpdateCommission(10);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(10);
       // console.log(Number(await parameters.epochCommissionLastUpdated()));
       for (let i = 0; i < 10; i++) {
         await mineToNextEpoch();

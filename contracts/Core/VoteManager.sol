@@ -2,17 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IVoteManager.sol";
-import "./interface/IParameters.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
 import "./storage/VoteStorage.sol";
+import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
-import "./ACL.sol";
 
-contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteManager {
-    IParameters public parameters;
+contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
@@ -23,20 +21,14 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
     function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
-        address blockManagerAddress,
-        address parametersAddress
+        address blockManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        parameters = IParameters(parametersAddress);
     }
 
-    function commit(uint32 epoch, bytes32 commitment)
-        external
-        initialized
-        checkEpochAndState(State.Commit, epoch, parameters.epochLength())
-    {
+    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, epochLength) {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
@@ -51,7 +43,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         // Switch to call confirm block only when block in previous epoch has not been confirmed
         // and if previous epoch do have proposed blocks
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
-        if (thisStakerStake >= parameters.minStake()) {
+        if (thisStakerStake >= minStake) {
             commitments[stakerId].epoch = epoch;
             commitments[stakerId].commitmentHash = commitment;
             emit Committed(epoch, stakerId, commitment, block.timestamp);
@@ -62,11 +54,11 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret
-    ) external initialized checkEpochAndState(State.Reveal, epoch, parameters.epochLength()) {
+    ) external initialized checkEpochAndState(State.Reveal, epoch, epochLength) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(stakeManager.getStake(stakerId) >= parameters.minStake(), "stake below minimum");
+        require(stakeManager.getStake(stakerId) >= minStake, "stake below minimum");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
 
@@ -92,7 +84,7 @@ contract VoteManager is Initializable, ACL, VoteStorage, StateManager, IVoteMana
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch, parameters.epochLength()) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Commit, epoch, epochLength) returns (uint32) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
