@@ -159,9 +159,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 stakerId,
         uint256 sAmount
     ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
-        State _currentState = getState(epochLength);
-        require(_currentState != State.Propose, "Unstake: NA Propose");
-        require(_currentState != State.Dispute, "Unstake: NA Dispute");
+        State currentState = getState(epochLength);
+        require(currentState != State.Propose, "Unstake: NA Propose");
+        require(currentState != State.Dispute, "Unstake: NA Dispute");
 
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
