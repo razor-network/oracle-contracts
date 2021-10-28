@@ -82,7 +82,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpochAndState(State.Commit, epoch, epochLength) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         uint256 totalSupply = 0;
 
@@ -124,7 +124,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch,
         uint32 stakerId,
         uint256 amount
-    ) external initialized checkEpochAndState(State.Commit, epoch, epochLength) whenNotPaused {
+    ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(isStakerActive(stakerId, epoch), "Staker is inactive");
 
@@ -158,7 +158,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch,
         uint32 stakerId,
         uint256 sAmount
-    ) external initialized checkEpochAndState(State.Commit, epoch, epochLength) whenNotPaused {
+    ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+        State currentState = getState(epochLength);
+        require(currentState != State.Propose, "Unstake: NA Propose");
+        require(currentState != State.Dispute, "Unstake: NA Dispute");
+
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
         require(staker.stake > 0, "Nonpositive stake");
@@ -205,12 +209,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // And they have to use extendLock()
     /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint32 stakerId)
-        external
-        initialized
-        checkEpochAndState(State.Commit, epoch, epochLength)
-        whenNotPaused
-    {
+    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
