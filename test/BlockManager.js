@@ -640,6 +640,14 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
     });
+    // Staker tries to dispute for new asset ID
+    it('should not be able to giveSorted votes for assets which are not collections', async function () {
+      const epoch = await getEpoch();
+      // Asset id 8 is the job
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 8, [6]);
+      assertRevert(tx, 'Asset is not a collection');
+    });
+
     it('staker should not be able to propose when not elected', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
