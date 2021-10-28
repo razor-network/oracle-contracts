@@ -640,14 +640,6 @@ describe('BlockManager', function () {
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
     });
-    // Staker tries to dispute for new asset ID
-    it('should not be able to giveSorted votes for assets which are not collections', async function () {
-      const epoch = await getEpoch();
-      // Asset id 8 is the job
-      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 8, [6]);
-      assertRevert(tx, 'Asset is not a collection');
-    });
-
     it('staker should not be able to propose when not elected', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -1488,6 +1480,33 @@ describe('BlockManager', function () {
       assertBNEqual(staker14.age, toBigNumber('0'), 'Age shoud be zero due to randaoPenalty');
       assertBNEqual(staker16.age, toBigNumber('10000'), 'Age shoud increase for commit');
       assertBNEqual(staker17.age, ageAcc17);
+    });
+    it('should not be able to giveSorted votes for job', async function () {
+      await mineToNextEpoch();
+      const votes = [10, 20, 30, 40, 50, 60, 70, 80, 90];
+      const epoch = await getEpoch();
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[3]).commit(epoch, commitment);
+      await mineToNextState();// reveal
+      await voteManager.connect(signers[3]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();// propose
+      const stakerIdAcc2 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc2);
+      const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const medians = [10, 20, 30, 40, 50, 60, 70, 80, 90];
+      await blockManager.connect(signers[3]).propose(epoch,
+        medians,
+        iteration,
+        biggestInfluencerId);
+      await mineToNextState();// dispute
+      // asset id 8 is a job
+      const tx1 = blockManager.connect(signers[19]).giveSorted(epoch, 8, [7]);
+      assertRevert(tx1, 'Asset is not a collection');
     });
   });
 });
