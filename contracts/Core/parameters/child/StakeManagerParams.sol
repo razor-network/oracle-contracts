@@ -21,7 +21,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
     uint16 public gracePeriod = 8;
     uint16 public epochLength = 300;
     bool public escapeHatchEnabled = true;
-    uint32 public epochLimitForUpdateCommission = 100;
+    uint16 public epochLimitForUpdateCommission = 100;
     uint256 public minStake = 1000 * (10**18);
     bytes32 public constant GOVERNANCE_ROLE = 0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1;
 
@@ -45,7 +45,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
         deltaCommission = _deltaCommission;
     }
 
-    function setEpochLimitForUpdateCommission(uint8 _epochLimitForUpdateCommission) external override onlyRole(GOVERNANCE_ROLE) {
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
     }

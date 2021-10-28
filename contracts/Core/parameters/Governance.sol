@@ -140,7 +140,7 @@ contract Governance is Initializable, ACL {
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
 
-    function setEpochLimitForUpdateCommission(uint8 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
