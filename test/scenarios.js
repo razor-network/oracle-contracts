@@ -767,4 +767,110 @@ describe('Scenarios', async () => {
     assertBNEqual((lock.amount), (lockedAmount), 'Stake is not equal to calculated stake');
     assertBNEqual(epoch, lock.withdrawAfter, 'new sToken balance is not equal to calculated sToken balance');
   });
+  it('Staker unstakes and in withdraw lock period, there is a change in governance parameter and withdraw lock period is reduced', async function () {
+    let epoch = await getEpoch();
+    const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    const commitment = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[1]).commit(epoch, commitment);
+
+    await mineToNextState();
+
+    await voteManager.connect(signers[1]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await mineToNextState();
+
+    const stakerId = await stakeManager.stakerIds(signers[1].address);
+    let staker = await stakeManager.getStaker(stakerId);
+
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    await blockManager.connect(signers[1]).propose(epoch,
+      medians,
+      iteration,
+      biggestInfluencerId);
+
+    await mineToNextState();
+    // dispute
+    await mineToNextState();
+    // confirm
+
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    staker = await stakeManager.getStaker(1);
+    const sToken = await stakedToken.attach(staker.tokenAddress);
+
+    const amount = (await sToken.balanceOf(staker._address));
+
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+
+    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await assertRevert(tx, 'Withdraw epoch not reached');
+
+    await parameters.setWithdrawLockPeriod(5); // increased the withdraw lock period
+
+    await mineToNextEpoch();
+    await parameters.setWithdrawLockPeriod(0); // decreased the withdraw lock period
+    epoch = await getEpoch();
+    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+  });
+  it('Staker unstakes and in withdraw release period, there is a change in governance parameter and withdraw release period is reduced', async function () {
+    let epoch = await getEpoch();
+    const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    const commitment = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[1]).commit(epoch, commitment);
+
+    await mineToNextState();
+
+    await voteManager.connect(signers[1]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await mineToNextState();
+
+    const stakerId = await stakeManager.stakerIds(signers[1].address);
+    let staker = await stakeManager.getStaker(stakerId);
+
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    await blockManager.connect(signers[1]).propose(epoch,
+      medians,
+      iteration,
+      biggestInfluencerId);
+
+    await mineToNextState();
+    // dispute
+    await mineToNextState();
+    // confirm
+
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    staker = await stakeManager.getStaker(1);
+    const sToken = await stakedToken.attach(staker.tokenAddress);
+
+    const amount = (await sToken.balanceOf(staker._address));
+
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+
+    // skip to last epoch of the lock period
+    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      await mineToNextEpoch();
+    }
+    await parameters.setWithdrawReleasePeriod(0); // withdraw release period is reduced
+    await mineToNextEpoch();
+    await parameters.setWithdrawReleasePeriod(2); // withdraw release period is increased
+    epoch = await getEpoch();
+    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+  });
 });
