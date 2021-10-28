@@ -3,6 +3,7 @@ const {
   ASSET_MODIFIER_ROLE,
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
+  GOVERNER_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -34,21 +35,23 @@ describe('Scenarios', async () => {
   let razor;
   let blockReward;
   let stakedToken;
+  let governance;
 
   let stakes = [];
 
   before(async () => {
     ({
-      blockManager, razor, parameters, voteManager, assetManager, stakeManager, initializeContracts, stakedToken,
+      blockManager, razor, parameters, governance, voteManager, assetManager, stakeManager, initializeContracts, stakedToken,
     } = await setupContracts());
     signers = await ethers.getSigners();
-    blockReward = await parameters.blockReward();
+    blockReward = await blockManager.blockReward();
   });
 
   beforeEach(async () => {
     snapShotId = await takeSnapshot();
     await Promise.all(await initializeContracts());
     await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+    await governance.grantRole(GOVERNER_ROLE, signers[0].address);
     const url = 'http://testurl.com';
     const selector = 'selector';
     const selectorType = 0;
@@ -62,7 +65,7 @@ describe('Scenarios', async () => {
       i++;
     }
 
-    while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
+    while (Number(await stakeManager.getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
 
     let Cname;
     for (let i = 1; i <= 8; i++) {
@@ -332,7 +335,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
 
-    const minStake = await parameters.minStake();
+    const minStake = await stakeManager.minStake();
 
     for (let i = 1; i <= 5; i++) {
       await mineToNextEpoch();
@@ -374,7 +377,7 @@ describe('Scenarios', async () => {
       await assertRevert(tx, 'not committed in this epoch');
     }
 
-    await parameters.setMinStake(toBigNumber('800'));
+    await governance.setMinStake(toBigNumber('800'));
 
     await mineToNextState();// propose
     await mineToNextState();// dispute
@@ -743,7 +746,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
 
-    const withdrawWithin = await parameters.withdrawReleasePeriod();
+    const withdrawWithin = await stakeManager.withdrawReleasePeriod();
 
     for (let i = 0; i < withdrawWithin + 1; i++) {
       await mineToNextEpoch();
@@ -755,7 +758,7 @@ describe('Scenarios', async () => {
 
     staker = await stakeManager.getStaker(1);
     let lock = await stakeManager.locks(signers[1].address, staker.tokenAddress);
-    const extendLockPenalty = await parameters.extendLockPenalty();
+    const extendLockPenalty = await stakeManager.extendLockPenalty();
     let lockedAmount = lock.amount;
     const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
     lockedAmount = lockedAmount.sub(penalty);
@@ -806,18 +809,19 @@ describe('Scenarios', async () => {
     staker = await stakeManager.getStaker(1);
     const sToken = await stakedToken.attach(staker.tokenAddress);
 
-    const amount = (await sToken.balanceOf(staker._address));
+    const amount = (await sToken.balanceOf(staker._address)).div(toBigNumber('2'));
 
     await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
-
     const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
     await assertRevert(tx, 'Withdraw epoch not reached');
 
-    await parameters.setWithdrawLockPeriod(5); // increased the withdraw lock period
-
     await mineToNextEpoch();
-    await parameters.setWithdrawLockPeriod(0); // decreased the withdraw lock period
     epoch = await getEpoch();
+    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+
+    await governance.setWithdrawLockPeriod(0); // decreased the withdraw lock period
+
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
     await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
   });
   it('Staker unstakes and in withdraw release period, there is a change in governance parameter and withdraw release period is reduced', async function () {
@@ -867,9 +871,7 @@ describe('Scenarios', async () => {
     for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
-    await parameters.setWithdrawReleasePeriod(0); // withdraw release period is reduced
-    await mineToNextEpoch();
-    await parameters.setWithdrawReleasePeriod(2); // withdraw release period is increased
+    await governance.setWithdrawReleasePeriod(2); // withdraw release period is increased
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
   });
