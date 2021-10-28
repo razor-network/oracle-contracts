@@ -52,18 +52,24 @@ describe('Scenarios', async () => {
     const url = 'http://testurl.com';
     const selector = 'selector';
     const selectorType = 0;
-    const name = 'test';
+    let name;
     const power = -2;
     const weight = 50;
     let i = 0;
-    while (i < 9) { await assetManager.createJob(weight, power, selectorType, name, selector, url); i++; }
+    while (i < 9) {
+      name = `test${i}`;
+      await assetManager.createJob(weight, power, selectorType, name, selector, url);
+      i++;
+    }
 
     while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
 
-    const Cname = 'Test Collection';
+    let Cname;
     for (let i = 1; i <= 8; i++) {
+      Cname = `Test Collection${String(i)}`;
       await assetManager.createCollection([i, i + 1], 1, 3, Cname);
     }
+    Cname = 'Test Collection9';
     await assetManager.createCollection([9, 1], 1, 3, Cname);
 
     await mineToNextEpoch();
@@ -272,7 +278,7 @@ describe('Scenarios', async () => {
     assertBNLessThan(stakeAfter, stakeBefore, 'Inactivity Penalties have not been levied');
   }).timeout(50000);
 
-  it('Staker participate in network and then unstakes his some amount, which makes his stake less than the minimum stake and now by using the setMinStake() minStake is changed then staker should be able to participate in network again', async function () {
+  it('Staker unsatkes such that stake becomes less than minStake, minStake() is changed such that staker particpates again', async function () {
     let epoch = await getEpoch();
     for (let i = 1; i <= 3; i++) {
       // commit
@@ -397,7 +403,7 @@ describe('Scenarios', async () => {
     }
   });
 
-  it('Staker partcipating in network and then remains inactive for long time such that stake becomes less than the minimum stake, then staker should not be able to participate in network', async function () {
+  it('Staker remains inactive for a long period of time such that stake becomes less than minStake , no participation now in network', async function () {
     const stake = tokenAmount('1000');
     await razor.transfer(signers[6].address, stake);
     let epoch = await getEpoch();
@@ -460,7 +466,7 @@ describe('Scenarios', async () => {
     await assertRevert(tx, 'not committed in this epoch');
   }).timeout(400000);
 
-  it('Staker participates in network and then ustakes some amount and then particpate again and increase the stake again, everything should work properly.', async function () {
+  it('Staker participates and unstakes and then increase the stake again, everything should work properly', async function () {
     let epoch = await getEpoch();
     for (let i = 1; i <= 3; i++) {
       // commit
@@ -556,5 +562,209 @@ describe('Scenarios', async () => {
       await voteManager.connect(signers[i]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
     }
+  });
+  it('Staker particpates with delegator and later delegator withdraws such that stakers stake becomes less than minStake', async function () {
+    // staker participating in netwrok
+    const stake = tokenAmount('1000');
+    await razor.transfer(signers[7].address, stake);
+    let epoch = await getEpoch();
+
+    await razor.connect(signers[7]).approve(stakeManager.address, stake);
+    await stakeManager.connect(signers[7]).stake(epoch, stake);
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    // commit
+    const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    const commitment = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[7]).commit(epoch, commitment);
+
+    await mineToNextState();
+    // Reveal
+    await voteManager.connect(signers[7]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await mineToNextState();
+
+    let stakerId = await stakeManager.stakerIds(signers[7].address);
+    let staker = await stakeManager.getStaker(stakerId);
+
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    await blockManager.connect(signers[7]).propose(epoch,
+      medians,
+      iteration,
+      biggestInfluencerId);
+
+    await mineToNextState();
+    // dispute
+    await mineToNextState();
+    // confirm
+
+    // delegator delegates it's stake to staker
+    const commRate = 6;
+    await stakeManager.connect(signers[7]).setCommission(commRate);
+    stakerId = await stakeManager.stakerIds(signers[7].address);
+    staker = await stakeManager.getStaker(stakerId);
+    assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
+
+    await stakeManager.connect(signers[7]).setDelegationAcceptance('true');
+    stakerId = await stakeManager.stakerIds(signers[7].address);
+    staker = await stakeManager.getStaker(stakerId);
+
+    await mineToNextState();
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+    // Participation In Epoch as delegators cant delegate to a staker untill they participate
+
+    const commitment1 = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[7]).commit(epoch, commitment1);
+    await mineToNextState();
+    await voteManager.connect(signers[7]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+    await mineToNextEpoch();
+    const { acceptDelegation } = staker;
+    assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
+
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    const delegatedStake = tokenAmount('10');
+    stakerId = await stakeManager.stakerIds(signers[7].address);
+    staker = await stakeManager.getStaker(stakerId);
+    const sToken = await stakedToken.attach(staker.tokenAddress);
+    await razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
+    await stakeManager.connect(signers[5]).delegate(epoch, stakerId, delegatedStake);
+    stakerId = await stakeManager.stakerIds(signers[7].address);
+    staker = await stakeManager.getStaker(stakerId);
+    assertBNEqual(staker.stake, tokenAmount('1010'), 'Change in stake is incorrect');
+    assertBNEqual(await sToken.balanceOf(signers[5].address), delegatedStake, 'Amount of minted sRzR is not correct');
+
+    // staker remains inactive for more than GRACE_PERIOD time and gets inactivity penalties
+    for (let i = 1; i <= 100; i++) {
+      await mineToNextEpoch();
+    }
+
+    await mineToNextState();
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    // commiting to get inactivity penalties
+
+    const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    const commitment2 = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[7]).commit(epoch, commitment2);
+
+    // delegator unstakes its stake
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+    const stakerIdAcc5 = await stakeManager.getStaker(5);
+    const sToken2 = await stakedToken.attach(stakerIdAcc5.tokenAddress);
+    const amount = (await sToken2.balanceOf(stakerIdAcc5._address)); // unstaking total amount
+
+    await stakeManager.connect(signers[5]).unstake(epoch, stakerIdAcc5.id, amount);
+    const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress);
+    assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+
+    // staker will not able to participate again because it's stake is now less than minimum stake
+    epoch = await getEpoch();
+    const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    const commitment3 = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+
+    await voteManager.connect(signers[7]).commit(epoch, commitment3);
+
+    await mineToNextState();
+    const tx = voteManager.connect(signers[7]).reveal(epoch, votes3,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await assertRevert(tx, 'not committed in this epoch');
+  }).timeout(400000);
+
+  it('Front-Run Unstake Call', async function () {
+    // If the attacker can call unstake though they don't want to withdraw and withdraw anytime after withdraw after period is passed
+    let epoch = await getEpoch();
+    const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    const commitment = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[1]).commit(epoch, commitment);
+
+    await mineToNextState();
+
+    await voteManager.connect(signers[1]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await mineToNextState();
+
+    const stakerId = await stakeManager.stakerIds(signers[1].address);
+    let staker = await stakeManager.getStaker(stakerId);
+
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    await blockManager.connect(signers[1]).propose(epoch,
+      medians,
+      iteration,
+      biggestInfluencerId);
+
+    await mineToNextState();
+    // dispute
+    await mineToNextState();
+    // confirm
+
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    staker = await stakeManager.getStaker(1);
+    const sToken = await stakedToken.attach(staker.tokenAddress);
+
+    const amount = (await sToken.balanceOf(staker._address));
+
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+
+    // skip to last epoch of the lock period
+    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      await mineToNextEpoch();
+    }
+
+    const withdrawWithin = await parameters.withdrawReleasePeriod();
+
+    for (let i = 0; i < withdrawWithin + 1; i++) {
+      await mineToNextEpoch();
+    }
+
+    epoch = await getEpoch();
+    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    assertRevert(tx, 'Release Period Passed');
+
+    staker = await stakeManager.getStaker(1);
+    let lock = await stakeManager.locks(signers[1].address, staker.tokenAddress);
+    const extendLockPenalty = await parameters.extendLockPenalty();
+    let lockedAmount = lock.amount;
+    const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
+    lockedAmount = lockedAmount.sub(penalty);
+    staker = await stakeManager.getStaker(1);
+    await stakeManager.connect(signers[1]).extendLock(staker.id);
+    staker = await stakeManager.getStaker(1);
+    lock = await stakeManager.locks(signers[1].address, staker.tokenAddress);
+    epoch = await getEpoch();
+    assertBNEqual((lock.amount), (lockedAmount), 'Stake is not equal to calculated stake');
+    assertBNEqual(epoch, lock.withdrawAfter, 'new sToken balance is not equal to calculated sToken balance');
   });
 });
