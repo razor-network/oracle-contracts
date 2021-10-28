@@ -72,13 +72,18 @@ const isElectedProposer = async (iteration, biggestInfluence, influence, stakerI
   return false;
 };
 
-const getBiggestInfluenceAndId = async (stakeManager) => {
+const getEpoch = async () => {
+  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
+  return blockNumber.div(EPOCH_LENGTH).toNumber();
+};
+
+const getBiggestInfluenceAndId = async (stakeManager, voteManager) => {
   const numStakers = await stakeManager.numStakers();
   let biggestInfluence = toBigNumber('0');
   let biggestInfluencerId = toBigNumber('0');
-
+  const epoch = getEpoch();
   for (let i = 1; i <= numStakers; i++) {
-    const influence = await stakeManager.getInfluence(i);
+    const influence = await voteManager.getInfluenceSnapshot(epoch, i);
     if (influence.gt(biggestInfluence)) {
       biggestInfluence = influence;
       biggestInfluencerId = i;
@@ -87,17 +92,15 @@ const getBiggestInfluenceAndId = async (stakeManager) => {
   return { biggestInfluence, biggestInfluencerId };
 };
 
-const getEpoch = async () => {
-  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  return blockNumber.div(EPOCH_LENGTH).toNumber();
-};
-
 const getIteration = async (voteManager, stakeManager, staker, biggestInfluence) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
-  const influence = await stakeManager.getInfluence(stakerId);
-
+  const epoch = getEpoch();
+  const influence = await voteManager.getInfluenceSnapshot(epoch, stakerId);
   const randaoHash = await voteManager.getRandaoHash();
+  if (Number(influence) === 0) return 0; // following loop goes in infinite loop if this condn not added
+  // influence 0 represents that given staker has not voted in that epoch
+  // so anyway in propose its going to revert
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
     if (isElected) return (i);
@@ -108,9 +111,9 @@ const getIteration = async (voteManager, stakeManager, staker, biggestInfluence)
 const getFalseIteration = async (voteManager, stakeManager, staker) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
-  const influence = await stakeManager.getInfluence(stakerId);
-
-  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager);
+  const epoch = getEpoch();
+  const influence = await voteManager.getInfluenceSnapshot(epoch, stakerId);
+  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager, voteManager);
   const randaoHash = await voteManager.getRandaoHash();
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
