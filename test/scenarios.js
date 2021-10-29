@@ -4,6 +4,7 @@ const {
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
+  WITHDRAW_RELEASE_PERIOD,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -281,7 +282,7 @@ describe('Scenarios', async () => {
     assertBNLessThan(stakeAfter, stakeBefore, 'Inactivity Penalties have not been levied');
   }).timeout(50000);
 
-  it('Staker unsatkes such that stake becomes less than minStake, minStake() is changed such that staker particpates again', async function () {
+  it('Staker unstakes such that stake becomes less than minStake, minStake() is changed such that staker particpates again', async function () {
     let epoch = await getEpoch();
     for (let i = 1; i <= 3; i++) {
       // commit
@@ -754,7 +755,66 @@ describe('Scenarios', async () => {
 
     epoch = await getEpoch();
     const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
-    assertRevert(tx, 'Release Period Passed');
+    await assertRevert(tx, 'Release Period Passed');
+  });
+  it('Front-Run Recurring Unstake call', async function () {
+    // If the attacker can call unstake though they don't want to withdraw and withdraw anytime after withdraw after period is passed
+    let epoch = await getEpoch();
+    const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+    const commitment = utils.solidityKeccak256(
+      ['uint32', 'uint48[]', 'bytes32'],
+      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+    );
+    await voteManager.connect(signers[1]).commit(epoch, commitment);
+
+    await mineToNextState();
+
+    await voteManager.connect(signers[1]).reveal(epoch, votes,
+      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+    await mineToNextState();
+
+    const stakerId = await stakeManager.stakerIds(signers[1].address);
+    let staker = await stakeManager.getStaker(stakerId);
+
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+    await blockManager.connect(signers[1]).propose(epoch,
+      medians,
+      iteration,
+      biggestInfluencerId);
+
+    await mineToNextState();
+    // dispute
+    await mineToNextState();
+    // confirm
+
+    await mineToNextEpoch();
+    epoch = await getEpoch();
+
+    staker = await stakeManager.getStaker(1);
+    const sToken = await stakedToken.attach(staker.tokenAddress);
+
+    const amount = (await sToken.balanceOf(staker._address));
+
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+
+    // skip to last epoch of the lock period
+    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      await mineToNextEpoch();
+    }
+
+    const withdrawWithin = await stakeManager.withdrawReleasePeriod();
+
+    for (let i = 0; i < withdrawWithin + 1; i++) {
+      await mineToNextEpoch();
+    }
+
+    epoch = await getEpoch();
+    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await assertRevert(tx, 'Release Period Passed');
 
     staker = await stakeManager.getStaker(1);
     let lock = await stakeManager.locks(signers[1].address, staker.tokenAddress);
@@ -863,7 +923,7 @@ describe('Scenarios', async () => {
     staker = await stakeManager.getStaker(1);
     const sToken = await stakedToken.attach(staker.tokenAddress);
 
-    const amount = (await sToken.balanceOf(staker._address));
+    const amount = (await sToken.balanceOf(staker._address)).div(toBigNumber('2'));
 
     await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
 
@@ -871,8 +931,23 @@ describe('Scenarios', async () => {
     for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
-    await governance.setWithdrawReleasePeriod(2); // withdraw release period is increased
+    for (let i = 0; i < WITHDRAW_RELEASE_PERIOD - 1; i++) {
+      await mineToNextEpoch();
+    }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+
+    await governance.setWithdrawReleasePeriod(2); // withdraw release period is decreased
+    await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      await mineToNextEpoch();
+    }
+    // Withdraw should fail
+    for (let i = 0; i < WITHDRAW_RELEASE_PERIOD - 1; i++) {
+      await mineToNextEpoch();
+    }
+    epoch = await getEpoch();
+    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await assertRevert(tx, 'Release Period Passed')
   });
 });
