@@ -88,7 +88,7 @@ describe('Delegator', function () {
     });
 
     it('should be able to get the correct number of active assets from delegator', async function () {
-      assertBNEqual((await delegator.getNumActiveAssets()), toBigNumber('1'), 'incorrect value fetched');
+      assertBNEqual((await delegator.getNumActiveCollections()), toBigNumber('1'), 'incorrect value fetched');
     });
 
     it('should be able to fetch the result of the desired id', async function () {

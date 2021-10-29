@@ -8,7 +8,7 @@ interface IDelegator {
 
     function getResult(bytes32 _name) external view returns (uint32, int8);
 
-    function getNumActiveAssets() external view returns (uint256);
+    function getNumActiveCollections() external view returns (uint256);
 
-    function getActiveAssets() external view returns (uint8[] memory);
+    function getActiveCollections() external view returns (uint8[] memory);
 }
