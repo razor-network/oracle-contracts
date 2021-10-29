@@ -161,15 +161,6 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'staked amount is less than minimum stake required');
     });
 
-    it('Staker should not be able to stake if not in commit state', async function () {
-      const epoch = await getEpoch();
-      await mineToNextState();
-      const stake1 = tokenAmount('420000');
-      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
-      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'incorrect state');
-    });
-
     it('Staker should not be able to stake if epoch is not current epoch', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -798,7 +789,7 @@ describe('StakeManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // propose
         await mineToNextState();
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         await blockManager.connect(signers[4]).propose(epoch,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
@@ -1486,6 +1477,24 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[4]).stake(epoch, amount);
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake.add(amount), staker.stake, 'stakeAmount should increase');
+    });
+
+    it('Unstake should be blocked in Propose and Dispute', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+
+      await mineToNextState();
+      await mineToNextState();
+
+      // Propose
+      const stakerIdAcc = await stakeManager.stakerIds(signers[4].address);
+      const tx = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
+      await assertRevert(tx, 'Unstake: NA Propose');
+      await mineToNextState();
+
+      // Dispute
+      const tx1 = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
+      await assertRevert(tx1, 'Unstake: NA Dispute');
     });
   });
 });
