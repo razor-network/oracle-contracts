@@ -1,16 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IParameters.sol";
 import "./interface/IAssetManager.sol";
 import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
-import "./storage/Constants.sol";
+import "./parameters/child/AssetManagerParams.sol";
 import "./StateManager.sol";
-import "./ACL.sol";
 
-contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManager {
-    IParameters public parameters;
+contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
     IDelegator public delegator;
 
     event AssetCreated(AssetType assetType, uint8 id, uint256 timestamp);
@@ -29,10 +26,6 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
     event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
 
     event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
-
-    constructor(address parametersAddress) {
-        parameters = IParameters(parametersAddress);
-    }
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -63,12 +56,12 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
-        uint32 epoch = parameters.getEpoch();
+        uint32 epoch = getEpoch(epochLength);
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -78,15 +71,11 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
-    function setCollectionStatus(bool assetStatus, uint8 id)
-        external
-        onlyRole(ASSET_MODIFIER_ROLE)
-        checkState(State.Confirm, parameters.epochLength())
-    {
+    function setCollectionStatus(bool assetStatus, uint8 id) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(id != 0, "ID cannot be 0");
         require(collections[id].id == id, "Asset is not a collection");
 
-        uint32 epoch = parameters.getEpoch();
+        uint32 epoch = getEpoch(epochLength);
         if (assetStatus) {
             if (!collections[id].active) {
                 activeAssets.push(id);
@@ -128,9 +117,7 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         uint32 aggregationMethod,
         int8 power,
         string calldata name
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, parameters.epochLength()) {
-        require(aggregationMethod > 0 && aggregationMethod < parameters.aggregationRange(), "Aggregation range out of bounds");
-
+    ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "Number of jobIDs low to create collection");
 
         numAssets = numAssets + 1;
@@ -147,10 +134,10 @@ contract AssetManager is ACL, AssetStorage, Constants, StateManager, IAssetManag
         uint32 aggregationMethod,
         int8 power,
         uint8[] memory jobIDs
-    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, parameters.epochLength()) {
+    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
-        uint32 epoch = parameters.getEpoch();
+        uint32 epoch = getEpoch(epochLength);
         collections[collectionID].power = power;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;

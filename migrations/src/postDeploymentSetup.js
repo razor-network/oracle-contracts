@@ -15,8 +15,7 @@ module.exports = async () => {
   const signers = await ethers.getSigners();
 
   const {
-    Random: randomAddress,
-    Parameters: parametersAddress,
+    Governance: governanceAddress,
     BlockManager: blockManagerAddress,
     AssetManager: assetManagerAddress,
     StakeManager: stakeManagerAddress,
@@ -52,16 +51,21 @@ module.exports = async () => {
   // keccak256("DELEGATOR_MODIFIER_ROLE")
   const DELEGATOR_MODIFIER_ROLE = '0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597';
 
-  const randomLibraryDependency = { Random: randomAddress };
+  // keccak256("GOVERNER_ROLE")
+  const GOVERNER_ROLE = '0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e';
 
-  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress, randomLibraryDependency);
+  // keccak256("GOVERNANCE_ROLE")
+  const GOVERNANCE_ROLE = '0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1';
+
+  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
   const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
   const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
-  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress, randomLibraryDependency);
+  const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
+  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
 
   const pendingTransactions = [];
   const stakerAddressList = STAKER_ADDRESSES.split(',');
@@ -87,12 +91,22 @@ module.exports = async () => {
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
-    assetManagerAddress, parametersAddress, randomNoManagerAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, parametersAddress, stakedTokenFactoryAddress));
-  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await delegator.updateAddress(assetManagerAddress, blockManagerAddress, parametersAddress));
-  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress, parametersAddress));
+    assetManagerAddress, randomNoManagerAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await delegator.updateAddress(assetManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
+  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
+    voteManagerAddress, assetManagerAddress, delegatorAddress, randomNoManagerAddress));
+
+  pendingTransactions.push(await assetManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await stakeManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await voteManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await delegator.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await randomNoManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
 
   pendingTransactions.push(await assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManagerAddress));
   pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
@@ -107,6 +121,7 @@ module.exports = async () => {
   pendingTransactions.push(await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManagerAddress));
   pendingTransactions.push(await assetManager.upgradeDelegator(delegatorAddress));
+  pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
 
   // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');
