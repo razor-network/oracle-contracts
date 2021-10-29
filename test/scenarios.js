@@ -828,7 +828,7 @@ describe('Scenarios', async () => {
     lock = await stakeManager.locks(signers[1].address, staker.tokenAddress);
     epoch = await getEpoch();
     assertBNEqual((lock.amount), (lockedAmount), 'Stake is not equal to calculated stake');
-    assertBNEqual(epoch, lock.withdrawAfter, 'new sToken balance is not equal to calculated sToken balance');
+    assertBNEqual(epoch, lock.withdrawAfter, 'lock.withdrawAfter assigned incorrectly');
   });
   it('Staker unstakes and in withdraw lock period, there is a change in governance parameter and withdraw lock period is reduced', async function () {
     let epoch = await getEpoch();
