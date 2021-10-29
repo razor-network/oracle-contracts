@@ -175,7 +175,7 @@ describe('BlockManager', function () {
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('9'));
+      assertBNEqual(toBigNumber((await assetManager.getActiveCollections()).length), toBigNumber('9'));
       assertBNEqual(
         (await blockManager.getBlock(epoch - 1)).proposerId,
         await stakeManager.stakerIds(signers[5].address),
@@ -291,7 +291,7 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).giveSorted(epoch, 11, sortedStakers);
 
       const dispute = await blockManager.disputes(epoch, signers[19].address);
-      assertBNEqual(dispute.assetId, toBigNumber('11'), 'assetId should match');
+      assertBNEqual(dispute.collectionId, toBigNumber('11'), 'collectionId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
     });
@@ -445,7 +445,7 @@ describe('BlockManager', function () {
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 11, res1.sortedStakers);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
-      assertBNEqual(firstDispute.assetId, toBigNumber('11'), 'assetId should match');
+      assertBNEqual(firstDispute.collectionId, toBigNumber('11'), 'collectionId should match');
       assertBNEqual(firstDispute.accWeight, res1.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(firstDispute.lastVisitedStaker, res1.sortedStakers[res1.sortedStakers.length - 1], 'lastVisited should match');
 
@@ -475,7 +475,7 @@ describe('BlockManager', function () {
 
       const secondDispute = await blockManager.disputes(epoch, signers[15].address);
 
-      assertBNEqual(secondDispute.assetId, toBigNumber('12'), 'assetId should match');
+      assertBNEqual(secondDispute.collectionId, toBigNumber('12'), 'collectionId should match');
       assertBNEqual(secondDispute.accWeight, res2.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(secondDispute.lastVisitedStaker, res2.sortedStakers[res2.sortedStakers.length - 1], 'lastVisited should match');
 
@@ -554,12 +554,12 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[15]).giveSorted(epoch, 11, sortedStakers);
 
       const beforeDisputeReset = await blockManager.disputes(epoch, signers[15].address);
-      assertBNEqual(beforeDisputeReset.assetId, toBigNumber('11'), 'assetId should match');
+      assertBNEqual(beforeDisputeReset.collectionId, toBigNumber('11'), 'collectionId should match');
 
       await blockManager.connect(signers[15]).resetDispute(epoch);
       const afterDisputeReset = await blockManager.disputes(epoch, signers[15].address);
 
-      assertBNEqual(afterDisputeReset.assetId, toBigNumber('0'));
+      assertBNEqual(afterDisputeReset.collectionId, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.accWeight, toBigNumber('0'));
       assertBNEqual(afterDisputeReset.lastVisitedStaker, toBigNumber('0'));
     });
@@ -634,7 +634,7 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
       const dispute = await blockManager.disputes(epoch, signers[19].address);
 
-      assertBNEqual(dispute.assetId, toBigNumber('11'), 'assetId should match');
+      assertBNEqual(dispute.collectionId, toBigNumber('11'), 'collectionId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.accProd, accProd, 'accProd should match');
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
