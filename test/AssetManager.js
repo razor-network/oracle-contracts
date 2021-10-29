@@ -242,7 +242,7 @@ describe('AssetManager', function () {
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
       const tx = assetManager.updateCollection(3, 2, 5, [1]);
-      assertRevert(tx, 'Collection is inactive');
+      await assertRevert(tx, 'Collection is inactive');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {
