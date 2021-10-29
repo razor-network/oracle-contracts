@@ -78,8 +78,8 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         uint32 epoch = getEpoch(epochLength);
         if (assetStatus) {
             if (!collections[id].active) {
-                activeAssets.push(id);
-                collections[id].assetIndex = uint8(activeAssets.length);
+                activeCollections.push(id);
+                collections[id].assetIndex = uint8(activeCollections.length);
                 collections[id].active = assetStatus;
                 emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
@@ -93,12 +93,12 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     function executePendingDeactivations(uint32 epoch) external override onlyRole(ASSET_CONFIRMER_ROLE) {
         for (uint8 i = uint8(pendingDeactivations.length); i > 0; i--) {
             uint8 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
-            if (assetIndex == activeAssets.length) {
-                activeAssets.pop();
+            if (assetIndex == activeCollections.length) {
+                activeCollections.pop();
             } else {
-                activeAssets[assetIndex - 1] = activeAssets[activeAssets.length - 1];
-                collections[activeAssets[assetIndex - 1]].assetIndex = assetIndex;
-                activeAssets.pop();
+                activeCollections[assetIndex - 1] = activeCollections[activeCollections.length - 1];
+                collections[activeCollections[assetIndex - 1]].assetIndex = assetIndex;
+                activeCollections.pop();
             }
             collections[pendingDeactivations[i - 1]].assetIndex = 0;
             collections[pendingDeactivations[i - 1]].active = false;
@@ -122,8 +122,16 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
         numAssets = numAssets + 1;
 
-        activeAssets.push(numAssets);
-        collections[numAssets] = Structs.Collection(true, numAssets, uint8(activeAssets.length), power, aggregationMethod, jobIDs, name);
+        activeCollections.push(numAssets);
+        collections[numAssets] = Structs.Collection(
+            true,
+            numAssets,
+            uint8(activeCollections.length),
+            power,
+            aggregationMethod,
+            jobIDs,
+            name
+        );
         emit AssetCreated(AssetType.Collection, numAssets, block.timestamp);
 
         delegator.setIDName(name, numAssets);
@@ -177,7 +185,8 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         return collections[id].active;
     }
 
-    function getAssetIndex(uint8 id) external view override returns (uint8) {
+    function getCollectionIndex(uint8 id) external view override returns (uint8) {
+        require(collections[id].id == id, "Asset is not a collection");
         return collections[id].assetIndex;
     }
 
@@ -191,12 +200,12 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         return numAssets;
     }
 
-    function getActiveAssets() external view override returns (uint8[] memory) {
-        return activeAssets;
+    function getActiveCollections() external view override returns (uint8[] memory) {
+        return activeCollections;
     }
 
-    function getNumActiveAssets() external view override returns (uint256) {
-        return activeAssets.length;
+    function getNumActiveCollections() external view override returns (uint256) {
+        return activeCollections.length;
     }
 
     function getPendingDeactivations() external view override returns (uint8[] memory) {
