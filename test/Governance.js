@@ -189,7 +189,7 @@ describe('Governance contract Test', async () => {
     assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
 
     const tx = governance.setMaxCommission(toBigNumber('101'));
-    assertRevert(tx, 'Invalid Max Commission Update');
+    await assertRevert(tx, 'Invalid Max Commission Update');
   });
 
   it('parameters values should be initialized correctly', async () => {

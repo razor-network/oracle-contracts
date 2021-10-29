@@ -178,6 +178,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function getAssetIndex(uint8 id) external view override returns (uint8) {
+        require(collections[id].id == id, "Asset is not a collection");
         return collections[id].assetIndex;
     }
 
