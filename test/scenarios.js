@@ -41,7 +41,7 @@ describe('Scenarios', async () => {
 
   before(async () => {
     ({
-      blockManager, razor, parameters, governance, voteManager, assetManager, stakeManager, initializeContracts, stakedToken,
+      blockManager, razor, governance, voteManager, assetManager, stakeManager, initializeContracts, stakedToken,
     } = await setupContracts());
     signers = await ethers.getSigners();
     blockReward = await blockManager.blockReward();
