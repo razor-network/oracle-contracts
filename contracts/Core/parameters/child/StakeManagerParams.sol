@@ -40,7 +40,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
 
-    function setDeltaCommission(uint16 _deltaCommission) external override onlyRole(GOVERNANCE_ROLE) {
+    function setDeltaCommission(uint8 _deltaCommission) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         deltaCommission = _deltaCommission;
     }

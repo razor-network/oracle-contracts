@@ -135,7 +135,7 @@ contract Governance is Initializable, ACL {
         randomNoManagerParams.setEpochLength(_epochLength);
     }
 
-    function setDeltaCommission(uint16 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+    function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }

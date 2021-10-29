@@ -24,7 +24,7 @@ interface IStakeManagerParams {
 
     function setMaxCommission(uint8 _maxCommission) external;
 
-    function setDeltaCommission(uint16 _deltaCommission) external;
+    function setDeltaCommission(uint8 _deltaCommission) external;
 
     function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external;
 
