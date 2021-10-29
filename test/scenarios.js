@@ -146,7 +146,7 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[j]).propose(epoch,
@@ -198,7 +198,7 @@ describe('Scenarios', async () => {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
       const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       await blockManager.connect(signers[j]).propose(epoch,
@@ -246,7 +246,7 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[j]).propose(epoch,
@@ -310,7 +310,7 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[j]).propose(epoch,
@@ -436,7 +436,7 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[6].address);
     const staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[6]).propose(epoch,
@@ -498,7 +498,7 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[j]).propose(epoch,
@@ -597,7 +597,7 @@ describe('Scenarios', async () => {
     let stakerId = await stakeManager.stakerIds(signers[7].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[7]).propose(epoch,
@@ -719,7 +719,7 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[1]).propose(epoch,
@@ -778,7 +778,7 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[1]).propose(epoch,
@@ -850,7 +850,7 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[1]).propose(epoch,
@@ -904,7 +904,7 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
     const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
     const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
     await blockManager.connect(signers[1]).propose(epoch,
