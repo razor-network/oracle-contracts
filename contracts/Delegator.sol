@@ -37,7 +37,7 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
         uint8 index = assetManager.getAssetIndex(ids[_name]);
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = assetManager.getCollectionPower(ids[_name]);
         return (medians[index - 1], power);
