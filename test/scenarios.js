@@ -28,7 +28,6 @@ describe('Scenarios', async () => {
   let signers;
   let snapShotId;
   let blockManager;
-  let parameters;
   let assetManager;
   let stakeManager;
   let voteManager;
@@ -948,6 +947,6 @@ describe('Scenarios', async () => {
     }
     epoch = await getEpoch();
     const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
-    await assertRevert(tx, 'Release Period Passed')
+    await assertRevert(tx, 'Release Period Passed');
   });
 });
