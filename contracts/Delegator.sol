@@ -27,12 +27,12 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
         ids[_name] = _id;
     }
 
-    function getNumActiveAssets() external view override returns (uint256) {
-        return assetManager.getNumActiveAssets();
+    function getNumActiveCollections() external view override returns (uint256) {
+        return assetManager.getNumActiveCollections();
     }
 
-    function getActiveAssets() external view override returns (uint8[] memory) {
-        return assetManager.getActiveAssets();
+    function getActiveCollections() external view override returns (uint8[] memory) {
+        return assetManager.getActiveCollections();
     }
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {

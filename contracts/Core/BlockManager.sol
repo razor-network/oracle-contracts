@@ -60,7 +60,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
-        require(medians.length == assetManager.getNumActiveAssets(), "invalid block proposed");
+        require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
 
         uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
@@ -73,17 +73,17 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     //anyone can give sorted votes in batches in dispute state
     function giveSorted(
         uint32 epoch,
-        uint8 assetId,
+        uint8 collectionId,
         uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
-        uint8 assetIndex = assetManager.getAssetIndex(assetId);
+        uint8 collectionIndex = assetManager.getCollectionIndex(collectionId);
         if (disputes[epoch][msg.sender].accWeight == 0) {
-            disputes[epoch][msg.sender].assetId = assetId;
+            disputes[epoch][msg.sender].collectionId = collectionId;
         } else {
-            require(disputes[epoch][msg.sender].assetId == assetId, "AssetId not matching");
+            require(disputes[epoch][msg.sender].collectionId == collectionId, "AssetId not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint16 i = 0; i < sortedStakers.length; i++) {
@@ -93,7 +93,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "epoch in vote doesnt match with current");
 
-            uint48 value = vote.values[assetIndex - 1];
+            uint48 value = vote.values[collectionIndex - 1];
             // slither-disable-next-line calls-loop
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
@@ -116,24 +116,25 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+        uint8[] memory deactivatedCollections = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
             assetManager.executePendingDeactivations(epoch);
             return;
         }
         uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
         require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
-        _confirmBlock(epoch, deactivatedAssets, proposerId);
+        _confirmBlock(epoch, deactivatedCollections, proposerId);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
         uint8[] memory deactivatedAssets = assetManager.getPendingDeactivations();
+
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
             assetManager.executePendingDeactivations(epoch);
             return;
         }
-        _confirmBlock(epoch - 1, deactivatedAssets, stakerId);
+        _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
     }
 
     function disputeBiggestInfluenceProposed(
@@ -163,10 +164,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(median > 0, "median can not be zero");
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint8 assetId = disputes[epoch][msg.sender].assetId;
-        uint8 assetIndex = assetManager.getAssetIndex(assetId);
+        uint8 collectionId = disputes[epoch][msg.sender].collectionId;
+        uint8 collectionIndex = assetManager.getCollectionIndex(collectionId);
         require(
-            proposedBlocks[epoch][blockId].medians[assetIndex - 1] != median,
+            proposedBlocks[epoch][blockId].medians[collectionIndex - 1] != median,
             "Proposed Alternate block is identical to proposed block"
         );
         return _executeDispute(epoch, blockIndex, blockId);
@@ -191,13 +192,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _confirmBlock(
         uint32 epoch,
-        uint8[] memory deactivatedAssets,
+        uint8[] memory deactivatedCollections,
         uint32 stakerId
     ) internal {
         uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
-        for (uint8 i = uint8(deactivatedAssets.length); i > 0; i--) {
+        for (uint8 i = uint8(deactivatedCollections.length); i > 0; i--) {
             // slither-disable-next-line calls-loop
-            uint8 index = assetManager.getAssetIndex(deactivatedAssets[i - 1]);
+            uint8 index = assetManager.getCollectionIndex(deactivatedCollections[i - 1]);
             if (index == proposedBlocks[epoch][blockId].medians.length) {
                 proposedBlocks[epoch][blockId].medians.pop();
             } else {
