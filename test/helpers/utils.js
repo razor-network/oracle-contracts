@@ -77,6 +77,14 @@ const getEpoch = async () => {
   return blockNumber.div(EPOCH_LENGTH).toNumber();
 };
 
+const getVote = async (medians) => {
+  const rand = Math.floor(Math.random() * 3);
+  const fact = (rand === 2) ? -1 : rand;
+  const votes = [];
+  for (let i = 0; i < medians.length; i++) votes.push((medians[i] + fact));
+  return votes;
+};
+
 const getBiggestInfluenceAndId = async (stakeManager, voteManager) => {
   const numStakers = await stakeManager.numStakers();
   let biggestInfluence = toBigNumber('0');
@@ -134,6 +142,7 @@ module.exports = {
   // getBiggestStakeAndId,
   getBiggestInfluenceAndId,
   getEpoch,
+  getVote,
   getIteration,
   getFalseIteration,
   getState,
