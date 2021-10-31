@@ -933,7 +933,7 @@ describe('Scenarios', async () => {
     const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
     await assertRevert(tx, 'Release Period Passed');
   });
-  it('Block Reward should be applied correctly when blockReward changes both or after confirming block', async () => {
+  it('BlockReward changes both before or after confirming block, check for block reward', async () => {
     let epoch = await getEpoch();
     let votes = await getVote(medians);
     const commitment = utils.solidityKeccak256(
@@ -1036,7 +1036,7 @@ describe('Scenarios', async () => {
     assertBNEqual(stakeAfter1, stakeBefore1.add(tokenAmount('300')), 'Block Reward not given correctly');
   }).timeout(5000);
 
-  it('BlockReward changes both before or after confirming block', async () => {
+  it('BlockReward changes both before or after confirming block, check for randao penalty', async () => {
     // Randao Penalty should be applied correctly when
     let epoch = await getEpoch();
     let votes = await getVote(medians);
