@@ -19,17 +19,17 @@ const calculateDisputesData = async (assetId, voteManager, stakeManager, assetMa
   // let accWeight;
   let infl;
   let vote;
-  const assetIndex = await assetManager.getAssetIndex(assetId);
+  const collectionIndex = await assetManager.getCollectionIndex(assetId);
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
     vote = await voteManager.getVote(i);
 
     if (vote[0] === epoch) {
       sortedStakers.push(i);
-      votes.push(vote[1][assetIndex - 1]);
+      votes.push(vote[1][collectionIndex - 1]);
 
       infl = await voteManager.getInfluenceSnapshot(epoch, i);
       // accWeight += infl;
-      accProd = accProd.add(toBigNumber(vote[1][assetIndex - 1]).mul(infl));
+      accProd = accProd.add(toBigNumber(vote[1][collectionIndex - 1]).mul(infl));
     }
   }
 

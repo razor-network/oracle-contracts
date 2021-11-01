@@ -468,11 +468,11 @@ describe('VoteManager', function () {
       it('Once Lock Period is over, BountyHunter should be able to redeem bounty of snitch', async function () {
         // Anyone shouldnt be able to redeem someones elses bounty
         const tx = stakeManager.connect(signers[8]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx, 'Incorrect Caller');
+        await assertRevert(tx, 'Incorrect Caller');
 
         // Shouldnt be reedemable before withdrawlock period
         const tx1 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx1, 'Redeem epoch not reached');
+        await assertRevert(tx1, 'Redeem epoch not reached');
         const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -488,7 +488,7 @@ describe('VoteManager', function () {
 
         // Should not able to redeem again
         const tx2 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx2, 'Incorrect Caller');
+        await assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('should not be able to commit if stake is below minstake', async function () {
@@ -709,11 +709,11 @@ describe('VoteManager', function () {
 
         // Anyone shouldnt be able to redeem someones elses bounty
         const tx = stakeManager.connect(signers[8]).redeemBounty(bountyId);
-        assertRevert(tx, 'Incorrect Caller');
+        await assertRevert(tx, 'Incorrect Caller');
 
         // Shouldnt be reedemable before withdrawlock period
         const tx1 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
-        assertRevert(tx1, 'Redeem epoch not reached');
+        await assertRevert(tx1, 'Redeem epoch not reached');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
           await mineToNextEpoch();
@@ -727,7 +727,7 @@ describe('VoteManager', function () {
 
         // Should not able to redeem again
         const tx2 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
-        assertRevert(tx2, 'Incorrect Caller');
+        await assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('if the revealed value is zero, staker should be able to reveal', async function () {
@@ -860,7 +860,7 @@ describe('VoteManager', function () {
           [],
           iteration,
           biggestInfluencerId);
-        assertRevert(tx, 'Cannot propose without revealing');
+        await assertRevert(tx, 'Cannot propose without revealing');
       });
       it('No Finalise Dispute should happen if no block is proposed or no one votes', async function () {
         const epoch = await getEpoch();
@@ -870,7 +870,7 @@ describe('VoteManager', function () {
         const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
-        assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
+        await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
         await mineToNextEpoch();

@@ -124,7 +124,7 @@ describe('StakeManager', function () {
 
     it('should not allow non admin to pause', async function () {
       const tx1 = stakeManager.connect(signers[1]).pause();
-      assertRevert(tx1, 'AccessControl');
+      await assertRevert(tx1, 'AccessControl');
     });
 
     it('should not be able to stake if stake is less than min stake', async function () {
@@ -132,7 +132,7 @@ describe('StakeManager', function () {
       const stake = tokenAmount('999');
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'staked amount is less than minimum stake required');
     });
 
     it('should not be able to stake if contract is paused', async function () {
@@ -143,12 +143,12 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).pause();
 
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      assertRevert(tx, 'pause');
+      await assertRevert(tx, 'pause');
     });
 
     it('should not allow pause if already paused', async function () {
       const tx = stakeManager.connect(signers[0]).pause();
-      assertRevert(tx, 'pause');
+      await assertRevert(tx, 'pause');
       await stakeManager.connect(signers[0]).unpause();
     });
 

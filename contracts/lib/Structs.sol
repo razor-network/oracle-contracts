@@ -43,7 +43,7 @@ library Structs {
     }
 
     struct Dispute {
-        uint8 assetId;
+        uint8 collectionId;
         uint32 lastVisitedStaker;
         uint256 accWeight;
         uint256 accProd;
