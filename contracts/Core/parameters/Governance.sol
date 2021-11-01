@@ -134,4 +134,14 @@ contract Governance is Initializable, ACL {
         delegatorParams.setEpochLength(_epochLength);
         randomNoManagerParams.setEpochLength(_epochLength);
     }
+
+    function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
+        stakeManagerParams.setDeltaCommission(_deltaCommission);
+    }
+
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
+        stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
+    }
 }
