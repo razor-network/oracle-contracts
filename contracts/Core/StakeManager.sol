@@ -93,7 +93,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, amount);
+            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, 0, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
@@ -245,21 +245,17 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
 
-    /// @notice Used by staker to set commision for delegation
-    function setCommission(uint8 commission) external {
-        uint32 stakerId = stakerIds[msg.sender];
-        require(stakerId != 0, "staker id = 0");
-        require(stakers[stakerId].commission == 0, "Commission already intilised");
+    /// @notice Used by staker to update commision for delegation
+    function updateCommission(uint8 commission) external {
         require(commission <= maxCommission, "Commission exceeds maxlimit");
-        stakers[stakerId].commission = commission;
-    }
-
-    /// @notice As of now we only allow decresing commision, as with increase staker would have unfair adv
-    function decreaseCommission(uint8 commission) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        require(commission != 0, "Invalid Commission Update");
-        require(stakers[stakerId].commission > commission, "Invalid Commission Update");
+        uint32 epoch = getEpoch(epochLength);
+        if (stakers[stakerId].epochCommissionLastUpdated != 0) {
+            require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
+            require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
+        }
+        stakers[stakerId].epochCommissionLastUpdated = epoch;
         stakers[stakerId].commission = commission;
     }
 

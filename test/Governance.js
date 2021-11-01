@@ -39,6 +39,8 @@ describe('Governance contract Test', async () => {
   const extendLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
+  const deltaCommission = toBigNumber('3');
+  const epochLimitForUpdateCommission = toBigNumber('100');
 
   before(async () => {
     ({
@@ -97,6 +99,12 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxCommission(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setDeltaCommission(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setEpochLimitForUpdateCommission(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
   });
 
@@ -172,6 +180,14 @@ describe('Governance contract Test', async () => {
     assertBNEqual(baseDenom, toBigNumber('1'));
     assertBNEqual(baseDenom1, toBigNumber('1'));
 
+    await governance.setDeltaCommission(toBigNumber('25'));
+    const deltaCommission = await stakeManager.deltaCommission();
+    assertBNEqual(deltaCommission, toBigNumber('25'));
+
+    await governance.setEpochLimitForUpdateCommission(toBigNumber('26'));
+    const epochLimitForUpdateCommission = await stakeManager.epochLimitForUpdateCommission();
+    assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
+
     const tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
   });
@@ -214,6 +230,12 @@ describe('Governance contract Test', async () => {
 
     const maxCommissionValue = await stakeManager.maxCommission();
     assertBNEqual(maxCommission, maxCommissionValue);
+
+    const deltaCommissionValue = await stakeManager.deltaCommission();
+    assertBNEqual(deltaCommission, deltaCommissionValue);
+
+    const epochLimitForUpdateCommissionValue = await stakeManager.epochLimitForUpdateCommission();
+    assertBNEqual(epochLimitForUpdateCommission, epochLimitForUpdateCommissionValue);
 
     const gracePeriodValue = await rewardManager.gracePeriod();
     assertBNEqual(gracePeriod, gracePeriodValue);
