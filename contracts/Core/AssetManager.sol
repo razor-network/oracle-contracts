@@ -61,7 +61,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -75,7 +75,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         require(id != 0, "ID cannot be 0");
         require(collections[id].id == id, "Asset is not a collection");
 
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         if (assetStatus) {
             if (!collections[id].active) {
                 activeCollections.push(id);
@@ -145,7 +145,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         collections[collectionID].power = power;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
