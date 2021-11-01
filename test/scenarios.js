@@ -1103,7 +1103,7 @@ describe('Scenarios', async () => {
     assertBNEqual(stake, stakeBefore.sub(updateBlockRewardTo), 'Randao Penalty is not being applied correctly');
   }).timeout(5000);
 
-  it('Staker will not be able to reveal if minstake increases to nowStake of staker during reveal state', async () => {
+  it('Staker will not be able to reveal if minstake increases to currentStake of staker during reveal state', async () => {
     const epoch = await getEpoch();
     const votes = await getVote(medians);
     const commitment = utils.solidityKeccak256(
@@ -1124,7 +1124,7 @@ describe('Scenarios', async () => {
     await assertRevert(tx, 'stake below minimum');
   }).timeout(5000);
 
-  it('Minstake increases more than nowStake of staker during propose states', async () => {
+  it('Minstake increases more than currentStake of staker during propose states', async () => {
     // staker should not be able to propose
     const epoch = await getEpoch();
     const votes = await getVote(medians);
