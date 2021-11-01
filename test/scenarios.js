@@ -603,7 +603,7 @@ describe('Scenarios', async () => {
 
     // delegator delegates it's stake to staker
     const commRate = 6;
-    await stakeManager.connect(signers[7]).setCommission(commRate);
+    await stakeManager.connect(signers[7]).updateCommission(commRate);
     stakerId = await stakeManager.stakerIds(signers[7].address);
     staker = await stakeManager.getStaker(stakerId);
     assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
