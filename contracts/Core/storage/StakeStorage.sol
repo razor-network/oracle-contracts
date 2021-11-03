@@ -14,7 +14,7 @@ contract StakeStorage {
     mapping(address => mapping(address => Structs.Lock)) public locks;
     mapping(uint32 => Structs.BountyLock) public bountyLocks;
     //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
-    uint16[] public maturities = [
+    uint16[101] public maturities = [
         50,
         70,
         86,

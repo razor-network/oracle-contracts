@@ -12,35 +12,38 @@ library Structs {
         bytes32 commitmentHash;
     }
     struct Staker {
+        // Slot 1
         bool acceptDelegation;
         uint8 commission;
-        address _address;
-        address tokenAddress;
         uint32 id;
         uint32 age;
+        address _address;
+        // Slot 2
+        address tokenAddress;
         uint32 epochFirstStakedOrLastPenalized;
         uint32 epochCommissionLastUpdated;
+        // Slot 3
         uint256 stake;
     }
 
     struct Lock {
         uint256 amount; //amount in RZR
         uint256 commission;
-        uint256 withdrawAfter;
+        uint256 withdrawAfter; // Can be made uint32 later if packing is possible
     }
 
     struct BountyLock {
+        uint32 redeemAfter;
         address bountyHunter;
         uint256 amount; //amount in RZR
-        uint256 redeemAfter;
     }
 
     struct Block {
+        bool valid;
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;
         uint256 biggestInfluence;
-        bool valid;
     }
 
     struct Dispute {
