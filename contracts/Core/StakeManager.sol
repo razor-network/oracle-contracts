@@ -227,7 +227,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
-        
+
         emit StakerActivity(
             msg.sender,
             epoch,
@@ -328,9 +328,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // https://soliditydeveloper.com/stacktoodeep
         {
             (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum) = (slashNums.bounty, slashNums.burn, slashNums.keep);
-            bounty = (_stake * bountyNum) / baseDenominator;
-            amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
-            amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
+            bounty = (_stake * bountyNum) / BASE_DENOMINATOR;
+            amountToBeBurned = (_stake * burnSlashNum) / BASE_DENOMINATOR;
+            amountToBeKept = (_stake * keepSlashNum) / BASE_DENOMINATOR;
         }
 
         uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;

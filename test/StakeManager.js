@@ -9,7 +9,7 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
-
+  BASE_DENOMINATOR,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -352,7 +352,7 @@ describe('StakeManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
+      const baseDeno = BASE_DENOMINATOR;
       const amountToBeBurned = stakeAfterAcc1.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeAfterAcc1.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeAfterAcc1.mul(keepSlashNum).div(baseDeno);

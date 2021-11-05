@@ -9,6 +9,7 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
+  BASE_DENOMINATOR,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -375,7 +376,7 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await stakeManager.baseDenominator();
+        const baseDeno = await BASE_DENOMINATOR;
         const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
@@ -690,7 +691,7 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await stakeManager.baseDenominator();
+        const baseDeno = await BASE_DENOMINATOR;
         const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);

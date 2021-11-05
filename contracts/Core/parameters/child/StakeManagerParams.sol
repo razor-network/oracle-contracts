@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 import "../interfaces/IStakeManagerParams.sol";
 import "../ACL.sol";
+import "../../storage/Constants.sol";
 
-abstract contract StakeManagerParams is ACL, IStakeManagerParams {
+abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     struct SlashNums {
         uint16 bounty;
         uint16 burn;
@@ -15,7 +16,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
     uint8 public maxCommission = 20;
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
-    uint16 public override baseDenominator = 10000;
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
     uint16 public gracePeriod = 8;
@@ -35,7 +35,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
         uint16 _burn,
         uint16 _keep
     ) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_bounty + _burn + _keep <= baseDenominator, "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
         // slither-disable-next-line events-maths
         slashNums = SlashNums(_bounty, _burn, _keep);
     }
@@ -48,11 +48,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams {
     function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
-    }
-
-    function setBaseDenominator(uint16 _baseDenominator) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        baseDenominator = _baseDenominator;
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
