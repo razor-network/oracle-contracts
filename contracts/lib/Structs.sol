@@ -19,6 +19,7 @@ library Structs {
         uint32 id;
         uint32 age;
         uint32 epochFirstStakedOrLastPenalized;
+        uint32 epochCommissionLastUpdated;
         uint256 stake;
     }
 
@@ -43,7 +44,7 @@ library Structs {
     }
 
     struct Dispute {
-        uint8 assetId;
+        uint8 collectionId;
         uint32 lastVisitedStaker;
         uint256 accWeight;
         uint256 accProd;

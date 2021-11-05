@@ -30,14 +30,12 @@ describe('RandomNoManager', function () {
   let voteManager;
   let razor;
   let stakeManager;
-  let parameters;
   let randomNoManager;
   let initializeContracts;
 
   before(async () => {
     ({
       blockManager,
-      parameters,
       razor,
       stakeManager,
       voteManager,
@@ -54,8 +52,7 @@ describe('RandomNoManager', function () {
     });
     it('should not be able to initiliaze randomNoManager contract without admin role', async () => {
       const tx = randomNoManager.connect(signers[1]).initialize(
-        blockManager.address,
-        parameters.address
+        blockManager.address
       );
       await assertRevert(tx, 'AccessControl');
     });
@@ -122,7 +119,7 @@ describe('RandomNoManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
       await blockManager.connect(signers[5]).propose(epoch,

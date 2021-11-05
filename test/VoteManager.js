@@ -8,6 +8,7 @@ const {
   ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
+  GOVERNER_ROLE,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -29,7 +30,7 @@ describe('VoteManager', function () {
   describe('BlockManager', function () {
     let signers;
     let blockManager;
-    let parameters;
+    let governance;
     let razor;
     let stakeManager;
     let rewardManager;
@@ -39,7 +40,7 @@ describe('VoteManager', function () {
 
     before(async () => {
       ({
-        blockManager, parameters, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, governance, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -64,7 +65,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
         await assertRevert(tx, 'AccessControl');
       });
 
@@ -85,7 +86,7 @@ describe('VoteManager', function () {
           i++;
         }
 
-        while (Number(await parameters.getState()) !== 4) { await mineToNextState(); }
+        while (Number(await assetManager.getState(await assetManager.epochLength())) !== 4) { await mineToNextState(); }
 
         let Cname;
         for (let i = 1; i <= 8; i++) {
@@ -115,7 +116,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, parameters.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
         await assertRevert(tx, 'Initializable: contract is already initialized');
       });
 
@@ -222,7 +223,7 @@ describe('VoteManager', function () {
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         // const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
@@ -299,7 +300,7 @@ describe('VoteManager', function () {
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         await mineToNextState(); // propose
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -364,16 +365,17 @@ describe('VoteManager', function () {
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        await parameters.setSlashParams(500, 4500, 0);
+        await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+        await governance.setSlashParams(500, 4500, 0);
         await voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
 
-        const slashNums = await parameters.getAllSlashParams();
+        const slashNums = await stakeManager.slashNums();
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = slashNums[3];
+        const baseDeno = await stakeManager.baseDenominator();
         const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
@@ -396,7 +398,7 @@ describe('VoteManager', function () {
         const tx = voteManager.connect(signers[10]).snitch(epoch, votes,
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[4].address);
-        await parameters.setSlashParams(500, 9500, 0);// Restoring the slashPenaltyNum again
+        await governance.setSlashParams(500, 9500, 0);// Restoring the slashPenaltyNum again
         await assertRevert(tx, 'incorrect secret/value');
       });
 
@@ -466,11 +468,11 @@ describe('VoteManager', function () {
       it('Once Lock Period is over, BountyHunter should be able to redeem bounty of snitch', async function () {
         // Anyone shouldnt be able to redeem someones elses bounty
         const tx = stakeManager.connect(signers[8]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx, 'Incorrect Caller');
+        await assertRevert(tx, 'Incorrect Caller');
 
         // Shouldnt be reedemable before withdrawlock period
         const tx1 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx1, 'Redeem epoch not reached');
+        await assertRevert(tx1, 'Redeem epoch not reached');
         const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -486,7 +488,7 @@ describe('VoteManager', function () {
 
         // Should not able to redeem again
         const tx2 = stakeManager.connect(signers[10]).redeemBounty(toBigNumber('1'));
-        assertRevert(tx2, 'Incorrect Caller');
+        await assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('should not be able to commit if stake is below minstake', async function () {
@@ -496,7 +498,7 @@ describe('VoteManager', function () {
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setSlashParams(500, 4500, 0);
+        await governance.setSlashParams(500, 4500, 0);
         await stakeManager.slash(epoch, stakerId, signers[11].address);
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -621,7 +623,7 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await parameters.setSlashParams(500, 9500, 0);
+        await governance.setSlashParams(500, 9500, 0);
         await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
 
         await mineToNextState(); // reveal
@@ -634,7 +636,7 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
 
-        await parameters.setMinStake(0);
+        await governance.setMinStake(0);
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -684,11 +686,11 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd',
           signers[5].address);
 
-        const slashNums = await parameters.getAllSlashParams();
+        const slashNums = await stakeManager.slashNums();
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = slashNums[3];
+        const baseDeno = await stakeManager.baseDenominator();
         const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
         const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
         const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
@@ -707,11 +709,11 @@ describe('VoteManager', function () {
 
         // Anyone shouldnt be able to redeem someones elses bounty
         const tx = stakeManager.connect(signers[8]).redeemBounty(bountyId);
-        assertRevert(tx, 'Incorrect Caller');
+        await assertRevert(tx, 'Incorrect Caller');
 
         // Shouldnt be reedemable before withdrawlock period
         const tx1 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
-        assertRevert(tx1, 'Redeem epoch not reached');
+        await assertRevert(tx1, 'Redeem epoch not reached');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
           await mineToNextEpoch();
@@ -725,7 +727,7 @@ describe('VoteManager', function () {
 
         // Should not able to redeem again
         const tx2 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
-        assertRevert(tx2, 'Incorrect Caller');
+        await assertRevert(tx2, 'Incorrect Caller');
       });
 
       it('if the revealed value is zero, staker should be able to reveal', async function () {
@@ -767,7 +769,7 @@ describe('VoteManager', function () {
         const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
         const staker = await stakeManager.getStaker(stakerIdAcc8);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
         const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
@@ -824,7 +826,7 @@ describe('VoteManager', function () {
 
         const staker = await stakeManager.getStaker(stakerIdAcc8);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
         await blockManager.connect(signers[8]).propose(epoch,
@@ -852,13 +854,13 @@ describe('VoteManager', function () {
         // propose state
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         const tx = blockManager.connect(signers[3]).propose(epoch,
           [],
           iteration,
           biggestInfluencerId);
-        assertRevert(tx, 'Cannot propose without revealing');
+        await assertRevert(tx, 'Cannot propose without revealing');
       });
       it('No Finalise Dispute should happen if no block is proposed or no one votes', async function () {
         const epoch = await getEpoch();
@@ -868,7 +870,7 @@ describe('VoteManager', function () {
         const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
-        assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
+        await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
         await mineToNextEpoch();
@@ -890,7 +892,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // propose state
         await mineToNextState();
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager);
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
         await blockManager.connect(signers[3]).propose(epoch,
 

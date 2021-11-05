@@ -98,8 +98,8 @@ describe('AssetManager', function () {
       assert((collection1.collection.jobIDs).length === 2);
       assert((collection2.collection.jobIDs).length === 1);
       assertBNEqual((await assetManager.getNumAssets()), toBigNumber('4'));
-      assertBNEqual((toBigNumber((await assetManager.getActiveAssets()).length)), toBigNumber('2'));
-      const activeAssets = await assetManager.getActiveAssets();
+      assertBNEqual((toBigNumber((await assetManager.getActiveCollections()).length)), toBigNumber('2'));
+      const activeAssets = await assetManager.getActiveCollections();
       assert(activeAssets[0] === 3);
       assert(activeAssets[1] === 4);
     });
@@ -181,14 +181,14 @@ describe('AssetManager', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
       const collectionIsActive = await assetManager.getCollectionStatus(7);
       assert(collectionIsActive === false);
-      assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(7), toBigNumber('0'), 'Incorrect index assignment');
     });
 
     it('should be able to reactivate collection', async function () {
       await assetManager.setCollectionStatus(true, 7);
       const collection = await assetManager.getAsset(7);
       assert(collection.collection.active === true);
-      assertBNEqual(await assetManager.getAssetIndex(7), toBigNumber('3'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(7), toBigNumber('3'), 'Incorrect index assignment');
       await assetManager.setCollectionStatus(false, 7);
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
@@ -242,7 +242,7 @@ describe('AssetManager', function () {
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
       const tx = assetManager.updateCollection(3, 2, 5, [1]);
-      assertRevert(tx, 'Collection is inactive');
+      await assertRevert(tx, 'Collection is inactive');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {
@@ -274,9 +274,9 @@ describe('AssetManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      assertBNEqual(await assetManager.getAssetIndex(8), toBigNumber('0'), 'Incorrect index assignment');
-      assertBNEqual(await assetManager.getAssetIndex(14), toBigNumber('8'), 'Incorrect index assignment');
-      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(8), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(14), toBigNumber('8'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(13), toBigNumber('7'), 'Incorrect index assignment');
 
       // Deactivating an asset with index between 0 and length - 1
       await assetManager.setCollectionStatus(false, 10);
@@ -286,15 +286,15 @@ describe('AssetManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      assertBNEqual(await assetManager.getAssetIndex(10), toBigNumber('0'), 'Incorrect index assignment');
-      assertBNEqual(await assetManager.getAssetIndex(13), toBigNumber('7'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(10), toBigNumber('0'), 'Incorrect index assignment');
+      assertBNEqual(await assetManager.getCollectionIndex(13), toBigNumber('7'), 'Incorrect index assignment');
     });
 
     it('should not add or remove a collection from activeAssets when it is activated/deactivated', async function () {
       await assetManager.setCollectionStatus(true, 9);
-      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('7'), 'collection has been added again');
+      assertBNEqual(toBigNumber((await assetManager.getActiveCollections()).length), toBigNumber('7'), 'collection has been added again');
       await assetManager.setCollectionStatus(false, 8);
-      assertBNEqual(toBigNumber((await assetManager.getActiveAssets()).length), toBigNumber('7'), 'collection has been removed again');
+      assertBNEqual(toBigNumber((await assetManager.getActiveCollections()).length), toBigNumber('7'), 'collection has been removed again');
     });
 
     it('Should not be able to set Weight of job beyond max : 100', async function () {
