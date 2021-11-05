@@ -17,6 +17,7 @@ const {
   GOVERNER_ROLE,
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
+  BASE_DENOMINATOR,
 } = require('./helpers/constants');
 const {
   calculateDisputesData,
@@ -320,7 +321,7 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
+      const baseDeno = BASE_DENOMINATOR;
       const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
@@ -1213,7 +1214,7 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
+      const baseDeno = BASE_DENOMINATOR;
       const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(baseDeno);
       const bounty = stakeBefore.mul(bountySlashNum).div(baseDeno);
       const amountTobeKept = stakeBefore.mul(keepSlashNum).div(baseDeno);

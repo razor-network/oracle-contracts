@@ -8,13 +8,14 @@ import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/IAssetManagerParams.sol";
 import "./interfaces/IDelegatorParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
+import "../storage/Constants.sol";
 import "./ACL.sol";
 
 // slither-reason : Disabled as slither is suggesting to have params interfaces to be inherited here
 // Though function signatures are same, meaning is diff
 // also two interfaces are going to have some common functions in this case
 // slither-disable-next-line missing-inheritance
-contract Governance is Initializable, ACL {
+contract Governance is Initializable, ACL, Constants {
     IBlockManagerParams public blockManagerParams;
     IRewardManagerParams public rewardManagerParams;
     IStakeManagerParams public stakeManagerParams;
@@ -56,17 +57,11 @@ contract Governance is Initializable, ACL {
         uint16 _burn,
         uint16 _keep
     ) external initialized onlyRole(GOVERNER_ROLE) {
-        require(_bounty + _burn + _keep <= stakeManagerParams.baseDenominator(), "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
         emit ParameterChanged(msg.sender, "bountySlashNum", _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", _burn, block.timestamp);
         emit ParameterChanged(msg.sender, "keepSlashNum", _keep, block.timestamp);
         stakeManagerParams.setSlashParams(_bounty, _burn, _keep);
-    }
-
-    function setBaseDenominator(uint16 _baseDenominator) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "baseDenom", _baseDenominator, block.timestamp);
-        rewardManagerParams.setBaseDenominator(_baseDenominator);
-        stakeManagerParams.setBaseDenominator(_baseDenominator);
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {

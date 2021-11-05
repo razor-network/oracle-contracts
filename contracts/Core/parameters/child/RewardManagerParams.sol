@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 import "../interfaces/IRewardManagerParams.sol";
 import "../ACL.sol";
+import "../../storage/Constants.sol";
 
 abstract contract RewardManagerParams is ACL, IRewardManagerParams {
     uint16 public penaltyNotRevealNum = 1;
-    uint16 public baseDenominator = 10000;
     uint16 public gracePeriod = 8;
     uint16 public epochLength = 300;
     uint32 public maxAge = 100 * 10000;
@@ -20,11 +20,6 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams {
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
-    }
-
-    function setBaseDenominator(uint16 _baseDenominator) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        baseDenominator = _baseDenominator;
     }
 
     function setBlockReward(uint256 _blockReward) external override onlyRole(GOVERNANCE_ROLE) {
