@@ -16,12 +16,6 @@ contract Constants {
         Slashed
     }
 
-    enum StakerActivities {
-        Delegated,
-        Unstaked,
-        Withdrew
-    }
-
     uint8 public constant NUM_STATES = 5;
 
     uint16 public constant BASE_DENOMINATOR = 10000;

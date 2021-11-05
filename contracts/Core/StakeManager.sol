@@ -36,14 +36,25 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 totalSupply,
         uint256 timestamp
     );
-    event StakerActivity(
+    event Unstaked(
+        address staker,
+        uint32 epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 totalSupply,
+        uint256 timestamp
+    );
+
+    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+
+    event Delegated(
         address delegator,
         uint32 epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
         uint256 totalSupply,
-        Constants.StakerActivities reason,
         uint256 timestamp
     );
 
@@ -129,16 +140,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         totalSupply = totalSupply + toMint;
 
         // slither-disable-next-line reentrancy-events
-        emit StakerActivity(
-            msg.sender,
-            epoch,
-            stakerId,
-            amount,
-            stakers[stakerId].stake,
-            totalSupply,
-            Constants.StakerActivities.Delegated,
-            block.timestamp
-        );
+        emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
 
         // Step 4:  Razor Token Transfer : Amount
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
@@ -192,16 +194,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(sToken.burn(msg.sender, sAmount), "Token burn Failed");
         //emit event here
-        emit StakerActivity(
-            msg.sender,
-            epoch,
-            stakerId,
-            rAmount,
-            staker.stake,
-            sToken.totalSupply(),
-            Constants.StakerActivities.Unstaked,
-            block.timestamp
-        );
+        emit Unstaked(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
 
     /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
@@ -228,16 +221,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // Reset lock
         _resetLock(stakerId);
 
-        emit StakerActivity(
-            msg.sender,
-            epoch,
-            stakerId,
-            withdrawAmount,
-            staker.stake,
-            0,
-            Constants.StakerActivities.Withdrew,
-            block.timestamp
-        );
+        emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
         require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
