@@ -92,7 +92,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, 0, amount);
+            stakers[numStakers] = Structs.Staker(false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
@@ -125,7 +125,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 amount
     ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        require(isStakerActive(stakerId, epoch), "Staker is inactive");
+        require(_isStakerActive(stakerId, epoch), "Staker is inactive");
 
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -158,7 +158,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 stakerId,
         uint256 sAmount
     ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
-        State currentState = getState(epochLength);
+        State currentState = _getState(epochLength);
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 
@@ -250,7 +250,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
             require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
@@ -263,7 +263,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function extendLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
         require(
             locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + withdrawReleasePeriod < epoch,
@@ -323,7 +323,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         if (bounty == 0) return 0;
         bountyCounter = bountyCounter + 1;
-        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + withdrawLockPeriod);
+        bountyLocks[bountyCounter] = Structs.BountyLock(epoch + withdrawLockPeriod, bountyHunter, bounty);
 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
@@ -337,7 +337,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @notice Allows bountyHunter to redeem their bounty once its locking period is over
     /// @param bountyId The ID of the bounty
     function redeemBounty(uint32 bountyId) external {
-        uint32 epoch = getEpoch(epochLength);
+        uint32 epoch = _getEpoch(epochLength);
         uint256 bounty = bountyLocks[bountyId].amount;
 
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
@@ -398,12 +398,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         return stakers[stakerId].epochFirstStakedOrLastPenalized;
     }
 
-    /// @return isStakerActive : Activity < Grace
-    function isStakerActive(uint32 stakerId, uint32 epoch) public view returns (bool) {
-        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        return ((epoch - epochLastRevealed) <= gracePeriod);
-    }
-
     /// @notice Internal function for setting stake of the staker
     /// @param _id of the staker
     /// @param _stake the amount of Razor tokens staked
@@ -415,6 +409,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     ) internal {
         stakers[_id].stake = _stake;
         emit StakeChange(_epoch, _id, reason, _stake, block.timestamp);
+    }
+
+    /// @return isStakerActive : Activity < Grace
+    function _isStakerActive(uint32 stakerId, uint32 epoch) internal view returns (bool) {
+        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
+        return ((epoch - epochLastRevealed) <= gracePeriod);
     }
 
     /// @return maturity of staker
@@ -455,6 +455,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
-        emit ResetLock(msg.sender, getEpoch(epochLength));
+        emit ResetLock(msg.sender, _getEpoch(epochLength));
     }
 }

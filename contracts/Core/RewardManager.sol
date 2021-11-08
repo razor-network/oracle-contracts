@@ -52,21 +52,6 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         _giveInactivityPenalties(epoch, stakerId);
     }
 
-    /// @notice Calculates the stake and age inactivity penalties of the staker
-    /// @param epochs The difference of epochs where the staker was inactive
-    /// @param stakeValue The Stake that staker had in last epoch
-    function calculateInactivityPenalties(
-        uint32 epochs,
-        uint256 stakeValue,
-        uint32 ageValue
-    ) public view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / BASE_DENOMINATOR;
-        uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
-        uint32 penaltyAge = epochs * 10000;
-        uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
-        return (newStake, newAge);
-    }
-
     /// @notice The function gives out penalties to stakers during commit.
     /// The penalties are given for inactivity, failing to reveal
     /// , deviation from the median value of particular asset
@@ -96,7 +81,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         }
 
         if (inactiveEpochs > gracePeriod) {
-            (newStake, newAge) = calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
+            (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
@@ -144,5 +129,20 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         age = penalty > age ? 0 : age - uint32(penalty);
 
         stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age));
+    }
+
+    /// @notice Calculates the stake and age inactivity penalties of the staker
+    /// @param epochs The difference of epochs where the staker was inactive
+    /// @param stakeValue The Stake that staker had in last epoch
+    function _calculateInactivityPenalties(
+        uint32 epochs,
+        uint256 stakeValue,
+        uint32 ageValue
+    ) internal view returns (uint256, uint32) {
+        uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / baseDenominator;
+        uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
+        uint32 penaltyAge = epochs * 10000;
+        uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
+        return (newStake, newAge);
     }
 }

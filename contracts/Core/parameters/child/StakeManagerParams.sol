@@ -10,18 +10,20 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         uint16 burn;
         uint16 keep;
     }
+    bool public escapeHatchEnabled = true;
     uint8 public withdrawLockPeriod = 1;
     uint8 public withdrawReleasePeriod = 5;
     uint8 public extendLockPenalty = 1;
     uint8 public maxCommission = 20;
-    SlashNums public slashNums = SlashNums(500, 9500, 0);
-    // Slash Penalty = bounty + burned + kept
+
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
+    uint16 public override baseDenominator = 10000;
     uint16 public gracePeriod = 8;
     uint16 public epochLength = 300;
-    bool public escapeHatchEnabled = true;
     uint16 public epochLimitForUpdateCommission = 100;
+    SlashNums public slashNums = SlashNums(500, 9500, 0);
+    // Slash Penalty = bounty + burned + kept
     uint256 public minStake = 1000 * (10**18);
     bytes32 public constant GOVERNANCE_ROLE = 0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1;
 
