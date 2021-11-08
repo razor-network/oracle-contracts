@@ -85,8 +85,11 @@ describe('VoteManager', function () {
           await assetManager.createJob(weight, power, selectorType, name, selector, url);
           i++;
         }
-
-        while (Number(await assetManager.getState(await assetManager.epochLength())) !== 4) { await mineToNextState(); }
+        await mineToNextEpoch();
+        await mineToNextState();
+        await mineToNextState();
+        await mineToNextState();
+        await mineToNextState();
 
         let Cname;
         for (let i = 1; i <= 8; i++) {
