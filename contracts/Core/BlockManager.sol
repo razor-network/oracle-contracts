@@ -64,7 +64,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(proposerId, medians, iteration, biggestInfluence, true);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
         numProposedBlocks = numProposedBlocks + 1;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);

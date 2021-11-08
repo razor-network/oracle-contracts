@@ -93,7 +93,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, 0, msg.sender, address(sToken), numStakers, 10000, epoch, 0, amount);
+            stakers[numStakers] = Structs.Staker(false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
@@ -323,7 +323,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         if (bounty == 0) return 0;
         bountyCounter = bountyCounter + 1;
-        bountyLocks[bountyCounter] = Structs.BountyLock(bountyHunter, bounty, epoch + withdrawLockPeriod);
+        bountyLocks[bountyCounter] = Structs.BountyLock(epoch + withdrawLockPeriod, bountyHunter, bounty);
 
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
