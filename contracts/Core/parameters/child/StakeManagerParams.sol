@@ -18,7 +18,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
 
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
-    uint16 public override baseDenominator = 10000;
     uint16 public gracePeriod = 8;
     uint16 public epochLength = 300;
     uint16 public epochLimitForUpdateCommission = 100;
