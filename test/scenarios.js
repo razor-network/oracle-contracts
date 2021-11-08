@@ -1,4 +1,5 @@
 const { utils } = require('ethers');
+const { getState } = require('./helpers/utils');
 const {
   ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
@@ -69,7 +70,7 @@ describe('Scenarios', async () => {
       i++;
     }
 
-    while (Number(await stakeManager.getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
 
     let Cname;
     for (let i = 1; i <= 8; i++) {
