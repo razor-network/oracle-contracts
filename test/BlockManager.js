@@ -857,7 +857,11 @@ describe('BlockManager', function () {
       await blockManager.disputes(epoch, signers[10].address);
 
       const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
+<<<<<<< HEAD
       await assertRevert(tx, 'TIR is wrong'); // TIR : Total Influence Revealed
+=======
+      await assertRevert(tx, 'TIR is wrong');
+>>>>>>> 4492c414ac902b0221c36a33d7f47b550220d7f9
     });
     it('should not be able to finalize dispute, if proposed alternate block is identical to proposed blocks', async function () {
       // Commit
