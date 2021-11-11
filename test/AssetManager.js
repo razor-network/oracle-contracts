@@ -219,7 +219,7 @@ describe('AssetManager', function () {
     it('should not create collection if it does not have any jobIDs', async function () {
       const collectionName = 'Test Collection2';
       const tx1 = assetManager.createCollection([], 1, 0, collectionName);
-      await assertRevert(tx1, 'Number of jobIDs low to create collection');
+      await assertRevert(tx1, 'no jobs added');
     });
 
     it('should not create collection if same named collection exists', async function () {
