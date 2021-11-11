@@ -87,7 +87,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint16 i = 0; i < sortedStakers.length; i++) {
-            require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS ");
+            require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS "); // LVS : Last Visited Staker
             lastVisitedStaker = sortedStakers[i];
             // slither-disable-next-line calls-loop
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
@@ -155,7 +155,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         checkEpochAndState(State.Dispute, epoch, epochLength)
         returns (uint32)
     {
-        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong");
+        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
