@@ -44,8 +44,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
+        uint256 prevStake = stakeManager.getStake(stakerId);
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
     }
 
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
@@ -86,7 +86,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
-            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
