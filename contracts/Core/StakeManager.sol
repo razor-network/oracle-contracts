@@ -23,7 +23,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
-    event StakeChange(uint32 epoch, uint32 indexed stakerId, Constants.StakeChanged reason, uint256 newStake, uint256 timestamp);
+    event StakeChange(
+        uint32 epoch,
+        uint32 indexed stakerId,
+        Constants.StakeChanged reason,
+        uint256 prevStake,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
 
@@ -286,9 +293,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 _epoch,
         uint32 _id,
         Constants.StakeChanged reason,
+        uint256 prevStake,
         uint256 _stake
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerStake(_epoch, _id, reason, _stake);
+        _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
     /// @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
@@ -319,7 +327,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;
         _stake = _stake - slashPenaltyAmount;
-        _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake);
+        _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake + slashPenaltyAmount, _stake);
 
         if (bounty == 0) return 0;
         bountyCounter = bountyCounter + 1;
@@ -405,10 +413,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 _epoch,
         uint32 _id,
         Constants.StakeChanged reason,
+        uint256 _prevStake,
         uint256 _stake
     ) internal {
         stakers[_id].stake = _stake;
-        emit StakeChange(_epoch, _id, reason, _stake, block.timestamp);
+        emit StakeChange(_epoch, _id, reason, _prevStake, _stake, block.timestamp);
     }
 
     /// @return isStakerActive : Activity < Grace
