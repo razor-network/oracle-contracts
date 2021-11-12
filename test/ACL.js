@@ -11,7 +11,7 @@ const {
   GOVERNER_ROLE,
 } = require('./helpers/constants');
 const {
-  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
+  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -341,6 +341,7 @@ describe('Access Control Test', async () => {
   });
 
   it('createCollection() should be accessable by only AssetCreator', async () => {
+    await mineToNextEpoch();
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
