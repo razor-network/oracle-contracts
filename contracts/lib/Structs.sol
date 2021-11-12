@@ -14,6 +14,7 @@ library Structs {
     struct Staker {
         // Slot 1
         bool acceptDelegation;
+        bool isSlashed;
         uint8 commission;
         uint32 id;
         uint32 age;

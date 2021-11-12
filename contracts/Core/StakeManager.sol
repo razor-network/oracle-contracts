@@ -100,13 +100,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
+            stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
 
             // Minting
             require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
             totalSupply = amount;
         } else {
             require(amount + stakers[stakerId].stake >= minStake, "staked amount is less than minimum stake required");
+            require(!stakers[stakerId].isSlashed, "staker is slashed");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
@@ -134,7 +135,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
-
+        require(!stakers[stakerId].isSlashed, "Staker is slashed");
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
@@ -327,6 +328,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;
         _stake = _stake - slashPenaltyAmount;
+        stakers[stakerId].isSlashed = true;
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake + slashPenaltyAmount, _stake);
 
         if (bounty == 0) return 0;
