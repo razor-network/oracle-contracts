@@ -87,11 +87,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint16 i = 0; i < sortedStakers.length; i++) {
-            require(sortedStakers[i] > lastVisitedStaker, "sorted[i] is not greater than lastVisited");
+            require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS "); // LVS : Last Visited Staker
             lastVisitedStaker = sortedStakers[i];
             // slither-disable-next-line calls-loop
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
-            require(vote.epoch == epoch, "epoch in vote doesnt match with current");
+            require(vote.epoch == epoch, "staker didnt vote in this epoch");
 
             uint48 value = vote.values[collectionIndex - 1];
             // slither-disable-next-line calls-loop
@@ -122,7 +122,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             return;
         }
         uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
-        require(proposerId == stakerId, "Block can be confirmed by proposer of the block");
+        require(proposerId == stakerId, "Block Proposer mismatches");
         _confirmBlock(epoch, deactivatedCollections, proposerId);
     }
 
@@ -155,20 +155,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         checkEpochAndState(State.Dispute, epoch, epochLength)
         returns (uint32)
     {
-        require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch),
-            "Total influence revealed doesnt match"
-        );
+        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint8 collectionId = disputes[epoch][msg.sender].collectionId;
         uint8 collectionIndex = assetManager.getCollectionIndex(collectionId);
-        require(
-            proposedBlocks[epoch][blockId].medians[collectionIndex - 1] != median,
-            "Proposed Alternate block is identical to proposed block"
-        );
+        require(proposedBlocks[epoch][blockId].medians[collectionIndex - 1] != median, "Block proposed with same medians");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
