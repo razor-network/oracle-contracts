@@ -143,7 +143,7 @@ describe('StakeManager', function () {
       const stake = tokenAmount('999');
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('should not be able to stake if contract is paused', async function () {
@@ -169,7 +169,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('Staker should not be able to stake if epoch is not current epoch', async function () {
