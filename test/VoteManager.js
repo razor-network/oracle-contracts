@@ -379,10 +379,9 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await BASE_DENOMINATOR;
-        const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
-        const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
-        const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
+        const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(BASE_DENOMINATOR);
+        const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(BASE_DENOMINATOR);
+        const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(BASE_DENOMINATOR);
         const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
@@ -694,10 +693,9 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await BASE_DENOMINATOR;
-        const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
-        const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
-        const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+        const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(BASE_DENOMINATOR);
+        const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(BASE_DENOMINATOR);
+        const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(BASE_DENOMINATOR);
         const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
