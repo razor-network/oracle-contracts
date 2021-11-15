@@ -15,7 +15,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public withdrawReleasePeriod = 5;
     uint8 public extendLockPenalty = 1;
     uint8 public maxCommission = 20;
-
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
     uint16 public gracePeriod = 8;
