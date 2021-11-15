@@ -141,7 +141,7 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
       await blockManager.connect(signers[5]).propose(epoch,
@@ -157,6 +157,22 @@ describe('BlockManager', function () {
 
       const nblocks = await blockManager.getNumProposedBlocks(epoch);
       assertBNEqual(nblocks, toBigNumber('1'), 'Only one block has been proposed till now. Incorrect Answer');
+    });
+
+    it('should not be able to propose again if already proposed', async function () {
+      const epoch = await getEpoch();
+      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc5);
+
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+
+      const tx = blockManager.connect(signers[5]).propose(epoch,
+        [],
+        iteration,
+        biggestInfluencerId);
+
+      await assertRevert(tx, "Already proposed");
     });
 
     it('should be able to confirm block and receive block reward', async () => {

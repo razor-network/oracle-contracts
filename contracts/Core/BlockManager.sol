@@ -60,12 +60,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+        require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
 
         uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
+        epochLastProposed[proposerId] = epoch;
         numProposedBlocks = numProposedBlocks + 1;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }

@@ -9,6 +9,8 @@ contract BlockStorage {
     mapping(uint32 => mapping(uint8 => Structs.Block)) public proposedBlocks;
     //epoch->blockId
     mapping(uint32 => uint8[]) public sortedProposedBlockIds;
+    //stakerId->epoch
+    mapping(uint32 => uint32) public epochLastProposed;
 
     // slither-disable-next-line constable-states
     uint8 public numProposedBlocks;
