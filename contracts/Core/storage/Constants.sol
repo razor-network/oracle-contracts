@@ -49,7 +49,7 @@ contract Constants {
 
     // keccak256("PAUSE_ROLE")
     bytes32 public constant PAUSE_ROLE = 0x139c2898040ef16910dc9f44dc697df79363da767d8bc92f2e310312b816e46d;
-    
+
     // keccak256("GOVERNANCE_ROLE")
     bytes32 public constant GOVERNANCE_ROLE = 0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1;
 }
