@@ -120,7 +120,16 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             totalSupply = totalSupply + toMint;
         }
         // slither-disable-next-line reentrancy-events
-        emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
+        emit Staked(
+            msg.sender,
+            stakers[stakerId].tokenAddress,
+            epoch,
+            stakerId,
+            amount,
+            stakers[stakerId].stake,
+            totalSupply,
+            block.timestamp
+        );
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
