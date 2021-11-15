@@ -10,6 +10,7 @@ const {
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
   BASE_DENOMINATOR,
+  PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -64,6 +65,13 @@ describe('StakeManager', function () {
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
+    });
+
+    it('pause role should be granted', async () => {
+      const DEFAULT_PAUSE_ROLE_HASH = PAUSE_ROLE;
+      await stakeManager.grantRole(DEFAULT_PAUSE_ROLE_HASH, signers[0].address);
+      const isPauseRoleGranted = await stakeManager.hasRole(DEFAULT_PAUSE_ROLE_HASH, signers[0].address);
+      assert(isPauseRoleGranted === true, 'Pause role was not Granted');
     });
 
     it('should not be able to stake without initialization', async () => {
@@ -135,7 +143,7 @@ describe('StakeManager', function () {
       const stake = tokenAmount('999');
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('should not be able to stake if contract is paused', async function () {
@@ -161,7 +169,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('Staker should not be able to stake if epoch is not current epoch', async function () {

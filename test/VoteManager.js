@@ -121,7 +121,7 @@ describe('VoteManager', function () {
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
         const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
-        await assertRevert(tx, 'Initializable: contract is already initialized');
+        await assertRevert(tx, 'contract already initialized');
       });
 
       it('should be able to commit', async function () {
@@ -791,7 +791,7 @@ describe('VoteManager', function () {
 
         const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
 
-        await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
+        await assertRevert(tx, 'sortedStaker <= LVS');
       });
 
       it('if the revealed value is zero, next epoch should work normally', async function () {
@@ -844,7 +844,7 @@ describe('VoteManager', function () {
         //
         const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
         //
-        await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
+        await assertRevert(tx3, 'sortedStaker <= LVS');
       });
       it('Block should not be proposed when no one votes', async function () {
         await mineToNextEpoch();

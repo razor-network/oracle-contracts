@@ -8,6 +8,7 @@ const {
   ASSET_CONFIRMER_ROLE,
   DELEGATOR_MODIFIER_ROLE,
   GOVERNANCE_ROLE,
+  PAUSE_ROLE,
 } = require('./constants');
 
 const setupContracts = async () => {
@@ -21,6 +22,7 @@ const setupContracts = async () => {
   const RewardManager = await ethers.getContractFactory('RewardManager');
   const VoteManager = await ethers.getContractFactory('VoteManager');
   const StakedTokenFactory = await ethers.getContractFactory('StakedTokenFactory');
+  const signers = await ethers.getSigners();
 
   const governance = await Governance.deploy();
   const blockManager = await BlockManager.deploy();
@@ -60,6 +62,7 @@ const setupContracts = async () => {
     assetManager.grantRole(ASSET_CONFIRMER_ROLE, blockManager.address),
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
     delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManager.address),
+    stakeManager.grantRole(PAUSE_ROLE, signers[0].address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, stakeManager.address),

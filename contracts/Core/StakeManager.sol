@@ -93,7 +93,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 totalSupply = 0;
 
         if (stakerId == 0) {
-            require(amount >= minStake, "staked amount is less than minimum stake required");
+            require(amount >= minStake, "Amount below Minstake");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
@@ -102,10 +102,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakers[numStakers] = Structs.Staker(false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
 
             // Minting
-            require(sToken.mint(msg.sender, amount, amount)); // as 1RZR = 1 sRZR
+            require(sToken.mint(msg.sender, amount, amount), "tokens not minted"); // as 1RZR = 1 sRZR
             totalSupply = amount;
         } else {
-            require(amount + stakers[stakerId].stake >= minStake, "staked amount is less than minimum stake required");
+            require(amount + stakers[stakerId].stake >= minStake, "amount + stake below min Stake");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
@@ -114,7 +114,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-            require(sToken.mint(msg.sender, toMint, amount));
+            require(sToken.mint(msg.sender, toMint, amount), "tokens not minted");
             totalSupply = totalSupply + toMint;
         }
         // slither-disable-next-line reentrancy-events
@@ -143,7 +143,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
         // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
-        require(sToken.mint(msg.sender, toMint, amount));
+        require(sToken.mint(msg.sender, toMint, amount), "tokens not minted");
         totalSupply = totalSupply + toMint;
 
         // slither-disable-next-line reentrancy-events

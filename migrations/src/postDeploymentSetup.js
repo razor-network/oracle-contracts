@@ -57,6 +57,9 @@ module.exports = async () => {
   // keccak256("GOVERNANCE_ROLE")
   const GOVERNANCE_ROLE = '0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1';
 
+  // keccak256("PAUSE_ROLE")
+  const PAUSE_ROLE = '0x139c2898040ef16910dc9f44dc697df79363da767d8bc92f2e310312b816e46d';
+
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: assetManager } = await getdeployedContractInstance('AssetManager', assetManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
@@ -119,6 +122,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address));
+  pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, assetManagerAddress));
   pendingTransactions.push(await assetManager.upgradeDelegator(delegatorAddress));
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
