@@ -172,7 +172,7 @@ describe('BlockManager', function () {
         iteration,
         biggestInfluencerId);
 
-      await assertRevert(tx, "Already proposed");
+      await assertRevert(tx, 'Already proposed');
     });
 
     it('should be able to confirm block and receive block reward', async () => {
