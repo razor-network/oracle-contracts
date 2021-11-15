@@ -118,7 +118,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         int8 power,
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
-        require(jobIDs.length > 0, "Number of jobIDs low to create collection");
+        require(jobIDs.length > 0, "no jobs added");
 
         numAssets = numAssets + 1;
 
