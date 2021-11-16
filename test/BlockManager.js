@@ -17,6 +17,7 @@ const {
   GOVERNER_ROLE,
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
+  BASE_DENOMINATOR,
 } = require('./helpers/constants');
 const {
   calculateDisputesData,
@@ -336,10 +337,9 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
-      const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
-      const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
-      const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+      const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(BASE_DENOMINATOR);
       const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
@@ -1229,10 +1229,9 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
-      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(baseDeno);
-      const bounty = stakeBefore.mul(bountySlashNum).div(baseDeno);
-      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(baseDeno);
+      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeBefore.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(BASE_DENOMINATOR);
       const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');

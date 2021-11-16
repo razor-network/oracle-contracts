@@ -19,6 +19,7 @@ contract Constants {
     uint8 public constant NUM_STATES = 5;
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
+    uint16 public constant BASE_DENOMINATOR = 10000;
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 public constant BLOCK_CONFIRMER_ROLE = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
 
@@ -42,8 +43,13 @@ contract Constants {
 
     // keccak256("DELEGATOR_MODIFIER_ROLE")
     bytes32 public constant DELEGATOR_MODIFIER_ROLE = 0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597;
+
     // keccak256("SECRETS_MODIFIER_ROLE")
     bytes32 public constant SECRETS_MODIFIER_ROLE = 0x46aaf8a125792dfff6db03d74f94fe1acaf55c8cab22f65297c15809c364465c;
+
     // keccak256("PAUSE_ROLE")
     bytes32 public constant PAUSE_ROLE = 0x139c2898040ef16910dc9f44dc697df79363da767d8bc92f2e310312b816e46d;
+
+    // keccak256("GOVERNANCE_ROLE")
+    bytes32 public constant GOVERNANCE_ROLE = 0x71840dc4906352362b0cdaf79870196c8e42acafade72d5d5a6d59291253ceb1;
 }

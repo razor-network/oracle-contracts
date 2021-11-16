@@ -39,11 +39,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         address sToken,
         uint32 epoch,
         uint32 indexed stakerId,
+        uint256 amount,
         uint256 newStake,
         uint256 totalSupply,
         uint256 timestamp
     );
-
     event Unstaked(
         address staker,
         uint32 epoch,
@@ -119,7 +119,16 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             totalSupply = totalSupply + toMint;
         }
         // slither-disable-next-line reentrancy-events
-        emit Staked(msg.sender, stakers[stakerId].tokenAddress, epoch, stakerId, stakers[stakerId].stake, totalSupply, block.timestamp);
+        emit Staked(
+            msg.sender,
+            stakers[stakerId].tokenAddress,
+            epoch,
+            stakerId,
+            amount,
+            stakers[stakerId].stake,
+            totalSupply,
+            block.timestamp
+        );
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
@@ -228,6 +237,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
+
         emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
         require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
@@ -320,9 +330,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // https://soliditydeveloper.com/stacktoodeep
         {
             (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum) = (slashNums.bounty, slashNums.burn, slashNums.keep);
-            bounty = (_stake * bountyNum) / baseDenominator;
-            amountToBeBurned = (_stake * burnSlashNum) / baseDenominator;
-            amountToBeKept = (_stake * keepSlashNum) / baseDenominator;
+            bounty = (_stake * bountyNum) / BASE_DENOMINATOR;
+            amountToBeBurned = (_stake * burnSlashNum) / BASE_DENOMINATOR;
+            amountToBeKept = (_stake * keepSlashNum) / BASE_DENOMINATOR;
         }
 
         uint256 slashPenaltyAmount = bounty + amountToBeBurned + amountToBeKept;
