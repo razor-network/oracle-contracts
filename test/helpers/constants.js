@@ -4,6 +4,7 @@ const DEFAULT_ADMIN_ROLE_HASH = '0x000000000000000000000000000000000000000000000
 const ONE_ETHER = BigNumber.from(10).pow(BigNumber.from(18));
 
 const EPOCH_LENGTH = BigNumber.from(300);
+const BASE_DENOMINATOR = BigNumber.from(10000);
 const NUM_BLOCKS = 10;
 const NUM_STATES = BigNumber.from(5);
 const STATE_LENGTH = BigNumber.from(60);
@@ -69,6 +70,7 @@ module.exports = {
   VOTE_MODIFIER_ROLE,
   DELEGATOR_MODIFIER_ROLE,
   GOVERNER_ROLE,
+  BASE_DENOMINATOR,
   GOVERNANCE_ROLE,
   PAUSE_ROLE,
   EPOCH_LENGTH,
