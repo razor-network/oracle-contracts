@@ -89,7 +89,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
             if (randao) stakeManager.setStakerStake(epoch, stakerId, StakeChanged.RandaoPenalty, previousStake, newStake);
-            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
+            else stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
