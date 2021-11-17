@@ -75,13 +75,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     //anyone can give sorted votes in batches in dispute state
     function giveSorted(
         uint32 epoch,
-        uint8 collectionId,
+        uint16 collectionId,
         uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
-        uint8 collectionIndex = assetManager.getCollectionIndex(collectionId);
+        uint16 collectionIndex = assetManager.getCollectionIndex(collectionId);
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].collectionId = collectionId;
         } else {
@@ -118,7 +118,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        uint8[] memory deactivatedCollections = assetManager.getPendingDeactivations();
+        uint16[] memory deactivatedCollections = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
             assetManager.executePendingDeactivations(epoch);
             return;
@@ -130,7 +130,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
-        uint8[] memory deactivatedCollections = assetManager.getPendingDeactivations();
+        uint16[] memory deactivatedCollections = assetManager.getPendingDeactivations();
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
             assetManager.executePendingDeactivations(epoch);
             return;
@@ -143,7 +143,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint32 correctBiggestInfluencerId
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
-        uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        uint16 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
         require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
@@ -160,10 +160,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
-        uint8 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        uint16 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint8 collectionId = disputes[epoch][msg.sender].collectionId;
-        uint8 collectionIndex = assetManager.getCollectionIndex(collectionId);
+        uint16 collectionId = disputes[epoch][msg.sender].collectionId;
+        uint16 collectionIndex = assetManager.getCollectionIndex(collectionId);
         require(proposedBlocks[epoch][blockId].medians[collectionIndex - 1] != median, "Block proposed with same medians");
         return _executeDispute(epoch, blockIndex, blockId);
     }
@@ -172,7 +172,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch]);
     }
 
-    function getProposedBlock(uint32 epoch, uint8 proposedBlock) external view returns (Structs.Block memory _block) {
+    function getProposedBlock(uint32 epoch, uint16 proposedBlock) external view returns (Structs.Block memory _block) {
         _block = proposedBlocks[epoch][proposedBlock];
         return (_block);
     }
@@ -187,13 +187,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _confirmBlock(
         uint32 epoch,
-        uint8[] memory deactivatedCollections,
+        uint16[] memory deactivatedCollections,
         uint32 stakerId
     ) internal {
-        uint8 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
-        for (uint8 i = uint8(deactivatedCollections.length); i > 0; i--) {
+        uint16 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
+        for (uint16 i = uint16(deactivatedCollections.length); i > 0; i--) {
             // slither-disable-next-line calls-loop
-            uint8 index = assetManager.getCollectionIndex(deactivatedCollections[i - 1]);
+            uint16 index = assetManager.getCollectionIndex(deactivatedCollections[i - 1]);
             if (index == proposedBlocks[epoch][blockId].medians.length) {
                 proposedBlocks[epoch][blockId].medians.pop();
             } else {
@@ -212,7 +212,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _insertAppropriately(
         uint32 epoch,
-        uint8 blockId,
+        uint16 blockId,
         uint256 iteration,
         uint256 biggestInfluence
     ) internal {
@@ -258,7 +258,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _executeDispute(
         uint32 epoch,
         uint8 blockIndex,
-        uint8 blockId
+        uint16 blockId
     ) internal returns (uint32) {
         proposedBlocks[epoch][blockId].valid = false;
 
@@ -269,7 +269,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
             blockIndexToBeConfirmed = -1;
             for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
-                uint8 _blockId = sortedProposedBlockIds[epoch][i];
+                uint16 _blockId = sortedProposedBlockIds[epoch][i];
                 if (proposedBlocks[epoch][_blockId].valid) {
                     // slither-disable-next-line costly-loop
                     blockIndexToBeConfirmed = int8(i);
