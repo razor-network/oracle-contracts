@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 const jsonfile = require('jsonfile');
 const hre = require('hardhat');
+const axios = require('axios');
 
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
@@ -90,7 +91,11 @@ const deployContract = async (
     config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
   }
 
-  await hre.run('verify:verify', config);
+  try {
+    await hre.run('verify:verify', config);
+  } catch (err) {
+    console.error('Etherscan verification failed');
+  }
 
   return contract;
 };
@@ -117,6 +122,32 @@ const getdeployedContractInstance = async (
   return { Contract, contractInstance };
 };
 
+const source = 'https://raw.githubusercontent.com/razor-network/datasources/master';
+
+const getJobs = async () => {
+  try {
+    const jobs = await axios.get(`${source}/jobs.json`);
+    return jobs.data;
+  } catch (error) {
+    console.log(error.response.body);
+    return null;
+  }
+};
+
+const getCollections = async () => {
+  try {
+    const collections = await axios.get(`${source}/collections.json`);
+    return collections.data;
+  } catch (error) {
+    console.log(error.response.body);
+    return null;
+  }
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 module.exports = {
   deployContract,
   getdeployedContractInstance,
@@ -124,4 +155,7 @@ module.exports = {
   readDeploymentFile,
   readOldDeploymentFile,
   writeDeploymentFile,
+  getJobs,
+  getCollections,
+  sleep,
 };
