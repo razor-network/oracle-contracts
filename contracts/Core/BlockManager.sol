@@ -88,7 +88,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             require(disputes[epoch][msg.sender].collectionId == collectionId, "AssetId not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
-        for (uint16 i = 0; i < sortedStakers.length; i++) {
+        for (uint32 i = 0; i < sortedStakers.length; i++) {
             require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS "); // LVS : Last Visited Staker
             lastVisitedStaker = sortedStakers[i];
             // slither-disable-next-line calls-loop
@@ -143,7 +143,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint32 correctBiggestInfluencerId
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
-        uint16 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
         require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
@@ -160,7 +160,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
-        uint16 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 collectionId = disputes[epoch][msg.sender].collectionId;
         uint16 collectionIndex = assetManager.getCollectionIndex(collectionId);
@@ -172,7 +172,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch]);
     }
 
-    function getProposedBlock(uint32 epoch, uint16 proposedBlock) external view returns (Structs.Block memory _block) {
+    function getProposedBlock(uint32 epoch, uint32 proposedBlock) external view returns (Structs.Block memory _block) {
         _block = proposedBlocks[epoch][proposedBlock];
         return (_block);
     }
@@ -190,7 +190,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16[] memory deactivatedCollections,
         uint32 stakerId
     ) internal {
-        uint16 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
+        uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         for (uint16 i = uint16(deactivatedCollections.length); i > 0; i--) {
             // slither-disable-next-line calls-loop
             uint16 index = assetManager.getCollectionIndex(deactivatedCollections[i - 1]);
@@ -212,7 +212,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _insertAppropriately(
         uint32 epoch,
-        uint16 blockId,
+        uint32 blockId,
         uint256 iteration,
         uint256 biggestInfluence
     ) internal {
@@ -258,7 +258,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _executeDispute(
         uint32 epoch,
         uint8 blockIndex,
-        uint16 blockId
+        uint32 blockId
     ) internal returns (uint32) {
         proposedBlocks[epoch][blockId].valid = false;
 
@@ -269,7 +269,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
             blockIndexToBeConfirmed = -1;
             for (uint8 i = blockIndex + 1; i < sortedProposedBlocksLength; i++) {
-                uint16 _blockId = sortedProposedBlockIds[epoch][i];
+                uint32 _blockId = sortedProposedBlockIds[epoch][i];
                 if (proposedBlocks[epoch][_blockId].valid) {
                     // slither-disable-next-line costly-loop
                     blockIndexToBeConfirmed = int8(i);
