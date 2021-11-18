@@ -27,7 +27,6 @@ describe('Governance contract Test', async () => {
   const expectedRevertMessage = 'AccessControl';
 
   const penaltyNotRevealNumerator = toBigNumber('1');
-  const baseDenominator = toBigNumber('10000');
 
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
@@ -69,9 +68,6 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
-    tx = governance.connect(signers[0]).setBaseDenominator(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setWithdrawLockPeriod(toBigNumber('1'));
@@ -174,12 +170,6 @@ describe('Governance contract Test', async () => {
     assertBNEqual(slashNums.burn, toBigNumber('23'));
     assertBNEqual(slashNums.keep, toBigNumber('24'));
 
-    await governance.setBaseDenominator(toBigNumber('1'));
-    const baseDenom = await stakeManager.baseDenominator();
-    const baseDenom1 = await rewardManager.baseDenominator();
-    assertBNEqual(baseDenom, toBigNumber('1'));
-    assertBNEqual(baseDenom1, toBigNumber('1'));
-
     await governance.setDeltaCommission(toBigNumber('25'));
     const deltaCommission = await stakeManager.deltaCommission();
     assertBNEqual(deltaCommission, toBigNumber('25'));
@@ -200,9 +190,6 @@ describe('Governance contract Test', async () => {
     assertBNEqual(slashParams[0], toBigNumber('500'));
     assertBNEqual(slashParams[1], toBigNumber('9500'));
     assertBNEqual(slashParams[2], toBigNumber('0'));
-
-    const baseDenom = await stakeManager.baseDenominator();
-    assertBNEqual(baseDenom, baseDenominator);
 
     const minStakeValue = await stakeManager.minStake();
     assertBNEqual(minimumStake, minStakeValue);

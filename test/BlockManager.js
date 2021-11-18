@@ -17,6 +17,7 @@ const {
   GOVERNER_ROLE,
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
+  BASE_DENOMINATOR,
 } = require('./helpers/constants');
 const {
   calculateDisputesData,
@@ -141,7 +142,7 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
 
       await blockManager.connect(signers[5]).propose(epoch,
@@ -157,6 +158,22 @@ describe('BlockManager', function () {
 
       const nblocks = await blockManager.getNumProposedBlocks(epoch);
       assertBNEqual(nblocks, toBigNumber('1'), 'Only one block has been proposed till now. Incorrect Answer');
+    });
+
+    it('should not be able to propose again if already proposed', async function () {
+      const epoch = await getEpoch();
+      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc5);
+
+      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+
+      const tx = blockManager.connect(signers[5]).propose(epoch,
+        [],
+        iteration,
+        biggestInfluencerId);
+
+      await assertRevert(tx, 'Already proposed');
     });
 
     it('should be able to confirm block and receive block reward', async () => {
@@ -320,10 +337,9 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
-      const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
-      const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
-      const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+      const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(BASE_DENOMINATOR);
       const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc5.sub(slashPenaltyAmount), 'staker did not get slashed');
@@ -716,7 +732,7 @@ describe('BlockManager', function () {
       await mineToNextState();
       const epoch = await getEpoch();
       const tx = blockManager.connect(signers[19]).giveSorted(epoch, 10, [8]);
-      await assertRevert(tx, 'epoch in vote doesnt match with current');
+      await assertRevert(tx, 'staker didnt vote in this epoch');
     });
     it('For the second batch while raising dispute, assetid should match to the disputed assetid of first batch', async function () {
       await mineToNextEpoch();
@@ -751,7 +767,7 @@ describe('BlockManager', function () {
     });
     it('if Staker other than BlockProposer tries to call ClaimBlockReward should revert', async function () {
       const tx = blockManager.connect(signers[2]).claimBlockReward(); // Signer[2] never proposed a block
-      await assertRevert(tx, 'Block can be confirmed by proposer of the block');
+      await assertRevert(tx, 'Block Proposer mismatches');
     });
     it('If block is already confirmed Block Proposer should not be able to confirm using ClaimBlockReward()', async function () {
       await blockManager.connect(signers[3]).claimBlockReward();// BlockProposer confirms the block
@@ -857,7 +873,7 @@ describe('BlockManager', function () {
       await blockManager.disputes(epoch, signers[10].address);
 
       const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
-      await assertRevert(tx, 'Total influence revealed doesnt match');
+      await assertRevert(tx, 'TIR is wrong');
     });
     it('should not be able to finalize dispute, if proposed alternate block is identical to proposed blocks', async function () {
       // Commit
@@ -937,7 +953,7 @@ describe('BlockManager', function () {
 
       const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
 
-      await assertRevert(tx, 'Proposed Alternate block is identical to proposed block');
+      await assertRevert(tx, 'Block proposed with same medians');
     });
     it('Blocks should be proposed according to iteration', async function () {
       await mineToNextEpoch();
@@ -1213,10 +1229,9 @@ describe('BlockManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
-      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(baseDeno);
-      const bounty = stakeBefore.mul(bountySlashNum).div(baseDeno);
-      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(baseDeno);
+      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeBefore.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(BASE_DENOMINATOR);
       const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');
