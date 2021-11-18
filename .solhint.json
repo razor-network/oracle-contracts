@@ -22,6 +22,7 @@
     "quotes": ["error","double"],
     "reentrancy": "error",
     "var-name-mixedcase": "error",
-    "visibility-modifier-order": "error"
+    "visibility-modifier-order": "error",
+    "reason-string": "error"
   }
 }

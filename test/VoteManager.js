@@ -9,6 +9,7 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
+  BASE_DENOMINATOR,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -120,7 +121,7 @@ describe('VoteManager', function () {
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
         const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
-        await assertRevert(tx, 'Initializable: contract is already initialized');
+        await assertRevert(tx, 'contract already initialized');
       });
 
       it('should be able to commit', async function () {
@@ -378,10 +379,9 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await stakeManager.baseDenominator();
-        const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(baseDeno);
-        const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(baseDeno);
-        const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(baseDeno);
+        const amountToBeBurned = stakeBeforeAcc4.mul(burnSlashNum).div(BASE_DENOMINATOR);
+        const bounty = stakeBeforeAcc4.mul(bountySlashNum).div(BASE_DENOMINATOR);
+        const amountTobeKept = stakeBeforeAcc4.mul(keepSlashNum).div(BASE_DENOMINATOR);
         const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
         assertBNEqual((await stakeManager.stakers(stakerIdAcc4)).stake, stakeBeforeAcc4.sub(slashPenaltyAmount), 'stake should be less by slashPenalty');
@@ -693,10 +693,9 @@ describe('VoteManager', function () {
         const bountySlashNum = slashNums[0];
         const burnSlashNum = slashNums[1];
         const keepSlashNum = slashNums[2];
-        const baseDeno = await stakeManager.baseDenominator();
-        const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(baseDeno);
-        const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(baseDeno);
-        const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(baseDeno);
+        const amountToBeBurned = stakeBeforeAcc5.mul(burnSlashNum).div(BASE_DENOMINATOR);
+        const bounty = stakeBeforeAcc5.mul(bountySlashNum).div(BASE_DENOMINATOR);
+        const amountTobeKept = stakeBeforeAcc5.mul(keepSlashNum).div(BASE_DENOMINATOR);
         const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
         const stakeAfterAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
@@ -792,7 +791,7 @@ describe('VoteManager', function () {
 
         const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
 
-        await assertRevert(tx, 'sorted[i] is not greater than lastVisited');
+        await assertRevert(tx, 'sortedStaker <= LVS');
       });
 
       it('if the revealed value is zero, next epoch should work normally', async function () {
@@ -845,7 +844,7 @@ describe('VoteManager', function () {
         //
         const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
         //
-        await assertRevert(tx3, 'sorted[i] is not greater than lastVisited');
+        await assertRevert(tx3, 'sortedStaker <= LVS');
       });
       it('Block should not be proposed when no one votes', async function () {
         await mineToNextEpoch();

@@ -10,8 +10,6 @@ interface IStakeManagerParams {
         uint16 _keep
     ) external;
 
-    function setBaseDenominator(uint16 _baseDenominator) external;
-
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
 
     function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external;
@@ -29,6 +27,4 @@ interface IStakeManagerParams {
     function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external;
 
     function disableEscapeHatch() external;
-
-    function baseDenominator() external view returns (uint16);
 }
