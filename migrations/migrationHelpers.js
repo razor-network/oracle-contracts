@@ -96,7 +96,7 @@ const deployContract = async (
   try {
     await hre.run('verify:verify', config);
   } catch (err) {
-    console.error('Etherscan verification failed');
+    console.error('Etherscan verification failed', err);
   }
 
   return contract;
