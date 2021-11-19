@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 interface IVoteManager {
-    function getVoteValue(uint8 assetId, uint32 stakerId) external view returns (uint48);
+    function getVoteValue(uint16 assetId, uint32 stakerId) external view returns (uint48);
 
     function getVote(uint32 stakerId) external view returns (Structs.Vote memory vote);
 
