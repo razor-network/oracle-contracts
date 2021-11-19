@@ -9,7 +9,7 @@ import "./Core/parameters/child/DelegatorParams.sol";
 import "./Core/storage/Constants.sol";
 
 contract Delegator is StateManager, DelegatorParams, IDelegator {
-    mapping(bytes32 => uint8) public ids;
+    mapping(bytes32 => uint16) public ids;
 
     IAssetManager public assetManager;
     IBlockManager public blockManager;
@@ -21,7 +21,7 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
         blockManager = IBlockManager(newResultAddress);
     }
 
-    function setIDName(string calldata name, uint8 _id) external override onlyRole(DELEGATOR_MODIFIER_ROLE) {
+    function setIDName(string calldata name, uint16 _id) external override onlyRole(DELEGATOR_MODIFIER_ROLE) {
         bytes32 _name = keccak256(abi.encodePacked(name));
         require(ids[_name] == 0, "Similar collection exists");
         ids[_name] = _id;
@@ -31,12 +31,12 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
         return assetManager.getNumActiveCollections();
     }
 
-    function getActiveCollections() external view override returns (uint8[] memory) {
+    function getActiveCollections() external view override returns (uint16[] memory) {
         return assetManager.getActiveCollections();
     }
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
-        uint8 index = assetManager.getCollectionIndex(ids[_name]);
+        uint16 index = assetManager.getCollectionIndex(ids[_name]);
         uint32 epoch = _getEpoch(epochLength);
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = assetManager.getCollectionPower(ids[_name]);

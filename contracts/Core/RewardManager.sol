@@ -44,8 +44,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /// called from confirmBlock function of BlockManager contract
     /// @param stakerId The ID of the staker
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 newStake = stakeManager.getStake(stakerId) + (blockReward);
-        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, newStake);
+        uint256 prevStake = stakeManager.getStake(stakerId);
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
     }
 
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
@@ -86,7 +86,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
-            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
@@ -111,7 +111,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         if (mediansLastEpoch.length == 0) return;
         uint64 penalty = 0;
-        for (uint8 i = 0; i < mediansLastEpoch.length; i++) {
+        for (uint16 i = 0; i < mediansLastEpoch.length; i++) {
             // slither-disable-next-line calls-loop
             uint64 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
             // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
@@ -139,7 +139,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint256 stakeValue,
         uint32 ageValue
     ) internal view returns (uint256, uint32) {
-        uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / baseDenominator;
+        uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / BASE_DENOMINATOR;
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint32 penaltyAge = epochs * 10000;
         uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;

@@ -11,7 +11,7 @@ const {
   GOVERNER_ROLE,
 } = require('./helpers/constants');
 const {
-  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState,
+  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -178,30 +178,30 @@ describe('Access Control Test', async () => {
 
   it('setStakerStake() should not be accessable by anyone besides StakeModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
     // Checking if AssetConfirmer can access it
     await stakeManager.grantRole(await ASSET_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await stakeManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
     // Checking if RewardModifier can access it
     await stakeManager.grantRole(REWARD_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
   });
 
   it('setStakerStake() should be accessable by StakeModifier', async () => {
     await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    stakeManager.setStakerStake(1, 1, 1, 10);
+    stakeManager.setStakerStake(1, 1, 1, 10, 10);
     await stakeManager.revokeRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10), expectedRevertMessage);
+    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
   });
 
   it('createJob() should not be accessable by anyone besides AssetCreator', async () => {
@@ -341,6 +341,7 @@ describe('Access Control Test', async () => {
   });
 
   it('createCollection() should be accessable by only AssetCreator', async () => {
+    await mineToNextEpoch();
     const assetCreatorHash = ASSET_MODIFIER_ROLE;
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');

@@ -9,6 +9,7 @@ interface IStakeManager {
         uint32 _epoch,
         uint32 _id,
         Constants.StakeChanged reason,
+        uint256 _prevStake,
         uint256 _stake
     ) external;
 

@@ -9,7 +9,8 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
-
+  BASE_DENOMINATOR,
+  PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -64,6 +65,13 @@ describe('StakeManager', function () {
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
+    });
+
+    it('pause role should be granted', async () => {
+      const DEFAULT_PAUSE_ROLE_HASH = PAUSE_ROLE;
+      await stakeManager.grantRole(DEFAULT_PAUSE_ROLE_HASH, signers[0].address);
+      const isPauseRoleGranted = await stakeManager.hasRole(DEFAULT_PAUSE_ROLE_HASH, signers[0].address);
+      assert(isPauseRoleGranted === true, 'Pause role was not Granted');
     });
 
     it('should not be able to stake without initialization', async () => {
@@ -135,7 +143,7 @@ describe('StakeManager', function () {
       const stake = tokenAmount('999');
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('should not be able to stake if contract is paused', async function () {
@@ -161,7 +169,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'staked amount is less than minimum stake required');
+      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('Staker should not be able to stake if epoch is not current epoch', async function () {
@@ -355,10 +363,9 @@ describe('StakeManager', function () {
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
       const keepSlashNum = slashNums[2];
-      const baseDeno = await stakeManager.baseDenominator();
-      const amountToBeBurned = stakeAfterAcc1.mul(burnSlashNum).div(baseDeno);
-      const bounty = stakeAfterAcc1.mul(bountySlashNum).div(baseDeno);
-      const amountTobeKept = stakeAfterAcc1.mul(keepSlashNum).div(baseDeno);
+      const amountToBeBurned = stakeAfterAcc1.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeAfterAcc1.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeAfterAcc1.mul(keepSlashNum).div(BASE_DENOMINATOR);
       const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
 
       let staker = await stakeManager.getStaker(stakerIdAcc1);
@@ -1191,7 +1198,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('2000'));
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000'));
       staker = await stakeManager.stakers(stakerId);
 
       // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
@@ -1355,7 +1362,7 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       const sToken = await stakedToken.attach(staker.tokenAddress);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('2000')); // Staker Rewarded
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000')); // Staker Rewarded
 
       // Step 2 : Delegation 1
       const delegation1 = tokenAmount('2000');
@@ -1375,7 +1382,7 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('2000'), 'withdrawable mismatch');
 
       // Step 3 : Delegation 2
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('6000')); // Staker Rewarded
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('6000')); // Staker Rewarded
 
       const delegation2 = tokenAmount('3000');
       await razor.transfer(signers[13].address, delegation2);
@@ -1394,7 +1401,7 @@ describe('StakeManager', function () {
       assertBNEqual(withdrawable, tokenAmount('6000'), 'withdrawable mismatch');
 
       // Step 4 : Delegation 3
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('3000')); // Staker Slashed
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('3000')); // Staker Slashed
 
       const delegation3 = tokenAmount('3000');
       await razor.transfer(signers[13].address, delegation3);

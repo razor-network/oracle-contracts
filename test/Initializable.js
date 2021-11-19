@@ -21,7 +21,7 @@ describe('Initializable', function () {
 
   it('initializer does not run again', async function () {
     await this.contract.initialize();
-    await assertRevert(this.contract.initialize(), 'Initializable: contract is already initialized');
+    await assertRevert(this.contract.initialize(), 'contract already initialized');
   });
 
   it('initializer has run after nested initialization', async function () {

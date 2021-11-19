@@ -10,10 +10,10 @@ import "./StateManager.sol";
 contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
     IDelegator public delegator;
 
-    event AssetCreated(AssetType assetType, uint8 id, uint256 timestamp);
+    event AssetCreated(AssetType assetType, uint16 id, uint256 timestamp);
 
     event JobUpdated(
-        uint8 id,
+        uint16 id,
         JobSelectorType selectorType,
         uint32 epoch,
         uint8 weight,
@@ -23,9 +23,9 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         string url
     );
 
-    event CollectionActivityStatus(bool active, uint8 id, uint32 epoch, uint256 timestamp);
+    event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
 
-    event CollectionUpdated(uint8 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint8[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16[] updatedJobIDs, uint256 timestamp);
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -50,7 +50,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function updateJob(
-        uint8 jobID,
+        uint16 jobID,
         uint8 weight,
         int8 power,
         JobSelectorType selectorType,
@@ -71,7 +71,11 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
-    function setCollectionStatus(bool assetStatus, uint8 id) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
+    function setCollectionStatus(bool assetStatus, uint16 id)
+        external
+        onlyRole(ASSET_MODIFIER_ROLE)
+        checkState(State.Confirm, epochLength)
+    {
         require(id != 0, "ID cannot be 0");
         require(collections[id].id == id, "Asset is not a collection");
 
@@ -79,7 +83,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         if (assetStatus) {
             if (!collections[id].active) {
                 activeCollections.push(id);
-                collections[id].assetIndex = uint8(activeCollections.length);
+                collections[id].assetIndex = uint16(activeCollections.length);
                 collections[id].active = assetStatus;
                 emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
@@ -91,8 +95,8 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function executePendingDeactivations(uint32 epoch) external override onlyRole(ASSET_CONFIRMER_ROLE) {
-        for (uint8 i = uint8(pendingDeactivations.length); i > 0; i--) {
-            uint8 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
+        for (uint16 i = uint16(pendingDeactivations.length); i > 0; i--) {
+            uint16 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
             if (assetIndex == activeCollections.length) {
                 activeCollections.pop();
             } else {
@@ -113,12 +117,12 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function createCollection(
-        uint8[] memory jobIDs,
+        uint16[] memory jobIDs,
         uint32 aggregationMethod,
         int8 power,
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
-        require(jobIDs.length > 0, "Number of jobIDs low to create collection");
+        require(jobIDs.length > 0, "no jobs added");
 
         numAssets = numAssets + 1;
 
@@ -126,7 +130,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         collections[numAssets] = Structs.Collection(
             true,
             numAssets,
-            uint8(activeCollections.length),
+            uint16(activeCollections.length),
             power,
             aggregationMethod,
             jobIDs,
@@ -138,10 +142,10 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function updateCollection(
-        uint8 collectionID,
+        uint16 collectionID,
         uint32 aggregationMethod,
         int8 power,
-        uint8[] memory jobIDs
+        uint16[] memory jobIDs
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
@@ -160,47 +164,35 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         );
     }
 
-    // function getResult(uint8 id) external view returns (uint32 result) {
-    //     require(id != 0, "ID cannot be 0");
-    //
-    //     require(id <= numAssets, "ID does not exist");
-    //
-    //     if (jobs[id].assetType == uint8(AssetTypes.Job)) {
-    //         return jobs[id].result;
-    //     } else {
-    //         return collections[id].result;
-    //     }
-    // }
-
-    function getAsset(uint8 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {
+    function getAsset(uint16 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {
         require(id != 0, "ID cannot be 0");
         require(id <= numAssets, "ID does not exist");
 
         return (jobs[id], collections[id]);
     }
 
-    function getCollectionStatus(uint8 id) external view returns (bool) {
+    function getCollectionStatus(uint16 id) external view returns (bool) {
         require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].active;
     }
 
-    function getCollectionIndex(uint8 id) external view override returns (uint8) {
+    function getCollectionIndex(uint16 id) external view override returns (uint16) {
         require(collections[id].id == id, "Asset is not a collection");
         return collections[id].assetIndex;
     }
 
-    function getCollectionPower(uint8 id) external view override returns (int8) {
+    function getCollectionPower(uint16 id) external view override returns (int8) {
         require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].power;
     }
 
-    function getNumAssets() external view returns (uint8) {
+    function getNumAssets() external view returns (uint16) {
         return numAssets;
     }
 
-    function getActiveCollections() external view override returns (uint8[] memory) {
+    function getActiveCollections() external view override returns (uint16[] memory) {
         return activeCollections;
     }
 
@@ -208,7 +200,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         return activeCollections.length;
     }
 
-    function getPendingDeactivations() external view override returns (uint8[] memory) {
+    function getPendingDeactivations() external view override returns (uint16[] memory) {
         return pendingDeactivations;
     }
 }
