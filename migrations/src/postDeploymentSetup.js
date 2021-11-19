@@ -4,7 +4,7 @@ const {
   readDeploymentFile,
   getJobs,
   getCollections,
-  sleep,
+  waitForConfirmState,
 } = require('../migrationHelpers');
 
 const { BigNumber } = ethers;
@@ -148,18 +148,11 @@ module.exports = async () => {
 
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
-  let state = 0;
   const numStates = await stakeManager.NUM_STATES();
   const stateLength = (BigNumber.from(await stakeManager.epochLength())).div(numStates);
 
-  while (state !== 4) {
-    const blockNumber = await ethers.provider.getBlockNumber();
-    state = Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
-    console.log('Current state', state);
-    await sleep(10000);
-  }
-
   for (let i = 0; i < collections.length; i++) {
+    await waitForConfirmState(numStates, stateLength);
     const collection = collections[i];
     await assetManager.createCollection(collection.jobIDs, collection.aggregationMethod, collection.power, collection.name);
     console.log(`Collection Created :  ${collection.name}`);

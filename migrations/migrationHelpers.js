@@ -3,6 +3,8 @@ const jsonfile = require('jsonfile');
 const hre = require('hardhat');
 const axios = require('axios');
 
+const { BigNumber } = ethers;
+
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
@@ -122,31 +124,45 @@ const getdeployedContractInstance = async (
   return { Contract, contractInstance };
 };
 
-const source = 'https://raw.githubusercontent.com/razor-network/datasources/master';
+const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master';
 
 const getJobs = async () => {
   try {
-    const jobs = await axios.get(`${source}/jobs.json`);
+    const jobs = await axios.get(`${SOURCE}/jobs.json`);
     return jobs.data;
   } catch (error) {
-    console.log(error.response.body);
+    console.log('Error while fetching jobs', error.response.body);
     return null;
   }
 };
 
 const getCollections = async () => {
   try {
-    const collections = await axios.get(`${source}/collections.json`);
+    const collections = await axios.get(`${SOURCE}/collections.json`);
     return collections.data;
   } catch (error) {
-    console.log(error.response.body);
+    console.log('Error while fetching collections', error.response.body);
     return null;
   }
+};
+
+const currentState = async(numStates, stateLength) => {
+  const blockNumber = await ethers.provider.getBlockNumber();
+  return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
 };
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+const waitForConfirmState = async (numStates, stateLength) => {
+  let state = await currentState(numStates, stateLength);
+  while (state !== 4) {
+    state = await currentState(numStates, stateLength);
+    console.log('Current state', state);
+    await sleep(10000);
+  }
+};
 
 module.exports = {
   deployContract,
@@ -158,4 +174,5 @@ module.exports = {
   getJobs,
   getCollections,
   sleep,
+  waitForConfirmState,
 };
