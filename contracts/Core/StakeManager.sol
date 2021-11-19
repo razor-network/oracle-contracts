@@ -107,6 +107,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             totalSupply = amount;
         } else {
             require(amount + stakers[stakerId].stake >= minStake, "amount + stake below min Stake");
+            require(!stakers[stakerId].isSlashed, "staker is slashed");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs

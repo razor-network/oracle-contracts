@@ -9,7 +9,6 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
-  BASE_DENOMINATOR,
   PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
@@ -1517,7 +1516,7 @@ describe('StakeManager', function () {
       await mineToNextState();
       await voteManager.connect(signers[4]).reveal(epoch, votes1,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await governance.setSlashParams(500, 9500, 0); // slashing only half stake
+      await governance.setSlashParams(500, 4500, 0); // slashing only half stake
       await stakeManager.slash(epoch, stakerIdAcc4, signers[10].address); // slashing signers[1]
       const amount = tokenAmount('1000');
       const tx = stakeManager.connect(signers[10]).delegate(epoch, stakerIdAcc4, amount);
