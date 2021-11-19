@@ -108,8 +108,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return (votes[stakerId]);
     }
 
-    function getVoteValue(uint8 assetIndex, uint32 stakerId) external view override returns (uint48) {
-        //uint8 assetIndex = assetManager.getAssetIndex(assetId);
+    function getVoteValue(uint16 assetIndex, uint32 stakerId) external view override returns (uint48) {
         //stakerid -> assetid -> vote
         return (votes[stakerId].values[assetIndex]);
     }

@@ -48,15 +48,14 @@ library Structs {
     }
 
     struct Dispute {
-        uint8 collectionId;
+        uint16 collectionId;
         uint32 lastVisitedStaker;
         uint256 accWeight;
         uint256 accProd;
-        // uint32 median;
     }
 
     struct Job {
-        uint8 id;
+        uint16 id;
         uint8 selectorType; // 0-1
         uint8 weight; // 1-100
         int8 power;
@@ -67,11 +66,11 @@ library Structs {
 
     struct Collection {
         bool active;
-        uint8 id;
-        uint8 assetIndex;
+        uint16 id;
+        uint16 assetIndex;
         int8 power;
         uint32 aggregationMethod;
-        uint8[] jobIDs;
+        uint16[] jobIDs;
         string name;
     }
 }
