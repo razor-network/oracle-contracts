@@ -71,6 +71,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint256 newStake = thisStaker.stake;
         uint32 previousAge = thisStaker.age;
         uint32 newAge = thisStaker.age;
+        Constants.StakeChanged reason = StakeChanged.RandaoPenalty;
 
         uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
@@ -82,11 +83,12 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         if (inactiveEpochs > gracePeriod) {
             (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
+            reason = StakeChanged.InactivityPenalty;
         }
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
-            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, reason, previousStake, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge);
