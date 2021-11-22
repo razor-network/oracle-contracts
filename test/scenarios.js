@@ -2,7 +2,6 @@ const { utils } = require('ethers');
 const { getState } = require('./helpers/utils');
 const {
   ASSET_MODIFIER_ROLE,
-  STAKE_MODIFIER_ROLE,
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
@@ -1158,96 +1157,4 @@ describe('Scenarios', async () => {
 
     await assertRevert(tx, 'stake below minimum stake');
   }).timeout(5000);
-
-  it('MinStake is decreased after staker getting slashed, have a chance to participate', async () => {
-    let epoch = await getEpoch();
-    const razors = tokenAmount('444000');
-    await razor.transfer(signers[6].address, razors);
-    const stake = tokenAmount('442000');
-    await razor.connect(signers[6]).approve(stakeManager.address, stake);
-    await stakeManager.connect(signers[6]).stake(epoch, stake);
-    let votes = await getVote(medians);
-    const commitment = utils.solidityKeccak256(
-      ['uint32', 'uint48[]', 'bytes32'],
-      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-    );
-    await voteManager.connect(signers[6]).commit(epoch, commitment);
-
-    await mineToNextState(); // reveal
-    let stakerId = await stakeManager.stakerIds(signers[6].address);
-    let staker = await stakeManager.getStaker(stakerId);
-
-    await voteManager.connect(signers[6]).reveal(epoch, votes,
-      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-    await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await governance.setSlashParams(500, 9480, 0); // slashing only half stake
-    await stakeManager.slash(epoch, stakerId, signers[6].address); // slashing signers[6]
-
-    staker = await stakeManager.getStaker(stakerId);
-
-    await mineToNextState(); // propose
-
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
-    const tx = blockManager.connect(signers[6]).propose(epoch,
-      medians,
-      iteration,
-      biggestInfluencerId);
-
-    await assertRevert(tx, 'stake below minimum stake');
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-    stakerId = await stakeManager.stakerIds(signers[6].address);
-    staker = await stakeManager.getStaker(stakerId);
-
-    let amount = staker.stake;
-    let newMinStake = amount.sub(tokenAmount('10'));
-    await governance.connect(signers[0]).setMinStake(newMinStake);
-    await mineToNextEpoch(); // commit
-    epoch = await getEpoch();
-    votes = await getVote(medians);
-    const commitment1 = utils.solidityKeccak256(
-      ['uint32', 'uint48[]', 'bytes32'],
-      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-    );
-    await voteManager.connect(signers[6]).commit(epoch, commitment1);
-    stakerId = await stakeManager.stakerIds(signers[6].address);
-    staker = await stakeManager.getStaker(stakerId);
-    let commitmentAcc1 = await voteManager.getCommitment(stakerId);
-    assertBNEqual(epoch, commitmentAcc1.epoch, 'Staker is not able to participate');
-    await mineToNextState(); // reveal
-    await voteManager.connect(signers[6]).reveal(epoch, votes,
-      '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-    await mineToNextState(); // propose
-
-    iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
-    await blockManager.connect(signers[6]).propose(epoch,
-      medians,
-      iteration,
-      biggestInfluencerId);
-
-    await mineToNextState(); // Dispute
-    await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await governance.setSlashParams(500, 9480, 0); // slashing only half stake
-    await stakeManager.slash(epoch, stakerId, signers[6].address); // slashing signers[6]
-    await mineToNextState(); // Confirm
-    stakerId = await stakeManager.stakerIds(signers[6].address);
-    staker = await stakeManager.getStaker(stakerId);
-    amount = staker.stake;
-    newMinStake = amount.sub(tokenAmount('1'));
-    await governance.connect(signers[0]).setMinStake(newMinStake);
-    await mineToNextEpoch(); // commit
-    epoch = await getEpoch();
-    votes = await getVote(medians);
-    const commitment2 = utils.solidityKeccak256(
-      ['uint32', 'uint48[]', 'bytes32'],
-      [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-    );
-    await voteManager.connect(signers[6]).commit(epoch, commitment2);
-    stakerId = await stakeManager.stakerIds(signers[6].address);
-    staker = await stakeManager.getStaker(stakerId);
-    commitmentAcc1 = await voteManager.getCommitment(stakerId);
-    assertBNEqual(epoch, commitmentAcc1.epoch, 'Staker is not able to participate');
-  });
 });

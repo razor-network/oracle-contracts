@@ -9,7 +9,6 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
-  BASE_DENOMINATOR,
   PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
@@ -344,7 +343,7 @@ describe('StakeManager', function () {
       assertBNEqual(await razor.balanceOf(staker._address), prevBalance.add(lock.amount), 'Balance should be equal');
     });
 
-    it('should allow staker to add stake after withdraw or slash if either withdrawnAmount or slashPenaltyAmount is not the whole stake', async function () {
+    it('should allow staker to add stake after withdraw if either withdrawnAmount is not the whole stake', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('20000');
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
@@ -353,30 +352,6 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[1]).stake(epoch, stake); // adding stake after withdraw
       const stakeAfterAcc1 = (await stakeManager.stakers(stakerIdAcc1)).stake;
       assertBNEqual(stakeAfterAcc1, stakeBeforeAcc1.add(stake), 'Stake did not increase on staking after withdraw');
-
-      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
-      await governance.setSlashParams(500, 4500, 0); // slashing only half stake
-      await stakeManager.slash(epoch, stakerIdAcc1, signers[10].address); // slashing signers[1]
-
-      const slashNums = await stakeManager.slashNums();
-      const bountySlashNum = slashNums[0];
-      const burnSlashNum = slashNums[1];
-      const keepSlashNum = slashNums[2];
-      const amountToBeBurned = stakeAfterAcc1.mul(burnSlashNum).div(BASE_DENOMINATOR);
-      const bounty = stakeAfterAcc1.mul(bountySlashNum).div(BASE_DENOMINATOR);
-      const amountTobeKept = stakeAfterAcc1.mul(keepSlashNum).div(BASE_DENOMINATOR);
-      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
-
-      let staker = await stakeManager.getStaker(stakerIdAcc1);
-      const stakeAfterSlash = staker.stake;
-      assertBNEqual(stakeAfterSlash, stakeAfterAcc1.sub(slashPenaltyAmount), 'Stake should be less by slashPenalty');
-
-      const stake2 = tokenAmount('20000');
-      await razor.connect(signers[1]).approve(stakeManager.address, stake2);
-      await stakeManager.connect(signers[1]).stake(epoch, stake2);
-      staker = await stakeManager.getStaker(stakerIdAcc1);
-      assertBNEqual(staker.stake, stakeAfterSlash.add(stake2), 'Stake did not increase on staking after slash');
     });
 
     it('should not allow staker to add stake after withdrawing whole amount', async function () {
@@ -1032,9 +1007,11 @@ describe('StakeManager', function () {
       assertBNEqual(DelegatorBalance, newBalance, 'Delagators balance does not match the calculated balance');
     });
 
-    it('should not allow staker to add stake after being slashed the whole amount', async function () {
+    it('should not allow staker to add stake after being slashed', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('423000');
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
       await razor.connect(signers[7]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[7]).stake(epoch, stake1);
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
@@ -1044,7 +1021,7 @@ describe('StakeManager', function () {
       const stake2 = tokenAmount('20000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
       const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);
-      await assertRevert(tx, 'Stakers Stake is 0');
+      await assertRevert(tx, 'staker is slashed');
     });
 
     it('non admin should not be able to withdraw funds in emergency', async function () {
@@ -1523,6 +1500,27 @@ describe('StakeManager', function () {
       // Dispute
       const tx1 = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
       await assertRevert(tx1, 'Unstake: NA Dispute');
+    });
+
+    it('Delegator should not be able to delegate funds to slashed Staker', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+
+      const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[4]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[4]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await governance.setSlashParams(500, 4500, 0); // slashing only half stake
+      await stakeManager.slash(epoch, stakerIdAcc4, signers[10].address); // slashing signers[1]
+      const amount = tokenAmount('1000');
+      const tx = stakeManager.connect(signers[10]).delegate(epoch, stakerIdAcc4, amount);
+      await assertRevert(tx, 'Staker is slashed');
     });
   });
 });

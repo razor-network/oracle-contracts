@@ -2,6 +2,7 @@
 test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
+const { assert } = require('chai');
 const { utils } = require('ethers');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -499,10 +500,10 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
+        const staker = await stakeManager.getStaker(stakerId);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await governance.setSlashParams(500, 4500, 0);
-        await stakeManager.slash(epoch, stakerId, signers[11].address);
+        await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('999'));
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -616,6 +617,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to reveal if stake is zero', async function () {
         const epoch = await getEpoch();
         const stakerId = await stakeManager.stakerIds(signers[7].address);
+        const staker = await stakeManager.getStaker(stakerId);
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900]; // 900 changed to 950 for having incorrect value
 
         const commitment1 = utils.solidityKeccak256(
@@ -626,8 +628,8 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[7]).commit(epoch, commitment1);
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await governance.setSlashParams(500, 9500, 0);
-        await stakeManager.slash(epoch, stakerId, signers[10].address); // slashing signers[7] 100% making his stake zero
+        // setting stake below minstake
+        await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('0'));
 
         await mineToNextState(); // reveal
         const tx = voteManager.connect(signers[7]).reveal(epoch, votes,
@@ -922,6 +924,30 @@ describe('VoteManager', function () {
         await voteManager.connect(signers[3]).commit(epoch, commitment);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
+      });
+      it('slashed staker should not be able to participate after it is slashed', async function () {
+        await mineToNextEpoch();
+        const epoch = await getEpoch();
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+        const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc4);
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        const tx = voteManager.connect(signers[4]).commit(epoch, commitment);
+        await assertRevert(tx, 'staker is slashed');
+        await mineToNextState();
+        const tx1 = voteManager.connect(signers[4]).reveal(epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        await assertRevert(tx1, 'not committed in this epoch');
+        await mineToNextState();
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const tx2 = blockManager.connect(signers[4]).propose(epoch,
+          [100, 200, 300, 400, 500, 600, 700, 800],
+          iteration,
+          biggestInfluencerId);
+        await assertRevert(tx2, 'Cannot propose without revealing');
       });
     });
   });

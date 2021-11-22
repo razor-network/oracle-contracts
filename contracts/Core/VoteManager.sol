@@ -31,6 +31,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, epochLength) {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        require(!stakeManager.getStaker(stakerId).isSlashed, "VM : staker is slashed");
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
 
