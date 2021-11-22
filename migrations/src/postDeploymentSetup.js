@@ -1,6 +1,10 @@
+/* eslint-disable no-console */
 const {
   getdeployedContractInstance,
   readDeploymentFile,
+  getJobs,
+  getCollections,
+  waitForConfirmState,
 } = require('../migrationHelpers');
 
 const { BigNumber } = ethers;
@@ -127,12 +131,31 @@ module.exports = async () => {
   pendingTransactions.push(await assetManager.upgradeDelegator(delegatorAddress));
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
 
-  // eslint-disable-next-line no-console
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {
     pendingTransactions[i].wait();
   }
 
-  // eslint-disable-next-line no-console
+  const jobs = await getJobs();
+  const collections = await getCollections();
+  console.log('Creating Jobs');
+
+  for (let i = 0; i < jobs.length; i++) {
+    const job = jobs[i];
+    await assetManager.createJob(job.weight, job.power, job.selectorType, job.name, job.selector, job.url);
+    console.log(`Job Created :  ${job.name}`);
+  }
+
+  console.log('Creating Collections');
+  console.log('Waiting for Confirm state : 4.......');
+  const numStates = await stakeManager.NUM_STATES();
+  const stateLength = (BigNumber.from(await stakeManager.epochLength())).div(numStates);
+
+  for (let i = 0; i < collections.length; i++) {
+    await waitForConfirmState(numStates, stateLength);
+    const collection = collections[i];
+    await assetManager.createCollection(collection.jobIDs, collection.aggregationMethod, collection.power, collection.name);
+    console.log(`Collection Created :  ${collection.name}`);
+  }
   console.log('Contracts deployed successfully & initial setup is done');
 };

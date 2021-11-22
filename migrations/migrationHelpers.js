@@ -1,6 +1,9 @@
 /* eslint-disable no-console */
 const jsonfile = require('jsonfile');
 const hre = require('hardhat');
+const axios = require('axios');
+
+const { BigNumber } = ethers;
 
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
@@ -90,7 +93,11 @@ const deployContract = async (
     config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
   }
 
-  await hre.run('verify:verify', config);
+  try {
+    await hre.run('verify:verify', config);
+  } catch (err) {
+    console.error('Etherscan verification failed', err);
+  }
 
   return contract;
 };
@@ -117,6 +124,46 @@ const getdeployedContractInstance = async (
   return { Contract, contractInstance };
 };
 
+const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master';
+
+const getJobs = async () => {
+  try {
+    const jobs = await axios.get(`${SOURCE}/jobs.json`);
+    return jobs.data;
+  } catch (error) {
+    console.log('Error while fetching jobs', error.response.body);
+    return null;
+  }
+};
+
+const getCollections = async () => {
+  try {
+    const collections = await axios.get(`${SOURCE}/collections.json`);
+    return collections.data;
+  } catch (error) {
+    console.log('Error while fetching collections', error.response.body);
+    return null;
+  }
+};
+
+const currentState = async(numStates, stateLength) => {
+  const blockNumber = await ethers.provider.getBlockNumber();
+  return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
+};
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+const waitForConfirmState = async (numStates, stateLength) => {
+  let state = await currentState(numStates, stateLength);
+  while (state !== 4) {
+    state = await currentState(numStates, stateLength);
+    console.log('Current state', state);
+    await sleep(10000);
+  }
+};
+
 module.exports = {
   deployContract,
   getdeployedContractInstance,
@@ -124,4 +171,8 @@ module.exports = {
   readDeploymentFile,
   readOldDeploymentFile,
   writeDeploymentFile,
+  getJobs,
+  getCollections,
+  sleep,
+  waitForConfirmState,
 };
