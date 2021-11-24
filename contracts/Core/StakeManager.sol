@@ -23,7 +23,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
-    event srzr_transfer(address from, address to, uint256 amount, uint32 stakerId);
+    event SrzrTransfer(address from, address to, uint256 amount, uint32 stakerId);
 
     event StakeChange(
         uint32 epoch,
@@ -256,6 +256,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         }
     }
 
+    function srzrTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint32 stakerId
+    ) external override {
+        emit SrzrTransfer(from, to, amount, stakerId);
+    }
+
     /// @notice Used by staker to set delegation acceptance, its set as False by default
     function setDelegationAcceptance(bool status) external {
         uint32 stakerId = stakerIds[msg.sender];
@@ -388,15 +397,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @return The staker ID
     function getStakerId(address _address) external view override returns (uint32) {
         return (stakerIds[_address]);
-    }
-
-    function srzrTransfer(
-        address from,
-        address to,
-        uint256 amount,
-        uint32 stakerId
-    ) external override {
-        emit srzr_transfer(from, to, amount, stakerId);
     }
 
     /// @param _id The staker ID
