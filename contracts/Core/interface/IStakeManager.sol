@@ -29,6 +29,13 @@ interface IStakeManager {
 
     function escape(address _address) external;
 
+    function srzrTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint32 stakerId
+    ) external;
+
     function getStakerId(address _address) external view returns (uint32);
 
     function getStaker(uint32 _id) external view returns (Structs.Staker memory staker);

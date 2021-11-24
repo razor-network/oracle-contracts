@@ -23,6 +23,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
+    event srzr_transfer(address from, address to, uint256 amount, uint32 stakerId);
+
     event StakeChange(
         uint32 epoch,
         uint32 indexed stakerId,
@@ -386,6 +388,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @return The staker ID
     function getStakerId(address _address) external view override returns (uint32) {
         return (stakerIds[_address]);
+    }
+
+    function srzrTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint32 stakerId
+    ) external override {
+        emit srzr_transfer(from, to, amount, stakerId);
     }
 
     /// @param _id The staker ID

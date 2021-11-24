@@ -70,5 +70,7 @@ contract StakedToken is ERC20, IStakedToken {
             razorDeposited[from] = razorDeposited[from] - propotionalRazorContribution;
             razorDeposited[to] = razorDeposited[to] + propotionalRazorContribution;
         }
+
+        stakeManager.srzrTransfer(from, to, amount, stakerID);
     }
 }
