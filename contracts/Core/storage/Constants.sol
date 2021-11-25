@@ -17,6 +17,12 @@ contract Constants {
         Slashed
     }
 
+    enum AgeChanged {
+        InactivityPenalty,
+        MissedEpoch,
+        VotingPenalty
+    }
+
     uint8 public constant NUM_STATES = 5;
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 

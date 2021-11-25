@@ -91,7 +91,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             stakeManager.setStakerStake(epoch, stakerId, reason, previousStake, newStake);
         }
         if (newAge < previousAge) {
-            stakeManager.setStakerAge(epoch, stakerId, newAge);
+            stakeManager.setStakerAge(epoch, stakerId, newAge, AgeChanged.InactivityPenalty);
         }
     }
 
@@ -100,7 +100,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         if (epochLastRevealed != 0 && epochLastRevealed < epoch - 1) {
-            stakeManager.setStakerAge(epoch, thisStaker.id, 0);
+            stakeManager.setStakerAge(epoch, thisStaker.id, 0, AgeChanged.MissedEpoch);
             return;
         }
         uint64 age = thisStaker.age + 10000;
@@ -130,7 +130,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         age = penalty > age ? 0 : age - uint32(penalty);
 
-        stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age));
+        stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age), AgeChanged.VotingPenalty);
     }
 
     /// @notice Calculates the stake and age inactivity penalties of the staker
