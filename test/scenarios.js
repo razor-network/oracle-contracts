@@ -1157,4 +1157,61 @@ describe('Scenarios', async () => {
 
     await assertRevert(tx, 'stake below minimum stake');
   }).timeout(5000);
+
+  it('Staker can jump the queue at the time of block proposal', async function () {
+    while (true) {
+      let epoch = await getEpoch();
+      const votesarray = [];
+      // commit
+      for (let j = 1; j <= 5; j++) {
+        epoch = await getEpoch();
+        const votes = await getVote(medians);
+        votesarray.push(votes);
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[j]).commit(epoch, commitment);
+      }
+      await mineToNextState();
+      // reveal
+      for (let j = 1; j <= 5; j++) {
+        await voteManager.connect(signers[j]).reveal(epoch, votesarray[j - 1],
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      }
+      await mineToNextState();
+      // propose
+      for (let j = 1; j <= 5; j++) {
+        const stakerId = await stakeManager.stakerIds(signers[j].address);
+        const staker = await stakeManager.getStaker(stakerId);
+
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        if (j === 4) {
+          await blockManager.connect(signers[j]).propose(epoch,
+            medians,
+            iteration,
+            biggestInfluencerId + 1);
+        } else {
+          await blockManager.connect(signers[j]).propose(epoch,
+            medians,
+            iteration,
+            biggestInfluencerId);
+        }
+      }
+
+      const proposedBlocksLength = await blockManager.getNumProposedBlocks(epoch);
+
+      for (let i = 0; i < proposedBlocksLength - 1; i++) {
+        const sortedProposedBlockId1 = await blockManager.sortedProposedBlockIds(epoch, i);
+        if (sortedProposedBlockId1 === 4 && i + 1 < 4) {
+          const sortedProposedBlock1 = await blockManager.proposedBlocks(epoch, sortedProposedBlockId1);
+          const sortedProposedBlockId2 = await blockManager.sortedProposedBlockIds(epoch, i + 1);
+          const sortedProposedBlock2 = await blockManager.proposedBlocks(epoch, sortedProposedBlockId2);
+          assertBNLessThan(sortedProposedBlock1.iteration, sortedProposedBlock2.iteration, 'Staker jumps the queue');
+        }
+      }
+      await mineToNextEpoch();
+    }
+  }).timeout(50000);
 });
