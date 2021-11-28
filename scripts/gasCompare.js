@@ -72,12 +72,12 @@ let gasCompare = async () => {
                 'Method':gasDataI[i].method, 
                 'Current(Maxiumum)':calculateMaximumValue(gasDataI[i].gasData),
                 'Master(Maximum)' :calculateMaximumValue(gasDataII[i].gasData),
-                'Change%(Maximum)': changeMaximum > 0 ? '+' + change.toFixed(2).toString() :'-' + Math.abs(change.toFixed(2)),
+                'Change%(Maximum)': changeMaximum > 0 ? '+' + changeMaximum.toFixed(2).toString() :'-' + Math.abs(changeMaximum.toFixed(2)),
                 'Diff(Maximum)' : diffMaximum > 0 ? '+' + diffMaximum.toFixed(2).toString() :'-' + Math.abs(diffMaximum.toFixed(2)),
                 'Current(Minimum)':calculateMinimumValue(gasDataI[i].gasData),
                 'Master(Minimum)' :calculateMinimumValue(gasDataII[i].gasData),
                 'Diff(Maximum)' : diffMinimum > 0 ? '+' + diffMinimum.toFixed(2).toString() :'-' + Math.abs(diffMinimum.toFixed(2)),
-                'Change%(Minimum)':changeMinimum > 0 ? '+' + change.toFixed(2).toString() :'-' + Math.abs(change.toFixed(2)),
+                'Change%(Minimum)':changeMinimum > 0 ? '+' + changeMinimum.toFixed(2).toString() :'-' + Math.abs(changeMinimum.toFixed(2)),
                 }
                 gasChangeData.push(obj);
             }
