@@ -68,7 +68,7 @@ let gasCompare = async () => {
             let diffMinimum = calculateMinimumValue(gasDataI[i].gasData)-calculateMinimumValue(gasDataII[i].gasData);
             if(calculateMaximumValue(gasDataI[i].gasData) && changeMaximum!=0)
             {
-                let obj = {'Contract': gasDataI[i].contractgit, 
+                let obj = {'Contract': gasDataI[i].contract, 
                 'Method':gasDataI[i].method, 
                 'Current(Maxiumum)':calculateMaximumValue(gasDataI[i].gasData),
                 'Master(Maximum)' :calculateMaximumValue(gasDataII[i].gasData),
