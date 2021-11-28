@@ -52,7 +52,7 @@ let compareValue = (gas_usage_current,gas_usage_master) => {
 // method to compare the gas Consumption.
 
 let gasCompare = async () => {
-    let coloumn = ['Contract','Method','Current(Maximum)','Master(Maximum)','Change%(Maximum)','Diff(Maximum)','Current(Minimum)','Master(Maximum)','Diff(Minimum)','Change%(Minimum)'];
+    let coloumn = ['Contract','Method','Current(Maximum)','Master(Maximum)','Change%(Maximum)','Diff(Maximum)','Current(Minimum)','Master(Minimum)','Diff(Minimum)','Change%(Minimum)'];
     let gasChangeData = [];
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
@@ -66,7 +66,7 @@ let gasCompare = async () => {
             {
                 let obj = {'Contract': gasDataI[i].contract, 
                 'Method':gasDataI[i].method, 
-                'Current(Maxiumum)':calculateMaximumValue(gasDataI[i].gasData),
+                'Current(Maximum)':calculateMaximumValue(gasDataI[i].gasData),
                 'Master(Maximum)' :calculateMaximumValue(gasDataII[i].gasData),
                 'Change%(Maximum)': changeMaximum > 0 ? '+' + changeMaximum.toFixed(2).toString() :'-' + Math.abs(changeMaximum.toFixed(2)),
                 'Diff(Maximum)' : diffMaximum > 0 ? '+' + diffMaximum.toFixed(2).toString() :'-' + Math.abs(diffMaximum.toFixed(2)),
