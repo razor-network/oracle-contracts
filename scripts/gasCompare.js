@@ -1,12 +1,8 @@
 const fs = require("fs");
 const markdown = require('json-to-markdown-table');
 const Commenter = require('circleci-pr-commenter');
-try{
-    const commenter = new Commenter()
-}
-catch (err){
-    console.log("Script is called in dev environment")
-};
+
+const commenter = new Commenter()
 
 let arguments = process.argv
 
