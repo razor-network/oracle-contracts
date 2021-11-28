@@ -76,7 +76,7 @@ let gasCompare = async () => {
                 'Diff(Maximum)' : diffMaximum > 0 ? '+' + diffMaximum.toFixed(2).toString() :'-' + Math.abs(diffMaximum.toFixed(2)),
                 'Current(Minimum)':calculateMinimumValue(gasDataI[i].gasData),
                 'Master(Minimum)' :calculateMinimumValue(gasDataII[i].gasData),
-                'Diff(Maximum)' : diffMinimum > 0 ? '+' + diffMinimum.toFixed(2).toString() :'-' + Math.abs(diffMinimum.toFixed(2)),
+                'Diff(Minimum)' : diffMinimum > 0 ? '+' + diffMinimum.toFixed(2).toString() :'-' + Math.abs(diffMinimum.toFixed(2)),
                 'Change%(Minimum)':changeMinimum > 0 ? '+' + changeMinimum.toFixed(2).toString() :'-' + Math.abs(changeMinimum.toFixed(2)),
                 }
                 gasChangeData.push(obj);
@@ -86,16 +86,16 @@ let gasCompare = async () => {
 let markdownstring = markdown(gasChangeData,coloumn);
 if(gasChangeData.length!==0){
     
-        await commenter.createOrUpdateComment('gasCompare', markdownstring ).catch(err)
-        {
-        console.log(markdownstring);
-        }
-}
+        await commenter.createOrUpdateComment('gasCompare', markdownstring ).catch(err=>{  
+                console.log(markdownstring);
+        })
+    }
+        
 else{
-        await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`).catch(err)
+        await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`).catch(err=>
         {
             console.log(`No changes found in gas Consumption`);
-        }
+        })
         
 }
 }
