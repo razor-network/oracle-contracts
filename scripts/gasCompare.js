@@ -56,7 +56,7 @@ let compareValue = (gas_usage_current,gas_usage_master) => {
 // method to compare the gas Consumption.
 
 let gasCompare = async () => {
-    let coloumn = ['Contract','Method','Change%(Maximum)','Current(Maximum)','Master(Maximum)','Diff','Current(Minimum)','Master(Maximum)','Diff','Change%(Minimum)'];
+    let coloumn = ['Contract','Method','Current(Maximum)','Master(Maximum)','Change%(Maximum)','Diff(Maximum)','Current(Minimum)','Master(Maximum)','Diff(Minimum)','Change%(Minimum)'];
     let gasChangeData = [];
     const gasDataI = getFileData(arguments[2]);
     const gasDataII = getFileData(arguments[3]);
@@ -85,20 +85,17 @@ let gasCompare = async () => {
     }
 let markdownstring = markdown(gasChangeData,coloumn);
 if(gasChangeData.length!==0){
-    try{
-    await commenter.createOrUpdateComment('gasCompare', markdownstring )
-    }
-    catch(err){
+    
+        await commenter.createOrUpdateComment('gasCompare', markdownstring ).catch(err)
+        {
         console.log(markdownstring);
-    }
+        }
 }
 else{
-    try{
-        await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`)
-    }
-    catch(err){
-        console.log(`No changes found in gas Consumption`);
-    }
+        await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`).catch(err)
+        {
+            console.log(`No changes found in gas Consumption`);
+        }
         
 }
 }
