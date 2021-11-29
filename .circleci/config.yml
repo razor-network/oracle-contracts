@@ -53,21 +53,6 @@ jobs:
           prefix: test
 
 
-  scenarios:
-    docker:
-      - image: 'cimg/node:16.5'
-    resource_class: xlarge
-    steps:
-      - attach_workspace:
-          at: .
-      - run:
-          name: Run Scenarios
-          command: npm run scenarios
-      - store_artifacts:
-          path: scenarios
-          prefix: scenarios
-
-
   lint:
     docker:
       - image: 'cimg/node:16.5'
@@ -131,7 +116,7 @@ jobs:
               mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
               git checkout $CIRCLE_BRANCH
               npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
-              
+
 
 
 notify:
