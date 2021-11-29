@@ -60,10 +60,9 @@ describe('RandomNoManager', function () {
     it('should be able to initialize', async () => {
       await Promise.all(await initializeContracts());
       await mineToNextEpoch();
-      const epoch = await getEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[5]).stake(tokenAmount('420000'));
     });
 
     it('client should be able to register for random number', async function () {

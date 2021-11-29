@@ -115,9 +115,8 @@ describe('VoteManager', function () {
         await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
 
         await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('2000'));
-        const epoch = await getEpoch();
-        await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
-        await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
+        await stakeManager.connect(signers[3]).stake(tokenAmount('420000'));
+        await stakeManager.connect(signers[4]).stake(tokenAmount('19000'));
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
@@ -498,7 +497,7 @@ describe('VoteManager', function () {
       it('should not be able to commit if stake is below minstake', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        await stakeManager.connect(signers[7]).stake(tokenAmount('1000'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         const staker = await stakeManager.getStaker(stakerId);
         // slashing the staker to make his stake below minstake
@@ -544,7 +543,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to reveal other than in reveal state', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        await stakeManager.connect(signers[7]).stake(tokenAmount('1000'));
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
@@ -642,7 +641,7 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
 
         await governance.setMinStake(0);
-        await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
+        await stakeManager.connect(signers[6]).stake(tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -670,7 +669,7 @@ describe('VoteManager', function () {
 
       it('Snitch,Slash,RedeemBounty should work even for stake 1', async function () {
         let epoch = await getEpoch();
-        await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
+        await stakeManager.connect(signers[5]).stake(tokenAmount('1'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -742,8 +741,8 @@ describe('VoteManager', function () {
         await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
 
         let epoch = await getEpoch();
-        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
-        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
+        await stakeManager.connect(signers[8]).stake(tokenAmount('19000'));
+        await stakeManager.connect(signers[9]).stake(tokenAmount('17000'));
 
         const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -787,11 +786,10 @@ describe('VoteManager', function () {
 
       it('if the disputed value is zero, staker should not be able to dispute', async function () {
         await mineToNextState(); // dispute
-        const epoch = await getEpoch();
 
         const sortedVotes = [toBigNumber('0')];
 
-        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx = blockManager.connect(signers[9]).giveSorted(11, sortedVotes);
 
         await assertRevert(tx, 'sortedStaker <= LVS');
       });
@@ -844,7 +842,7 @@ describe('VoteManager', function () {
         //
         const sortedVotes = [toBigNumber('0')];
         //
-        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx3 = blockManager.connect(signers[9]).giveSorted(11, sortedVotes);
         //
         await assertRevert(tx3, 'sortedStaker <= LVS');
       });
@@ -867,12 +865,11 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'Cannot propose without revealing');
       });
       it('No Finalise Dispute should happen if no block is proposed or no one votes', async function () {
-        const epoch = await getEpoch();
         await mineToNextState();
         // dispute state
         const sortedVotes = [];
-        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
-        const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
+        const tx1 = blockManager.connect(signers[3]).giveSorted(11, sortedVotes);
+        const tx2 = blockManager.connect(signers[3]).finalizeDispute(0);
         assert(tx1, 'should be able to give sorted votes');
         await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
       });

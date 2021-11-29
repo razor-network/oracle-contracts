@@ -18,7 +18,6 @@ const {
 
 const {
   toBigNumber,
-  getEpoch,
   tokenAmount,
 } = require('./helpers/utils');
 
@@ -162,7 +161,6 @@ describe('AssetManager', function () {
     });
 
     it('should be able to inactivate collection', async function () {
-      let epoch = await getEpoch();
       const collectionName = 'Test Collection6';
       await assetManager.createCollection([1, 2], 2, 0, collectionName);
       await assetManager.setCollectionStatus(false, 7);
@@ -171,8 +169,7 @@ describe('AssetManager', function () {
       await mineToNextEpoch(); // commit
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
-      epoch = await getEpoch();
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[5]).stake(tokenAmount('420000'));
 
       await mineToNextState(); // reveal
       await mineToNextState(); // propose

@@ -67,7 +67,7 @@ describe('BlockManager', function () {
     it('should not be able to stake, commit without initialization', async () => {
       const epoch = await getEpoch();
 
-      const tx1 = stakeManager.connect(signers[1]).stake(epoch, tokenAmount('18000'));
+      const tx1 = stakeManager.connect(signers[1]).stake(tokenAmount('18000'));
       await assertRevert(tx1, 'Contract should be initialized');
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -119,7 +119,7 @@ describe('BlockManager', function () {
 
       await razor.connect(signers[1]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
-      await stakeManager.connect(signers[1]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[1]).stake(tokenAmount('420000'));
 
       const votes = [0];
 
@@ -205,10 +205,10 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
 
       await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('18000'));
+      await stakeManager.connect(signers[2]).stake(tokenAmount('18000'));
 
       await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
+      await stakeManager.connect(signers[3]).stake(tokenAmount('18000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -306,7 +306,7 @@ describe('BlockManager', function () {
         stakeManager,
         assetManager,
         epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, 11, sortedStakers);
+      await blockManager.connect(signers[19]).giveSorted(11, sortedStakers);
 
       const dispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(dispute.collectionId, toBigNumber('11'), 'collectionId should match');
@@ -333,7 +333,7 @@ describe('BlockManager', function () {
         }
       }
 
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, blockIndex);
+      await blockManager.connect(signers[19]).finalizeDispute(blockIndex);
       const slashNums = await stakeManager.slashNums();
       const bountySlashNum = slashNums[0];
       const burnSlashNum = slashNums[1];
@@ -398,7 +398,7 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
 
       await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
+      await stakeManager.connect(signers[4]).stake(tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
@@ -460,7 +460,7 @@ describe('BlockManager', function () {
         assetManager,
         epoch);
 
-      await blockManager.connect(signers[19]).giveSorted(epoch, 11, res1.sortedStakers);
+      await blockManager.connect(signers[19]).giveSorted(11, res1.sortedStakers);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(firstDispute.collectionId, toBigNumber('11'), 'collectionId should match');
       assertBNEqual(firstDispute.accWeight, res1.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
@@ -477,9 +477,9 @@ describe('BlockManager', function () {
       //    }
       // }
 
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      await blockManager.connect(signers[19]).finalizeDispute(0);
 
-      const tx = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      const tx = blockManager.connect(signers[19]).finalizeDispute(0);
 
       await assertRevert(tx, 'Block already has been disputed');
       const res2 = await calculateDisputesData(12,
@@ -488,7 +488,7 @@ describe('BlockManager', function () {
         assetManager,
         epoch);
 
-      await blockManager.connect(signers[15]).giveSorted(epoch, 12, res2.sortedStakers);
+      await blockManager.connect(signers[15]).giveSorted(12, res2.sortedStakers);
 
       const secondDispute = await blockManager.disputes(epoch, signers[15].address);
 
@@ -496,7 +496,7 @@ describe('BlockManager', function () {
       assertBNEqual(secondDispute.accWeight, res2.totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(secondDispute.lastVisitedStaker, res2.sortedStakers[res2.sortedStakers.length - 1], 'lastVisited should match');
 
-      await blockManager.connect(signers[15]).finalizeDispute(epoch, 1);
+      await blockManager.connect(signers[15]).finalizeDispute(1);
       // assertBNEqual(secondDispute2.median, res2.median, 'median should match');
       // assert((await proposedBlock.valid) === false);
     });
@@ -536,7 +536,7 @@ describe('BlockManager', function () {
 
       await razor.transfer(signers[5].address, tokenAmount('19000'));
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('19000'));
+      await stakeManager.connect(signers[5]).stake(tokenAmount('19000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
@@ -569,7 +569,7 @@ describe('BlockManager', function () {
 
       const sortedStakers = [5];
 
-      await blockManager.connect(signers[13]).giveSorted(epoch, 11, sortedStakers);
+      await blockManager.connect(signers[13]).giveSorted(11, sortedStakers);
 
       const beforeDisputeReset = await blockManager.disputes(epoch, signers[13].address);
       assertBNEqual(beforeDisputeReset.collectionId, toBigNumber('11'), 'collectionId should match');
@@ -590,10 +590,10 @@ describe('BlockManager', function () {
       let epoch = await getEpoch();
 
       await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[6]).stake(tokenAmount('420000'));
 
       await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('18000'));
+      await stakeManager.connect(signers[7]).stake(tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
@@ -648,15 +648,15 @@ describe('BlockManager', function () {
         epoch);
 
       // Dispute in batches
-      await blockManager.connect(signers[19]).giveSorted(epoch, 11, [6]);
-      await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
+      await blockManager.connect(signers[19]).giveSorted(11, [6]);
+      await blockManager.connect(signers[19]).giveSorted(11, [7]);
       const dispute = await blockManager.disputes(epoch, signers[19].address);
 
       assertBNEqual(dispute.collectionId, toBigNumber('11'), 'collectionId should match');
       assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
       assertBNEqual(dispute.accProd, accProd, 'accProd should match');
       assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
-      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      await blockManager.connect(signers[19]).finalizeDispute(0);
     });
     it('staker should not be able to propose when not elected', async function () {
       await mineToNextEpoch();
@@ -731,8 +731,7 @@ describe('BlockManager', function () {
     });
     it('should not be able to give sorted votes for stakers who didnt vote in epoch', async function () {
       await mineToNextState();
-      const epoch = await getEpoch();
-      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 10, [16]);
+      const tx = blockManager.connect(signers[19]).giveSorted(10, [16]);
       await assertRevert(tx, 'staker didnt vote in this epoch');
     });
     it('For the second batch while raising dispute, assetid should match to the disputed assetid of first batch', async function () {
@@ -757,8 +756,8 @@ describe('BlockManager', function () {
         iteration,
         biggestInfluencerId);
       await mineToNextState();// dispute
-      await blockManager.connect(signers[19]).giveSorted(epoch, 10, [7]);
-      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
+      await blockManager.connect(signers[19]).giveSorted(10, [7]);
+      const tx = blockManager.connect(signers[19]).giveSorted(11, [7]);
       await assertRevert(tx, 'AssetId not matching');
     });
     it('Only valid staker can call the claimBlockReward function', async function () {
@@ -808,9 +807,9 @@ describe('BlockManager', function () {
       assertBNEqual(block.iteration, iteration, 'iteration should be equal');
       assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
       await mineToNextState();// dispute
-      await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
+      await blockManager.connect(signers[19]).giveSorted(11, [7]);
 
-      const tx1 = blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      const tx1 = blockManager.connect(signers[19]).finalizeDispute(0);
       await assertRevert(tx1, 'median can not be zero');
     });
     it('should be able to return correct data for getBlockMedians', async function () {
@@ -834,10 +833,10 @@ describe('BlockManager', function () {
       let epoch = await getEpoch();
 
       await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
+      await stakeManager.connect(signers[8]).stake(tokenAmount('19000'));
 
       await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
-      await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
+      await stakeManager.connect(signers[9]).stake(tokenAmount('17000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -873,7 +872,7 @@ describe('BlockManager', function () {
 
       await blockManager.disputes(epoch, signers[9].address);
 
-      const tx = blockManager.connect(signers[9]).finalizeDispute(epoch, 0);
+      const tx = blockManager.connect(signers[9]).finalizeDispute(0);
       await assertRevert(tx, 'TIR is wrong');
     });
     it('should not be able to finalize dispute, if proposed alternate block is identical to proposed blocks', async function () {
@@ -884,10 +883,10 @@ describe('BlockManager', function () {
       let epoch = await getEpoch();
 
       await razor.connect(signers[10]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[10]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[10]).stake(tokenAmount('420000'));
 
       await razor.connect(signers[11]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[11]).stake(epoch, tokenAmount('18000'));
+      await stakeManager.connect(signers[11]).stake(tokenAmount('18000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
@@ -947,11 +946,11 @@ describe('BlockManager', function () {
         stakeManager,
         assetManager,
         epoch);
-      await blockManager.connect(signers[10]).giveSorted(epoch, 11, res1.sortedStakers);
+      await blockManager.connect(signers[10]).giveSorted(11, res1.sortedStakers);
 
       await blockManager.disputes(epoch, signers[10].address);
 
-      const tx = blockManager.connect(signers[10]).finalizeDispute(epoch, 0);
+      const tx = blockManager.connect(signers[10]).finalizeDispute(0);
 
       await assertRevert(tx, 'Block proposed with same medians');
     });
@@ -965,16 +964,16 @@ describe('BlockManager', function () {
       await razor.transfer(signers[15].address, tokenAmount('418000'));
 
       await razor.connect(signers[12]).approve(stakeManager.address, tokenAmount('421000'));
-      await stakeManager.connect(signers[12]).stake(epoch, tokenAmount('421000'));
+      await stakeManager.connect(signers[12]).stake(tokenAmount('421000'));
 
       await razor.connect(signers[13]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[13]).stake(epoch, tokenAmount('420000'));
+      await stakeManager.connect(signers[13]).stake(tokenAmount('420000'));
 
       await razor.connect(signers[14]).approve(stakeManager.address, tokenAmount('419000'));
-      await stakeManager.connect(signers[14]).stake(epoch, tokenAmount('419000'));
+      await stakeManager.connect(signers[14]).stake(tokenAmount('419000'));
 
       await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('418000'));
-      await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('418000'));
+      await stakeManager.connect(signers[15]).stake(tokenAmount('418000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const commitment1 = utils.solidityKeccak256(
@@ -1220,7 +1219,7 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerId);
       const stakeBefore = staker.stake;
       assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
-      await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      await blockManager.disputeBiggestInfluenceProposed(0, 10);
       assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
 
       const slashNums = await stakeManager.slashNums();
@@ -1241,11 +1240,11 @@ describe('BlockManager', function () {
       assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
       assertBNEqual(bountyLock.amount, bounty);
 
-      const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      const tx = blockManager.disputeBiggestInfluenceProposed(0, 10);
       await assertRevert(tx, 'Block already has been disputed');
 
       // Disputing valid block
-      const tx1 = blockManager.disputeBiggestInfluenceProposed(epoch, 1, 10);
+      const tx1 = blockManager.disputeBiggestInfluenceProposed(1, 10);
       await assertRevert(tx1, 'Invalid dispute : Influence');
     });
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
@@ -1257,7 +1256,7 @@ describe('BlockManager', function () {
       for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
         await razor.transfer(signers[base + i].address, tokenAmount('420000'));
         await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
-        await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
+        await stakeManager.connect(signers[base + i]).stake(tokenAmount('420000'));
       }
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -1321,7 +1320,7 @@ describe('BlockManager', function () {
       for (let i = 0; i < 4; i++) {
         await razor.transfer(signers[base + i].address, tokenAmount('420000'));
         await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
-        await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
+        await stakeManager.connect(signers[base + i]).stake(tokenAmount('420000'));
       }
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -1369,26 +1368,26 @@ describe('BlockManager', function () {
         assetManager,
         epoch);
 
-      await blockManager.giveSorted(epoch, 11, res.sortedStakers);
-      await blockManager.finalizeDispute(epoch, 0);
+      await blockManager.giveSorted(11, res.sortedStakers);
+      await blockManager.finalizeDispute(0);
       blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should be 1
       assertBNEqual(blockIndexToBeConfirmed, toBigNumber('1'));
 
       // we dispute C - 2
-      await blockManager.finalizeDispute(epoch, 2);
+      await blockManager.finalizeDispute(2);
       blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should not change, be 1 only
       assertBNEqual(blockIndexToBeConfirmed, toBigNumber('1'));
 
       // we dispute B - 1
-      await blockManager.finalizeDispute(epoch, 1);
+      await blockManager.finalizeDispute(1);
       blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should change to 3
       assertBNEqual(blockIndexToBeConfirmed, toBigNumber('3'));
 
       // we dispute D - 3
-      await blockManager.finalizeDispute(epoch, 3);
+      await blockManager.finalizeDispute(3);
       blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
@@ -1515,7 +1514,7 @@ describe('BlockManager', function () {
         biggestInfluencerId);
       await mineToNextState();// dispute
       // asset id 8 is a job
-      const tx1 = blockManager.connect(signers[19]).giveSorted(epoch, 8, [4]);
+      const tx1 = blockManager.connect(signers[19]).giveSorted(8, [4]);
       await assertRevert(tx1, 'Asset is not a collection');
     });
   });
