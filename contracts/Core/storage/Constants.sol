@@ -19,7 +19,6 @@ contract Constants {
 
     enum AgeChanged {
         InactivityPenalty,
-        MissedEpoch,
         VotingPenalty
     }
 

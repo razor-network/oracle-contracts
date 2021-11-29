@@ -100,7 +100,6 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         if (epochLastRevealed != 0 && epochLastRevealed < epoch - 1) {
-            stakeManager.setStakerAge(epoch, thisStaker.id, 0, AgeChanged.MissedEpoch);
             return;
         }
         uint64 age = thisStaker.age + 10000;
