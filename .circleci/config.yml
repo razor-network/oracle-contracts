@@ -116,7 +116,7 @@ jobs:
               mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
               git checkout $CIRCLE_BRANCH
               npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
-
+              
 
 
 notify:
