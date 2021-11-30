@@ -1,12 +1,12 @@
 const { utils } = require('ethers');
-const { getState } = require('./helpers/utils');
+const { getState } = require('../test/helpers/utils');
 const {
   ASSET_MODIFIER_ROLE,
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
-} = require('./helpers/constants');
+} = require('../test/helpers/constants');
 const {
   assertBNEqual,
   assertBNLessThan,
@@ -15,8 +15,8 @@ const {
   restoreSnapshot,
   takeSnapshot,
   mineToNextState,
-} = require('./helpers/testHelpers');
-const { setupContracts } = require('./helpers/testSetup');
+} = require('../test/helpers/testHelpers');
+const { setupContracts } = require('../test/helpers/testSetup');
 const {
   getEpoch,
   tokenAmount,
@@ -24,7 +24,7 @@ const {
   getIteration,
   getVote,
   toBigNumber,
-} = require('./helpers/utils');
+} = require('../test/helpers/utils');
 
 describe('Scenarios', async () => {
   let signers;
