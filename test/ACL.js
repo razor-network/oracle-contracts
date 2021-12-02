@@ -9,13 +9,14 @@ const {
   ASSET_MODIFIER_ROLE,
   ZERO_ADDRESS,
   GOVERNER_ROLE,
+  STOKEN_ROLE,
 } = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  getEpoch,
+  getEpoch, tokenAmount,
 } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
@@ -421,5 +422,10 @@ describe('Access Control Test', async () => {
   });
   it('upgradeDelegator should not accept zero Address', async function () {
     await assertRevert(assetManager.connect(signers[0]).upgradeDelegator(ZERO_ADDRESS), 'Zero Address check');
+  });
+  it('only sToken Address should be able to call the srzrTransfer Method', async function () {
+    await assertRevert(stakeManager.connect(signers[0]).srzrTransfer(signers[0].address, signers[1].address, tokenAmount('100'), 1), expectedRevertMessage);
+    await stakeManager.connect(signers[0]).grantRole(STOKEN_ROLE, signers[2].address);
+    assert(await stakeManager.connect(signers[2]).srzrTransfer(signers[0].address, signers[1].address, tokenAmount('100'), 1), 'STOKEN_ROLE not granted');
   });
 });
