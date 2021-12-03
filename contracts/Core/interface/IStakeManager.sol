@@ -22,7 +22,8 @@ interface IStakeManager {
     function setStakerAge(
         uint32 _epoch,
         uint32 _id,
-        uint32 _age
+        uint32 _age,
+        Constants.AgeChanged reason
     ) external;
 
     function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external;

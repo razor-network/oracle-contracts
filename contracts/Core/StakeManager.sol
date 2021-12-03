@@ -34,7 +34,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 timestamp
     );
 
-    event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, uint256 timestamp);
+    event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, Constants.AgeChanged reason, uint256 timestamp);
 
     event Staked(
         address staker,
@@ -387,10 +387,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function setStakerAge(
         uint32 _epoch,
         uint32 _id,
-        uint32 _age
+        uint32 _age,
+        Constants.AgeChanged reason
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
-        emit AgeChange(_epoch, _id, _age, block.timestamp);
+        emit AgeChange(_epoch, _id, _age, reason, block.timestamp);
     }
 
     /// @param _address Address of the staker
