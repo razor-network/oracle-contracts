@@ -743,7 +743,7 @@ describe('Scenarios', async () => {
     }
 
     epoch = await getEpoch();
-    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    const tx = stakeManager.connect(signers[1]).withdraw(staker.id);
     await assertRevert(tx, 'Release Period Passed');
   });
   it('Front-Run Recurring Unstake call', async function () {
@@ -800,7 +800,7 @@ describe('Scenarios', async () => {
     }
 
     epoch = await getEpoch();
-    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    const tx = stakeManager.connect(signers[1]).withdraw(staker.id);
     await assertRevert(tx, 'Release Period Passed');
 
     staker = await stakeManager.getStaker(1);
@@ -857,17 +857,17 @@ describe('Scenarios', async () => {
     const amount = (await sToken.balanceOf(staker._address)).div(toBigNumber('2'));
 
     await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
-    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    const tx = stakeManager.connect(signers[1]).withdraw(staker.id);
     await assertRevert(tx, 'Withdraw epoch not reached');
 
     await mineToNextEpoch();
     epoch = await getEpoch();
-    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await stakeManager.connect(signers[1]).withdraw(staker.id);
 
     await governance.setWithdrawLockPeriod(0); // decreased the withdraw lock period
 
     await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
-    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await stakeManager.connect(signers[1]).withdraw(staker.id);
   });
   it('Staker unstakes and in withdraw release period, there is a change in governance parameter and withdraw release period is reduced', async function () {
     let epoch = await getEpoch();
@@ -918,7 +918,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
-    await stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    await stakeManager.connect(signers[1]).withdraw(staker.id);
 
     await governance.setWithdrawReleasePeriod(2); // withdraw release period is decreased
     await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
@@ -930,7 +930,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
-    const tx = stakeManager.connect(signers[1]).withdraw(epoch, staker.id);
+    const tx = stakeManager.connect(signers[1]).withdraw(staker.id);
     await assertRevert(tx, 'Release Period Passed');
   });
   it('BlockReward changes both before or after confirming block, check for block reward', async () => {
