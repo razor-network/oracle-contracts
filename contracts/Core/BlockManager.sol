@@ -73,8 +73,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     //anyone can give sorted votes in batches in dispute state
-    function giveSorted(uint16 collectionId, uint32[] memory sortedStakers) external initialized checkState(State.Dispute, epochLength) {
-        uint32 epoch = _getEpoch(epochLength);
+    function giveSorted(
+        uint32 epoch,
+        uint16 collectionId,
+        uint32[] memory sortedStakers
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -135,13 +138,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
     }
 
-    function disputeBiggestInfluenceProposed(uint8 blockIndex, uint32 correctBiggestInfluencerId)
-        external
-        initialized
-        checkState(State.Dispute, epochLength)
-        returns (uint32)
-    {
-        uint32 epoch = _getEpoch(epochLength);
+    function disputeBiggestInfluenceProposed(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 correctBiggestInfluencerId
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
@@ -150,8 +151,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint8 blockIndex) external initialized checkState(State.Dispute, epochLength) returns (uint32) {
-        uint32 epoch = _getEpoch(epochLength);
+    function finalizeDispute(uint32 epoch, uint8 blockIndex)
+        external
+        initialized
+        checkEpochAndState(State.Dispute, epoch, epochLength)
+        returns (uint32)
+    {
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");

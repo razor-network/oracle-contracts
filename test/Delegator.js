@@ -97,7 +97,7 @@ describe('Delegator', function () {
 
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
-      await stakeManager.connect(signers[5]).stake(tokenAmount('420000'));
+      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
 
       const votes = [100];
 
