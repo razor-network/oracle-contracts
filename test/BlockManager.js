@@ -1487,8 +1487,7 @@ describe('BlockManager', function () {
       const staker16 = await stakeManager.getStaker(stakerIdAcc16);
       assertBNEqual(staker14.stake, prevStakeAcc14.sub(randaoPenalty), 'Penalty has not been applied correctly');
       assertBNEqual(staker16.stake, prevStakeAcc16.add(blockReward), 'Reward has not been given correctly');
-      assertBNEqual(staker14.age, toBigNumber('0'), 'Age shoud be zero due to randaoPenalty');
-      assertBNEqual(staker16.age, toBigNumber('10000'), 'Age shoud increase for commit');
+      assertBNEqual(staker16.age, toBigNumber('20000'), 'Age shoud increase for commit');
       assertBNEqual(staker17.age, ageAcc17);
     });
     it('should not be able to giveSorted votes for job', async function () {

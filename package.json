@@ -24,6 +24,7 @@
     "lint:sol": "solhint 'contracts/**/*.sol'",
     "lint:sol:fix": "prettier 'contracts/**/*.sol' -w",
     "test": "hardhat test",
+    "scenarios": "hardhat test scenarios/scenarios.js",
     "gas": "CI=true npm run test && node scripts/gasAnalyze.js",
     "gasCompare": "node scripts/gasCompare.js"
   },
