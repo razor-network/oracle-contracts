@@ -17,4 +17,6 @@ interface IVoteManager {
     function getEpochLastCommitted(uint32 stakerId) external view returns (uint32);
 
     function getRandaoHash() external view returns (bytes32);
+
+    function getBiggestInfluence(uint32 epoch) external view returns (uint256);
 }

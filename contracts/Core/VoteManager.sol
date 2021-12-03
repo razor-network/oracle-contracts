@@ -74,6 +74,9 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint256 influence = stakeManager.getInfluence(stakerId);
         totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
         influenceSnapshot[epoch][stakerId] = influence;
+        if (influence > biggestInfluence[epoch]) {
+            biggestInfluence[epoch] = influence;
+        }
         secrets = keccak256(abi.encodePacked(secrets, secret));
 
         emit Revealed(epoch, stakerId, values, block.timestamp);
@@ -125,6 +128,10 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
     function getEpochLastCommitted(uint32 stakerId) external view override returns (uint32) {
         return commitments[stakerId].epoch;
+    }
+
+    function getBiggestInfluence(uint32 epoch) external view override returns (uint256) {
+        return biggestInfluence[epoch];
     }
 
     function getEpochLastRevealed(uint32 stakerId) external view override returns (uint32) {

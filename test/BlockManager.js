@@ -22,7 +22,6 @@ const {
 const {
   calculateDisputesData,
   getEpoch,
-  getBiggestInfluenceAndId,
   getIteration,
   getFalseIteration,
   toBigNumber,
@@ -143,13 +142,11 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
 
       await blockManager.connect(signers[1]).propose(epoch,
         [],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('1'), 'incorrect proposalID');
     });
@@ -166,13 +163,11 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
 
       const tx = blockManager.connect(signers[1]).propose(epoch,
         [],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       await assertRevert(tx, 'Already proposed');
     });
@@ -251,20 +246,31 @@ describe('BlockManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[1].address);
       const staker1 = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker1, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker1);
 
       const tx = blockManager.connect(signers[1]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       await assertRevert(tx, 'invalid block proposed');
 
       await blockManager.connect(signers[1]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
+    });
+
+    it('should not allow proposals with the wrong iteration', async function () {
+      const epoch = await getEpoch();
+
+      const stakerIdAcc6 = await stakeManager.stakerIds(signers[2].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc6);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
+
+      const tx = blockManager.connect(signers[2]).propose(epoch,
+        [100, 200, 300, 400, 500, 600, 700, 800, 900],
+        (iteration + 1));
+
+      await assertRevert(tx, 'not elected');
     });
 
     it('should allow other proposals', async function () {
@@ -273,13 +279,11 @@ describe('BlockManager', function () {
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[2].address);
       const staker = await stakeManager.getStaker(stakerIdAcc6);
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
 
       await blockManager.connect(signers[2]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration))
         ? await blockManager.proposedBlocks(epoch, 0) : await blockManager.proposedBlocks(epoch, 1);
@@ -431,25 +435,22 @@ describe('BlockManager', function () {
       const stakerIdAcc6 = await stakeManager.stakerIds(signers[2].address);
       const staker6 = await stakeManager.getStaker(stakerIdAcc6);
 
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
-      const iteration6 = await getIteration(voteManager, stakeManager, staker6, biggestInfluence);
+      const iteration6 = await getIteration(voteManager, stakeManager, staker6);
 
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[4].address);
       const staker7 = await stakeManager.getStaker(stakerIdAcc7);
 
-      const iteration7 = await getIteration(voteManager, stakeManager, staker7, biggestInfluence);
+      const iteration7 = await getIteration(voteManager, stakeManager, staker7);
 
       await mineToNextState();
 
       await blockManager.connect(signers[2]).propose(epoch,
         [1000, 2100, 3100, 4000, 5000, 6000, 7000, 8000, 9000],
-        iteration6,
-        biggestInfluencerId);
+        iteration6);
 
       await blockManager.connect(signers[4]).propose(epoch,
         [1000, 2200, 3300, 4000, 5000, 6000, 7000, 8000, 9000],
-        iteration7,
-        biggestInfluencerId);
+        iteration7);
 
       await mineToNextState();
 
@@ -555,13 +556,11 @@ describe('BlockManager', function () {
       const stakerIdAcc20 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc20);
 
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [1000, 2001, 3000, 4000, 5000, 6000, 7000, 8000, 9000],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
 
@@ -626,13 +625,11 @@ describe('BlockManager', function () {
 
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[6].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestInfluence, biggestInfluencerId } = await await getBiggestInfluenceAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
 
       await blockManager.connect(signers[6]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('6'), 'incorrect proposalID');
 
@@ -673,12 +670,10 @@ describe('BlockManager', function () {
       await voteManager.connect(signers[3]).reveal(epoch, votes,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
-      const { biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getFalseIteration(voteManager, stakeManager, staker);
       const tx = blockManager.connect(signers[1]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       await assertRevert(tx, 'not elected');
     });
     it('staker should not be able to propose when not not revealed', async function () {
@@ -686,8 +681,7 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
       const stakerIdAcc8 = await stakeManager.stakerIds(signers[3].address);
       const staker = await stakeManager.getStaker(stakerIdAcc8);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
@@ -698,8 +692,7 @@ describe('BlockManager', function () {
       await mineToNextState();
       const tx = blockManager.connect(signers[3]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       await assertRevert(tx, 'Cannot propose without revealing');
     });
     it('staker should not be able to propose when stake below minStake', async function () {
@@ -721,12 +714,10 @@ describe('BlockManager', function () {
       await mineToNextState();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.setStakerStake(epoch, stakerIdAcc2, 2, staker.stake, tokenAmount('999'));
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       const tx = blockManager.connect(signers[3]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       await assertRevert(tx, 'stake below minimum stake');
     });
     it('should not be able to give sorted votes for stakers who didnt vote in epoch', async function () {
@@ -750,12 +741,10 @@ describe('BlockManager', function () {
       await mineToNextState();// propose
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[7].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       await blockManager.connect(signers[7]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
       await mineToNextState();// dispute
       await blockManager.connect(signers[19]).giveSorted(epoch, 10, [7]);
       const tx = blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
@@ -795,18 +784,15 @@ describe('BlockManager', function () {
       await mineToNextState();// propose
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[7].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       await blockManager.connect(signers[7]).propose(epoch,
         medians,
-        iteration,
-        biggestInfluencerId);
+        iteration);
       const block = await blockManager.getProposedBlock(await getEpoch(), 0);
       assertBNEqual(block.proposerId, stakerIdAcc2, 'ID should be equal');
       assertDeepEqual(block.medians, medians, 'medians should be equal');
       assertBNEqual(block.iteration, iteration, 'iteration should be equal');
-      assertBNEqual(biggestInfluence, block.biggestInfluence, 'biggest Influence should be equal');
       await mineToNextState();// dispute
       await blockManager.connect(signers[19]).giveSorted(epoch, 11, [7]);
 
@@ -820,11 +806,10 @@ describe('BlockManager', function () {
     it('getProposedBlock Function should work as expected', async function () {
       const block = await blockManager.connect(signers[19]).getProposedBlock(await getEpoch(), 0);
       const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      const { proposerId, iteration, biggestInfluence } = await blockManager.proposedBlocks(await getEpoch(), 0);
+      const { proposerId, iteration } = await blockManager.proposedBlocks(await getEpoch(), 0);
       assertBNEqual(block.proposerId, proposerId, 'it should return correct value');
       assertDeepEqual(block.medians, medians, 'it should return correct value');
       assertBNEqual(block.iteration, iteration, 'it should return correct value');
-      assertBNEqual(block.biggestInfluence, biggestInfluence, 'it should return correct value');
     });
     it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
       // commit
@@ -858,12 +843,10 @@ describe('BlockManager', function () {
       await mineToNextState();
       const stakerIdAcc9 = await stakeManager.stakerIds(signers[8].address);
       const staker = await stakeManager.getStaker(stakerIdAcc9);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       await blockManager.connect(signers[8]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       // dispute
       await mineToNextState();
@@ -920,23 +903,20 @@ describe('BlockManager', function () {
       await mineToNextState();
       const stakerIdAcc12 = await stakeManager.stakerIds(signers[10].address);
       const staker12 = await stakeManager.getStaker(stakerIdAcc12);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration1 = await getIteration(voteManager, stakeManager, staker12, biggestInfluence);
+      const iteration1 = await getIteration(voteManager, stakeManager, staker12);
 
       await blockManager.connect(signers[10]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration1,
-        biggestInfluencerId);
+        iteration1);
 
       const stakerIdAcc13 = await stakeManager.stakerIds(signers[11].address);
       const staker13 = await stakeManager.getStaker(stakerIdAcc13);
 
-      const iteration2 = await getIteration(voteManager, stakeManager, staker13, biggestInfluence);
+      const iteration2 = await getIteration(voteManager, stakeManager, staker13);
 
       await blockManager.connect(signers[11]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration2,
-        biggestInfluencerId);
+        iteration2);
 
       // dispute
       await mineToNextState();
@@ -1047,49 +1027,43 @@ describe('BlockManager', function () {
 
       const stakerIdAcc12 = await stakeManager.stakerIds(signers[10].address);
       let staker = await stakeManager.getStaker(stakerIdAcc12);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      let iteration = await getIteration(voteManager, stakeManager, staker);
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[10]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const stakerIdAcc13 = await stakeManager.stakerIds(signers[11].address);
       staker = await stakeManager.getStaker(stakerIdAcc13);
-      iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      iteration = await getIteration(voteManager, stakeManager, staker);
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[11]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const stakerIdAcc14 = await stakeManager.stakerIds(signers[12].address);
       staker = await stakeManager.getStaker(stakerIdAcc14);
-      iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      iteration = await getIteration(voteManager, stakeManager, staker);
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[12]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const stakerIdAcc15 = await stakeManager.stakerIds(signers[13].address);
       staker = await stakeManager.getStaker(stakerIdAcc15);
-      iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      iteration = await getIteration(voteManager, stakeManager, staker);
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[13]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const stakerIdAcc16 = await stakeManager.stakerIds(signers[14].address);
       staker = await stakeManager.getStaker(stakerIdAcc16);
-      iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      iteration = await getIteration(voteManager, stakeManager, staker);
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[14]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       const proposedBlocksLength = await blockManager.getNumProposedBlocks(epoch);
       const sorted = proposedBlocksIteration.slice().sort((a, b) => a - b);
@@ -1100,154 +1074,6 @@ describe('BlockManager', function () {
       }
     });
 
-    it('If Biggest Influence of subquecent, block is larger; it should replace, if smaller; should place it as per itr', async function () {
-      await mineToNextEpoch();
-      const epoch = await getEpoch();
-
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[9]).commit(epoch, commitment1);
-
-      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[10]).commit(epoch, commitment2);
-
-      const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment3 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes3, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[11]).commit(epoch, commitment3);
-
-      const votes4 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment4 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes4, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[12]).commit(epoch, commitment4);
-
-      const votes5 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment5 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes5, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[13]).commit(epoch, commitment5);
-
-      const votes6 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment6 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes6, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[14]).commit(epoch, commitment6);
-
-      await mineToNextState(); // reveal
-
-      await voteManager.connect(signers[9]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[10]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[11]).reveal(epoch, votes3,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[12]).reveal(epoch, votes4,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[13]).reveal(epoch, votes5,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await voteManager.connect(signers[14]).reveal(epoch, votes6,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      await mineToNextState(); // propose state
-
-      const influencerIds = [9, 10, 11, 12, 13];
-      const influenceLargest = (await voteManager.getInfluenceSnapshot(epoch, influencerIds[1]));
-      const influenceSmallest = (await voteManager.getInfluenceSnapshot(epoch, influencerIds[4]));
-      const influenceMid = (await voteManager.getInfluenceSnapshot(epoch, influencerIds[3]));
-
-      const stakerIdAcc12 = await stakeManager.stakerIds(signers[11].address);
-      let staker = await stakeManager.getStaker(stakerIdAcc12);
-
-      // Block with Mid Influence
-      const iteration = await getIteration(voteManager, stakeManager, staker, influenceMid);
-      await blockManager.connect(signers[11]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        influencerIds[3]);
-
-      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
-
-      // Block With Largest Influence, Should Replace Previous one
-      const stakerIdAcc13 = await stakeManager.stakerIds(signers[12].address);
-      staker = await stakeManager.getStaker(stakerIdAcc13);
-
-      const iteration1 = await getIteration(voteManager, stakeManager, staker, influenceLargest);
-      await blockManager.connect(signers[12]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration1,
-        influencerIds[1]);
-      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
-
-      // Block with smaller influence, should be placed as per iteration
-      const stakerIdAcc14 = await stakeManager.stakerIds(signers[13].address);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      const iteration2 = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
-      await blockManager.connect(signers[13]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration2,
-        influencerIds[4]);
-
-      if (iteration1 > iteration2) {
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('1'));
-      } else {
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
-      }
-    });
-    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
-      const epoch = await getEpoch();
-      await mineToNextState();
-      const stakerId = await stakeManager.stakerIds(signers[13].address);
-      const staker = await stakeManager.getStaker(stakerId);
-      const stakeBefore = staker.stake;
-      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
-      await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
-      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
-
-      const slashNums = await stakeManager.slashNums();
-      const bountySlashNum = slashNums[0];
-      const burnSlashNum = slashNums[1];
-      const keepSlashNum = slashNums[2];
-      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(BASE_DENOMINATOR);
-      const bounty = stakeBefore.mul(bountySlashNum).div(BASE_DENOMINATOR);
-      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(BASE_DENOMINATOR);
-      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
-
-      assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');
-
-      // Bounty should be locked
-      const bountyId = await stakeManager.bountyCounter();
-      const bountyLock = await stakeManager.bountyLocks(bountyId);
-      assertBNEqual(bountyLock.bountyHunter, signers[0].address);
-      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-      assertBNEqual(bountyLock.amount, bounty);
-
-      const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
-      await assertRevert(tx, 'Block already has been disputed');
-
-      // Disputing valid block
-      const tx1 = blockManager.disputeBiggestInfluenceProposed(epoch, 1, 10);
-      await assertRevert(tx1, 'Invalid dispute : Influence');
-    });
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -1281,21 +1107,18 @@ describe('BlockManager', function () {
 
       let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
       let staker = await stakeManager.getStaker(stakerIdAcc);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      let iteration = await getIteration(voteManager, stakeManager, staker);
       await blockManager.connect(signers[base]).propose(epoch,
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       for (let i = 1; i < maxAltBlocks + 1; i++) {
         stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
         staker = await stakeManager.getStaker(stakerIdAcc);
-        iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        iteration = await getIteration(voteManager, stakeManager, staker);
         await blockManager.connect(signers[base + i]).propose(epoch,
           [100, 201, 300, 400, 500, 600, 700, 800, 900],
-          iteration,
-          biggestInfluencerId);
+          iteration);
       }
       assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await blockManager.maxAltBlocks());
     });
@@ -1343,16 +1166,14 @@ describe('BlockManager', function () {
 
       await mineToNextState(); // propose state
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       let iteration;
       for (let i = 0; i < 4; i++) {
         const stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
         const staker = await stakeManager.getStaker(stakerIdAcc);
-        iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        iteration = await getIteration(voteManager, stakeManager, staker);
         await blockManager.connect(signers[base + i]).propose(epoch,
           [100, 201, 300, 400, 500, 600, 700, 800, 900],
-          iteration,
-          biggestInfluencerId);
+          iteration);
       }
 
       await mineToNextState(); // dispute state
@@ -1427,21 +1248,18 @@ describe('BlockManager', function () {
 
       let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
       let staker = await stakeManager.getStaker(stakerIdAcc);
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      let iteration = await getIteration(voteManager, stakeManager, staker);
       await blockManager.connect(signers[base]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestInfluencerId);
+        iteration);
 
       for (let i = 1; i < 3; i++) {
         stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
         staker = await stakeManager.getStaker(stakerIdAcc);
-        iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        iteration = await getIteration(voteManager, stakeManager, staker);
         await blockManager.connect(signers[base + i]).propose(epoch,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
-          iteration,
-          biggestInfluencerId);
+          iteration);
       }
 
       await mineToNextState(); // dispute state
@@ -1505,13 +1323,11 @@ describe('BlockManager', function () {
       await mineToNextState();// propose
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc2);
-      const { biggestInfluencerId, biggestInfluence } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const iteration = await getIteration(voteManager, stakeManager, staker);
       const medians = [10, 20, 30, 40, 50, 60, 70, 80, 90];
       await blockManager.connect(signers[5]).propose(epoch,
         medians,
-        iteration,
-        biggestInfluencerId);
+        iteration);
       await mineToNextState();// dispute
       // asset id 8 is a job
       const tx1 = blockManager.connect(signers[19]).giveSorted(epoch, 8, [4]);
