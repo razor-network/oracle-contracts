@@ -103,7 +103,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
-            grantRole(STOKEN_ROLE, address(sToken));
+            _setupRole(STOKEN_ROLE, address(sToken));
             // Minting
             require(sToken.mint(msg.sender, amount, amount), "tokens not minted"); // as 1RZR = 1 sRZR
             totalSupply = amount;
