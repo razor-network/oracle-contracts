@@ -23,6 +23,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     IERC20 public razor;
     IStakedTokenFactory public stakedTokenFactory;
 
+    event SrzrTransfer(address from, address to, uint256 amount, uint32 stakerId);
+
     event StakeChange(
         uint32 epoch,
         uint32 indexed stakerId,
@@ -101,7 +103,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
             stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
-
+            _setupRole(STOKEN_ROLE, address(sToken));
             // Minting
             require(sToken.mint(msg.sender, amount, amount), "tokens not minted"); // as 1RZR = 1 sRZR
             totalSupply = amount;
@@ -252,6 +254,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         } else {
             revert("escape hatch is disabled");
         }
+    }
+
+    function srzrTransfer(
+        address from,
+        address to,
+        uint256 amount,
+        uint32 stakerId
+    ) external override onlyRole(STOKEN_ROLE) {
+        emit SrzrTransfer(from, to, amount, stakerId);
     }
 
     /// @notice Used by staker to set delegation acceptance, its set as False by default
