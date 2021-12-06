@@ -1195,7 +1195,7 @@ describe('BlockManager', function () {
         influencerIds[4]);
       assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
 
-      // Another Block with Mid Influence 
+      // Another Block with Mid Influence
       const stakerIdAcc15 = await stakeManager.stakerIds(signers[14].address);
       staker = await stakeManager.getStaker(stakerIdAcc15);
       const iteration3 = await getIteration(voteManager, stakeManager, staker, influenceMid);
@@ -1203,14 +1203,14 @@ describe('BlockManager', function () {
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration3,
         influencerIds[3]);
-      
-        if (iteration3 > iteration) {
-          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
-          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
-        } else {
-          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
-          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('0'));
-        }
+
+      if (iteration3 > iteration) {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
+      } else {
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('0'));
+      }
 
       // Block With Largest Influence, Should Replace Previous one
       const stakerIdAcc13 = await stakeManager.stakerIds(signers[12].address);
