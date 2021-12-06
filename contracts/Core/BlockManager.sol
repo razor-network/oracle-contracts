@@ -22,7 +22,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint256 timestamp);
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -51,10 +51,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function propose(
         uint32 epoch,
         uint32[] memory medians,
-        uint256 iteration
+        uint256 iteration,
+        uint32 biggestInfluencerId
     ) external initialized checkEpochAndState(State.Propose, epoch, epochLength) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, proposerId, epoch), "not elected");
+        require(_isElectedProposer(iteration, biggestInfluencerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
@@ -62,12 +63,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
 
+        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration);
-        _insertAppropriately(epoch, numProposedBlocks, iteration);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
+        _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
         epochLastProposed[proposerId] = epoch;
         numProposedBlocks = numProposedBlocks + 1;
-        emit Proposed(epoch, proposerId, medians, iteration, block.timestamp);
+        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -136,6 +138,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
     }
 
+    function disputeBiggestInfluenceProposed(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 correctBiggestInfluencerId
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
+        require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
+        return _executeDispute(epoch, blockIndex, blockId);
+    }
+
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
@@ -199,7 +213,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _insertAppropriately(
         uint32 epoch,
         uint32 blockId,
-        uint256 iteration
+        uint256 iteration,
+        uint256 biggestInfluence
     ) internal {
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
@@ -210,8 +225,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
 
         for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
+            // Replace : New Block has better biggest influence
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
+                sortedProposedBlockIds[epoch][i] = blockId;
+                return;
+            }
             // Push and Shift
-            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
+            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 sortedProposedBlockIds[epoch].push(blockId);
 
                 sortedProposedBlockslength = sortedProposedBlockslength + 1;
@@ -264,6 +284,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _isElectedProposer(
         uint256 iteration,
+        uint32 biggestInfluencerId,
         uint32 stakerId,
         uint32 epoch
     ) internal view initialized returns (bool) {
@@ -279,7 +300,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
-        uint256 biggestInfluence = voteManager.getBiggestInfluence(epoch);
+        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         uint256 influence = voteManager.getInfluenceSnapshot(epoch, stakerId);
         if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
         return true;

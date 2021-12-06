@@ -100,11 +100,10 @@ const getBiggestInfluenceAndId = async (stakeManager, voteManager) => {
   return { biggestInfluence, biggestInfluencerId };
 };
 
-const getIteration = async (voteManager, stakeManager, staker) => {
+const getIteration = async (voteManager, stakeManager, staker, biggestInfluence) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const epoch = getEpoch();
-  const biggestInfluence = await voteManager.getBiggestInfluence(epoch);
   const influence = await voteManager.getInfluenceSnapshot(epoch, stakerId);
   const randaoHash = await voteManager.getRandaoHash();
   if (Number(influence) === 0) return 0; // following loop goes in infinite loop if this condn not added

@@ -14,6 +14,5 @@ contract VoteStorage {
     // mapping(uint32 => mapping(uint8 => mapping(uint32 => uint256))) public voteWeights;
     //epoch-> stakerid->influe
     mapping(uint32 => mapping(uint32 => uint256)) public influenceSnapshot;
-    mapping(uint32 => uint256) public biggestInfluence;
     bytes32 public secrets;
 }

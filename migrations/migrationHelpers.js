@@ -146,7 +146,7 @@ const getCollections = async () => {
   }
 };
 
-const currentState = async (numStates, stateLength) => {
+const currentState = async(numStates, stateLength) => {
   const blockNumber = await ethers.provider.getBlockNumber();
   return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
 };
