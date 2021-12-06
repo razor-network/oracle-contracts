@@ -224,14 +224,21 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             return;
         }
 
-        for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
-            // Replace : New Block has better biggest influence
-            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].biggestInfluence < biggestInfluence) {
-                sortedProposedBlockIds[epoch][i] = blockId;
-                return;
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence > biggestInfluence) {
+            return;
+        }
+
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence < biggestInfluence) {
+            for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
+                sortedProposedBlockIds[epoch].pop();
             }
+            sortedProposedBlockIds[epoch].push(blockId);
+            return;
+        }
+
+        for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
             // Push and Shift
-            else if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
+            if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][i]].iteration > iteration) {
                 sortedProposedBlockIds[epoch].push(blockId);
 
                 sortedProposedBlockslength = sortedProposedBlockslength + 1;

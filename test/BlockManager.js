@@ -1100,7 +1100,7 @@ describe('BlockManager', function () {
       }
     });
 
-    it('If Biggest Influence of subquecent, block is larger; it should replace, if smaller; should place it as per itr', async function () {
+    it('If Biggest Influence of subquecent, block is larger; it should replace all the other blocks, if smaller; should not be added', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -1185,6 +1185,33 @@ describe('BlockManager', function () {
 
       assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
 
+      // Block with smaller influence, should not be added
+      const stakerIdAcc14 = await stakeManager.stakerIds(signers[13].address);
+      staker = await stakeManager.getStaker(stakerIdAcc14);
+      const iteration2 = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
+      await blockManager.connect(signers[13]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration2,
+        influencerIds[4]);
+      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
+
+      // Another Block with Mid Influence 
+      const stakerIdAcc15 = await stakeManager.stakerIds(signers[14].address);
+      staker = await stakeManager.getStaker(stakerIdAcc15);
+      const iteration3 = await getIteration(voteManager, stakeManager, staker, influenceMid);
+      await blockManager.connect(signers[14]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration3,
+        influencerIds[3]);
+      
+        if (iteration3 > iteration) {
+          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
+          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
+        } else {
+          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
+          assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('0'));
+        }
+
       // Block With Largest Influence, Should Replace Previous one
       const stakerIdAcc13 = await stakeManager.stakerIds(signers[12].address);
       staker = await stakeManager.getStaker(stakerIdAcc13);
@@ -1194,59 +1221,7 @@ describe('BlockManager', function () {
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration1,
         influencerIds[1]);
-      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
-
-      // Block with smaller influence, should be placed as per iteration
-      const stakerIdAcc14 = await stakeManager.stakerIds(signers[13].address);
-      staker = await stakeManager.getStaker(stakerIdAcc14);
-      const iteration2 = await getIteration(voteManager, stakeManager, staker, influenceSmallest);
-      await blockManager.connect(signers[13]).propose(epoch,
-        [100, 201, 300, 400, 500, 600, 700, 800, 900],
-        iteration2,
-        influencerIds[4]);
-
-      if (iteration1 > iteration2) {
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('1'));
-      } else {
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
-      }
-    });
-    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
-      const epoch = await getEpoch();
-      await mineToNextState();
-      const stakerId = await stakeManager.stakerIds(signers[13].address);
-      const staker = await stakeManager.getStaker(stakerId);
-      const stakeBefore = staker.stake;
-      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
-      await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
-      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
-
-      const slashNums = await stakeManager.slashNums();
-      const bountySlashNum = slashNums[0];
-      const burnSlashNum = slashNums[1];
-      const keepSlashNum = slashNums[2];
-      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(BASE_DENOMINATOR);
-      const bounty = stakeBefore.mul(bountySlashNum).div(BASE_DENOMINATOR);
-      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(BASE_DENOMINATOR);
-      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
-
-      assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');
-
-      // Bounty should be locked
-      const bountyId = await stakeManager.bountyCounter();
-      const bountyLock = await stakeManager.bountyLocks(bountyId);
-      assertBNEqual(bountyLock.bountyHunter, signers[0].address);
-      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
-      assertBNEqual(bountyLock.amount, bounty);
-
-      const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
-      await assertRevert(tx, 'Block already has been disputed');
-
-      // Disputing valid block
-      const tx1 = blockManager.disputeBiggestInfluenceProposed(epoch, 1, 10);
-      await assertRevert(tx1, 'Invalid dispute : Influence');
+      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('3'));
     });
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
       await mineToNextEpoch();
