@@ -219,7 +219,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
         if (sortedProposedBlockslength == 0) {
-            sortedProposedBlockIds[epoch].push(0);
+            sortedProposedBlockIds[epoch].push(blockId);
             blockIndexToBeConfirmed = 0;
             return;
         }
