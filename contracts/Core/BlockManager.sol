@@ -138,6 +138,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
     }
 
+    function disputeBiggestInfluenceProposed(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 correctBiggestInfluencerId
+    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
+        require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
+        return _executeDispute(epoch, blockIndex, blockId);
+    }
+
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external

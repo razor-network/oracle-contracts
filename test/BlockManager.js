@@ -1223,6 +1223,86 @@ describe('BlockManager', function () {
         influencerIds[1]);
       assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('3'));
     });
+
+    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[10]).commit(epoch, commitment1);
+      await voteManager.connect(signers[9]).commit(epoch, commitment1);
+      await voteManager.connect(signers[8]).commit(epoch, commitment1);
+
+      await mineToNextState();
+
+      await voteManager.connect(signers[10]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await voteManager.connect(signers[9]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await voteManager.connect(signers[8]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      await mineToNextState();
+      const stakerIdAcc10 = await stakeManager.stakerIds(signers[9].address);
+      let staker = await stakeManager.getStaker(stakerIdAcc10);
+      const influenceMid = (await voteManager.getInfluenceSnapshot(epoch, 12));
+      const iteration = await getIteration(voteManager, stakeManager, staker, influenceMid);
+      await blockManager.connect(signers[9]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration,
+        12);
+
+      const stakerIdAcc11 = await stakeManager.stakerIds(signers[8].address);
+      staker = await stakeManager.getStaker(stakerIdAcc11);
+      const iteration1 = await getIteration(voteManager, stakeManager, staker, influenceMid);
+      await blockManager.connect(signers[8]).propose(epoch,
+        [100, 201, 300, 400, 500, 600, 700, 800, 900],
+        iteration1,
+        12);
+
+      await mineToNextState();
+      let stakerId;
+      if (iteration < iteration1) {
+        stakerId = await stakeManager.stakerIds(signers[9].address);
+      } else {
+        stakerId = await stakeManager.stakerIds(signers[8].address);
+      }
+      staker = await stakeManager.getStaker(stakerId);
+      const stakeBefore = staker.stake;
+      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
+      await blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('1'));
+
+      const slashNums = await stakeManager.slashNums();
+      const bountySlashNum = slashNums[0];
+      const burnSlashNum = slashNums[1];
+      const keepSlashNum = slashNums[2];
+      const amountToBeBurned = stakeBefore.mul(burnSlashNum).div(BASE_DENOMINATOR);
+      const bounty = stakeBefore.mul(bountySlashNum).div(BASE_DENOMINATOR);
+      const amountTobeKept = stakeBefore.mul(keepSlashNum).div(BASE_DENOMINATOR);
+      const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
+
+      assertBNEqual((await stakeManager.getStaker(stakerId)).stake, stakeBefore.sub(slashPenaltyAmount), 'staker did not get slashed');
+
+      // Bounty should be locked
+      const bountyId = await stakeManager.bountyCounter();
+      const bountyLock = await stakeManager.bountyLocks(bountyId);
+      assertBNEqual(bountyLock.bountyHunter, signers[0].address);
+      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+      assertBNEqual(bountyLock.amount, bounty);
+
+      const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);
+      await assertRevert(tx, 'Block already has been disputed');
+
+      // Disputing valid block
+      // const tx1 = blockManager.disputeBiggestInfluenceProposed(epoch, 1, 10);
+      // await assertRevert(tx1, 'Invalid dispute : Influence');
+    });
+
     it('proposed blocks length should not be more than maxAltBlocks', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
@@ -1291,7 +1371,7 @@ describe('BlockManager', function () {
     it('BlockToBeConfirmed should always have lowest iteration and should be valid', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      const base = 8;
+      const base = 10;
 
       for (let i = 0; i < 4; i++) {
         await razor.transfer(signers[base + i].address, tokenAmount('420000'));
