@@ -1206,9 +1206,9 @@ describe('BlockManager', function () {
 
       if (iteration3 > iteration) {
         assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('0'));
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('2'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('1'));
       } else {
-        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
+        assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('1'));
         assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 1), toBigNumber('0'));
       }
 
@@ -1221,7 +1221,7 @@ describe('BlockManager', function () {
         [100, 201, 300, 400, 500, 600, 700, 800, 900],
         iteration1,
         influencerIds[1]);
-      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('3'));
+      assertBNEqual(await blockManager.sortedProposedBlockIds(epoch, 0), toBigNumber('2'));
     });
 
     it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {

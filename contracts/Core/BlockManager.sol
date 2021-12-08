@@ -68,7 +68,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
         _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
         epochLastProposed[proposerId] = epoch;
-        numProposedBlocks = numProposedBlocks + 1;
         emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
     }
 
@@ -221,6 +220,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (sortedProposedBlockslength == 0) {
             sortedProposedBlockIds[epoch].push(0);
             blockIndexToBeConfirmed = 0;
+            numProposedBlocks = numProposedBlocks + 1;
             return;
         }
 
@@ -233,6 +233,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
                 sortedProposedBlockIds[epoch].pop();
             }
             sortedProposedBlockIds[epoch].push(blockId);
+            numProposedBlocks = numProposedBlocks + 1;
             return;
         }
 
@@ -253,12 +254,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
                     sortedProposedBlockIds[epoch].pop();
                 }
 
+                numProposedBlocks = numProposedBlocks + 1;
                 return;
             }
         }
         // Worst Iteration and for all other blocks, influence was >=
         if (sortedProposedBlockIds[epoch].length < maxAltBlocks) {
             sortedProposedBlockIds[epoch].push(blockId);
+            numProposedBlocks = numProposedBlocks + 1;
         }
     }
 
