@@ -39,7 +39,7 @@ jobs:
 
   test:
     docker:
-      - image: "cimg/node:16.5"
+      - image: cimg/node:16.5
     resource_class: large
     steps:
       - attach_workspace:
