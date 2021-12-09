@@ -12,8 +12,12 @@ then
     rm -rf deployed/$ENV
 fi
 
+echo "Compiling....."
 npx hardhat --config $ENV.hardhat.config.js compile
+
+echo "Migrating....."
 npx hardhat --config $ENV.hardhat.config.js run migrations/deploy_all.js --network $ENV 
+
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi
