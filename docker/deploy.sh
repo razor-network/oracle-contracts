@@ -14,7 +14,10 @@ then
     rm -rf deployed/$ENV
 fi
 
-cp .env.$ENV .env
+if [[ -f .env.$ENV ]]
+then
+    cp .env.$ENV .env
+fi
 
 npm run compile
 npx hardhat run migrations/deploy_all.js --network $ENV

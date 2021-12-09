@@ -41,31 +41,11 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 100000,
-          },
-        },
-      },
-    ],
-    overrides: {
-      "contracts/Core/StakeManager.sol": {
-        version: "0.8.4",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 50000,
-          },
-        },
-      },
-      "contracts/Core/BlockManager.sol": {
-        version: "0.8.4",
-        settings: {
-          optimizer: {
-            enabled: true,
             runs: 30000,
           },
         },
       },
-    },
+    ],
   },
   networks: {
     local: {
@@ -81,6 +61,12 @@ module.exports = {
       url: PROVIDER_URL || "",
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
+    },
+    hardhat: {
+      mining: {
+        auto: false,
+        interval: 1000,
+      },
     },
   },
   etherscan: {
@@ -99,6 +85,6 @@ module.exports = {
   },
   tenderly: {
     username: "razor",
-    project: "razor-network",
+    project: "razor-test",
   },
 };

@@ -1,7 +1,7 @@
 account_id: ""
 exports:
   hardhat:
-    project_slug: razor/razor-network
+    project_slug: razor-test
     rpc_address: 127.0.0.1:8545
     protocol: ""
     forked_network: ""
@@ -29,7 +29,7 @@ exports:
       istanbul_block: 0
       petersburg_block: 0
     forked_network: ""
-    project_slug: razor/razor-network
+    project_slug: razor-test
     protocol: ""
     rpc_address: 127.0.0.1:8545
 project_slug: ""

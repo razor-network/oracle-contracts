@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
-const jsonfile = require('jsonfile');
-const hre = require('hardhat');
-const axios = require('axios');
+const jsonfile = require("jsonfile");
+const hre = require("hardhat");
+const axios = require("axios");
 
 const { BigNumber } = ethers;
 
@@ -10,9 +10,11 @@ const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
 const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
 
-const readOldDeploymentFile = async () => jsonfile.readFile(OLD_DEPLOYMENT_FILE);
+const readOldDeploymentFile = async () =>
+  jsonfile.readFile(OLD_DEPLOYMENT_FILE);
 
-const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
+const writeDeploymentFile = async (data) =>
+  jsonfile.writeFile(DEPLOYMENT_FILE, data);
 
 const appendDeploymentFile = async (data) => {
   let deployments = {};
@@ -73,7 +75,7 @@ const deployContract = async (
       address: contract.address,
     });
   } catch (err) {
-    console.log('Error pushing to tenderly:', err);
+    console.log("Error pushing to tenderly:", err);
   }
 
   await appendDeploymentFile({ [contractName]: contract.address });
@@ -85,18 +87,18 @@ const deployContract = async (
   };
 
   // We need to set explicitly for these as it was causing conflicts with OpenZeplin
-  if (contractName === 'Structs') {
-    config.contract = 'contracts/lib/Structs.sol:Structs';
+  if (contractName === "Structs") {
+    config.contract = "contracts/lib/Structs.sol:Structs";
   }
 
-  if (contractName === 'RAZOR') {
-    config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  if (contractName === "RAZOR") {
+    config.contract = "contracts/tokenization/RAZOR.sol:RAZOR";
   }
 
   try {
-    await hre.run('verify:verify', config);
+    await hre.run("verify:verify", config);
   } catch (err) {
-    console.error('Etherscan verification failed', err);
+    console.error("Etherscan verification failed", err);
   }
 
   return contract;
@@ -124,14 +126,15 @@ const getdeployedContractInstance = async (
   return { Contract, contractInstance };
 };
 
-const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master';
+const SOURCE =
+  "https://raw.githubusercontent.com/razor-network/datasources/master";
 
 const getJobs = async () => {
   try {
     const jobs = await axios.get(`${SOURCE}/jobs.json`);
     return jobs.data;
   } catch (error) {
-    console.log('Error while fetching jobs', error.response.body);
+    console.log("Error while fetching jobs", error.response.body);
     return null;
   }
 };
@@ -141,14 +144,14 @@ const getCollections = async () => {
     const collections = await axios.get(`${SOURCE}/collections.json`);
     return collections.data;
   } catch (error) {
-    console.log('Error while fetching collections', error.response.body);
+    console.log("Error while fetching collections", error.response.body);
     return null;
   }
 };
 
-const currentState = async(numStates, stateLength) => {
+const currentState = async (numStates, stateLength) => {
   const blockNumber = await ethers.provider.getBlockNumber();
-  return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
+  return Number(BigNumber.from(blockNumber).div(stateLength).mod(numStates));
 };
 
 function sleep(ms) {
@@ -159,7 +162,7 @@ const waitForConfirmState = async (numStates, stateLength) => {
   let state = await currentState(numStates, stateLength);
   while (state !== 4) {
     state = await currentState(numStates, stateLength);
-    console.log('Current state', state);
+    console.log("Current state", state);
     await sleep(10000);
   }
 };

@@ -12,10 +12,14 @@ then
     rm -rf deployed/$ENV
 fi
 
-cp .env.$ENV .env
-
-npm run compile
-npx hardhat run migrations/deploy_all.js --network $ENV
+if [[ $ENV == 'local' ]]
+then
+    npx hardhat --config hardhat.config.js compile    
+    npx hardhat run migrations/deploy_all.js --network $ENV 
+else
+    npx hardhat --config $ENV.hardhat.config.js compile
+    npx hardhat --config $ENV.hardhat.config.js run migrations/deploy_all.js --network $ENV 
+fi
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi
