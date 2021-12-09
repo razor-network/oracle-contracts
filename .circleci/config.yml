@@ -140,7 +140,22 @@ jobs:
             address='{"Governance": "0x00613a2a5040615B741011Be2EEA793eD68847A8", "BlockManager": "0x13A01446b3FB0924F66DA18e20E3BCC6142DBEba","AssetManager": "0x213343a416C869112751Eb12A948aF932710Ee13","StakeManager": "0x1b20b61B23dAF44b897F9aA49A257eB2399f93bd","RewardManager": "0x4F8d72C05C37440FDdf473cd84EE4341782A1C96","VoteManager": "0xaA43956F27401f94AE2dc1dcF3D7336AF1e82456","Delegator": "0xe2De3Bf42CA96724ADd97D7e56886C3aCE82123b","RAZOR": "0x8fe49dAc6e13670d53b25281a8e75e4C49A0833D","StakedTokenFactory": "0x69c2cAbB848A17a39B411009ce39E72FC2c47245","RandomNoManager": "0x1033993Af488e56405e1840E2760C8C73C1B661E"}'
             echo $address >.previous-deployment-addresses
             npm run deploy:mumbai
-
+  git-commit:
+    docker:
+      - image: "cimg/node:16.5"
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Commit into git
+          command: |
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "shrikant1997upadhyay@gmail.com"
+            git config user.name "Shrikant Upadhyay"
+            git commit --allow-empty -m "Commit from CircleCI"
+            # Push quietly to prevent showing the token in log
+            git push -q https://${GITHUB_TOKEN}@github.com/giantswarm/docs.git master
 notify:
   webhooks:
     - url: >-
@@ -170,7 +185,8 @@ workflows:
   deploy:
     jobs:
       - checkout_source
-      - deploy-contracts:
-          requires:
-            - checkout_source
-          context: Stag
+      # - deploy-contracts:
+      #     requires:
+      #       - checkout_source
+      #     context: Stag
+      - git-commit
