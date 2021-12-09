@@ -144,7 +144,7 @@ jobs:
     docker:
       - image: "cimg/node:16.5"
         environment:
-          CIRCLE_TOKEN: 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
+          GIT_TOKEN: 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
     resource_class: medium
     steps:
       - attach_workspace:
@@ -157,7 +157,7 @@ jobs:
             git config user.name "Shrikant Upadhyay"
             git commit --allow-empty -m "Commit from CircleCI"
             # Push quietly to prevent showing the token in log
-            git push -q https://$CIRCLE_TOKEN@github.com/Shrikant1212/contracts.git
+            git push -q https://$GIT_TOKEN@github.com/Shrikant1212/contracts.git
 notify:
   webhooks:
     - url: >-
