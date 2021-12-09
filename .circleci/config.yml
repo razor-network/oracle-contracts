@@ -133,36 +133,36 @@ jobs:
           paths:
             - node_modules
       - run:
-          name: Check env vars
+          name: Deploy Contracts
           command: |
-            printenv
+            npm run deploy:mumbai
 
 notify:
   webhooks:
     - url: >-
         https://coveralls.io/webhook?repo_token=${process.env.COVERALLS_REPO_TOKEN}
 workflows:
-  tests:
-    jobs:
-      - checkout_source
-      - install_dependencies:
-          requires:
-            - checkout_source
-      - test:
-          requires:
-            - install_dependencies
-      - coverage:
-          requires:
-            - install_dependencies
-      - slither:
-          requires:
-            - install_dependencies
-      - lint:
-          requires:
-            - install_dependencies
-      - gasCompare:
-          requires:
-            - install_dependencies
+  # tests:
+  #   jobs:
+  #     - checkout_source
+  #     - install_dependencies:
+  #         requires:
+  #           - checkout_source
+  #     - test:
+  #         requires:
+  #           - install_dependencies
+  #     - coverage:
+  #         requires:
+  #           - install_dependencies
+  #     - slither:
+  #         requires:
+  #           - install_dependencies
+  #     - lint:
+  #         requires:
+  #           - install_dependencies
+  #     - gasCompare:
+  #         requires:
+  #           - install_dependencies
   deploy:
     jobs:
       - checkout_source
