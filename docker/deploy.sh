@@ -14,10 +14,9 @@ then
     rm -rf deployed/$ENV
 fi
 
-cp .env.$ENV .env
 
-npm run compile
-npx hardhat run migrations/deploy_all.js --network $ENV
+npx hardhat --config $ENV.hardhat.config.js compile
+npx hardhat --config $ENV.hardhat.config.js run migrations/deploy_all.js --network $ENV 
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi

@@ -1,10 +1,14 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9" # optional since v1.27.0
 services:
   contracts:
     build: .
+    env_file: .env.local
+    tty: true
+    container_name: contracts
     ports:
       - "8545:8545"
     volumes:
+      # - .env.local:/usr/src/app/.env.local
       - type: bind
         source: ./deployed
         target: /usr/src/app/deployed
