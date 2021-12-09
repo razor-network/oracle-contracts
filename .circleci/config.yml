@@ -155,7 +155,7 @@ jobs:
             git config user.name "Shrikant Upadhyay"
             git commit --allow-empty -m "Commit from CircleCI"
             # Push quietly to prevent showing the token in log
-            git push -q https://${GITHUB_TOKEN}@github.com/giantswarm/docs.git master
+            git push -q https://${GITHUB_TOKEN}@github.com/giantswarm/docs.git configure-staging-deployment
 notify:
   webhooks:
     - url: >-
