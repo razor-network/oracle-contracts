@@ -189,4 +189,6 @@ workflows:
       #     requires:
       #       - checkout_source
       #     context: Stag
-      - git-commit
+      - git-commit:
+          requires:
+            - checkout_source
