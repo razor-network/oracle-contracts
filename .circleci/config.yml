@@ -128,6 +128,7 @@ jobs:
       - run:
           name: Install dependencies
           command: |
+            ls
             npm install
       - save_cache:
           key: dependencies-{{ checksum "package-lock.json" }}
