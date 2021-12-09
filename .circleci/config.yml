@@ -135,6 +135,7 @@ jobs:
       - run:
           name: Deploy Contracts
           command: |
+            printenv > .env.mumbai
             npm run deploy:mumbai
 
 notify:
