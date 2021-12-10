@@ -143,8 +143,6 @@ jobs:
   git-commit:
     docker:
       - image: "cimg/node:16.5"
-        environment:
-          GIT_TOKEN: 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
     resource_class: medium
     steps:
       - attach_workspace:
@@ -158,6 +156,24 @@ jobs:
             git commit --allow-empty -m "Commit from CircleCI"
             # Push quietly to prevent showing the token in log
       #git push -q https://$GIT_TOKEN@github.com/Shrikant1212/contracts.git
+  publish-package:
+    docker:
+      - image: "cimg/node:16.5"
+        environment:
+          NPM_TOKEN: //122.169.32.237:8083/:_authToken=xCbuEcS1bCaqR7QkFyyOMR8A69M97XlkJBms2AdZXZo=
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Create .npmrc
+          command: |
+            echo $NPM > .npmrc
+      - run:
+          name: publish package
+          command: |
+            npm publish --registry http://122.169.32.237:8083
+
 notify:
   webhooks:
     - url: >-
@@ -191,6 +207,9 @@ workflows:
       #     requires:
       #       - checkout_source
       #     context: Stag
-      - git-commit:
+      # - git-commit:
+      #     requires:
+      #       - checkout_source
+      - publish-package:
           requires:
             - checkout_source
