@@ -72,6 +72,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     event ResetLock(address staker, uint32 epoch);
 
+    event CommissionChanged(uint32 indexed stakerId, uint8 commision);
+
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -286,6 +288,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         }
         stakers[stakerId].epochCommissionLastUpdated = epoch;
         stakers[stakerId].commission = commission;
+        emit CommissionChanged(stakerId, commission);
     }
 
     /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
