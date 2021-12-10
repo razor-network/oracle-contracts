@@ -159,8 +159,6 @@ jobs:
   publish-package:
     docker:
       - image: "cimg/node:16.5"
-        environment:
-          NPM_TOKEN: xCbuEcS1bCaqR7QkFyyOMR8A69M97XlkJBms2AdZXZo=
     resource_class: medium
     steps:
       - attach_workspace:
@@ -168,13 +166,11 @@ jobs:
       - run:
           name: Create .npmrc
           command: |
-            echo //122.169.32.237:8083/:_authToken=$NPM_TOKEN > .npmrc
+            echo //$NPM_REGISTRY_STAG/:_authToken=$NPM_TOKEN_STAG > .npmrc
       - run:
           name: publish package
           command: |
-            ls
-            cat .npmrc
-            npm publish --registry http://122.169.32.237:8083
+            npm publish --registry $NPM_REGISTRY_STAG
 
 notify:
   webhooks:
