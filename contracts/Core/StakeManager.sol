@@ -138,14 +138,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @notice Delegation
-    /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
-    function delegate(
-        uint32 epoch,
-        uint32 stakerId,
-        uint256 amount
-    ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+    function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
+        uint32 epoch = _getEpoch(epochLength);
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
@@ -172,17 +168,13 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // and should wait for params.withdraw_after period
     // after which she can call withdraw() in withdrawReleasePeriod.
     // If this period pass, lock expires and she will have to extendLock() to able to withdraw again
-    /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
-    function unstake(
-        uint32 epoch,
-        uint32 stakerId,
-        uint256 sAmount
-    ) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+    function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
         State currentState = _getState(epochLength);
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
+        uint32 epoch = _getEpoch(epochLength);
 
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
@@ -228,9 +220,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // Both Staker and Delegator should have their locked funds(sRZR) present in
     //their wallet at time of if not withdraw reverts
     // And they have to use extendLock()
-    /// @param epoch The Epoch value for which staker is requesting to unstake
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
-    function withdraw(uint32 epoch, uint32 stakerId) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+    function withdraw(uint32 stakerId) external initialized whenNotPaused {
+        uint32 epoch = _getEpoch(epochLength);
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
