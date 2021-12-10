@@ -170,7 +170,7 @@ jobs:
       - run:
           name: publish package
           command: |
-            npm publish --registry $NPM_REGISTRY_STAG
+            npm publish --registry http://$NPM_REGISTRY_STAG
 
 notify:
   webhooks:
