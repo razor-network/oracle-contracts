@@ -211,3 +211,4 @@ workflows:
       - publish-package:
           requires:
             - checkout_source
+          context: Stag
