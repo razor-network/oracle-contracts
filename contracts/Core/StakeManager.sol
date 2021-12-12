@@ -70,7 +70,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
 
-    event ResetLock(address staker, uint32 epoch);
+    event ResetLock(uint32 indexed stakerId, address staker, uint32 epoch);
+
+    event ExtendLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
     event CommissionChanged(uint32 indexed stakerId, uint8 commision);
 
@@ -300,6 +302,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 penalty = (lock.amount * extendLockPenalty) / 100;
         lock.amount = lock.amount - penalty;
         lock.withdrawAfter = epoch;
+        emit ExtendLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 
     /// @notice External function for setting stake of the staker
@@ -483,6 +486,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
-        emit ResetLock(msg.sender, _getEpoch(epochLength));
+        emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 }
