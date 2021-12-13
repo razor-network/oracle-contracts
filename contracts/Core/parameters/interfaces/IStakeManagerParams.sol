@@ -10,9 +10,9 @@ interface IStakeManagerParams {
         uint16 _keep
     ) external;
 
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
+    function setLockPeriod(uint8 _lockPeriod) external;
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external;
+    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external;
 
     function setExtendLockPenalty(uint8 _extendLockPenalty) external;
 

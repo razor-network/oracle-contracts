@@ -267,7 +267,7 @@ describe('StakeManager', function () {
     it('Staker should not be able to withdraw if didnt unstake', async function () {
       const epoch = await getEpoch();
       const stakerId = await stakeManager.stakerIds(signers[1].address);
-      const tx = stakeManager.connect(signers[1]).withdraw(epoch, stakerId);
+      const tx = stakeManager.connect(signers[1]).initiateWithdraw(epoch, stakerId);
       await assertRevert(tx, 'Did not unstake');
     });
 
@@ -278,9 +278,9 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Non-Positive Amount');
     });
 
-    it('Staker should not be able to call extendLock if lock amount is zero', async function () {
-      const tx = stakeManager.connect(signers[1]).extendLock(1);
-      await assertRevert(tx, 'Existing Lock doesnt exist');
+    it('Staker should not be able to call extendUnstakeLock if lock amount is zero', async function () {
+      const tx = stakeManager.connect(signers[1]).extendUnstakeLock(1);
+      await assertRevert(tx, 'Unstake Lock doesnt exist');
     });
 
     it('Staker should not be able to unstake more than his sRZR balance', async function () {
@@ -299,48 +299,65 @@ describe('StakeManager', function () {
       // we're doing a partial unstake here , though full unstake has the same procedure
       const amount = tokenAmount('20000');
       const staker = await stakeManager.getStaker(1);
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      const totalSupply = await sToken.totalSupply();
       await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
-      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
-      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
-      assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-      assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress, 0);
+      assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
+      assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     });
 
-    it('Staker should not be able to unstake when there is an existing lock', async function () {
+    it('Staker should not be able to unstake when there is an existing unstake lock', async function () {
       const epoch = await getEpoch();
       const amount = tokenAmount('20000');
       const tx = stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
-      await assertRevert(tx, 'Existing Lock');
+      await assertRevert(tx, 'Existing Unstake Lock');
     });
 
-    it('Staker should not be able to withdraw in withdraw lock period', async function () {
+    it('Staker should not be able to initiate withdraw in unstake lock period', async function () {
       // skip to last epoch of the lock period
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
         await mineToNextEpoch();
       }
       const epoch = await getEpoch();
-      const staker = await stakeManager.getStaker(1);
+      let staker = await stakeManager.getStaker(1);
       const prevStake = staker.stake;
-      const tx = stakeManager.connect(signers[1]).withdraw(epoch, 1);
+      const tx = stakeManager.connect(signers[1]).initiateWithdraw(epoch, 1);
       await assertRevert(tx, 'Withdraw epoch not reached');
+      staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, prevStake, 'Stake should not change');
     });
 
-    it('Staker should be able to withdraw after withdraw lock period if it didnt reveal in withdraw lock period', async function () {
+    it('Staker should be able to initiate withdraw after lock period', async function () {
       let staker = await stakeManager.getStaker(1);
       let epoch = await getEpoch();
 
       const prevStake = staker.stake;
-      const prevBalance = await razor.balanceOf(staker._address);
-      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      let lock = await stakeManager.locks(staker._address, staker.tokenAddress, 0);
+      const rAmount = (lock.amount.mul(staker.stake)).div(totalSupply);
       await mineToNextEpoch();
       epoch = await getEpoch();
-      await (stakeManager.connect(signers[1]).withdraw(epoch, 1));
+      await (stakeManager.connect(signers[1]).initiateWithdraw(epoch, 1));
+      lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
+      staker = await stakeManager.getStaker(1);
+      assertBNEqual(rAmount, lock.amount, 'incorrect Amount locked');
+      assertBNEqual(staker.stake.add(lock.amount), prevStake, 'Stake not reduced');
+    });
+
+    it('Staker should be able to unlock withdraw after lock period', async function () {
+      let staker = await stakeManager.getStaker(1);
+
+      const prevStake = staker.stake;
+      const prevBalance = await razor.balanceOf(signers[1].address);
+      const lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
+      for (let i = 0; i <= WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      let epoch = await getEpoch();
+      await (stakeManager.connect(signers[1]).unlockWithdraw(epoch, 1));
       staker = await stakeManager.getStaker(1);
       assertBNEqual(staker.stake, prevStake, 'Stake should not change');
-      assertBNEqual(await razor.balanceOf(staker._address), prevBalance.add(lock.amount), 'Balance should be equal');
+      assertBNEqual(prevBalance.add(lock.amount), await razor.balanceOf(signers[1].address), 'Balance should be equal');
     });
 
     it('should allow staker to add stake after withdraw if either withdrawnAmount is not the whole stake', async function () {
@@ -361,17 +378,28 @@ describe('StakeManager', function () {
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const amount = await sToken.balanceOf(staker._address);
       await stakeManager.connect(signers[1]).unstake(epoch, 1, amount);
+      let lock = await stakeManager.locks(staker._address, staker.tokenAddress, 0);
+      assertBNEqual(await sToken.balanceOf(staker._address), lock.amount, 'sToken stake not unstaked');
+
+      for (let i = 0; i <= WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[1]).initiateWithdraw(epoch, 1);
+      lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
+      assertBNEqual(staker.stake, lock.amount, 'stake not locked');
+      staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(await sToken.balanceOf(staker._address), toBigNumber('0'), 'sToken stake not burnt');
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD - 1; i++) {
+      assertBNEqual(staker.stake, toBigNumber('0'), 'stake not removed');
+
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
       const prevBalance = await razor.balanceOf(staker._address);
-      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
       await mineToNextEpoch();
       epoch = await getEpoch();
-      await (stakeManager.connect(signers[1]).withdraw(epoch, 1));
+      await (stakeManager.connect(signers[1]).unlockWithdraw(epoch, 1));
       staker = await stakeManager.getStaker(stakerId);
-      assertBNEqual(staker.stake, toBigNumber('0'), 'Updated stake is not equal to calculated stake');
       assertBNEqual(await razor.balanceOf(staker._address), prevBalance.add(lock.amount), 'Balance should be equal');
       const stake = await razor.balanceOf(staker._address);
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
@@ -385,21 +413,15 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Nonpositive stake');
     });
 
-    it('staker should be able to withdraw even if they have participated in the withdraw lock period', async function () {
+    it('staker should be able to withdraw even if they have participated in the unstake and withdraw lock period', async function () {
       // @notice: Checking for Staker 2
       const stake = tokenAmount('10000');
       let epoch = await getEpoch();
-      let staker = await stakeManager.getStaker(2);
-      const prevStake = staker.stake;
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      const totalSupply = await sToken.totalSupply();
-      const rAmount = (stake.mul(staker.stake)).div(totalSupply);
       await stakeManager.connect(signers[2]).unstake(epoch, 2, stake);
-      const lock = await stakeManager.locks(staker._address, staker.tokenAddress);
-      staker = await stakeManager.getStaker(2);
-      assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-      assertBNEqual(lock.withdrawAfter, toBigNumber(epoch + WITHDRAW_LOCK_PERIOD), 'Withdraw after for the lock is incorrect');
-      assertBNEqual(prevStake.sub(rAmount), staker.stake, 'Stake not correct');
+      let staker = await stakeManager.getStaker(2);
+      let lock = await stakeManager.locks(staker._address, staker.tokenAddress, 0);
+      assertBNEqual(lock.amount, stake, 'Locked amount is not equal to requested lock amount');
+      assertBNEqual(lock.unlockAfter, toBigNumber(epoch + WITHDRAW_LOCK_PERIOD), 'Withdraw after for the lock is incorrect');
       // Next Epoch
       await mineToNextEpoch();
 
@@ -423,8 +445,40 @@ describe('StakeManager', function () {
       // Next Epoch
       await mineToNextEpoch();
       epoch = await getEpoch();
+      staker = await stakeManager.getStaker(2);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = (stake.mul(staker.stake)).div(totalSupply);
+      const prevStake = staker.stake;
+      await stakeManager.connect(signers[2]).initiateWithdraw(epoch, 2);
+      lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
+      staker = await stakeManager.getStaker(2);
+      assertBNEqual(prevStake.sub(rAmount), staker.stake, 'Stake not correct');
+      // Next Epoch
+      await mineToNextEpoch();
+
+      // Participation In Epoch
+      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+
+      epoch = await getEpoch();
+      const commitment2 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+
+      // Commit
+      await voteManager.connect(signers[2]).commit(epoch, commitment2);
+      await mineToNextState();
+
+      // Reveal
+      await voteManager.connect(signers[2]).reveal(epoch, votes2,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // Next Epoch
+      await mineToNextEpoch();
+      epoch = await getEpoch();
       const prevBalance = await razor.balanceOf(signers[2].address);
-      await stakeManager.connect(signers[2]).withdraw(epoch, 2);
+      await stakeManager.connect(signers[2]).unlockWithdraw(epoch, 2);
       const newBalance = await razor.balanceOf(signers[2].address);
       assertBNEqual(prevBalance.add(rAmount), newBalance, 'Could not Withdraw');
     });
@@ -546,12 +600,14 @@ describe('StakeManager', function () {
         // const staker = await stakeManager.getStaker(stakerId);
         const tx1 = stakeManager.connect(signers[7]).unstake(epoch, stakerId, amount);
         await assertRevert(tx1, 'staker.id = 0');
-        const tx2 = stakeManager.connect(signers[7]).withdraw(epoch, stakerId);
+        const tx2 = stakeManager.connect(signers[7]).initiateWithdraw(epoch, stakerId);
         await assertRevert(tx2, 'staker doesnt exist');
         const tx3 = stakeManager.connect(signers[7]).setDelegationAcceptance('true');
         await assertRevert(tx3, 'staker id = 0');
         const tx4 = stakeManager.connect(signers[7]).updateCommission(7);
         await assertRevert(tx4, 'staker id = 0');
+        const tx5 = stakeManager.connect(signers[7]).unlockWithdraw(epoch, stakerId);
+        await assertRevert(tx5, 'staker doesnt exist');
       });
 
     it('Staker should not be able to accept delegation if comission is not set', async function () {
@@ -651,23 +707,28 @@ describe('StakeManager', function () {
     it('Delegator should not be able to withdraw if didnt unstake', async function () {
       const epoch = await getEpoch();
       const stakerId = await stakeManager.stakerIds(signers[1].address);
-      const tx = stakeManager.connect(signers[5]).withdraw(epoch, stakerId);
+      const tx = stakeManager.connect(signers[5]).initiateWithdraw(epoch, stakerId);
       await assertRevert(tx, 'Did not unstake');
     });
 
     it('Delegator should be able to unstake when there is no existing lock', async function () {
       await mineToNextEpoch();
-      const epoch = await getEpoch();
+      let epoch = await getEpoch();
       const amount = tokenAmount('10000'); // unstaking partial amount
       let staker = await stakeManager.getStaker(4);
+      await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
       const prevStake = staker.stake;
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
-      await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
-      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const rAmount = (amount.mul(staker.stake)).div(totalSupply);
+      await stakeManager.connect(signers[5]).initiateWithdraw(epoch, staker.id);
       staker = await stakeManager.getStaker(4);
 
+      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
       const initial = await sToken.getRZRDeposited(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
       const gain = (rAmount.sub(initial)); // commission in accordance to gain
       const commission = ((gain).mul(staker.commission)).div(100);
@@ -678,7 +739,7 @@ describe('StakeManager', function () {
       assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
-      assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+      assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     });
 
     it('Delegator should not be able to unstake when there is an existing lock', async function () {
@@ -686,7 +747,7 @@ describe('StakeManager', function () {
       const amount = tokenAmount('10000');
       const staker = await stakeManager.getStaker(4);
       const tx = stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
-      await assertRevert(tx, 'Existing Lock');
+      await assertRevert(tx, 'Existing Unstake Lock');
     });
 
     it('Delegator should not be able to withdraw in withdraw lock period', async function () {
@@ -696,10 +757,8 @@ describe('StakeManager', function () {
       }
       const epoch = await getEpoch();
       const staker = await stakeManager.getStaker(4);
-      const prevStake = staker.stake;
-      const tx = stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
+      const tx = stakeManager.connect(signers[5]).unlockWithdraw(epoch, staker.id);
       await assertRevert(tx, 'Withdraw epoch not reached');
-      assertBNEqual(staker.stake, prevStake, 'Stake should not change');
     });
 
     it('Delegator should not be able to withdraw if contract is paused', async function () {
@@ -707,7 +766,7 @@ describe('StakeManager', function () {
       const epoch = await getEpoch();
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       await stakeManager.connect(signers[0]).pause();
-      const tx = stakeManager.connect(signers[5]).withdraw(epoch, stakerId);
+      const tx = stakeManager.connect(signers[5]).unlockWithdraw(epoch, stakerId);
       await assertRevert(tx, 'paused');
       await stakeManager.connect(signers[0]).unpause();
     });
@@ -716,7 +775,7 @@ describe('StakeManager', function () {
       const staker = await stakeManager.getStaker(4);
       const epoch = await getEpoch();
       const prevBalance = await razor.balanceOf(signers[5].address);
-      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
+      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
 
       const stakerPrevBalance = await razor.balanceOf(staker._address);
       let withdawAmount = lock.amount;
@@ -724,7 +783,7 @@ describe('StakeManager', function () {
         withdawAmount = withdawAmount.sub(lock.commission);
       }
 
-      await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
+      await (stakeManager.connect(signers[5]).unlockWithdraw(epoch, staker.id));
       const DelegatorBalance = await razor.balanceOf(signers[5].address);
       const newBalance = prevBalance.add(withdawAmount);
 
@@ -781,11 +840,22 @@ describe('StakeManager', function () {
         const amount = tokenAmount('10000'); // unstaking partial amount
         staker = await stakeManager.getStaker(4);
         const prevStake = (staker.stake);
+        await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
+        let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
+        assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
+        assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
+        assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+        
+        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+          await mineToNextEpoch();
+        }
+
         const sToken = await stakedToken.attach(staker.tokenAddress);
         const totalSupply = await sToken.totalSupply();
-        await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
-        let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
         const rAmount = (amount.mul(staker.stake)).div(totalSupply);
+        epoch = await getEpoch()
+        await stakeManager.connect(signers[5]).initiateWithdraw(epoch, staker.id);
+        lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
         const newStake = prevStake.sub(rAmount);
         staker = await stakeManager.getStaker(4);
 
@@ -796,7 +866,7 @@ describe('StakeManager', function () {
         assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
         assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
         assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
-        assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+        assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
           await mineToNextEpoch();
@@ -805,8 +875,7 @@ describe('StakeManager', function () {
         // Delegator withdraws
         epoch = await getEpoch();
         const prevBalance = await razor.balanceOf(signers[5].address);
-        lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
-        await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
+        await (stakeManager.connect(signers[5]).unlockWithdraw(epoch, staker.id));
 
         let withdawAmount = lock.amount;
         if (lock.commission > 0) {
@@ -857,35 +926,43 @@ describe('StakeManager', function () {
         const amount = tokenAmount('10000'); // unstaking partial amount
         staker = await stakeManager.getStaker(4);
         const prevStake = (staker.stake);
+        await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
+        let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
+        assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
+        assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
+        assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+        
+        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+          await mineToNextEpoch();
+        }
+
         const sToken = await stakedToken.attach(staker.tokenAddress);
         const totalSupply = await sToken.totalSupply();
         const rAmount = (amount.mul(staker.stake)).div(totalSupply);
-        await stakeManager.connect(signers[5]).unstake(epoch, staker.id, amount);
-        const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
+        epoch = await getEpoch()
+        await stakeManager.connect(signers[5]).initiateWithdraw(epoch, staker.id);
+        lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
+        const newStake = prevStake.sub(rAmount);
+        staker = await stakeManager.getStaker(4);
 
         const initial = await sToken.getRZRDeposited(signers[5].address, amount); // How much delegator had put for this much amount of SRZRS
         const gain = (rAmount.sub(initial)); // commission in accordance to gain
         assertBNLessThan(gain, toBigNumber('0'), 'Gain calculated is not expected');
-        const commission = 0; // as gain is < 0
+        const commission = 0;
 
+        assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
         assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
         assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
-        assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
-
-        epoch = await getEpoch();
-        staker = await stakeManager.getStaker(4);
-        const prevBalance = await razor.balanceOf(signers[5].address);
-        const newStake = prevStake.sub(rAmount);
-        staker = await stakeManager.getStaker(4);
-        assertBNEqual(staker.stake, newStake, 'Updated stake is not equal to calculated stake'); // checking withdraw is working
+        assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
           await mineToNextEpoch();
         }
 
         // Delegator withdraws
+        const prevBalance = await razor.balanceOf(signers[5].address);
         epoch = await getEpoch();
-        await (stakeManager.connect(signers[5]).withdraw(epoch, staker.id));
+        await (stakeManager.connect(signers[5]).unlockWithdraw(epoch, staker.id));
         const DelegatorBalance = await razor.balanceOf(signers[5].address);
         let withdawAmount = lock.amount;
         if (lock.commission > 0) {
@@ -914,48 +991,56 @@ describe('StakeManager', function () {
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      const withdrawWithin = await stakeManager.withdrawReleasePeriod();
+      const withdrawWithin = await stakeManager.withdrawInitiationPeriod();
 
       // Delegator withdraws
       for (let i = 0; i < withdrawWithin + 1; i++) {
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
-      const tx = stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
-      await assertRevert(tx, 'Release Period Passed');
+      const tx = stakeManager.connect(signers[5]).initiateWithdraw(epoch, staker.id);
+      await assertRevert(tx, 'Initiation Period Passed');
     }).timeout(100000);
 
     it('Delegator/Staker should not be able to call extendLock if contract is paused', async function () {
       const staker = await stakeManager.getStaker(4);
       await stakeManager.connect(signers[0]).pause();
-      const tx = stakeManager.connect(signers[5]).extendLock(staker.id);
+      const tx = stakeManager.connect(signers[5]).extendUnstakeLock(staker.id);
       await assertRevert(tx, 'paused');
       await stakeManager.connect(signers[0]).unpause();
     });
 
     it('Delegetor/Staker should be penalized when calling extend lock', async function () {
       let staker = await stakeManager.getStaker(4);
-      let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
+      let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
       const extendLockPenalty = await stakeManager.extendLockPenalty();
       let lockedAmount = lock.amount;
       const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
       lockedAmount = lockedAmount.sub(penalty);
       staker = await stakeManager.getStaker(4);
-      await stakeManager.connect(signers[5]).extendLock(staker.id);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const prevTotalSupply = await sToken.totalSupply();
+      await stakeManager.connect(signers[5]).extendUnstakeLock(staker.id);
+      lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
       staker = await stakeManager.getStaker(4);
-      lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
       const epoch = await getEpoch();
       assertBNEqual((lock.amount), (lockedAmount), 'Stake is not equal to calculated stake');
-      assertBNEqual(epoch, lock.withdrawAfter, 'new sToken balance is not equal to calculated sToken balance');
+      assertBNEqual(prevTotalSupply.sub(penalty), await sToken.totalSupply(), 'sToken not burnt');
+      assertBNEqual(epoch, lock.unlockAfter, 'new sToken balance is not equal to calculated sToken balance');
     });
 
     it('Delegetor/Staker should be able to withdraw after extend lock', async function () {
       const staker = await stakeManager.getStaker(4);
+      let epoch = await getEpoch();
       const prevDBalance = await razor.balanceOf(signers[5].address);
       const prevSBalance = await razor.balanceOf(signers[4].address);
-      const epoch = await getEpoch();
-      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress);
-      await stakeManager.connect(signers[5]).withdraw(epoch, staker.id);
+      await stakeManager.connect(signers[5]).initiateWithdraw(epoch, staker.id);
+      const lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[5]).unlockWithdraw(epoch, staker.id);
       const newDBalance = await razor.balanceOf(signers[5].address);
       const newSBalance = await razor.balanceOf(signers[4].address);
       assertBNEqual((prevDBalance.add(lock.amount).sub(lock.commission)), newDBalance, 'Locked amount is not equal to requested lock amount');
@@ -965,16 +1050,31 @@ describe('StakeManager', function () {
     it('if delegator transfer its sRZR to other account,than other account becomes the delegator who can unstake/withdraw', async function () {
       let staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
-      const amount = await sToken.balanceOf(signers[5].address);
-      await sToken.connect(signers[5]).transfer(signers[6].address, amount); // signers[6] becomes new delegator.
+      const sAmount = await sToken.balanceOf(signers[5].address);
+      await sToken.connect(signers[5]).transfer(signers[6].address, sAmount); // signers[6] becomes new delegator.
 
       // new delegator should be able to unstake
+      epoch = await getEpoch();
+      const amount = tokenAmount('10000'); // unstaking partial amount
       staker = await stakeManager.getStaker(4);
       const prevStake = (staker.stake);
-      const amount1 = tokenAmount('10000');
+      await stakeManager.connect(signers[6]).unstake(epoch, staker.id, amount);
+      let lock = await stakeManager.locks(signers[6].address, staker.tokenAddress, 0);
+      assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
+      assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
+      assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+        
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+
       const totalSupply = await sToken.totalSupply();
-      let epoch = await getEpoch();
-      const rAmount = (amount1.mul(staker.stake)).div(totalSupply);
+      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
+      epoch = await getEpoch()
+      await stakeManager.connect(signers[6]).initiateWithdraw(epoch, staker.id);
+      lock = await stakeManager.locks(signers[6].address, staker.tokenAddress, 1);
+      const newStake = prevStake.sub(rAmount);
+      staker = await stakeManager.getStaker(4);
 
       const initial = await sToken.getRZRDeposited(signers[6].address, amount); // How much delegator had put for this much amount of SRZRS
       const gain = (rAmount.sub(initial)); // commission in accordance to gain
@@ -983,22 +1083,19 @@ describe('StakeManager', function () {
         commission = ((gain).mul(staker.commission)).div(100);
       }
 
-      await stakeManager.connect(signers[6]).unstake(epoch, staker.id, amount1);
-      const lock = await stakeManager.locks(signers[6].address, staker.tokenAddress);
-
+      assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
-      assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+      assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
 
-      // new delegator should be able to withdraw
-      const prevBalance = await razor.balanceOf(signers[6].address);
-
-      const newStake = prevStake.sub(rAmount);
+      // Delegator withdraws
       epoch = await getEpoch();
-      await (stakeManager.connect(signers[6]).withdraw(epoch, staker.id));
+      const prevBalance = await razor.balanceOf(signers[6].address);
+      await (stakeManager.connect(signers[6]).unlockWithdraw(epoch, staker.id));
       staker = await stakeManager.getStaker(4);
       assertBNEqual(staker.stake, newStake, 'Updated stake is not equal to calculated stake');
 
@@ -1062,7 +1159,12 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).pause();
       await stakeManager.connect(signers[0]).escape(signers[0].address);
       await stakeManager.connect(signers[0]).unpause();
-      const tx = stakeManager.connect(signers[3]).withdraw(epoch, stakerIdacc3);
+      await stakeManager.connect(signers[3]).initiateWithdraw(epoch, stakerIdacc3);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      const tx = stakeManager.connect(signers[3]).unlockWithdraw(epoch, stakerIdacc3);
       await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
       await razor.connect(signers[0]).transfer(stakeManager.address, balanceContractBefore);
     });
@@ -1127,7 +1229,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.connect(signers[0]).pause();
-      const tx = stakeManager.connect(signers[4]).withdraw(epoch, stakerId);
+      const tx = stakeManager.connect(signers[4]).initiateWithdraw(epoch, stakerId);
       const presentBalance = await razor.balanceOf(staker._address);
       staker = await stakeManager.getStaker(stakerId);
       await assertRevert(tx, 'paused');
@@ -1271,10 +1373,15 @@ describe('StakeManager', function () {
 
     it('should be given out inactivity penalties at the time of unstaking', async function () {
       let staker = await stakeManager.getStaker(4);
-      await stakeManager.connect(signers[4]).extendLock(staker.id);
+      await stakeManager.connect(signers[4]).extendUnstakeLock(staker.id);
       await mineToNextEpoch();
       let epoch = await getEpoch();
-      await stakeManager.connect(signers[4]).withdraw(epoch, staker.id);
+      await stakeManager.connect(signers[4]).initiateWithdraw(epoch, staker.id);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[4]).unlockWithdraw(epoch, staker.id);
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
@@ -1287,6 +1394,11 @@ describe('StakeManager', function () {
       const totalSupply = await sToken.totalSupply();
       epoch = await getEpoch();
       await stakeManager.connect(signers[4]).unstake(epoch, staker.id, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[4]).initiateWithdraw(epoch, staker.id);
       const rAmount = (amount.mul(staker.stake)).div(totalSupply);
       staker = await stakeManager.getStaker(4);
       assertBNLessThan((staker.stake).add(rAmount), prevStake, 'Inactivity penalties have not been applied');
@@ -1309,7 +1421,7 @@ describe('StakeManager', function () {
       for (let i = 0; i <= epochsJumped; i++) {
         await mineToNextEpoch();
       }
-      await stakeManager.connect(signers[4]).extendLock(staker.id);
+      await stakeManager.connect(signers[4]).extendUnstakeLock(staker.id);
     });
 
     // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
@@ -1411,30 +1523,45 @@ describe('StakeManager', function () {
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
-      const epochPenalized = epoch;
       const stakerId = await stakeManager.stakerIds(signers[15].address);
       await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      const epochPenalized = epoch;
+      await stakeManager.connect(signers[15]).initiateWithdraw(epoch, stakerId);
       let staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker not penalized');
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
-      await stakeManager.connect(signers[15]).withdraw(epoch, stakerId);
-      for (let i = 0; i < Math.ceil(GRACE_PERIOD / WITHDRAW_LOCK_PERIOD); i++) {
+      await stakeManager.connect(signers[15]).unlockWithdraw(epoch, stakerId);
+      for (let i = 0; i < Math.ceil(GRACE_PERIOD / (WITHDRAW_LOCK_PERIOD * 2)); i++) {
         epoch = await getEpoch();
         await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
         for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
           await mineToNextEpoch();
         }
         epoch = await getEpoch();
-        await stakeManager.connect(signers[15]).withdraw(epoch, stakerId);
+        await stakeManager.connect(signers[15]).initiateWithdraw(epoch, stakerId);
+        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+          await mineToNextEpoch();
+        }
+        epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).unlockWithdraw(epoch, stakerId);
         staker = await stakeManager.getStaker(stakerId);
         assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
       }
       await mineToNextEpoch();
       epoch = await getEpoch();
       await stakeManager.connect(signers[15]).unstake(epoch, stakerId, amount);
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      epoch = await getEpoch();
+      await stakeManager.connect(signers[15]).initiateWithdraw(epoch, stakerId);
       staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(staker.epochFirstStakedOrLastPenalized, epoch, 'Staker not penalized');
     });
@@ -1493,12 +1620,12 @@ describe('StakeManager', function () {
 
       // Propose
       const stakerIdAcc = await stakeManager.stakerIds(signers[4].address);
-      const tx = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
+      const tx = stakeManager.connect(signers[4]).initiateWithdraw(epoch, stakerIdAcc);
       await assertRevert(tx, 'Unstake: NA Propose');
       await mineToNextState();
 
       // Dispute
-      const tx1 = stakeManager.connect(signers[4]).unstake(epoch, stakerIdAcc, 1);
+      const tx1 = stakeManager.connect(signers[4]).initiateWithdraw(epoch, stakerIdAcc);
       await assertRevert(tx1, 'Unstake: NA Dispute');
     });
 

@@ -11,8 +11,8 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         uint16 keep;
     }
     bool public escapeHatchEnabled = true;
-    uint8 public withdrawLockPeriod = 1;
-    uint8 public withdrawReleasePeriod = 5;
+    uint8 public lockPeriod = 1;
+    uint8 public withdrawInitiationPeriod = 5;
     uint8 public extendLockPenalty = 1;
     uint8 public maxCommission = 20;
     // change the commission by 3% points
@@ -49,14 +49,14 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
     }
 
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setLockPeriod(uint8 _lockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        withdrawLockPeriod = _withdrawLockPeriod;
+        lockPeriod = _lockPeriod;
     }
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        withdrawReleasePeriod = _withdrawReleasePeriod;
+        withdrawInitiationPeriod = _withdrawInitiationPeriod;
     }
 
     function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
