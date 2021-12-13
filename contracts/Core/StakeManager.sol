@@ -75,7 +75,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     event ResetLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
-    event ExtendLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ExtendUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
     event CommissionChanged(uint32 indexed stakerId, uint8 commision);
 
@@ -322,9 +322,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 penalty = (lock.amount * extendLockPenalty) / 100;
         lock.amount = lock.amount - penalty;
         lock.unlockAfter = epoch;
+        emit ExtendUnstakeLock(stakerId, msg.sender, _getEpoch(epochLength));
         require(sToken.burn(msg.sender, penalty), "Token burn Failed");
-
-        emit ExtendLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 
     /// @notice External function for setting stake of the staker
