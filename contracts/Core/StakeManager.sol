@@ -175,10 +175,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // If this period pass, lock expires and she will have to extendLock() to able to withdraw again
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
-    function unstake(
-        uint32 stakerId,
-        uint256 sAmount
-    ) external initialized whenNotPaused {
+    function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
         Structs.Staker storage staker = stakers[stakerId];
         uint32 epoch = _getEpoch(epochLength);
         require(staker.id != 0, "staker.id = 0");
@@ -213,7 +210,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= lock.amount, "locked amount lost");
 
-        uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply()); 
+        uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
         // Transfer commission in case of delegators

@@ -8,7 +8,7 @@ const {
   DEFAULT_ADMIN_ROLE_HASH,
   ASSET_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
-  WITHDRAW_LOCK_PERIOD,
+  LOCK_PERIOD,
   GOVERNER_ROLE,
   BASE_DENOMINATOR,
 
@@ -391,7 +391,7 @@ describe('VoteManager', function () {
         const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
         assertBNEqual(await stakeManager.bountyCounter(), toBigNumber('1'));
         assertBNEqual(bountyLock.bountyHunter, signers[10].address);
-        assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+        assertBNEqual(bountyLock.redeemAfter, epoch + LOCK_PERIOD);
         assertBNEqual(bountyLock.amount, bounty);
       });
 
@@ -479,7 +479,7 @@ describe('VoteManager', function () {
         await assertRevert(tx1, 'Redeem epoch not reached');
         const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
 
-        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        for (let i = 0; i < LOCK_PERIOD; i++) {
           await mineToNextEpoch();
         }
 
@@ -708,7 +708,7 @@ describe('VoteManager', function () {
         const bountyLock = await stakeManager.bountyLocks(bountyId);
         epoch = await getEpoch();
         assertBNEqual(bountyLock.bountyHunter, signers[10].address);
-        assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
+        assertBNEqual(bountyLock.redeemAfter, epoch + LOCK_PERIOD);
         assertBNEqual(bountyLock.amount, bounty);
 
         // Anyone shouldnt be able to redeem someones elses bounty
@@ -719,7 +719,7 @@ describe('VoteManager', function () {
         const tx1 = stakeManager.connect(signers[10]).redeemBounty(bountyId);
         await assertRevert(tx1, 'Redeem epoch not reached');
 
-        for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+        for (let i = 0; i < LOCK_PERIOD; i++) {
           await mineToNextEpoch();
         }
 

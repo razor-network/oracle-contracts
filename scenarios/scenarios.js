@@ -3,9 +3,9 @@ const { getState } = require('../test/helpers/utils');
 const {
   ASSET_MODIFIER_ROLE,
   GRACE_PERIOD,
-  WITHDRAW_LOCK_PERIOD,
+  LOCK_PERIOD,
   GOVERNER_ROLE,
-  WITHDRAW_RELEASE_PERIOD,
+  WITHDRAW_INITIATION_PERIOD,
 } = require('../test/helpers/constants');
 const {
   assertBNEqual,
@@ -338,7 +338,6 @@ describe('Scenarios', async () => {
 
     const minStake = await stakeManager.minStake();
 
-    
     await mineToNextEpoch();
     epoch = await getEpoch();
     // we're doing a unstake such that stake becomes less than the minStake
@@ -350,7 +349,7 @@ describe('Scenarios', async () => {
 
       await stakeManager.connect(signers[i]).unstake(i, amount.sub(minStake).add(tokenAmount('100')));
     }
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
@@ -359,9 +358,9 @@ describe('Scenarios', async () => {
       await stakeManager.connect(signers[i]).initiateWithdraw(i);
       const lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
 
-      assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+      assertBNEqual(lock.unlockAfter, epoch + LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
@@ -539,7 +538,7 @@ describe('Scenarios', async () => {
     const amount = tokenAmount('1000');
 
     await stakeManager.connect(signers[1]).unstake(1, amount);
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
@@ -547,12 +546,11 @@ describe('Scenarios', async () => {
     const lock = await stakeManager.locks(staker._address, staker.tokenAddress, 1);
     const rAmount = (amount.mul(staker.stake)).div(totalSupply);
     assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-    assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    assertBNEqual(lock.unlockAfter, epoch + LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     await stakeManager.connect(signers[1]).unlockWithdraw(1);
-  
 
     // staking again
     const votesarray = [];
@@ -690,7 +688,7 @@ describe('Scenarios', async () => {
 
     await stakeManager.connect(signers[5]).unstake(stakerIdAcc5.id, amount);
     const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress, 0);
-    assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
+    assertBNEqual(lock.unlockAfter, epoch + LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
     // staker will not able to participate again because it's stake is now less than minimum stake
     epoch = await getEpoch();
@@ -752,7 +750,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[1]).unstake(1, amount);
 
     // skip to last epoch of the lock period
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
 
@@ -809,7 +807,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[1]).unstake(1, amount);
 
     // skip to last epoch of the lock period
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
 
@@ -934,29 +932,28 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[1]).unstake(1, amount);
 
     // skip to last epoch of the lock period
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
-    for (let i = 0; i < WITHDRAW_RELEASE_PERIOD - 1; i++) {
+    for (let i = 0; i < WITHDRAW_INITIATION_PERIOD - 1; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).initiateWithdraw(staker.id);
 
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).unlockWithdraw(staker.id);
 
-
     await governance.setWithdrawInitiationPeriod(2); // withdraw release period is decreased
     await stakeManager.connect(signers[1]).unstake(1, amount);
-    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+    for (let i = 0; i < LOCK_PERIOD; i++) {
       await mineToNextEpoch();
     }
     // Withdraw should fail
-    for (let i = 0; i < WITHDRAW_RELEASE_PERIOD - 1; i++) {
+    for (let i = 0; i < WITHDRAW_INITIATION_PERIOD - 1; i++) {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
