@@ -16,7 +16,7 @@ const {
   ASSET_MODIFIER_ROLE,
   GOVERNER_ROLE,
   BURN_ADDRESS,
-  LOCK_PERIOD,
+  WITHDRAW_LOCK_PERIOD,
   BASE_DENOMINATOR,
 } = require('./helpers/constants');
 const {
@@ -350,7 +350,7 @@ describe('BlockManager', function () {
       const bountyLock = await stakeManager.bountyLocks(toBigNumber('1'));
       epoch = await getEpoch();
       assertBNEqual(bountyLock.bountyHunter, signers[19].address);
-      assertBNEqual(bountyLock.redeemAfter, epoch + LOCK_PERIOD);
+      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
       assertBNEqual(bountyLock.amount, bounty);
 
       assertBNEqual(await razor.balanceOf(BURN_ADDRESS), balanceBeforeBurn.add(amountToBeBurned));
@@ -373,7 +373,7 @@ describe('BlockManager', function () {
       // Shouldnt be reedemable before withdrawlock period
       const tx = stakeManager.connect(signers[19]).redeemBounty(toBigNumber('1'));
       await assertRevert(tx, 'Redeem epoch not reached');
-      for (let i = 0; i < LOCK_PERIOD; i++) {
+      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
 
@@ -1292,7 +1292,7 @@ describe('BlockManager', function () {
       const bountyId = await stakeManager.bountyCounter();
       const bountyLock = await stakeManager.bountyLocks(bountyId);
       assertBNEqual(bountyLock.bountyHunter, signers[0].address);
-      assertBNEqual(bountyLock.redeemAfter, epoch + LOCK_PERIOD);
+      assertBNEqual(bountyLock.redeemAfter, epoch + WITHDRAW_LOCK_PERIOD);
       assertBNEqual(bountyLock.amount, bounty);
 
       const tx = blockManager.disputeBiggestInfluenceProposed(epoch, 0, 10);

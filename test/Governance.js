@@ -28,7 +28,8 @@ describe('Governance contract Test', async () => {
 
   const penaltyNotRevealNumerator = toBigNumber('1');
 
-  const LockPeriod = toBigNumber('1');
+  const unstakeLockPeriod = toBigNumber('1');
+  const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
   const gracePeriod = toBigNumber('8');
@@ -70,7 +71,10 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setLockPeriod(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setUnstakeLockPeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setWithdrawLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setWithdrawInitiationPeriod(toBigNumber('1'));
@@ -118,9 +122,13 @@ describe('Governance contract Test', async () => {
     assertBNEqual(minStake1, toBigNumber('8'));
     assertBNEqual(minStake2, toBigNumber('8'));
 
-    await governance.setLockPeriod(toBigNumber('9'));
-    const LockPeriod = await stakeManager.lockPeriod();
-    assertBNEqual(LockPeriod, toBigNumber('9'));
+    await governance.setUnstakeLockPeriod(toBigNumber('9'));
+    const unstakeLockPeriod = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, toBigNumber('9'));
+
+    await governance.setWithdrawLockPeriod(toBigNumber('9'));
+    const withdrawLockPeriod = await stakeManager.withdrawLockPeriod();
+    assertBNEqual(withdrawLockPeriod, toBigNumber('9'));
 
     await governance.setMaxAltBlocks(toBigNumber('10'));
     const maxAltBlocks = await blockManager.maxAltBlocks();
@@ -197,8 +205,11 @@ describe('Governance contract Test', async () => {
     const blockRewardValue = await blockManager.blockReward();
     assertBNEqual(blockReward, blockRewardValue);
 
-    const LockPeriodValue = await stakeManager.lockPeriod();
-    assertBNEqual(LockPeriod, LockPeriodValue);
+    const withdrawLockPeriodValue = await stakeManager.withdrawLockPeriod();
+    assertBNEqual(withdrawLockPeriod, withdrawLockPeriodValue);
+
+    const unstakeLockPeriodValue = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, unstakeLockPeriodValue);
 
     const withdrawReleasePeriodValue = await stakeManager.withdrawInitiationPeriod();
     assertBNEqual(withdrawReleasePeriod, withdrawReleasePeriodValue);

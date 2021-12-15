@@ -64,9 +64,14 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setSlashParams(_bounty, _burn, _keep);
     }
 
-    function setLockPeriod(uint8 _lockPeriod) external onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "lockPeriod", _lockPeriod, block.timestamp);
-        stakeManagerParams.setLockPeriod(_lockPeriod);
+    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
+        stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
+    }
+
+    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
+        stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
 
     function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
