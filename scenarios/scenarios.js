@@ -824,9 +824,9 @@ describe('Scenarios', async () => {
 
     staker = await stakeManager.getStaker(1);
     let lock = await stakeManager.locks(signers[1].address, staker.tokenAddress, 0);
-    const extendLockPenalty = await stakeManager.extendLockPenalty();
+    const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
     let lockedAmount = lock.amount;
-    const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
+    const penalty = ((lockedAmount).mul(extendUnstakeLockPenalty)).div(100);
     lockedAmount = lockedAmount.sub(penalty);
     staker = await stakeManager.getStaker(1);
     await stakeManager.connect(signers[1]).extendUnstakeLock(staker.id);

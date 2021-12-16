@@ -16,7 +16,7 @@ interface IStakeManagerParams {
 
     function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external;
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external;
+    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external;
 
     function setMinStake(uint256 _minStake) external;
 

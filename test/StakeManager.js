@@ -1011,9 +1011,9 @@ describe('StakeManager', function () {
     it('Delegetor/Staker should be penalized when calling extend lock', async function () {
       let staker = await stakeManager.getStaker(4);
       let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
-      const extendLockPenalty = await stakeManager.extendLockPenalty();
+      const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
       let lockedAmount = lock.amount;
-      const penalty = ((lockedAmount).mul(extendLockPenalty)).div(100);
+      const penalty = ((lockedAmount).mul(extendUnstakeLockPenalty)).div(100);
       lockedAmount = lockedAmount.sub(penalty);
       staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);

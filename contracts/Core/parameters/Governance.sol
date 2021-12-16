@@ -79,9 +79,9 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
+    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", _extendLockPenalty, block.timestamp);
-        stakeManagerParams.setExtendLockPenalty(_extendLockPenalty);
+        stakeManagerParams.setExtendUnstakeLockPenalty(_extendLockPenalty);
     }
 
     function setMaxAltBlocks(uint8 _maxAltBlocks) external initialized onlyRole(GOVERNER_ROLE) {

@@ -14,7 +14,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public unstakeLockPeriod = 1;
     uint8 public withdrawLockPeriod = 1;
     uint8 public withdrawInitiationPeriod = 5;
-    uint8 public extendLockPenalty = 1;
+    uint8 public extendUnstakeLockPenalty = 1;
     uint8 public maxCommission = 20;
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
@@ -65,9 +65,9 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         withdrawInitiationPeriod = _withdrawInitiationPeriod;
     }
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
+    function setExtendUnstakeLockPenalty(uint8 _extendUnstakeLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        extendLockPenalty = _extendLockPenalty;
+        extendUnstakeLockPenalty = _extendUnstakeLockPenalty;
     }
 
     function setMinStake(uint256 _minStake) external override onlyRole(GOVERNANCE_ROLE) {
