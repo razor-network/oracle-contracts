@@ -176,12 +176,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
     function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch(epochLength);
         require(sAmount > 0, "Non-Positive Amount");
         require(stakerId != 0, "staker.id = 0");
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
 
+        uint32 epoch = _getEpoch(epochLength);
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
