@@ -1380,12 +1380,11 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       let epoch = await getEpoch();
       const stake = tokenAmount('10500');
-      let amount = tokenAmount('10000');
       await razor.transfer(signers[15].address, stake);
       await razor.connect(signers[15]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[15]).stake(epoch, stake);
       await mineToNextEpoch();
-      amount = tokenAmount('1');
+      let amount = tokenAmount('1');
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
@@ -1417,6 +1416,10 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[15]).unstake(stakerId, amount);
       staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(staker.epochFirstStakedOrLastPenalized, epoch, 'Staker not penalized');
+      for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
+        await mineToNextEpoch();
+      }
+      await stakeManager.connect(signers[15]).withdraw(stakerId);
     });
     it('staker should be able to increase stake by any number of RZR token', async () => {
       let staker = await stakeManager.getStaker(4);
@@ -1500,6 +1503,35 @@ describe('StakeManager', function () {
       const amount = tokenAmount('1000');
       const tx = stakeManager.connect(signers[10]).delegate(stakerIdAcc4, amount);
       await assertRevert(tx, 'Staker is slashed');
+    });
+
+    it('Delegator should not be able to delegate funds to staker whose stake is less than minStake', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[15]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[15]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      
+      await mineToNextEpoch();
+      let amount = tokenAmount('9500');
+      await stakeManager.connect(signers[15]).updateCommission('2');
+      await stakeManager.connect(signers[15]).setDelegationAcceptance(true);
+      const stakerId = await stakeManager.stakerIds(signers[15].address);
+      await stakeManager.connect(signers[15]).unstake(stakerId, amount);
+      for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
+        await mineToNextEpoch();
+      }
+      await stakeManager.connect(signers[15]).withdraw(stakerId);
+      amount = tokenAmount('1000');
+      const tx = stakeManager.connect(signers[10]).delegate(stakerId, amount);
+      await assertRevert(tx, 'Staker stake less than minStake');
     });
   });
 });

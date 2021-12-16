@@ -147,6 +147,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
+        require(stakers[stakerId].stake >= minStake, "Staker stake less than minStake");
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
