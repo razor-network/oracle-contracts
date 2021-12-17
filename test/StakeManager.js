@@ -1384,7 +1384,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[15]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[15]).stake(epoch, stake);
       await mineToNextEpoch();
-      let amount = tokenAmount('1');
+      const amount = tokenAmount('1');
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
@@ -1518,7 +1518,7 @@ describe('StakeManager', function () {
       await mineToNextState();
       await voteManager.connect(signers[15]).reveal(epoch, votes1,
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      
+
       await mineToNextEpoch();
       let amount = tokenAmount('9500');
       await stakeManager.connect(signers[15]).updateCommission('2');
