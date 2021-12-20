@@ -189,7 +189,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, 0, epoch + unstakeLockPeriod);
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
-
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
 
@@ -198,18 +197,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 
-        uint32 epoch = _getEpoch(epochLength);
         require(stakerId != 0, "staker doesnt exist");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].unlockAfter != 0, "Did not unstake");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].unlockAfter <= epoch, "Withdraw epoch not reached");
-        require(
-            locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].unlockAfter + withdrawInitiationPeriod >= epoch,
-            "Initiation Period Passed"
-        ); // Can Use ExtendLock
-
+        uint32 epoch = _getEpoch(epochLength);
         Structs.Staker storage staker = stakers[stakerId];
-        IStakedToken sToken = IStakedToken(staker.tokenAddress);
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
+        require(lock.unlockAfter != 0, "Did not unstake");
+        require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
+        require(lock.unlockAfter + withdrawInitiationPeriod >= epoch, "Initiation Period Passed"); // Can Use ExtendLock
+
+        IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         rewardManager.giveInactivityPenalties(epoch, stakerId);
@@ -222,7 +218,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 commission = 0;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
-            uint256 initial = sToken.getRZRDeposited(msg.sender, lock.amount);
+            uint256 initial = sToken.getRZRDeposited(address(this), lock.amount);
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
                 uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
@@ -231,7 +227,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         }
 
         locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, commission, epoch + withdrawLockPeriod);
-
         require(sToken.burn(address(this), lock.amount), "Token burn Failed");
         //emit event here
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
@@ -250,11 +245,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
         uint32 epoch = _getEpoch(epochLength);
         require(stakerId != 0, "staker doesnt exist");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter != 0, "Did not unstake");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter <= epoch, "Withdraw epoch not reached");
 
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Withdraw];
+        require(lock.unlockAfter != 0, "Did not unstake");
+        require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
 
         uint256 commission = lock.commission;
         uint256 withdrawAmount = lock.amount - commission;
