@@ -15,7 +15,8 @@ contract AssetStorage {
     mapping(uint16 => Structs.Job) public jobs;
     mapping(uint16 => Structs.Collection) public collections;
 
-    uint16[] public pendingDeactivations;
-    uint16[] public activeCollections;
-    uint16 public numAssets;
+    uint16 public numActiveCollections;
+    uint32 public updateRegistry;
+    uint16 public numCollections;
+    uint16 public numJobs;
 }

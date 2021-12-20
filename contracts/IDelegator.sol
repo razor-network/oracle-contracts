@@ -6,9 +6,9 @@ interface IDelegator {
 
     function setIDName(string calldata name, uint16 _id) external;
 
+    function updateRegistry(uint16 numCollections) external;
+
     function getResult(bytes32 _name) external view returns (uint32, int8);
 
     function getNumActiveCollections() external view returns (uint256);
-
-    function getActiveCollections() external view returns (uint16[] memory);
 }

@@ -41,12 +41,11 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         string calldata url
     ) external onlyRole(ASSET_MODIFIER_ROLE) {
         require(weight <= 100, "Weight beyond max");
-        numAssets = numAssets + 1;
+        numJobs = numJobs + 1;
 
-        jobs[numAssets] = Structs.Job(numAssets, uint8(selectorType), weight, power, name, selector, url);
+        jobs[numJobs] = Structs.Job(numJobs, uint8(selectorType), weight, power, name, selector, url);
 
-        emit AssetCreated(AssetType.Job, numAssets, block.timestamp);
-        delegator.setIDName(name, numAssets);
+        emit AssetCreated(AssetType.Job, numJobs, block.timestamp);
     }
 
     function updateJob(
@@ -82,37 +81,26 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         uint32 epoch = _getEpoch(epochLength);
         if (assetStatus) {
             if (!collections[id].active) {
-                activeCollections.push(id);
-                collections[id].assetIndex = uint16(activeCollections.length);
+                if (updateRegistry == epoch) {
+                    // update registry
+                    delegator.updateRegistry(numCollections);
+                }
+                numActiveCollections = numActiveCollections + 1;
                 collections[id].active = assetStatus;
+                updateRegistry = epoch + 1;
                 emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
         } else {
             if (collections[id].active) {
-                pendingDeactivations.push(id);
+                if (updateRegistry == epoch) {
+                    // update registry
+                    delegator.updateRegistry(numCollections);
+                }
+                numActiveCollections = numActiveCollections - 1;
+                collections[id].active = assetStatus;
+                updateRegistry = epoch + 1;
+                emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
-        }
-    }
-
-    function executePendingDeactivations(uint32 epoch) external override onlyRole(ASSET_CONFIRMER_ROLE) {
-        for (uint16 i = uint16(pendingDeactivations.length); i > 0; i--) {
-            uint16 assetIndex = collections[pendingDeactivations[i - 1]].assetIndex;
-            if (assetIndex == activeCollections.length) {
-                activeCollections.pop();
-            } else {
-                activeCollections[assetIndex - 1] = activeCollections[activeCollections.length - 1];
-                collections[activeCollections[assetIndex - 1]].assetIndex = assetIndex;
-                activeCollections.pop();
-            }
-            collections[pendingDeactivations[i - 1]].assetIndex = 0;
-            collections[pendingDeactivations[i - 1]].active = false;
-            emit CollectionActivityStatus(
-                collections[pendingDeactivations[i - 1]].active,
-                pendingDeactivations[i - 1],
-                epoch,
-                block.timestamp
-            );
-            pendingDeactivations.pop();
         }
     }
 
@@ -124,21 +112,21 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
 
-        numAssets = numAssets + 1;
+        numCollections = numCollections + 1;
 
-        activeCollections.push(numAssets);
-        collections[numAssets] = Structs.Collection(
+        collections[numCollections] = Structs.Collection(
             true,
-            numAssets,
-            uint16(activeCollections.length),
+            numCollections,
             power,
             aggregationMethod,
             jobIDs,
             name
         );
-        emit AssetCreated(AssetType.Collection, numAssets, block.timestamp);
 
-        delegator.setIDName(name, numAssets);
+        numActiveCollections = numActiveCollections + 1;
+        emit AssetCreated(AssetType.Collection, numCollections, block.timestamp);
+
+        delegator.setIDName(name, numCollections);
     }
 
     function updateCollection(
@@ -164,22 +152,24 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         );
     }
 
-    function getAsset(uint16 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {
+    function getJob(uint16 id) external view returns (Structs.Job memory job) {
         require(id != 0, "ID cannot be 0");
-        require(id <= numAssets, "ID does not exist");
+        require(id <= numJobs, "ID does not exist");
 
-        return (jobs[id], collections[id]);
+        return jobs[id];
     }
 
-    function getCollectionStatus(uint16 id) external view returns (bool) {
+    function getCollection(uint16 id) external view returns (Structs.Collection memory collection) {
+        require(id != 0, "ID cannot be 0");
+        require(id <= numCollections, "ID does not exist");
+
+        return collections[id];
+    }
+
+    function getCollectionStatus(uint16 id) external view override returns (bool) {
         require(collections[id].id == id, "Asset is not a collection");
 
         return collections[id].active;
-    }
-
-    function getCollectionIndex(uint16 id) external view override returns (uint16) {
-        require(collections[id].id == id, "Asset is not a collection");
-        return collections[id].assetIndex;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
@@ -188,19 +178,19 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         return collections[id].power;
     }
 
-    function getNumAssets() external view returns (uint16) {
-        return numAssets;
+    function getNumJobs() external view returns (uint16) {
+        return numJobs;
     }
 
-    function getActiveCollections() external view override returns (uint16[] memory) {
-        return activeCollections;
+    function getNumCollections() external view override returns (uint16) {
+        return numCollections;
     }
 
     function getNumActiveCollections() external view override returns (uint256) {
-        return activeCollections.length;
+        return numActiveCollections;
     }
 
-    function getPendingDeactivations() external view override returns (uint16[] memory) {
-        return pendingDeactivations;
+    function getUpdateRegistryEpoch() external view override returns (uint32) {
+        return updateRegistry;
     }
 }
