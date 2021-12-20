@@ -117,9 +117,10 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function createCollection(
-        uint16[] memory jobIDs,
-        uint32 aggregationMethod,
+        uint16 tolerance,
         int8 power,
+        uint32 aggregationMethod,
+        uint16[] memory jobIDs,
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
@@ -131,6 +132,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
             true,
             numAssets,
             uint16(activeCollections.length),
+            tolerance,
             power,
             aggregationMethod,
             jobIDs,
@@ -180,6 +182,10 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     function getCollectionIndex(uint16 id) external view override returns (uint16) {
         require(collections[id].id == id, "Asset is not a collection");
         return collections[id].assetIndex;
+    }
+
+    function getCollectionTolerance(uint16 i) external view override returns (uint16) {
+        return collections[activeCollections[i]].tolerance;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
