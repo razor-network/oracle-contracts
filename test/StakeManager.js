@@ -1663,7 +1663,7 @@ describe('StakeManager', function () {
     });
 
     it('delegators should be able to unstake properly if there are 2 or more delegators to a staker', async function () {
-      await mineToNextEpoch()
+      await mineToNextEpoch();
       let epoch = await getEpoch();
       const stake = tokenAmount('20000');
       await razor.connect(signers[17]).approve(stakeManager.address, stake);
@@ -1709,7 +1709,7 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[18]).delegate(stakerId, amount);
       await razor.connect(signers[19]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[19]).delegate(stakerId, amount);
-      
+
       epoch = await getEpoch();
 
       const commitment1 = utils.solidityKeccak256(
