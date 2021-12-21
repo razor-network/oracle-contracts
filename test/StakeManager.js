@@ -1206,7 +1206,7 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[10]).delegate(stakerId, amount);
       await assertRevert(tx, 'Staker is inactive');
     });
-    it('Staker with min amount staked, should be able to participate', async function () {
+    it('Staker with minStake staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('1000');
       await razor.transfer(signers[9].address, stakeOfStaker);
       let epoch = await getEpoch();
