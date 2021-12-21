@@ -133,12 +133,15 @@ jobs:
           paths:
             - node_modules
       - run:
+          name: Previous addresses
+          command: cat deployed/$ENV/addresses.json
+      - run:
           name: Deploy Contracts
           command: |
             printenv > .env
             npm run deploy:$ENV
       - run:
-          name: Addresses of Contracts
+          name: New addresses of Contracts
           command: cat deployed/$ENV/addresses.json
       - persist_to_workspace:
           root: .
