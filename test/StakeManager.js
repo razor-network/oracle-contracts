@@ -137,14 +137,6 @@ describe('StakeManager', function () {
       await assertRevert(tx1, 'AccessControl');
     });
 
-    it('should not be able to stake if stake is less than min stake', async function () {
-      const epoch = await getEpoch();
-      const stake = tokenAmount('999');
-      await razor.connect(signers[1]).approve(stakeManager.address, stake);
-      const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      await assertRevert(tx, 'Amount below Minstake');
-    });
-
     it('should not be able to stake if contract is paused', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
@@ -160,15 +152,6 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[0]).pause();
       await assertRevert(tx, 'pause');
       await stakeManager.connect(signers[0]).unpause();
-    });
-
-    it('Staker should not be able to stake if stake is below minstake', async function () {
-      const epoch = await getEpoch();
-      const stake1 = tokenAmount('10');
-
-      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
-      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('Staker should not be able to stake if epoch is not current epoch', async function () {
@@ -1223,7 +1206,7 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[10]).delegate(stakerId, amount);
       await assertRevert(tx, 'Staker is inactive');
     });
-    it('Staker with minStake staked, should be able to participate', async function () {
+    it('Staker with min amount staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('1000');
       await razor.transfer(signers[9].address, stakeOfStaker);
       let epoch = await getEpoch();
@@ -1500,6 +1483,16 @@ describe('StakeManager', function () {
       const amount = tokenAmount('1000');
       const tx = stakeManager.connect(signers[10]).delegate(stakerIdAcc4, amount);
       await assertRevert(tx, 'Staker is slashed');
+    });
+
+    it('Staker should be able to stake any amount of stake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('800');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
     });
   });
 });
