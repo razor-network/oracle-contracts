@@ -147,6 +147,21 @@ jobs:
           root: .
           paths:
             - .
+  git-commit:
+    docker:
+      - image: "cimg/node:16.5"
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Commit into git
+          command: |
+            git config credential.helper 'cache --timeout=120'
+            git config user.email "shrikant1997upadhyay@gmail.com"
+            git config user.name "Shrikant Upadhyay"
+            git add .
+            git commit  -m "Commit from CircleCI"
+            git push -q https://$GIT_TOKEN@github.com/Shrikant1212/contracts.git
 
   publish-package:
     docker:
@@ -197,3 +212,7 @@ workflows:
           requires:
             - checkout_source
           context: Stag
+      - git-commit:
+          context: Stag
+          requires:
+            - deploy-contracts
