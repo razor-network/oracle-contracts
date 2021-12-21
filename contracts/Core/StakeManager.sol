@@ -13,7 +13,6 @@ import "../Initializable.sol";
 import "./StateManager.sol";
 import "../Pause.sol";
 
-
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
@@ -188,7 +187,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
 
-        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, 0, epoch + unstakeLockPeriod, sToken.getRZRDeposited(msg.sender, sAmount));
+        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(
+            sAmount,
+            0,
+            epoch + unstakeLockPeriod,
+            sToken.getRZRDeposited(msg.sender, sAmount)
+        );
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
@@ -511,8 +515,18 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0, initial: 0});
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0, initial: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({
+            amount: 0,
+            commission: 0,
+            unlockAfter: 0,
+            initial: 0
+        });
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({
+            amount: 0,
+            commission: 0,
+            unlockAfter: 0,
+            initial: 0
+        });
         emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 }
