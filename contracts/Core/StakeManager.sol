@@ -13,6 +13,7 @@ import "../Initializable.sol";
 import "./StateManager.sol";
 import "../Pause.sol";
 
+
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
 /// for stakers
@@ -187,7 +188,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
 
-        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, 0, epoch + unstakeLockPeriod);
+        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, 0, epoch + unstakeLockPeriod, sToken.getRZRDeposited(msg.sender, sAmount));
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
@@ -218,7 +219,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 commission = 0;
         if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
             // Calculate Gain
-            uint256 initial = sToken.getRZRDeposited(address(this), lock.amount);
+            uint256 initial = lock.initial;
             if (rAmount > initial) {
                 uint256 gain = rAmount - initial;
                 uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
@@ -226,7 +227,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             }
         }
 
-        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, commission, epoch + withdrawLockPeriod);
+        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, commission, epoch + withdrawLockPeriod, 0);
         require(sToken.burn(address(this), lock.amount), "Token burn Failed");
         //emit event here
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
@@ -510,8 +511,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0});
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0, initial: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, commission: 0, unlockAfter: 0, initial: 0});
         emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 }
