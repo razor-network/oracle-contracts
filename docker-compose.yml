@@ -1,7 +1,10 @@
-version: "3.9"  # optional since v1.27.0
+version: "3.9" # optional since v1.27.0
 services:
   contracts:
     build: .
+    env_file: .env
+    tty: true
+    container_name: contracts
     ports:
       - "8545:8545"
     volumes:

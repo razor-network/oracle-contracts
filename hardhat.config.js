@@ -1,5 +1,5 @@
 /* eslint-disable no-undef */
-const dotenv = require('dotenv');
+const dotenv = require("dotenv");
 
 const dotenvResult = dotenv.config();
 
@@ -7,13 +7,13 @@ if (dotenvResult.error) {
   throw dotenvResult.error;
 }
 
-require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-truffle5');
-require('hardhat-gas-reporter');
-require('solidity-coverage');
-require('hardhat-abi-exporter');
-require('@tenderly/hardhat-tenderly');
-require('@nomiclabs/hardhat-etherscan');
+require("@nomiclabs/hardhat-ethers");
+require("@nomiclabs/hardhat-truffle5");
+require("hardhat-gas-reporter");
+require("solidity-coverage");
+require("hardhat-abi-exporter");
+require("@tenderly/hardhat-tenderly");
+require("@nomiclabs/hardhat-etherscan");
 
 const {
   PROVIDER_HOST,
@@ -23,6 +23,7 @@ const {
   MNEMONIC,
   CMC_KEY,
   ETHERSCAN_KEY,
+  TENDERLY_SLUG,
 } = process.env;
 
 // Ref - https://chainid.network/chains.json
@@ -33,11 +34,11 @@ const ENV_CHAIN_IDS = {
 };
 
 module.exports = {
-  defaultNetwork: 'hardhat',
+  defaultNetwork: "hardhat",
   solidity: {
     compilers: [
       {
-        version: '0.8.4',
+        version: "0.8.4",
         settings: {
           optimizer: {
             enabled: true,
@@ -47,17 +48,17 @@ module.exports = {
       },
     ],
     overrides: {
-      'contracts/Core/StakeManager.sol': {
-        version: '0.8.4',
+      "contracts/Core/StakeManager.sol": {
+        version: "0.8.4",
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50000,
+            runs: 30000,
           },
         },
       },
-      'contracts/Core/BlockManager.sol': {
-        version: '0.8.4',
+      "contracts/Core/BlockManager.sol": {
+        version: "0.8.4",
         settings: {
           optimizer: {
             enabled: true,
@@ -78,9 +79,18 @@ module.exports = {
       },
     },
     mumbai: {
-      url: PROVIDER_URL || '',
+      url: PROVIDER_URL || "",
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
+      gas: 2100000,
+      gasPrice: 8000000000,
+    },
+    staging: {
+      url: PROVIDER_URL || "",
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+      gas: 2100000,
+      gasPrice: 8000000000,
     },
   },
   etherscan: {
@@ -89,16 +99,16 @@ module.exports = {
   gasReporter: {
     noColors: true, // Colors on terminal corrupts the output.
     coinmarketcap: CMC_KEY,
-    currency: 'USD',
+    currency: "USD",
   },
   abiExporter: {
-    path: './abi',
+    path: "./abi",
     clear: true,
     flat: true,
     spacing: 2,
   },
   tenderly: {
-    username: 'razor',
-    project: 'razor-network',
+    username: "razor",
+    project: TENDERLY_SLUG,
   },
 };

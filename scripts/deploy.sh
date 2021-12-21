@@ -12,8 +12,6 @@ then
     rm -rf deployed/$ENV
 fi
 
-cp .env.$ENV .env
-
 npm run compile
 npx hardhat run migrations/deploy_all.js --network $ENV
 

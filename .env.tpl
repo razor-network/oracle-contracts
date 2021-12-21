@@ -17,3 +17,6 @@ RAZOR_ADDRESS=
 # List of Stakers
 STAKER_ADDRESSES=
 SEED_AMOUNT=
+
+# Tenderly project name
+TENDERLY_SLUG= 
