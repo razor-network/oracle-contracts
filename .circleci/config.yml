@@ -136,7 +136,7 @@ jobs:
           name: Deploy Contracts
           command: |
             printenv > .env
-            npm run deploy:mumbai
+            npm run deploy:$ENV
       - run:
           name: Addresses of Contracts
           command: cat deployed/$ENV/addresses.json
