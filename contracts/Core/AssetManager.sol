@@ -26,7 +26,15 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
 
-    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16 tolerance, uint16[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(
+        uint16 id,
+        uint32 epoch,
+        uint32 aggregationMethod,
+        int8 power,
+        uint16 tolerance,
+        uint16[] updatedJobIDs,
+        uint256 timestamp
+    );
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -161,15 +169,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
 
-        emit CollectionUpdated(
-            collectionID,
-            epoch,
-            aggregationMethod,
-            power,
-            tolerance,
-            jobIDs,
-            block.timestamp
-        );
+        emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
     }
 
     function getAsset(uint16 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {

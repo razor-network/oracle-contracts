@@ -316,7 +316,7 @@ describe('VoteManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       });
 
-      it('account 4 should be penalised for trying to make fraudulent predictions in the previous epoch but not account 2 due to asset tolerance', async function () {
+      it('account 4 should be penalised for incorrect voting in the previous epoch but not account 2 due to asset tolerance', async function () {
         let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -907,10 +907,9 @@ describe('VoteManager', function () {
           [],
           iteration,
           biggestInfluencerId);
-        try{
+        try {
           await assertRevert(tx, 'Cannot propose without revealing');
-        }
-        catch{
+        } catch (err) {
           await assertRevert(tx, 'not elected');
         }
       });
@@ -995,12 +994,11 @@ describe('VoteManager', function () {
           [100, 200, 300, 400, 500, 600, 700, 800],
           iteration,
           biggestInfluencerId);
-          try{
-            await assertRevert(tx2, 'Cannot propose without revealing');
-          }
-          catch{
-            await assertRevert(tx2, 'not elected');
-          }
+        try {
+          await assertRevert(tx2, 'Cannot propose without revealing');
+        } catch (err) {
+          await assertRevert(tx2, 'not elected');
+        }
       });
     });
   });

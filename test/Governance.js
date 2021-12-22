@@ -225,6 +225,9 @@ describe('Governance contract Test', async () => {
     const maxAgeValue = await rewardManager.maxAge();
     assertBNEqual(maxAge, maxAgeValue);
 
+    const maxToleranceValue = await rewardManager.maxTolerance();
+    assertBNEqual(maxTolerance, maxToleranceValue);
+
     const maxCommissionValue = await stakeManager.maxCommission();
     assertBNEqual(maxCommission, maxCommissionValue);
 
