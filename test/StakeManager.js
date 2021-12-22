@@ -1523,7 +1523,5 @@ describe('StakeManager', function () {
       await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
       await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
     });
-
-
   });
 });
