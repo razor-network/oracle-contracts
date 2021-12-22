@@ -1485,7 +1485,7 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Staker is slashed');
     });
 
-    it('Staker should be able to stake any amount of stake', async function () {
+    it('Staker should be able to stake amount less than minStake', async function () {
       await mineToNextEpoch();
       const stakeOfStaker = tokenAmount('800');
       await razor.transfer(signers[9].address, stakeOfStaker);
@@ -1494,5 +1494,36 @@ describe('StakeManager', function () {
       await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
       await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
     });
+    it('Staker should be able to stake amount more than minStake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('1100');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake amount same as minStake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('1000');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake zero amount', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('0');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+
+
   });
 });
