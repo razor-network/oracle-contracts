@@ -1617,7 +1617,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
 
-        // Delegator withdraws
+    // Delegator withdraws
     epoch = await getEpoch();
     const prevBalance = await razor.balanceOf(signers[5].address);
     await (stakeManager.connect(signers[5]).unlockWithdraw(staker.id));
