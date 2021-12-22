@@ -1514,14 +1514,15 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
     });
 
-    it('Staker should be able to stake zero amount', async function () {
+    it('Staker should not be able to stake zero amount', async function () {
       await mineToNextEpoch();
       const stakeOfStaker = tokenAmount('0');
-      await razor.transfer(signers[9].address, stakeOfStaker);
+      await razor.transfer(signers[14].address, stakeOfStaker);
       const epoch = await getEpoch();
 
-      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
-      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+      await razor.connect(signers[14]).approve(stakeManager.address, stakeOfStaker);
+      const tx = stakeManager.connect(signers[14]).stake(epoch, stakeOfStaker);
+      await assertRevert(tx, 'less than minimum safe Razor');
     });
   });
 });

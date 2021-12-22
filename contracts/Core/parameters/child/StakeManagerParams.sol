@@ -23,6 +23,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
     uint256 public minStake = 1000 * (10**18);
+    uint256 public minSafeRazor = 1 * (10**18);
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
@@ -67,6 +68,11 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     function setMinStake(uint256 _minStake) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         minStake = _minStake;
+    }
+
+    function setMinSafeRazor(uint256 _minSafeRazor) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        minSafeRazor = _minSafeRazor;
     }
 
     function setGracePeriod(uint16 _gracePeriod) external override onlyRole(GOVERNANCE_ROLE) {

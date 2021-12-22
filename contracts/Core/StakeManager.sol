@@ -100,6 +100,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 totalSupply = 0;
 
         if (stakerId == 0) {
+            require(amount >= minSafeRazor, "less than minimum safe Razor");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;

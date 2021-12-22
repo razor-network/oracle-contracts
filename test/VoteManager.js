@@ -641,6 +641,7 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
 
+        await governance.setMinSafeRazor(0);
         await governance.setMinStake(0);
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
