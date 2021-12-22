@@ -37,6 +37,7 @@ describe('Governance contract Test', async () => {
   const withdrawReleasePeriod = toBigNumber('5');
   const extendLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
+  const maxTolerance = toBigNumber('1000');
   const maxCommission = toBigNumber('20');
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
@@ -94,6 +95,9 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setMaxAge(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setMaxTolerance(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setMaxCommission(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -147,6 +151,12 @@ describe('Governance contract Test', async () => {
     const gracePeriod1 = await stakeManager.gracePeriod();
     assertBNEqual(gracePeriod, toBigNumber('14'));
     assertBNEqual(gracePeriod1, toBigNumber('14'));
+
+    await governance.setMaxTolerance(toBigNumber('15'));
+    const maxTolerance = await rewardManager.maxTolerance();
+    const maxTolerance1 = await assetManager.maxTolerance();
+    assertBNEqual(maxTolerance, toBigNumber('15'));
+    assertBNEqual(maxTolerance1, toBigNumber('15'));
 
     await governance.setWithdrawReleasePeriod(toBigNumber('16'));
     const withdrawReleasePeriod = await stakeManager.withdrawReleasePeriod();

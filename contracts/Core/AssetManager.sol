@@ -6,6 +6,7 @@ import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
 import "./parameters/child/AssetManagerParams.sol";
 import "./StateManager.sol";
+import "hardhat/console.sol";
 
 contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
     IDelegator public delegator;
@@ -25,7 +26,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
 
-    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16 tolerance, uint16[] updatedJobIDs, uint256 timestamp);
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -124,6 +125,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
 
         numAssets = numAssets + 1;
 
@@ -145,23 +147,27 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     function updateCollection(
         uint16 collectionID,
+        uint16 tolerance,
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch(epochLength);
         collections[collectionID].power = power;
+        collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
 
         emit CollectionUpdated(
             collectionID,
             epoch,
-            collections[collectionID].aggregationMethod,
-            collections[collectionID].power,
-            collections[collectionID].jobIDs,
+            aggregationMethod,
+            power,
+            tolerance,
+            jobIDs,
             block.timestamp
         );
     }

@@ -124,8 +124,9 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             if (medianLastEpoch == 0) continue;
             uint64 prod = age * voteValueLastEpoch;
             uint16 tolerance = assetManager.getCollectionTolerance(i);
-            uint64 maxVoteTolerance = medianLastEpoch + (medianLastEpoch * (tolerance / BASE_DENOMINATOR));
-            uint64 minVoteTolerance = medianLastEpoch - (medianLastEpoch * (tolerance / BASE_DENOMINATOR));
+            tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
+            uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+            uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
             // if (voteWeightLastEpoch > 0) {
             if (voteValueLastEpoch > maxVoteTolerance) {
                 penalty = penalty + (prod / medianLastEpoch - age);

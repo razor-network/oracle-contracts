@@ -184,10 +184,10 @@ describe('BlockManager', function () {
       let Cname;
       for (let i = 1; i <= 8; i++) {
         Cname = `Test Collection${String(i)}`;
-        await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+        await assetManager.createCollection(500, 3, 1, [i, i + 1], Cname);
       }
       Cname = 'Test Collection9';
-      await assetManager.createCollection([9, 1], 1, 3, Cname);
+      await assetManager.createCollection(500, 3, 1, [9, 1], Cname);
 
       await blockManager.connect(signers[1]).claimBlockReward();
 
