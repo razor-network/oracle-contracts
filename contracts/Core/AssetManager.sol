@@ -6,7 +6,6 @@ import "../IDelegator.sol";
 import "./storage/AssetStorage.sol";
 import "./parameters/child/AssetManagerParams.sol";
 import "./StateManager.sol";
-import "hardhat/console.sol";
 
 contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
     IDelegator public delegator;
