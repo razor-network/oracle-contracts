@@ -191,6 +191,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         uint32 updateRegistry = assetManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
         if (updateRegistry == epoch) {
             delegator.updateRegistry(assetManager.getNumCollections());
         }

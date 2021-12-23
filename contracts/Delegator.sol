@@ -31,6 +31,7 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
     function updateRegistry(uint16 numCollections) external override onlyRole(REGISTRY_MODIFIER_ROLE) {
         uint8 j = 1;
         for (uint16 i = 1; i <= numCollections; i++) {
+            // slither-disable-next-line calls-loop
             bool active = assetManager.getCollectionStatus(i);
             if (active) {
                 assetRegistry[i] = j;

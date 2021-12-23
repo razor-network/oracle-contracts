@@ -81,6 +81,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         uint32 epoch = _getEpoch(epochLength);
         if (assetStatus) {
             if (!collections[id].active) {
+                // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign,incorrect-equality
                 if (updateRegistry == epoch) {
                     // update registry
                     delegator.updateRegistry(numCollections);
@@ -92,6 +93,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
             }
         } else {
             if (collections[id].active) {
+                // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign,incorrect-equality
                 if (updateRegistry == epoch) {
                     // update registry
                     delegator.updateRegistry(numCollections);
@@ -114,6 +116,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
         uint32 epoch = _getEpoch(epochLength);
 
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign,incorrect-equality
         if (updateRegistry == epoch) {
             // update registry
             delegator.updateRegistry(numCollections);
