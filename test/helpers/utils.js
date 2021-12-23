@@ -6,7 +6,7 @@ const {
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
 
-const calculateDisputesData = async (assetId, voteManager, stakeManager, assetManager, epoch) => {
+const calculateDisputesData = async (medianIndex, voteManager, stakeManager, assetManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
@@ -19,17 +19,16 @@ const calculateDisputesData = async (assetId, voteManager, stakeManager, assetMa
   // let accWeight;
   let infl;
   let vote;
-  const collectionIndex = await assetManager.getCollectionIndex(assetId);
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
     vote = await voteManager.getVote(i);
 
     if (vote[0] === epoch) {
       sortedStakers.push(i);
-      votes.push(vote[1][collectionIndex - 1]);
+      votes.push(vote[1][medianIndex]);
 
       infl = await voteManager.getInfluenceSnapshot(epoch, i);
       // accWeight += infl;
-      accProd = accProd.add(toBigNumber(vote[1][collectionIndex - 1]).mul(infl));
+      accProd = accProd.add(toBigNumber(vote[1][medianIndex]).mul(infl));
     }
   }
 

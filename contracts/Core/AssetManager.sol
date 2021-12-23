@@ -112,18 +112,19 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
 
+        uint32 epoch = _getEpoch(epochLength);
+
+        if (updateRegistry == epoch) {
+            // update registry
+            delegator.updateRegistry(numCollections);
+        }
+
         numCollections = numCollections + 1;
 
-        collections[numCollections] = Structs.Collection(
-            true,
-            numCollections,
-            power,
-            aggregationMethod,
-            jobIDs,
-            name
-        );
+        collections[numCollections] = Structs.Collection(true, numCollections, power, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
+        updateRegistry = epoch + 1;
         emit AssetCreated(AssetType.Collection, numCollections, block.timestamp);
 
         delegator.setIDName(name, numCollections);

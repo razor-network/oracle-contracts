@@ -7,6 +7,7 @@ const {
   REWARD_MODIFIER_ROLE,
   ASSET_CONFIRMER_ROLE,
   DELEGATOR_MODIFIER_ROLE,
+  REGISTRY_MODIFIER_ROLE,
   GOVERNANCE_ROLE,
   PAUSE_ROLE,
 } = require('./constants');
@@ -49,8 +50,8 @@ const setupContracts = async () => {
 
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, assetManager.address,
-      randomNoManager.address),
-    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address),
+      randomNoManager.address, delegator.address),
+    voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, assetManager.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address),
     delegator.updateAddress(assetManager.address, blockManager.address),
@@ -70,6 +71,9 @@ const setupContracts = async () => {
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
+
+    delegator.grantRole(REGISTRY_MODIFIER_ROLE, assetManager.address),
+    delegator.grantRole(REGISTRY_MODIFIER_ROLE, blockManager.address),
 
     assetManager.grantRole(GOVERNANCE_ROLE, governance.address),
     blockManager.grantRole(GOVERNANCE_ROLE, governance.address),

@@ -84,6 +84,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16 medianIndex,
         uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
+        require(medianIndex <= (assetManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -185,10 +186,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
-    function _confirmBlock(
-        uint32 epoch,
-        uint32 stakerId
-    ) internal {
+    function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);

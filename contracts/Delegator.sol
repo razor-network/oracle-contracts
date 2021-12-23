@@ -10,7 +10,7 @@ import "./Core/storage/Constants.sol";
 
 contract Delegator is StateManager, DelegatorParams, IDelegator {
     mapping(bytes32 => uint16) public ids;
-    mapping(uint16 => uint8) public assetRegistry;
+    mapping(uint16 => uint16) public assetRegistry;
 
     IAssetManager public assetManager;
     IBlockManager public blockManager;
@@ -30,13 +30,12 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
 
     function updateRegistry(uint16 numCollections) external override onlyRole(REGISTRY_MODIFIER_ROLE) {
         uint8 j = 1;
-        for(uint16 i = 1; i <= numCollections; i++) {
+        for (uint16 i = 1; i <= numCollections; i++) {
             bool active = assetManager.getCollectionStatus(i);
             if (active) {
                 assetRegistry[i] = j;
                 j = j + 1;
-            }
-            else {
+            } else {
                 assetRegistry[i] = 0;
             }
         }

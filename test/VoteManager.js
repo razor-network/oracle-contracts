@@ -67,7 +67,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, assetManager.address);
         await assertRevert(tx, 'AccessControl');
       });
 
@@ -107,21 +107,27 @@ describe('VoteManager', function () {
         await razor.transfer(signers[4].address, tokenAmount('19000'));
         await razor.transfer(signers[5].address, tokenAmount('1000'));
         await razor.transfer(signers[6].address, tokenAmount('1000'));
-
         await razor.transfer(signers[7].address, tokenAmount('2000'));
+        await razor.transfer(signers[8].address, tokenAmount('19000'));
+        await razor.transfer(signers[9].address, tokenAmount('17000'));
+        await razor.transfer(signers[15].address, tokenAmount('10000'));
+
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
         await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
         await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
         await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
-
         await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('2000'));
+        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
+        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
+        await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('10000'));
+
         const epoch = await getEpoch();
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, assetManager.address);
         await assertRevert(tx, 'contract already initialized');
       });
 
@@ -736,10 +742,6 @@ describe('VoteManager', function () {
 
       it('if the revealed value is zero, staker should be able to reveal', async function () {
         await mineToNextEpoch();
-        await razor.transfer(signers[8].address, tokenAmount('19000'));
-        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
-        await razor.transfer(signers[9].address, tokenAmount('17000'));
-        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
 
         let epoch = await getEpoch();
         await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
@@ -791,7 +793,7 @@ describe('VoteManager', function () {
 
         const sortedVotes = [toBigNumber('0')];
 
-        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
 
         await assertRevert(tx, 'sortedStaker <= LVS');
       });
@@ -844,7 +846,7 @@ describe('VoteManager', function () {
         //
         const sortedVotes = [toBigNumber('0')];
         //
-        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
         //
         await assertRevert(tx3, 'sortedStaker <= LVS');
       });
@@ -871,7 +873,7 @@ describe('VoteManager', function () {
         await mineToNextState();
         // dispute state
         const sortedVotes = [];
-        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
+        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
         await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
@@ -948,6 +950,76 @@ describe('VoteManager', function () {
           iteration,
           biggestInfluencerId);
         await assertRevert(tx2, 'Cannot propose without revealing');
+      });
+      it('Correct penalties need to be given even after an asset has been deactivated', async function () {
+        await mineToNextState();
+        await mineToNextState();
+        await assetManager.setCollectionStatus(false, 9);
+        await mineToNextState();
+        let epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('10000'));
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+        const commitment1 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[3]).commit(epoch, commitment1);
+
+        const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
+        const commitment2 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[15]).commit(epoch, commitment2);
+
+        await mineToNextState();
+
+        await voteManager.connect(signers[3]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
+
+        await voteManager.connect(signers[15]).reveal(epoch, votes2,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+        await mineToNextState();
+
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+
+        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800];
+        await blockManager.connect(signers[3]).propose(epoch,
+          medians,
+          iteration,
+          biggestInfluencerId);
+
+        const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
+        await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
+        await mineToNextState(); // commit
+        epoch = await getEpoch();
+        await voteManager.connect(signers[15]).commit(epoch, commitment1);
+
+        let penalty = toBigNumber(0);
+        let toAdd = toBigNumber(0);
+        let prod = toBigNumber(0);
+        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
+        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
+        for (let i = 0; i < votes2.length; i++) {
+          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
+          if (votes2[i] > medians[i]) {
+            toAdd = (prod.div(medians[i])).sub(expectedAgeAfter2);
+          } else {
+            toAdd = expectedAgeAfter2.sub(prod.div(medians[i]));
+          }
+          penalty = penalty.add(toAdd);
+        }
+        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
+
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
+        assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
       });
     });
   });
