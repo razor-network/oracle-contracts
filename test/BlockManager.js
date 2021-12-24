@@ -1526,15 +1526,18 @@ describe('BlockManager', function () {
       for (let i = 0; i < medians.length; i++) {
         voteValues = await voteManager.getVoteValue(i, stakerIdAcc17);
         prod = age * voteValues;
+        const tolerance = await assetManager.getCollectionTolerance(i);
+        const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
+        const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
         if (medians[i] !== 0) {
-          if (voteValues > medians[i]) {
-            incorrectVotingPenalty += (prod / medians[i] - age);
-          } else {
-            incorrectVotingPenalty += (age - prod / medians[i]);
+          if (voteValues > maxVoteTolerance) {
+            incorrectVotingPenalty += (prod / maxVoteTolerance - age);
+          } else if (voteValues < minVoteTolerance) {
+            incorrectVotingPenalty += (age - prod / minVoteTolerance);
           }
         }
       }
-      const ageAcc17 = incorrectVotingPenalty > age ? 0 : age - incorrectVotingPenalty;
+      const ageAcc17 = incorrectVotingPenalty > age ? 0 : age - Math.floor(incorrectVotingPenalty);
       staker17 = await stakeManager.getStaker(stakerIdAcc17);
       const blockReward = await blockManager.blockReward();
       const randaoPenalty = await blockManager.blockReward();

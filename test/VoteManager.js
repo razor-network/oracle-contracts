@@ -378,19 +378,19 @@ describe('VoteManager', function () {
 
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
           if (votes2[i] > maxVoteTolerance) {
-            toAdd = (prod.div(medians[i])).sub(expectedAgeAfter2);
+            toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
             penalty = penalty.add(toAdd);
           } else if (votes2[i] < minVoteTolerance) {
-            toAdd = expectedAgeAfter2.sub(prod.div(medians[i]));
+            toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
             penalty = penalty.add(toAdd);
           }
 
           prod2 = toBigNumber(votes3[i]).mul(expectedAgeAfter3);
           if (votes3[i] > maxVoteTolerance) {
-            toAdd2 = (prod2.div(medians[i])).sub(expectedAgeAfter3);
+            toAdd2 = (prod2.div(maxVoteTolerance)).sub(expectedAgeAfter3);
             penalty2 = penalty2.add(toAdd2);
           } else if (votes3[i] < minVoteTolerance) {
-            toAdd2 = expectedAgeAfter3.sub(prod2.div(medians[i]));
+            toAdd2 = expectedAgeAfter3.sub(prod2.div(minVoteTolerance));
             penalty2 = penalty2.add(toAdd2);
           }
         }

@@ -130,9 +130,9 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
             // if (voteWeightLastEpoch > 0) {
             if (voteValueLastEpoch > maxVoteTolerance) {
-                penalty = penalty + (prod / medianLastEpoch - age);
+                penalty = penalty + (prod / maxVoteTolerance - age);
             } else if (voteValueLastEpoch < minVoteTolerance) {
-                penalty = penalty + (age - prod / medianLastEpoch);
+                penalty = penalty + (age - prod / minVoteTolerance);
             }
         }
 
