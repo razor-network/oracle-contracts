@@ -1514,14 +1514,34 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
     });
 
-    it('Staker should not be able to stake zero amount', async function () {
+    it('Staker should be able to stake amount more than minSafeRazor', async function () {
       await mineToNextEpoch();
-      const stakeOfStaker = tokenAmount('0');
+      const stakeOfStaker = tokenAmount('10');
       await razor.transfer(signers[14].address, stakeOfStaker);
       const epoch = await getEpoch();
 
       await razor.connect(signers[14]).approve(stakeManager.address, stakeOfStaker);
-      const tx = stakeManager.connect(signers[14]).stake(epoch, stakeOfStaker);
+      await stakeManager.connect(signers[14]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake amount same as minSafeRazor', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('1');
+      await razor.transfer(signers[16].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[16]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[16]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should not be able to stake amount less than minSafeRazor', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('0');
+      await razor.transfer(signers[17].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[17]).approve(stakeManager.address, stakeOfStaker);
+      const tx = stakeManager.connect(signers[17]).stake(epoch, stakeOfStaker);
       await assertRevert(tx, 'less than minimum safe Razor');
     });
   });
