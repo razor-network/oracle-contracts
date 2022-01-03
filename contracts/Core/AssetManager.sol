@@ -76,7 +76,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         checkState(State.Confirm, epochLength)
     {
         require(id != 0, "ID cannot be 0");
-        require(collections[id].id == id, "Asset is not a collection");
+        require(id <= numCollections, "ID does not exist");
 
         uint32 epoch = _getEpoch(epochLength);
         if (assetStatus) {
@@ -139,7 +139,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
-        require(collections[collectionID].id == collectionID, "Collection ID not present");
+        require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         uint32 epoch = _getEpoch(epochLength);
         collections[collectionID].power = power;
@@ -171,13 +171,13 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function getCollectionStatus(uint16 id) external view override returns (bool) {
-        require(collections[id].id == id, "Asset is not a collection");
+        require(id <= numCollections, "ID does not exist");
 
         return collections[id].active;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
-        require(collections[id].id == id, "Asset is not a collection");
+        require(id <= numCollections, "ID does not exist");
 
         return collections[id].power;
     }

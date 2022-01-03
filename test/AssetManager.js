@@ -150,7 +150,7 @@ describe('AssetManager', function () {
     it('should not be able to get the active status of any asset is not a collection', async function () {
       const numCollections = await assetManager.getNumCollections();
       const tx2 = assetManager.getCollectionStatus(numCollections + 1);
-      await assertRevert(tx2, 'Asset is not a collection');
+      await assertRevert(tx2, 'ID does not exist');
     });
 
     it('should be able to remove job from collection', async function () {
@@ -210,13 +210,13 @@ describe('AssetManager', function () {
       const tx1 = assetManager.setCollectionStatus(true, 0);// id should not be zero
       await assertRevert(tx1, 'ID cannot be 0');
       const tx2 = assetManager.setCollectionStatus(true, 100);// asset does not exist
-      await assertRevert(tx2, 'Asset is not a collection');
+      await assertRevert(tx2, 'ID does not exist');
     });
 
     it('should not be able to get power of any asset if not a collection', async function () {
       const numCollections = await assetManager.getNumCollections();
       const tx2 = assetManager.getCollectionPower(numCollections + 1);
-      await assertRevert(tx2, 'Asset is not a collection');
+      await assertRevert(tx2, 'ID does not exist');
     });
 
     it('should not create collection if it does not have any jobIDs', async function () {
