@@ -67,7 +67,7 @@ describe('BlockManager', function () {
     it('should not be able to stake, commit without initialization', async () => {
       const epoch = await getEpoch();
 
-      const tx1 = stakeManager.connect(signers[1]).stake(epoch, tokenAmount('18000'));
+      const tx1 = stakeManager.connect(signers[1]).stake(epoch, tokenAmount('180000'));
       await assertRevert(tx1, 'Contract should be initialized');
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -114,8 +114,8 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
 
       await razor.transfer(signers[1].address, tokenAmount('423000'));
-      await razor.transfer(signers[2].address, tokenAmount('19000'));
-      await razor.transfer(signers[3].address, tokenAmount('18000'));
+      await razor.transfer(signers[2].address, tokenAmount('190000'));
+      await razor.transfer(signers[3].address, tokenAmount('180000'));
 
       await razor.connect(signers[1]).approve(stakeManager.address, tokenAmount('420000'));
       const epoch = await getEpoch();
@@ -204,11 +204,11 @@ describe('BlockManager', function () {
     it('should not allow invalid proposals', async function () {
       const epoch = await getEpoch();
 
-      await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('18000'));
+      await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('180000'));
+      await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('180000'));
 
-      await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('18000'));
+      await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('180000'));
+      await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('180000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -393,12 +393,12 @@ describe('BlockManager', function () {
     it('all blocks being disputed and should not able to dispute same block again', async function () {
       await mineToNextEpoch();
 
-      await razor.connect(signers[0]).transfer(signers[4].address, tokenAmount('20000'));
+      await razor.connect(signers[0]).transfer(signers[4].address, tokenAmount('200000'));
 
       const epoch = await getEpoch();
 
-      await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
+      await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('190000'));
+      await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('190000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
@@ -534,9 +534,9 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
-      await razor.transfer(signers[5].address, tokenAmount('19000'));
-      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('19000'));
+      await razor.transfer(signers[5].address, tokenAmount('190000'));
+      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('190000'));
+      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('190000'));
 
       const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
@@ -586,14 +586,14 @@ describe('BlockManager', function () {
       // Commit
       await mineToNextEpoch();
       await razor.transfer(signers[6].address, tokenAmount('423000'));
-      await razor.transfer(signers[7].address, tokenAmount('19000'));
+      await razor.transfer(signers[7].address, tokenAmount('190000'));
       let epoch = await getEpoch();
 
       await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('420000'));
 
-      await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('18000'));
+      await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('180000'));
+      await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('180000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(
@@ -720,7 +720,7 @@ describe('BlockManager', function () {
         '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerIdAcc2, 2, staker.stake, tokenAmount('999'));
+      await stakeManager.setStakerStake(epoch, stakerIdAcc2, 2, staker.stake, tokenAmount('19999'));
       const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
       const tx = blockManager.connect(signers[3]).propose(epoch,
@@ -829,15 +829,15 @@ describe('BlockManager', function () {
     it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
       // commit
       await mineToNextEpoch();
-      await razor.transfer(signers[8].address, tokenAmount('19000'));
-      await razor.transfer(signers[9].address, tokenAmount('17000'));
+      await razor.transfer(signers[8].address, tokenAmount('190000'));
+      await razor.transfer(signers[9].address, tokenAmount('170000'));
       let epoch = await getEpoch();
 
-      await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
-      await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
+      await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('190000'));
+      await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('190000'));
 
-      await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
-      await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
+      await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('170000'));
+      await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('170000'));
 
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -880,14 +880,14 @@ describe('BlockManager', function () {
       // Commit
       await mineToNextEpoch();
       await razor.transfer(signers[10].address, tokenAmount('423000'));
-      await razor.transfer(signers[11].address, tokenAmount('18000'));
+      await razor.transfer(signers[11].address, tokenAmount('180000'));
       let epoch = await getEpoch();
 
       await razor.connect(signers[10]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[10]).stake(epoch, tokenAmount('420000'));
 
-      await razor.connect(signers[11]).approve(stakeManager.address, tokenAmount('18000'));
-      await stakeManager.connect(signers[11]).stake(epoch, tokenAmount('18000'));
+      await razor.connect(signers[11]).approve(stakeManager.address, tokenAmount('180000'));
+      await stakeManager.connect(signers[11]).stake(epoch, tokenAmount('180000'));
       const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const commitment1 = utils.solidityKeccak256(

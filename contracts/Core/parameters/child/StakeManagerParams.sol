@@ -22,8 +22,8 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint16 public epochLimitForUpdateCommission = 100;
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
-    uint256 public minStake = 1000 * (10**18);
-    uint256 public minSafeRazor = 1 * (10**18);
+    uint256 public minStake = 20000 * (10**18);
+    uint256 public minSafeRazor = 10000 * (10**18);
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
@@ -71,6 +71,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     function setMinSafeRazor(uint256 _minSafeRazor) external override onlyRole(GOVERNANCE_ROLE) {
+        require(_minSafeRazor <= minStake, "Invalid minSafeRazor Update");
         // slither-disable-next-line events-maths
         minSafeRazor = _minSafeRazor;
     }
