@@ -81,7 +81,7 @@ describe('Delegator', function () {
       await mineToNextState();// dispute
       await mineToNextState();// confirm
       const collectionName = 'Test Collection';
-      await assetManager.createCollection([1, 2], 1, power, collectionName);
+      await assetManager.createCollection(500, power, 1, [1, 2], collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('3'));
@@ -130,7 +130,7 @@ describe('Delegator', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
 
       let collectionName = 'Test Collection2';
-      await assetManager.createCollection([1, 2], 1, 2, collectionName);
+      await assetManager.createCollection(500, 2, 1, [1, 2], collectionName);
       await assetManager.setCollectionStatus(false, 3);
       await mineToNextEpoch();
       collectionName = 'Test Collection';

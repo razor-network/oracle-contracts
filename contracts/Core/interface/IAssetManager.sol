@@ -10,6 +10,8 @@ interface IAssetManager {
 
     function getCollectionIndex(uint16 id) external view returns (uint16);
 
+    function getCollectionTolerance(uint16 id) external view returns (uint16);
+
     function getNumActiveCollections() external view returns (uint256);
 
     function getCollectionPower(uint16 id) external view returns (int8);

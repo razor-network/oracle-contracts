@@ -139,4 +139,11 @@ contract Governance is Initializable, ACL, Constants {
         emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
+
+    function setMaxTolerance(uint8 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+        require(_maxTolerance <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
+        emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
+        assetManagerParams.setMaxTolerance(_maxTolerance);
+        rewardManagerParams.setMaxTolerance(_maxTolerance);
+    }
 }

@@ -68,6 +68,7 @@ library Structs {
         bool active;
         uint16 id;
         uint16 assetIndex;
+        uint16 tolerance;
         int8 power;
         uint32 aggregationMethod;
         uint16[] jobIDs;
