@@ -283,7 +283,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
-    await assetManager.createCollection([1], 1, 0, collectionName);
+    await assetManager.createCollection(500, 0, 1, [1], collectionName);
     await assetManager.setCollectionStatus(true, 2);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.setCollectionStatus(true, 2), expectedRevertMessage);
@@ -317,7 +317,7 @@ describe('Access Control Test', async () => {
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
-    await assetManager.createCollection([1, 2], 1, 0, 'test');
+    await assetManager.createCollection(500, 1, 1, [1, 2], 'test');
     await assetManager.setCollectionStatus(false, 3);
     await assetManager.executePendingDeactivations(1);
     await assetManager.revokeRole(assetConfirmerHash, signers[0].address);
@@ -326,19 +326,19 @@ describe('Access Control Test', async () => {
 
   it('createCollection() should not be accessable by anyone besides AssetCreator', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
+    await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
+    await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
+    await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
+    await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
   });
 
   it('createCollection() should be accessable by only AssetCreator', async () => {
@@ -351,26 +351,26 @@ describe('Access Control Test', async () => {
     await mineToNextState();// propose
     await mineToNextState();// dispute
     await mineToNextState();// confirm
-    await assetManager.createCollection([1, 2], 1, 0, 'test3');
+    await assetManager.createCollection(500, 1, 1, [1, 2], 'test');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
-    await assertRevert(assetManager.createCollection([1, 2], 1, 0, 'test'), expectedRevertMessage);
+    await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
   });
 
   it('updateCollection() should not be accessable by anyone besides AssetModifier', async () => {
     // Checking if Anyone can access it
-    await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
+    await assertRevert(assetManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await assetManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
+    await assertRevert(assetManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await assetManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
+    await assertRevert(assetManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
 
     // Checking if StakerActivityUpdater can access it
     await assetManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
+    await assertRevert(assetManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
   });
 
   it('updateCollection() should be accessable by only AssetModifier', async () => {
@@ -382,11 +382,11 @@ describe('Access Control Test', async () => {
     await mineToNextState();// propose
     await mineToNextState();// dispute
     await mineToNextState();// confirm
-    await assetManager.createCollection([1, 2], 1, 0, 'test');
+    await assetManager.createCollection(500, 0, 1, [1, 2], 'test');
 
-    await assetManager.updateCollection(3, 2, -2, [1, 2]);
+    await assetManager.updateCollection(3, 500, 2, -2, [1, 2]);
     await assetManager.revokeRole(assetModifierHash, signers[0].address);
-    await assertRevert(assetManager.updateCollection(3, 2, -2, [1, 2]), expectedRevertMessage);
+    await assertRevert(assetManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
   });
 
   it('Only Governer should able to update Block Reward', async () => {
