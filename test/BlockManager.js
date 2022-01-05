@@ -13,7 +13,7 @@ const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   STAKE_MODIFIER_ROLE,
-  ASSET_MODIFIER_ROLE,
+  COLLECTION_MODIFIER_ROLE,
   GOVERNER_ROLE,
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
@@ -34,7 +34,7 @@ const { utils } = ethers;
 describe('BlockManager', function () {
   let signers;
   let blockManager;
-  let assetManager;
+  let collectionManager;
   let voteManager;
   let razor;
   let stakeManager;
@@ -47,7 +47,7 @@ describe('BlockManager', function () {
     ({
       blockManager,
       governance,
-      assetManager,
+      collectionManager,
       razor,
       stakeManager,
       rewardManager,
@@ -86,9 +86,9 @@ describe('BlockManager', function () {
         stakeManager.address,
         rewardManager.address,
         voteManager.address,
-        assetManager.address,
+        collectionManager.address,
         randomNoManager.address,
-        assetManager.address
+        collectionManager.address
       );
       await governance.grantRole(GOVERNER_ROLE, signers[0].address);
       await assertRevert(tx, 'AccessControl');
@@ -97,7 +97,7 @@ describe('BlockManager', function () {
     it('should be able to initialize', async () => {
       await Promise.all(await initializeContracts());
 
-      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       let name;
@@ -107,7 +107,7 @@ describe('BlockManager', function () {
       let i = 0;
       while (i < 9) {
         name = `test${i}`;
-        await assetManager.createJob(weight, power, selectorType, name, selector, url);
+        await collectionManager.createJob(weight, power, selectorType, name, selector, url);
         i++;
       }
 
@@ -185,16 +185,16 @@ describe('BlockManager', function () {
       let Cname;
       for (let i = 1; i <= 8; i++) {
         Cname = `Test Collection${String(i)}`;
-        await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+        await collectionManager.createCollection([i, i + 1], 1, 3, Cname);
       }
       Cname = 'Test Collection9';
-      await assetManager.createCollection([9, 1], 1, 3, Cname);
+      await collectionManager.createCollection([9, 1], 1, 3, Cname);
 
       await blockManager.connect(signers[1]).claimBlockReward();
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      assertBNEqual(await assetManager.getNumActiveCollections(), toBigNumber('9'));
+      assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('9'));
       assertBNEqual(
         (await blockManager.getBlock(epoch - 1)).proposerId,
         await stakeManager.stakerIds(signers[1].address),
@@ -305,7 +305,7 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(1,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, sortedStakers);
 
@@ -458,7 +458,7 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(1,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       await blockManager.connect(signers[19]).giveSorted(epoch, 1, res1.sortedStakers);
@@ -486,7 +486,7 @@ describe('BlockManager', function () {
       const res2 = await calculateDisputesData(2,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       await blockManager.connect(signers[15]).giveSorted(epoch, 2, res2.sortedStakers);
@@ -645,7 +645,7 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(1,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       // Dispute in batches
@@ -946,7 +946,7 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(1,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
       await blockManager.connect(signers[10]).giveSorted(epoch, 1, res1.sortedStakers);
 
@@ -1422,7 +1422,7 @@ describe('BlockManager', function () {
       const res = await calculateDisputesData(1,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       await blockManager.giveSorted(epoch, 1, res.sortedStakers);

@@ -5,7 +5,7 @@ import "./interfaces/IBlockManagerParams.sol";
 import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
-import "./interfaces/IAssetManagerParams.sol";
+import "./interfaces/ICollectionManagerParams.sol";
 import "./interfaces/IDelegatorParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
 import "../storage/Constants.sol";
@@ -20,7 +20,7 @@ contract Governance is Initializable, ACL, Constants {
     IRewardManagerParams public rewardManagerParams;
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
-    IAssetManagerParams public assetManagerParams;
+    ICollectionManagerParams public collectionManagerParams;
     IDelegatorParams public delegatorParams;
     IRandomNoManagerParams public randomNoManagerParams;
 
@@ -34,7 +34,7 @@ contract Governance is Initializable, ACL, Constants {
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
-        address assetManagerAddress,
+        address collectionManagerAddress,
         address delegatorAddress,
         address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -42,7 +42,7 @@ contract Governance is Initializable, ACL, Constants {
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
-        assetManagerParams = IAssetManagerParams(assetManagerAddress);
+        collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
         delegatorParams = IDelegatorParams(delegatorAddress);
         randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
@@ -125,7 +125,7 @@ contract Governance is Initializable, ACL, Constants {
         rewardManagerParams.setEpochLength(_epochLength);
         stakeManagerParams.setEpochLength(_epochLength);
         voteManagerParams.setEpochLength(_epochLength);
-        assetManagerParams.setEpochLength(_epochLength);
+        collectionManagerParams.setEpochLength(_epochLength);
         delegatorParams.setEpochLength(_epochLength);
         randomNoManagerParams.setEpochLength(_epochLength);
     }

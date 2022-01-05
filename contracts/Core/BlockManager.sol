@@ -5,7 +5,7 @@ import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
-import "./interface/IAssetManager.sol";
+import "./interface/ICollectionManager.sol";
 import "../IDelegator.sol";
 import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
@@ -18,7 +18,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
-    IAssetManager public assetManager;
+    ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
     IDelegator public delegator;
 
@@ -30,14 +30,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         address stakeManagerAddress,
         address rewardManagerAddress,
         address voteManagerAddress,
-        address assetManagerAddress,
+        address collectionManagerAddress,
         address randomNoManagerAddress,
         address delegatorAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
-        assetManager = IAssetManager(assetManagerAddress);
+        collectionManager = ICollectionManager(collectionManagerAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
         delegator = IDelegator(delegatorAddress);
     }
@@ -65,7 +65,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
-        require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
+        require(medians.length == collectionManager.getNumActiveCollections(), "invalid block proposed");
 
         uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
@@ -84,7 +84,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16 medianIndex,
         uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
-        require(medianIndex <= (assetManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
+        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
@@ -190,10 +190,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        uint32 updateRegistry = assetManager.getUpdateRegistryEpoch();
+        uint32 updateRegistry = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistry == epoch) {
-            delegator.updateRegistry(assetManager.getNumCollections());
+            delegator.updateRegistry(collectionManager.getNumCollections());
         }
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());

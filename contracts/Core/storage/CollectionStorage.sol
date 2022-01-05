@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract AssetStorage {
-    enum AssetType {
-        Job,
-        Collection
-    }
     enum JobSelectorType {
         JSON,
         XHTML

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-interface IAssetManager {
+interface ICollectionManager {
     function getCollectionStatus(uint16 id) external view returns (bool);
 
     function getNumActiveCollections() external view returns (uint256);

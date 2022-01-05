@@ -5,7 +5,7 @@ import "./interface/IVoteManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IBlockManager.sol";
-import "./interface/IAssetManager.sol";
+import "./interface/ICollectionManager.sol";
 import "./storage/VoteStorage.sol";
 import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
@@ -15,7 +15,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IBlockManager public blockManager;
-    IAssetManager public assetManager;
+    ICollectionManager public collectionManager;
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint32 epoch, uint32 stakerId, uint48[] values, uint256 timestamp);
@@ -24,12 +24,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         address stakeManagerAddress,
         address rewardManagerAddress,
         address blockManagerAddress,
-        address assetManagerAddress
+        address collectionManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
-        assetManager = IAssetManager(assetManagerAddress);
+        collectionManager = ICollectionManager(collectionManagerAddress);
     }
 
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, epochLength) {
@@ -70,7 +70,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
 
-        require(values.length == assetManager.getNumActiveCollections(), "invalid values revealed");
+        require(values.length == collectionManager.getNumActiveCollections(), "invalid values revealed");
 
         //TODO: REQUIRE all assets to be revealed
         commitments[stakerId].commitmentHash = 0x0;

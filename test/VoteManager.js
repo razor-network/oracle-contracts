@@ -6,7 +6,7 @@ const { assert } = require('chai');
 const { utils } = require('ethers');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
-  ASSET_MODIFIER_ROLE,
+  COLLECTION_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
@@ -38,11 +38,11 @@ describe('VoteManager', function () {
     let rewardManager;
     let voteManager;
     let initializeContracts;
-    let assetManager;
+    let collectionManager;
 
     before(async () => {
       ({
-        blockManager, governance, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, governance, collectionManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -67,14 +67,14 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, assetManager.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address);
         await assertRevert(tx, 'AccessControl');
       });
 
       it('should be able to initialize', async function () {
         await Promise.all(await initializeContracts());
 
-        await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+        await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
         let name;
@@ -84,7 +84,7 @@ describe('VoteManager', function () {
         let i = 0;
         while (i < 9) {
           name = `test${i}`;
-          await assetManager.createJob(weight, power, selectorType, name, selector, url);
+          await collectionManager.createJob(weight, power, selectorType, name, selector, url);
           i++;
         }
         await mineToNextEpoch();
@@ -96,10 +96,10 @@ describe('VoteManager', function () {
         let Cname;
         for (let i = 1; i <= 8; i++) {
           Cname = `Test Collection${String(i)}`;
-          await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+          await collectionManager.createCollection([i, i + 1], 1, 3, Cname);
         }
         Cname = 'Test Collection10';
-        await assetManager.createCollection([9, 1], 1, 3, Cname);
+        await collectionManager.createCollection([9, 1], 1, 3, Cname);
 
         await mineToNextEpoch();
         await mineToNextEpoch();
@@ -127,7 +127,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, assetManager.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address);
         await assertRevert(tx, 'contract already initialized');
       });
 
@@ -954,7 +954,7 @@ describe('VoteManager', function () {
       it('Correct penalties need to be given even after an asset has been deactivated', async function () {
         await mineToNextState();
         await mineToNextState();
-        await assetManager.setCollectionStatus(false, 9);
+        await collectionManager.setCollectionStatus(false, 9);
         await mineToNextState();
         let epoch = await getEpoch();
         await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('10000'));

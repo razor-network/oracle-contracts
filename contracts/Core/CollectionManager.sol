@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./interface/IAssetManager.sol";
+import "./interface/ICollectionManager.sol";
 import "../IDelegator.sol";
-import "./storage/AssetStorage.sol";
-import "./parameters/child/AssetManagerParams.sol";
+import "./storage/CollectionStorage.sol";
+import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
 
-contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetManager {
+contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, ICollectionManager {
     IDelegator public delegator;
 
-    event AssetCreated(AssetType assetType, uint16 id, uint256 timestamp);
+    event JobCreated(uint16 id, uint256 timestamp);
+
+    event CollectionCreated(uint16 id, uint256 timestamp);
 
     event JobUpdated(
         uint16 id,
@@ -39,13 +41,13 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         string calldata name,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) {
         require(weight <= 100, "Weight beyond max");
         numJobs = numJobs + 1;
 
         jobs[numJobs] = Structs.Job(numJobs, uint8(selectorType), weight, power, name, selector, url);
 
-        emit AssetCreated(AssetType.Job, numJobs, block.timestamp);
+        emit JobCreated(numJobs, block.timestamp);
     }
 
     function updateJob(
@@ -55,7 +57,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
@@ -72,7 +74,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     function setCollectionStatus(bool assetStatus, uint16 id)
         external
-        onlyRole(ASSET_MODIFIER_ROLE)
+        onlyRole(COLLECTION_MODIFIER_ROLE)
         checkState(State.Confirm, epochLength)
     {
         require(id != 0, "ID cannot be 0");
@@ -111,7 +113,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         uint32 aggregationMethod,
         int8 power,
         string calldata name
-    ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
 
         uint32 epoch = _getEpoch(epochLength);
@@ -128,7 +130,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
         numActiveCollections = numActiveCollections + 1;
         updateRegistry = epoch + 1;
-        emit AssetCreated(AssetType.Collection, numCollections, block.timestamp);
+        emit CollectionCreated(numCollections, block.timestamp);
 
         delegator.setIDName(name, numCollections);
     }
@@ -138,7 +140,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
-    ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         uint32 epoch = _getEpoch(epochLength);

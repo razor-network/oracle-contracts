@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./Core/StateManager.sol";
-import "./Core/interface/IAssetManager.sol";
+import "./Core/interface/ICollectionManager.sol";
 import "./Core/interface/IBlockManager.sol";
 import "./IDelegator.sol";
 import "./Core/parameters/child/DelegatorParams.sol";
@@ -12,13 +12,13 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
     mapping(bytes32 => uint16) public ids;
     mapping(uint16 => uint16) public assetRegistry;
 
-    IAssetManager public assetManager;
+    ICollectionManager public assetManager;
     IBlockManager public blockManager;
 
     function updateAddress(address newDelegateAddress, address newResultAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegateAddress != address(0x0), "Zero Address check");
         require(newResultAddress != address(0x0), "Zero Address check");
-        assetManager = IAssetManager(newDelegateAddress);
+        assetManager = ICollectionManager(newDelegateAddress);
         blockManager = IBlockManager(newResultAddress);
     }
 

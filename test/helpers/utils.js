@@ -6,7 +6,7 @@ const {
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
 
-const calculateDisputesData = async (medianIndex, voteManager, stakeManager, assetManager, epoch) => {
+const calculateDisputesData = async (medianIndex, voteManager, stakeManager, collectionManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);

@@ -6,7 +6,7 @@ const { assert } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
-  ASSET_MODIFIER_ROLE,
+  COLLECTION_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -28,7 +28,7 @@ describe('Delegator', function () {
   let signers;
   let blockManager;
   let delegator;
-  let assetManager;
+  let collectionManager;
   let voteManager;
   let razor;
   let stakeManager;
@@ -37,7 +37,7 @@ describe('Delegator', function () {
   before(async () => {
     ({
       blockManager,
-      assetManager,
+      collectionManager,
       razor,
       stakeManager,
       voteManager,
@@ -53,21 +53,21 @@ describe('Delegator', function () {
 
     it('should be able to get correct collectionID mapped to its hashed name but not registered yet', async function () {
       await Promise.all(await initializeContracts());
-      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
       let url = 'http://testurl.com';
       let selector = 'selector';
       let selectorType = 0;
       let name = 'testJSON';
       let power = -2;
       let weight = 50;
-      await assetManager.createJob(weight, power, selectorType, name, selector, url);
+      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       url = 'http://testurl.com/2';
       selector = 'selector/2';
       selectorType = 1;
       name = 'testXHTML';
       power = 2;
       weight = 50;
-      await assetManager.createJob(weight, power, selectorType, name, selector, url);
+      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       power = 3;
       await mineToNextState();// reveal
       await mineToNextState();// propose
@@ -75,11 +75,11 @@ describe('Delegator', function () {
       await mineToNextState();// confirm
       const epoch = await getEpoch();
       const collectionName = 'Test Collection';
-      await assetManager.createCollection([1, 2], 1, power, collectionName);
+      await collectionManager.createCollection([1, 2], 1, power, collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
-      assertBNEqual(await assetManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       assertBNEqual(await delegator.assetRegistry(1), toBigNumber('0'));
     });
 
@@ -127,7 +127,7 @@ describe('Delegator', function () {
 
       assertBNEqual(await delegator.assetRegistry(1), toBigNumber('1'));
       // const collectionName = 'Test Collection2';
-      // await assetManager.createCollection([1, 2], 1, 2, collectionName);
+      // await collectionManager.createCollection([1, 2], 1, 2, collectionName);
       // assertBNEqual(await delegator.assetRegistry(2), toBigNumber('0'));
     });
 
@@ -147,7 +147,7 @@ describe('Delegator', function () {
       await mineToNextState();
 
       for (let i = 2; i <= 9; i++) {
-        await assetManager.createCollection([1, 2], 1, 2, `Test Collection${String(i)}`);
+        await collectionManager.createCollection([1, 2], 1, 2, `Test Collection${String(i)}`);
         assertBNEqual(await delegator.assetRegistry(i), toBigNumber('0'));
       }
       await mineToNextState();
@@ -188,14 +188,14 @@ describe('Delegator', function () {
 
     it('getResult should give the right value after deactivation of assets', async function () {
       let epoch = await getEpoch();
-      await assetManager.setCollectionStatus(false, 2);
-      await assetManager.setCollectionStatus(false, 3);
-      await assetManager.setCollectionStatus(false, 4);
-      assert(await assetManager.getCollectionStatus(2) === false);
-      assert(await assetManager.getCollectionStatus(3) === false);
-      assert(await assetManager.getCollectionStatus(4) === false);
-      assertBNEqual(await assetManager.getNumActiveCollections(), toBigNumber('6'));
-      assertBNEqual(await assetManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
+      await collectionManager.setCollectionStatus(false, 2);
+      await collectionManager.setCollectionStatus(false, 3);
+      await collectionManager.setCollectionStatus(false, 4);
+      assert(await collectionManager.getCollectionStatus(2) === false);
+      assert(await collectionManager.getCollectionStatus(3) === false);
+      assert(await collectionManager.getCollectionStatus(4) === false);
+      assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('6'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
       epoch = await getEpoch();
 
@@ -230,7 +230,7 @@ describe('Delegator', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
       let j = 1;
       for (let i = 1; i <= 9; i++) {
-        const collection = await assetManager.getCollection(i);
+        const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
           assertBNEqual(await delegator.assetRegistry(i), toBigNumber(j));
           j++;
@@ -252,16 +252,16 @@ describe('Delegator', function () {
       await mineToNextState();
       await mineToNextState();
       let epoch = await getEpoch();
-      await assetManager.setCollectionStatus(true, 2);
-      await assetManager.setCollectionStatus(true, 3);
-      await assetManager.setCollectionStatus(true, 4);
-      await assetManager.setCollectionStatus(false, 8);
-      await assetManager.setCollectionStatus(false, 9);
-      assert(await assetManager.getCollectionStatus(2) === true);
-      assert(await assetManager.getCollectionStatus(3) === true);
-      assert(await assetManager.getCollectionStatus(4) === true);
-      assertBNEqual(await assetManager.getNumActiveCollections(), toBigNumber('7'));
-      assertBNEqual(await assetManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
+      await collectionManager.setCollectionStatus(true, 2);
+      await collectionManager.setCollectionStatus(true, 3);
+      await collectionManager.setCollectionStatus(true, 4);
+      await collectionManager.setCollectionStatus(false, 8);
+      await collectionManager.setCollectionStatus(false, 9);
+      assert(await collectionManager.getCollectionStatus(2) === true);
+      assert(await collectionManager.getCollectionStatus(3) === true);
+      assert(await collectionManager.getCollectionStatus(4) === true);
+      assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('7'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
       epoch = await getEpoch();
 
@@ -296,7 +296,7 @@ describe('Delegator', function () {
       await blockManager.connect(signers[5]).claimBlockReward();
       let j = 1;
       for (let i = 1; i <= 9; i++) {
-        const collection = await assetManager.getCollection(i);
+        const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
           assertBNEqual(await delegator.assetRegistry(i), toBigNumber(j));
           j++;
