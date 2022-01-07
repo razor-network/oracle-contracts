@@ -15,7 +15,7 @@ const {
 } = require('./helpers/constants');
 const {
   getEpoch,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
   toBigNumber,
   tokenAmount,
@@ -119,13 +119,13 @@ describe('RandomNoManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
       // Dispute
       await mineToNextState();
       // Confirm
