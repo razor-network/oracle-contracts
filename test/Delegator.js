@@ -75,7 +75,7 @@ describe('Delegator', function () {
       await mineToNextState();// confirm
       const epoch = await getEpoch();
       const collectionName = 'Test Collection';
-      await collectionManager.createCollection([1, 2], 1, power, collectionName);
+      await collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
@@ -147,7 +147,7 @@ describe('Delegator', function () {
       await mineToNextState();
 
       for (let i = 2; i <= 9; i++) {
-        await collectionManager.createCollection([1, 2], 1, 2, `Test Collection${String(i)}`);
+        await collectionManager.createCollection(500, 2, 1, [1, 2], `Test Collection${String(i)}`);
         assertBNEqual(await delegator.assetRegistry(i), toBigNumber('0'));
       }
       await mineToNextState();

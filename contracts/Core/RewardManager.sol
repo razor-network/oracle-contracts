@@ -5,6 +5,7 @@ import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IRewardManager.sol";
+import "./interface/ICollectionManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
@@ -16,6 +17,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
+    ICollectionManager public collectionManager;
 
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -23,11 +25,13 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     function initialize(
         address stakeManagerAddress,
         address voteManagersAddress,
-        address blockManagerAddress
+        address blockManagerAddress,
+        address collectionManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
+        collectionManager = ICollectionManager(collectionManagerAddress);
     }
 
     /// @notice gives penalty to stakers for failing to reveal or
@@ -119,11 +123,16 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;
             uint64 prod = age * voteValueLastEpoch;
+            // slither-disable-next-line calls-loop
+            uint16 tolerance = collectionManager.getCollectionTolerance(i);
+            tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
+            uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+            uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
             // if (voteWeightLastEpoch > 0) {
-            if (voteValueLastEpoch > medianLastEpoch) {
-                penalty = penalty + (prod / medianLastEpoch - age);
-            } else {
-                penalty = penalty + (age - prod / medianLastEpoch);
+            if (voteValueLastEpoch > maxVoteTolerance) {
+                penalty = penalty + (prod / maxVoteTolerance - age);
+            } else if (voteValueLastEpoch < minVoteTolerance) {
+                penalty = penalty + (age - prod / minVoteTolerance);
             }
         }
 

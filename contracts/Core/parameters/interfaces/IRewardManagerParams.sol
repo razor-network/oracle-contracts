@@ -11,4 +11,6 @@ interface IRewardManagerParams {
     function setGracePeriod(uint16 _gracePeriod) external;
 
     function setMaxAge(uint32 _maxAge) external;
+
+    function setMaxTolerance(uint16 _maxTolerance) external;
 }

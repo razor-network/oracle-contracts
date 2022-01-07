@@ -11,4 +11,6 @@ interface ICollectionManager {
     function getNumCollections() external view returns (uint16);
 
     function getUpdateRegistryEpoch() external view returns (uint32);
+
+    function getCollectionTolerance(uint16 id) external view returns (uint16);
 }

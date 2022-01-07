@@ -17,7 +17,7 @@ const setupContracts = async () => {
   const BlockManager = await ethers.getContractFactory('BlockManager');
   const RandomNoManager = await ethers.getContractFactory('RandomNoManager');
   const Delegator = await ethers.getContractFactory('Delegator');
-  const AssetManager = await ethers.getContractFactory('AssetManager');
+  const CollectionManager = await ethers.getContractFactory('CollectionManager');
   const RAZOR = await ethers.getContractFactory('RAZOR');
   const StakeManager = await ethers.getContractFactory('StakeManager');
   const RewardManager = await ethers.getContractFactory('RewardManager');
@@ -29,7 +29,7 @@ const setupContracts = async () => {
   const blockManager = await BlockManager.deploy();
   const stakedToken = await ethers.getContractFactory('StakedToken');
   const delegator = await Delegator.deploy();
-  const collectionManager = await AssetManager.deploy();
+  const collectionManager = await CollectionManager.deploy();
   const stakeManager = await StakeManager.deploy();
   const rewardManager = await RewardManager.deploy();
   const voteManager = await VoteManager.deploy();
@@ -53,7 +53,7 @@ const setupContracts = async () => {
       randomNoManager.address, delegator.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
-    rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address),
+    rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, collectionManager.address),
     delegator.updateAddress(collectionManager.address, blockManager.address),
     collectionManager.upgradeDelegator(delegator.address),
     randomNoManager.initialize(blockManager.address),

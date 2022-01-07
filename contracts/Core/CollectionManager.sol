@@ -7,7 +7,7 @@ import "./storage/CollectionStorage.sol";
 import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
 
-contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, ICollectionManager {
+contract CollectionManager is CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
     IDelegator public delegator;
 
     event JobCreated(uint16 id, uint256 timestamp);
@@ -27,7 +27,15 @@ contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, IC
 
     event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
 
-    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(
+        uint16 id,
+        uint32 epoch,
+        uint32 aggregationMethod,
+        int8 power,
+        uint16 tolerance,
+        uint16[] updatedJobIDs,
+        uint256 timestamp
+    );
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -109,12 +117,14 @@ contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, IC
     }
 
     function createCollection(
-        uint16[] memory jobIDs,
-        uint32 aggregationMethod,
+        uint16 tolerance,
         int8 power,
+        uint32 aggregationMethod,
+        uint16[] memory jobIDs,
         string calldata name
     ) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
 
         uint32 epoch = _getEpoch(epochLength);
 
@@ -126,7 +136,7 @@ contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, IC
 
         numCollections = numCollections + 1;
 
-        collections[numCollections] = Structs.Collection(true, numCollections, power, aggregationMethod, jobIDs, name);
+        collections[numCollections] = Structs.Collection(true, numCollections, tolerance, power, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
         updateRegistry = epoch + 1;
@@ -137,25 +147,21 @@ contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, IC
 
     function updateCollection(
         uint16 collectionID,
+        uint16 tolerance,
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch(epochLength);
         collections[collectionID].power = power;
+        collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
 
-        emit CollectionUpdated(
-            collectionID,
-            epoch,
-            collections[collectionID].aggregationMethod,
-            collections[collectionID].power,
-            collections[collectionID].jobIDs,
-            block.timestamp
-        );
+        emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
     }
 
     function getJob(uint16 id) external view returns (Structs.Job memory job) {
@@ -176,6 +182,10 @@ contract AssetManager is AssetStorage, StateManager, CollectionManagerParams, IC
         require(id <= numCollections, "ID does not exist");
 
         return collections[id].active;
+    }
+
+    function getCollectionTolerance(uint16 i) external view override returns (uint16) {
+        return collections[i].tolerance;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {

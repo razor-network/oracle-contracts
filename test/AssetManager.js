@@ -81,6 +81,7 @@ describe('AssetManager', function () {
 
     it('should be able to create a Collection with both one or more than one jobs', async function () {
       const power = 3;
+      const tolerance = 500;
       await mineToNextState();// reveal
       await mineToNextState();// propose
       await mineToNextState();// dispute
@@ -88,8 +89,8 @@ describe('AssetManager', function () {
       const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const collectionName2 = 'Test Collection2';
-      await collectionManager.createCollection([1, 2], 1, power, collectionName);
-      await collectionManager.createCollection([1], 2, power, collectionName2);
+      await collectionManager.createCollection(tolerance, power, 1, [1, 2], collectionName);
+      await collectionManager.createCollection(tolerance, power, 2, [1], collectionName2);
       const collection1 = await collectionManager.getCollection(1);
       const collection2 = await collectionManager.getCollection(2);
       assert(collection1.name === collectionName);
@@ -112,15 +113,15 @@ describe('AssetManager', function () {
       const weight = 50;
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
 
-      await collectionManager.updateCollection(1, 1, 3, [1, 2, 5]);
-      const collection = await collectionManager.getCollection(1);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 5]);
+      const collection = await collectionManager.getCollection(1)
       assert((collection.jobIDs).length === 3);
       assertBNEqual(collection.jobIDs[2], toBigNumber('5'));
     });
 
     it('should be able to update collection', async function () {
-      await collectionManager.updateCollection(1, 2, 5, [1, 2, 5]);
-      const collection = await collectionManager.getCollection(1);
+      await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 5]);
+      const collection = await collectionManager.getCollection(1)
       assertBNEqual(collection.power, toBigNumber('5'));
       assertBNEqual(collection.aggregationMethod, toBigNumber('2'));
     });
@@ -154,7 +155,7 @@ describe('AssetManager', function () {
     });
 
     it('should be able to remove job from collection', async function () {
-      await collectionManager.updateCollection(1, 1, 3, [1, 5]);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 5]);
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 2);
       assertBNEqual(collection.jobIDs[1], toBigNumber('5'));
@@ -163,7 +164,7 @@ describe('AssetManager', function () {
     it('should be able to inactivate collection', async function () {
       let epoch = await getEpoch();
       const collectionName = 'Test Collection6';
-      await collectionManager.createCollection([1, 2], 2, 0, collectionName);
+      await collectionManager.createCollection(500, 0, 2, [1, 2], collectionName);
       await collectionManager.setCollectionStatus(false, 3);
       const collectionIsActive = await collectionManager.getCollectionStatus(3);
       assert(collectionIsActive === false);
@@ -221,18 +222,18 @@ describe('AssetManager', function () {
 
     it('should not create collection if it does not have any jobIDs', async function () {
       const collectionName = 'Test Collection2';
-      const tx1 = collectionManager.createCollection([], 1, 0, collectionName);
+      const tx1 = collectionManager.createCollection(0, 0, 1, [], collectionName);
       await assertRevert(tx1, 'no jobs added');
     });
 
     it('should not create collection if same named collection exists', async function () {
       const collectionName = 'Test Collection2';
-      const tx = collectionManager.createCollection([1, 2], 1, 0, collectionName);
+      const tx = collectionManager.createCollection(0, 0, 1, [1, 2], collectionName);
       await assertRevert(tx, 'Similar collection exists');
     });
 
     it('updateCollection should only work for collections which exists', async function () {
-      const tx = collectionManager.updateCollection(10, 2, 5, [1]);
+      const tx = collectionManager.updateCollection(10, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection ID not present');
     });
 
@@ -244,7 +245,7 @@ describe('AssetManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      const tx = collectionManager.updateCollection(3, 2, 5, [1]);
+      const tx = collectionManager.updateCollection(3, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection is inactive');
     });
 
@@ -254,7 +255,7 @@ describe('AssetManager', function () {
       const tx = collectionManager.updateJob(5, 50, 4, 0, 'selector/6', 'http://testurl.com/6');
       await assertRevert(tx, 'incorrect state');
 
-      const tx2 = collectionManager.updateCollection(3, 2, 5, [1, 2, 5]);
+      const tx2 = collectionManager.updateCollection(3, 500, 2, 5, [1, 2, 5]);
       await assertRevert(tx2, 'incorrect state');
     });
 
