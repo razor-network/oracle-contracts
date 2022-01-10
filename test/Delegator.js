@@ -80,7 +80,7 @@ describe('Delegator', function () {
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
-      assertBNEqual(await delegator.assetRegistry(1), toBigNumber('0'));
+      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to get the correct number of active assets from delegator', async function () {
@@ -125,10 +125,10 @@ describe('Delegator', function () {
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
-      assertBNEqual(await delegator.assetRegistry(1), toBigNumber('1'));
+      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('1'));
       // const collectionName = 'Test Collection2';
       // await collectionManager.createCollection([1, 2], 1, 2, collectionName);
-      // assertBNEqual(await delegator.assetRegistry(2), toBigNumber('0'));
+      // assertBNEqual(await collectionManager.idToIndexRegistry(2), toBigNumber('0'));
     });
 
     it('should be able to fetch the result of the desired id', async function () {
@@ -148,7 +148,7 @@ describe('Delegator', function () {
 
       for (let i = 2; i <= 9; i++) {
         await collectionManager.createCollection(500, 2, 1, [1, 2], `Test Collection${String(i)}`);
-        assertBNEqual(await delegator.assetRegistry(i), toBigNumber('0'));
+        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
       }
       await mineToNextState();
       const epoch = await getEpoch();
@@ -182,7 +182,7 @@ describe('Delegator', function () {
 
       await blockManager.connect(signers[5]).claimBlockReward();
       for (let i = 1; i <= 9; i++) {
-        assertBNEqual(await delegator.assetRegistry(i), toBigNumber(i));
+        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i));
       }
     });
 
@@ -232,10 +232,10 @@ describe('Delegator', function () {
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
-          assertBNEqual(await delegator.assetRegistry(i), toBigNumber(j));
+          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(j));
           j++;
         } else {
-          assertBNEqual(await delegator.assetRegistry(i), toBigNumber('0'));
+          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
         }
       }
       await mineToNextEpoch();
@@ -298,10 +298,10 @@ describe('Delegator', function () {
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
-          assertBNEqual(await delegator.assetRegistry(i), toBigNumber(j));
+          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(j));
           j++;
         } else {
-          assertBNEqual(await delegator.assetRegistry(i), toBigNumber('0'));
+          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
         }
       }
       await mineToNextEpoch();

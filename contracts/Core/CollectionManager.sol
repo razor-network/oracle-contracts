@@ -92,25 +92,23 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         if (assetStatus) {
             if (!collections[id].active) {
                 // slither-disable-next-line incorrect-equality
-                if (updateRegistry == epoch) {
-                    // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign
-                    delegator.updateRegistry(numCollections);
+                if (updateRegistryEpoch == epoch) {
+                    _updateRegistry();
                 }
                 numActiveCollections = numActiveCollections + 1;
                 collections[id].active = assetStatus;
-                updateRegistry = epoch + 1;
+                updateRegistryEpoch = epoch + 1;
                 emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
         } else {
             if (collections[id].active) {
                 // slither-disable-next-line incorrect-equality
-                if (updateRegistry == epoch) {
-                    // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign
-                    delegator.updateRegistry(numCollections);
+                if (updateRegistryEpoch == epoch) {
+                    _updateRegistry();
                 }
                 numActiveCollections = numActiveCollections - 1;
                 collections[id].active = assetStatus;
-                updateRegistry = epoch + 1;
+                updateRegistryEpoch = epoch + 1;
                 emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
             }
         }
@@ -129,9 +127,8 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint32 epoch = _getEpoch(epochLength);
 
         // slither-disable-next-line incorrect-equality
-        if (updateRegistry == epoch) {
-            // slither-disable-next-line reentrancy-events,reentrancy-no-eth,reentrancy-benign
-            delegator.updateRegistry(numCollections);
+        if (updateRegistryEpoch == epoch) {
+            _updateRegistry();
         }
 
         numCollections = numCollections + 1;
@@ -139,7 +136,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         collections[numCollections] = Structs.Collection(true, numCollections, tolerance, power, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
-        updateRegistry = epoch + 1;
+        updateRegistryEpoch = epoch + 1;
         emit CollectionCreated(numCollections, block.timestamp);
 
         delegator.setIDName(name, numCollections);
@@ -164,6 +161,10 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
     }
 
+    function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
+        _updateRegistry();
+    }
+
     function getJob(uint16 id) external view returns (Structs.Job memory job) {
         require(id != 0, "ID cannot be 0");
         require(id <= numJobs, "ID does not exist");
@@ -185,7 +186,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
     }
 
     function getCollectionTolerance(uint16 i) external view override returns (uint16) {
-        return collections[i].tolerance;
+        return collections[indexToIdRegistry[i + 1]].tolerance;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
@@ -207,6 +208,23 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
     }
 
     function getUpdateRegistryEpoch() external view override returns (uint32) {
-        return updateRegistry;
+        return updateRegistryEpoch;
+    }
+
+    function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
+        return idToIndexRegistry[id];
+    }
+
+    function _updateRegistry() internal {
+        uint8 j = 1;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                idToIndexRegistry[i] = j;
+                indexToIdRegistry[j] = i;
+                j = j + 1;
+            } else {
+                idToIndexRegistry[i] = 0;
+            }
+        }
     }
 }

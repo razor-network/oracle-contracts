@@ -125,6 +125,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
+            uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+            // slither-disable-next-line incorrect-equality
+            if (updateRegistryEpoch == epoch) {
+                collectionManager.updateRegistry();
+            }
             return;
         }
         uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
@@ -135,6 +140,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
+            uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+            // slither-disable-next-line incorrect-equality
+            if (updateRegistryEpoch == epoch - 1) {
+                collectionManager.updateRegistry();
+            }
             return;
         }
         _confirmBlock(epoch - 1, stakerId);
@@ -190,10 +200,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        uint32 updateRegistry = collectionManager.getUpdateRegistryEpoch();
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
-        if (updateRegistry == epoch) {
-            delegator.updateRegistry(collectionManager.getNumCollections());
+        if (updateRegistryEpoch == epoch) {
+            collectionManager.updateRegistry();
         }
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());

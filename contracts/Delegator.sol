@@ -10,7 +10,6 @@ import "./Core/storage/Constants.sol";
 
 contract Delegator is StateManager, DelegatorParams, IDelegator {
     mapping(bytes32 => uint16) public ids;
-    mapping(uint16 => uint16) public assetRegistry;
 
     ICollectionManager public collectionManager;
     IBlockManager public blockManager;
@@ -28,26 +27,12 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
         ids[_name] = _id;
     }
 
-    function updateRegistry(uint16 numCollections) external override onlyRole(REGISTRY_MODIFIER_ROLE) {
-        uint8 j = 1;
-        for (uint16 i = 1; i <= numCollections; i++) {
-            // slither-disable-next-line calls-loop
-            bool active = collectionManager.getCollectionStatus(i);
-            if (active) {
-                assetRegistry[i] = j;
-                j = j + 1;
-            } else {
-                assetRegistry[i] = 0;
-            }
-        }
-    }
-
     function getNumActiveCollections() external view override returns (uint256) {
         return collectionManager.getNumActiveCollections();
     }
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
-        uint16 index = assetRegistry[ids[_name]];
+        uint16 index = collectionManager.getIdToIndexRegistryValue(ids[_name]);
         uint32 epoch = _getEpoch(epochLength);
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collectionManager.getCollectionPower(ids[_name]);

@@ -55,6 +55,9 @@ module.exports = async () => {
   // keccak256("DELEGATOR_MODIFIER_ROLE")
   const DELEGATOR_MODIFIER_ROLE = '0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597';
 
+  // keccak256("REGISTRY_MODIFIER_ROLE")
+  const REGISTRY_MODIFIER_ROLE = '0xca51085219bef34771da292cb24ee4fcf0ae6bdba1a62c17d1fb7d58be802883';
+
   // keccak256("GOVERNER_ROLE")
   const GOVERNER_ROLE = '0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e';
 
@@ -125,6 +128,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
   pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, collectionManagerAddress));

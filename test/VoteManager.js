@@ -102,7 +102,6 @@ describe('VoteManager', function () {
         await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
-        await mineToNextEpoch();
         await razor.transfer(signers[2].address, tokenAmount('3000'));
         await razor.transfer(signers[3].address, tokenAmount('423000'));
         await razor.transfer(signers[4].address, tokenAmount('19000'));
@@ -1059,13 +1058,18 @@ describe('VoteManager', function () {
         let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
         expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
         for (let i = 0; i < votes2.length; i++) {
+          const tolerance = await collectionManager.getCollectionTolerance(i);
+          const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
+          const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
+
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-          if (votes2[i] > medians[i]) {
-            toAdd = (prod.div(medians[i])).sub(expectedAgeAfter2);
-          } else {
-            toAdd = expectedAgeAfter2.sub(prod.div(medians[i]));
+          if (votes2[i] > maxVoteTolerance) {
+            toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+            penalty = penalty.add(toAdd);
+          } else if (votes2[i] < minVoteTolerance) {
+            toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+            penalty = penalty.add(toAdd);
           }
-          penalty = penalty.add(toAdd);
         }
         expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
 

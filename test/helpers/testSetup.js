@@ -72,8 +72,7 @@ const setupContracts = async () => {
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
 
-    delegator.grantRole(REGISTRY_MODIFIER_ROLE, collectionManager.address),
-    delegator.grantRole(REGISTRY_MODIFIER_ROLE, blockManager.address),
+    collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManager.address),
 
     collectionManager.grantRole(GOVERNANCE_ROLE, governance.address),
     blockManager.grantRole(GOVERNANCE_ROLE, governance.address),

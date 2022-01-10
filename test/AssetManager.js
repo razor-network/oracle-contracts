@@ -114,14 +114,14 @@ describe('AssetManager', function () {
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
 
       await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 5]);
-      const collection = await collectionManager.getCollection(1)
+      const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
       assertBNEqual(collection.jobIDs[2], toBigNumber('5'));
     });
 
     it('should be able to update collection', async function () {
       await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 5]);
-      const collection = await collectionManager.getCollection(1)
+      const collection = await collectionManager.getCollection(1);
       assertBNEqual(collection.power, toBigNumber('5'));
       assertBNEqual(collection.aggregationMethod, toBigNumber('2'));
     });
