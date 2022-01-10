@@ -79,16 +79,18 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
-        // Not reveal penalty due to Randao
-        if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
-            newStake = newStake - randaoPenalty;
-        }
-
         if (inactiveEpochs > gracePeriod) {
             (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
             reason = StakeChanged.InactivityPenalty;
         }
+
+        // Not reveal penalty due to Randao
+        if (epochLastRevealed < epochLastCommitted) {
+            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
+            newStake = newStake - randaoPenalty;
+            newAge = 0;
+        }
+
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
