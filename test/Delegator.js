@@ -18,7 +18,7 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
 } = require('./helpers/utils');
 
@@ -81,7 +81,7 @@ describe('Delegator', function () {
       await mineToNextState();// dispute
       await mineToNextState();// confirm
       const collectionName = 'Test Collection';
-      await assetManager.createCollection([1, 2], 1, power, collectionName);
+      await assetManager.createCollection(500, power, 1, [1, 2], collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await delegator.ids(hName);
       assertBNEqual(collectionID, toBigNumber('3'));
@@ -117,20 +117,20 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
       await mineToNextState();
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
       let collectionName = 'Test Collection2';
-      await assetManager.createCollection([1, 2], 1, 2, collectionName);
+      await assetManager.createCollection(500, 2, 1, [1, 2], collectionName);
       await assetManager.setCollectionStatus(false, 3);
       await mineToNextEpoch();
       collectionName = 'Test Collection';
@@ -161,13 +161,13 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100, 200],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
 
       await mineToNextState();
       await mineToNextState();

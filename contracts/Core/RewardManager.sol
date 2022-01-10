@@ -5,6 +5,7 @@ import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IRewardManager.sol";
+import "./interface/IAssetManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
@@ -16,6 +17,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
+    IAssetManager public assetManager;
 
     /// @param stakeManagerAddress The address of the VoteManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -23,11 +25,13 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     function initialize(
         address stakeManagerAddress,
         address voteManagersAddress,
-        address blockManagerAddress
+        address blockManagerAddress,
+        address assetManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         voteManager = IVoteManager(voteManagersAddress);
         blockManager = IBlockManager(blockManagerAddress);
+        assetManager = IAssetManager(assetManagerAddress);
     }
 
     /// @notice gives penalty to stakers for failing to reveal or
@@ -75,16 +79,18 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
-        // Not reveal penalty due to Randao
-        if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
-            newStake = newStake - randaoPenalty;
-        }
-
         if (inactiveEpochs > gracePeriod) {
             (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
             reason = StakeChanged.InactivityPenalty;
         }
+
+        // Not reveal penalty due to Randao
+        if (epochLastRevealed < epochLastCommitted) {
+            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
+            newStake = newStake - randaoPenalty;
+            newAge = 0;
+        }
+
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
@@ -119,11 +125,16 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             uint32 medianLastEpoch = mediansLastEpoch[i];
             if (medianLastEpoch == 0) continue;
             uint64 prod = age * voteValueLastEpoch;
+            // slither-disable-next-line calls-loop
+            uint16 tolerance = assetManager.getCollectionTolerance(i);
+            tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
+            uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+            uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
             // if (voteWeightLastEpoch > 0) {
-            if (voteValueLastEpoch > medianLastEpoch) {
-                penalty = penalty + (prod / medianLastEpoch - age);
-            } else {
-                penalty = penalty + (age - prod / medianLastEpoch);
+            if (voteValueLastEpoch > maxVoteTolerance) {
+                penalty = penalty + (prod / maxVoteTolerance - age);
+            } else if (voteValueLastEpoch < minVoteTolerance) {
+                penalty = penalty + (age - prod / minVoteTolerance);
             }
         }
 

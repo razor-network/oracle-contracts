@@ -57,9 +57,10 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         bytes32 secret
     ) external initialized checkEpochAndState(State.Reveal, epoch, epochLength) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
+        uint256 stakerStake = stakeManager.getStake(stakerId);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(stakeManager.getStake(stakerId) >= minStake, "stake below minimum");
+        require(stakerStake >= minStake, "stake below minimum");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
 
@@ -74,6 +75,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint256 influence = stakeManager.getInfluence(stakerId);
         totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
         influenceSnapshot[epoch][stakerId] = influence;
+        stakeSnapshot[epoch][stakerId] = stakerStake;
         secrets = keccak256(abi.encodePacked(secrets, secret));
 
         emit Revealed(epoch, stakerId, values, block.timestamp);
@@ -116,6 +118,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
         //epoch -> stakerId
         return (influenceSnapshot[epoch][stakerId]);
+    }
+
+    function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
+        //epoch -> stakerId
+        return (stakeSnapshot[epoch][stakerId]);
     }
 
     function getTotalInfluenceRevealed(uint32 epoch) external view override returns (uint256) {

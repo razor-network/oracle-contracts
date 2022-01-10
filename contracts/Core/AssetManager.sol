@@ -25,7 +25,15 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
 
-    event CollectionUpdated(uint16 id, uint32 epoch, uint32 aggregationMethod, int8 power, uint16[] updatedJobIDs, uint256 timestamp);
+    event CollectionUpdated(
+        uint16 id,
+        uint32 epoch,
+        uint32 aggregationMethod,
+        int8 power,
+        uint16 tolerance,
+        uint16[] updatedJobIDs,
+        uint256 timestamp
+    );
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -117,12 +125,14 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     }
 
     function createCollection(
-        uint16[] memory jobIDs,
-        uint32 aggregationMethod,
+        uint16 tolerance,
         int8 power,
+        uint32 aggregationMethod,
+        uint16[] memory jobIDs,
         string calldata name
     ) external onlyRole(ASSET_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
         require(jobIDs.length > 0, "no jobs added");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
 
         numAssets = numAssets + 1;
 
@@ -131,6 +141,7 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
             true,
             numAssets,
             uint16(activeCollections.length),
+            tolerance,
             power,
             aggregationMethod,
             jobIDs,
@@ -143,25 +154,21 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
 
     function updateCollection(
         uint16 collectionID,
+        uint16 tolerance,
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(ASSET_MODIFIER_ROLE) notState(State.Commit, epochLength) {
         require(collections[collectionID].id == collectionID, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
+        require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch(epochLength);
         collections[collectionID].power = power;
+        collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
 
-        emit CollectionUpdated(
-            collectionID,
-            epoch,
-            collections[collectionID].aggregationMethod,
-            collections[collectionID].power,
-            collections[collectionID].jobIDs,
-            block.timestamp
-        );
+        emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
     }
 
     function getAsset(uint16 id) external view returns (Structs.Job memory job, Structs.Collection memory collection) {
@@ -180,6 +187,10 @@ contract AssetManager is AssetStorage, StateManager, AssetManagerParams, IAssetM
     function getCollectionIndex(uint16 id) external view override returns (uint16) {
         require(collections[id].id == id, "Asset is not a collection");
         return collections[id].assetIndex;
+    }
+
+    function getCollectionTolerance(uint16 i) external view override returns (uint16) {
+        return collections[activeCollections[i]].tolerance;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
