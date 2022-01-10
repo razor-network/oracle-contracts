@@ -22,7 +22,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -52,10 +52,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint32[] memory medians,
         uint256 iteration,
-        uint32 biggestInfluencerId
+        uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, epochLength) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, biggestInfluencerId, proposerId, epoch), "not elected");
+        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
@@ -63,15 +63,15 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
 
-        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
+        uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
-        bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestStake);
+        bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestStake);
         epochLastProposed[proposerId] = epoch;
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
+        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
@@ -140,15 +140,15 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
     }
 
-    function disputeBiggestInfluenceProposed(
+    function disputeBiggestStakeProposed(
         uint32 epoch,
         uint8 blockIndex,
-        uint32 correctBiggestInfluencerId
+        uint32 correctBiggestStakerId
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
-        require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
+        uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
+        require(correctBiggestStake > proposedBlocks[epoch][blockId].biggestStake, "Invalid dispute : Stake");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -216,7 +216,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint32 blockId,
         uint256 iteration,
-        uint256 biggestInfluence
+        uint256 biggestStake
     ) internal returns (bool isAdded) {
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
@@ -226,11 +226,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             return true;
         }
 
-        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence > biggestInfluence) {
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestStake > biggestStake) {
             return false;
         }
 
-        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence < biggestInfluence) {
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestStake < biggestStake) {
             for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
                 sortedProposedBlockIds[epoch].pop();
             }
@@ -294,7 +294,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _isElectedProposer(
         uint256 iteration,
-        uint32 biggestInfluencerId,
+        uint32 biggestStakerId,
         uint32 stakerId,
         uint32 epoch
     ) internal view initialized returns (bool) {
@@ -310,9 +310,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
-        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
-        uint256 influence = voteManager.getInfluenceSnapshot(epoch, stakerId);
-        if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
+        uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
+        uint256 stake = voteManager.getStakeSnapshot(epoch, stakerId);
+        if (rand2 * (biggestStake) > stake * (2**32)) return (false);
         return true;
     }
 }

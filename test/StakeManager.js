@@ -23,7 +23,7 @@ const {
   getEpoch,
   toBigNumber,
   tokenAmount,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
   maturity,
 } = require('./helpers/utils');
@@ -742,12 +742,12 @@ describe('StakeManager', function () {
           '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
         // propose
         await mineToNextState();
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[4]).propose(epoch,
           [100, 200, 300, 400, 500, 600, 700, 800, 900],
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
         assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
 
