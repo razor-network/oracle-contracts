@@ -18,7 +18,7 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
 } = require('./helpers/utils');
 
@@ -113,13 +113,13 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
       await mineToNextState();
       await mineToNextState();
 
@@ -170,13 +170,13 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
       await mineToNextState();
       await mineToNextState();
 
@@ -217,13 +217,13 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100, 500, 600, 700, 800, 900],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
 
       await mineToNextState();
       await mineToNextState();
@@ -283,13 +283,13 @@ describe('Delegator', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [100, 200, 300, 400, 500, 600, 700],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
 
       await mineToNextState();
       await mineToNextState();

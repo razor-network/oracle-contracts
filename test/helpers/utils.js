@@ -56,7 +56,7 @@ const maturity = async (age) => {
   return MATURITIES[index];
 };
 
-const isElectedProposer = async (iteration, biggestInfluence, influence, stakerId, numStakers, randaoHash) => {
+const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, randaoHash) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const salt1 = await web3.utils.soliditySha3(iteration);
   const seed1 = await prngHash(randaoHash, salt1);
@@ -66,7 +66,7 @@ const isElectedProposer = async (iteration, biggestInfluence, influence, stakerI
   const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
   const seed2 = await prngHash(randaoHash, salt2);
   const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
-  if ((rand2.mul(biggestInfluence)).lt(influence.mul(toBigNumber(2).pow(32)))) return true;
+  if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) return true;
 
   return false;
 };
@@ -84,32 +84,32 @@ const getVote = async (medians) => {
   return votes;
 };
 
-const getBiggestInfluenceAndId = async (stakeManager, voteManager) => {
+const getBiggestStakeAndId = async (stakeManager, voteManager) => {
   const numStakers = await stakeManager.numStakers();
-  let biggestInfluence = toBigNumber('0');
-  let biggestInfluencerId = toBigNumber('0');
+  let biggestStake = toBigNumber('0');
+  let biggestStakerId = toBigNumber('0');
   const epoch = getEpoch();
   for (let i = 1; i <= numStakers; i++) {
-    const influence = await voteManager.getInfluenceSnapshot(epoch, i);
-    if (influence.gt(biggestInfluence)) {
-      biggestInfluence = influence;
-      biggestInfluencerId = i;
+    const stake = await voteManager.getStakeSnapshot(epoch, i);
+    if (stake.gt(biggestStake)) {
+      biggestStake = stake;
+      biggestStakerId = i;
     }
   }
-  return { biggestInfluence, biggestInfluencerId };
+  return { biggestStake, biggestStakerId };
 };
 
-const getIteration = async (voteManager, stakeManager, staker, biggestInfluence) => {
+const getIteration = async (voteManager, stakeManager, staker, biggestStake) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const epoch = getEpoch();
-  const influence = await voteManager.getInfluenceSnapshot(epoch, stakerId);
+  const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
   const randaoHash = await voteManager.getRandaoHash();
-  if (Number(influence) === 0) return 0; // following loop goes in infinite loop if this condn not added
-  // influence 0 represents that given staker has not voted in that epoch
+  if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
+  // stake 0 represents that given staker has not voted in that epoch
   // so anyway in propose its going to revert
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
     if (isElected) return (i);
   }
   return 0;
@@ -119,11 +119,11 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const epoch = getEpoch();
-  const influence = await voteManager.getInfluenceSnapshot(epoch, stakerId);
-  const { biggestInfluence } = await getBiggestInfluenceAndId(stakeManager, voteManager);
+  const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
+  const { biggestStake } = await getBiggestStakeAndId(stakeManager, voteManager);
   const randaoHash = await voteManager.getRandaoHash();
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestInfluence, influence, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
     if (!isElected) return i;
   }
   return 0;
@@ -139,7 +139,7 @@ module.exports = {
   calculateDisputesData,
   isElectedProposer,
   // getBiggestStakeAndId,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getEpoch,
   getVote,
   getIteration,

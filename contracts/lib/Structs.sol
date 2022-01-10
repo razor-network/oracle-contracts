@@ -44,7 +44,7 @@ library Structs {
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;
-        uint256 biggestInfluence;
+        uint256 biggestStake;
     }
 
     struct Dispute {
