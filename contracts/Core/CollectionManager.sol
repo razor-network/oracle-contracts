@@ -91,7 +91,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
 
         uint32 epoch = _getEpoch(epochLength);
         // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch == epoch) {
+        if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
         }
 
@@ -119,7 +119,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint32 epoch = _getEpoch(epochLength);
 
         // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch == epoch) {
+        if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
         }
 

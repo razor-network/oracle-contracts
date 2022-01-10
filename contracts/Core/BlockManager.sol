@@ -120,31 +120,30 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
+        if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
+            uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
+            require(proposerId == stakerId, "Block Proposer mismatches");
+            _confirmBlock(epoch, proposerId);
+        }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch == epoch) {
+        if (updateRegistryEpoch <= epoch) {
             collectionManager.updateRegistry();
         }
-
-        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
-            return;
-        }
-        uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
-        require(proposerId == stakerId, "Block Proposer mismatches");
-        _confirmBlock(epoch, proposerId);
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
+
+        if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
+            _confirmBlock(epoch - 1, stakerId);
+        }
+
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch == epoch - 1) {
+        if (updateRegistryEpoch <= epoch - 1) {
             collectionManager.updateRegistry();
         }
-        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
-            return;
-        }
-        _confirmBlock(epoch - 1, stakerId);
     }
 
     function disputeBiggestInfluenceProposed(
