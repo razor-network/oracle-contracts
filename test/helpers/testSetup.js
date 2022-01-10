@@ -50,7 +50,7 @@ const setupContracts = async () => {
 
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, collectionManager.address,
-      randomNoManager.address, delegator.address),
+      randomNoManager.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, collectionManager.address),

@@ -87,31 +87,23 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
+        require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch(epochLength);
-        if (assetStatus) {
-            if (!collections[id].active) {
-                // slither-disable-next-line incorrect-equality
-                if (updateRegistryEpoch == epoch) {
-                    _updateRegistry();
-                }
-                numActiveCollections = numActiveCollections + 1;
-                collections[id].active = assetStatus;
-                updateRegistryEpoch = epoch + 1;
-                emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
-            }
-        } else {
-            if (collections[id].active) {
-                // slither-disable-next-line incorrect-equality
-                if (updateRegistryEpoch == epoch) {
-                    _updateRegistry();
-                }
-                numActiveCollections = numActiveCollections - 1;
-                collections[id].active = assetStatus;
-                updateRegistryEpoch = epoch + 1;
-                emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
-            }
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch == epoch) {
+            _updateRegistry();
         }
+
+        if (!collections[id].active) {
+            numActiveCollections = numActiveCollections + 1;
+        } else {
+            numActiveCollections = numActiveCollections - 1;
+        }
+
+        collections[id].active = assetStatus;
+        updateRegistryEpoch = epoch + 1;
+        emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
     }
 
     function createCollection(
@@ -216,7 +208,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
     }
 
     function _updateRegistry() internal {
-        uint8 j = 1;
+        uint16 j = 1;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
                 idToIndexRegistry[i] = j;

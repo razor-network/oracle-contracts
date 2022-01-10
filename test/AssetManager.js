@@ -238,7 +238,6 @@ describe('AssetManager', function () {
     });
 
     it('updateCollection should only work for collections which are currently active', async function () {
-      await collectionManager.setCollectionStatus(false, 3);
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
       await mineToNextState(); // propose

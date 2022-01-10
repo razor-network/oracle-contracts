@@ -6,7 +6,6 @@ import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/ICollectionManager.sol";
-import "../IDelegator.sol";
 import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
 import "./parameters/child/BlockManagerParams.sol";
@@ -20,7 +19,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     IVoteManager public voteManager;
     ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
-    IDelegator public delegator;
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
@@ -31,15 +29,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         address rewardManagerAddress,
         address voteManagerAddress,
         address collectionManagerAddress,
-        address randomNoManagerAddress,
-        address delegatorAddress
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         collectionManager = ICollectionManager(collectionManagerAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
-        delegator = IDelegator(delegatorAddress);
     }
 
     // elected proposer proposes block.
@@ -124,12 +120,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch == epoch) {
+            collectionManager.updateRegistry();
+        }
+
         if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
-            uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-            // slither-disable-next-line incorrect-equality
-            if (updateRegistryEpoch == epoch) {
-                collectionManager.updateRegistry();
-            }
             return;
         }
         uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
@@ -139,12 +136,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch == epoch - 1) {
+            collectionManager.updateRegistry();
+        }
         if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
-            uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-            // slither-disable-next-line incorrect-equality
-            if (updateRegistryEpoch == epoch - 1) {
-                collectionManager.updateRegistry();
-            }
             return;
         }
         _confirmBlock(epoch - 1, stakerId);
@@ -200,11 +197,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch == epoch) {
-            collectionManager.updateRegistry();
-        }
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
