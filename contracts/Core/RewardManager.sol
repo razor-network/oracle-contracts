@@ -140,7 +140,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         age = penalty > age ? 0 : age - uint32(penalty);
 
-        stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age), AgeChanged.VotingPenalty);
+        stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age), AgeChanged.VotingRewardOrPenalty);
     }
 
     /// @notice Calculates the stake and age inactivity penalties of the staker
