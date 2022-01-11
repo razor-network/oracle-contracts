@@ -91,6 +91,11 @@ contract Governance is Initializable, ACL, Constants {
         blockManagerParams.setMinStake(_minStake);
     }
 
+    function setMinSafeRazor(uint256 _minSafeRazor) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "minSafeRazor", _minSafeRazor, block.timestamp);
+        stakeManagerParams.setMinSafeRazor(_minSafeRazor);
+    }
+
     function setBlockReward(uint256 _blockReward) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "blockReward", _blockReward, block.timestamp);
         blockManagerParams.setBlockReward(_blockReward);
