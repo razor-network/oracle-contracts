@@ -5,7 +5,7 @@ test cases where nobody votes, too low stake (1-4) */
 const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
-  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
+  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, COLLECTION_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
@@ -43,13 +43,13 @@ describe('StakeManager', function () {
     let initializeContracts;
     let stakedToken;
     let stakedTokenFactory;
-    let assetManager;
+    let collectionManager;
 
     before(async () => {
       ({
         razor,
         blockManager,
-        assetManager,
+        collectionManager,
         stakeManager,
         rewardManager,
         governance,
@@ -91,7 +91,7 @@ describe('StakeManager', function () {
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
 
-      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       let name;
@@ -101,7 +101,7 @@ describe('StakeManager', function () {
       let i = 0;
       while (i < 9) {
         name = `test${i}`;
-        await assetManager.createJob(weight, power, selectorType, name, selector, url);
+        await collectionManager.createJob(weight, power, selectorType, name, selector, url);
         i++;
       }
       await mineToNextEpoch();
@@ -113,10 +113,10 @@ describe('StakeManager', function () {
       let Cname;
       for (let i = 1; i <= 8; i++) {
         Cname = `Test Collection${String(i)}`;
-        await assetManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+        await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
       }
       Cname = 'Test Collection9';
-      await assetManager.createCollection(500, 3, 1, [9, 1], Cname);
+      await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');

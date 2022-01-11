@@ -6,7 +6,7 @@ const { assert } = require('chai');
 const { utils } = require('ethers');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
-  ASSET_MODIFIER_ROLE,
+  COLLECTION_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
@@ -38,11 +38,11 @@ describe('VoteManager', function () {
     let rewardManager;
     let voteManager;
     let initializeContracts;
-    let assetManager;
+    let collectionManager;
 
     before(async () => {
       ({
-        blockManager, governance, assetManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
+        blockManager, governance, collectionManager, razor, stakeManager, rewardManager, voteManager, initializeContracts,
       } = await setupContracts());
       signers = await ethers.getSigners();
     });
@@ -67,14 +67,14 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to initiliaze VoteManager contract without admin role', async () => {
-        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[1]).initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address);
         await assertRevert(tx, 'AccessControl');
       });
 
       it('should be able to initialize', async function () {
         await Promise.all(await initializeContracts());
 
-        await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+        await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
         const url = 'http://testurl.com';
         const selector = 'selector';
         let name;
@@ -84,7 +84,7 @@ describe('VoteManager', function () {
         let i = 0;
         while (i < 9) {
           name = `test${i}`;
-          await assetManager.createJob(weight, power, selectorType, name, selector, url);
+          await collectionManager.createJob(weight, power, selectorType, name, selector, url);
           i++;
         }
         await mineToNextEpoch();
@@ -96,35 +96,40 @@ describe('VoteManager', function () {
         let Cname;
         for (let i = 1; i <= 8; i++) {
           Cname = `Test Collection${String(i)}`;
-          await assetManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+          await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
         }
         Cname = 'Test Collection10';
-        await assetManager.createCollection(500, 3, 1, [9, 1], Cname);
+        await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
-        await mineToNextEpoch();
         await mineToNextEpoch();
         await razor.transfer(signers[2].address, tokenAmount('30000'));
         await razor.transfer(signers[3].address, tokenAmount('423000'));
-        await razor.transfer(signers[4].address, tokenAmount('190000'));
-        await razor.transfer(signers[5].address, tokenAmount('100000'));
-        await razor.transfer(signers[6].address, tokenAmount('100000'));
+        await razor.transfer(signers[4].address, tokenAmount('20000'));
+        await razor.transfer(signers[5].address, tokenAmount('20000'));
+        await razor.transfer(signers[6].address, tokenAmount('20000'));
         await razor.transfer(signers[7].address, tokenAmount('200000'));
+        await razor.transfer(signers[8].address, tokenAmount('20000'));
+        await razor.transfer(signers[9].address, tokenAmount('20000'));
+        await razor.transfer(signers[15].address, tokenAmount('20000'));
 
         await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('30000'));
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
-        await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('190000'));
-        await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('100000'));
-        await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('100000'));
-
+        await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('20000'));
         await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('200000'));
+        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('20000'));
+
         const epoch = await getEpoch();
         await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('30000'));
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
-        await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('190000'));
+        await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('20000'));
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
-        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address);
+        const tx = voteManager.connect(signers[0]).initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address);
         await assertRevert(tx, 'contract already initialized');
       });
 
@@ -372,7 +377,7 @@ describe('VoteManager', function () {
         let expectedAgeAfter3 = toBigNumber(ageBefore2).add(10000);
         expectedAgeAfter3 = expectedAgeAfter3 > 1000000 ? 1000000 : expectedAgeAfter3;
         for (let i = 0; i < votes2.length; i++) {
-          const tolerance = await assetManager.getCollectionTolerance(i);
+          const tolerance = await collectionManager.getCollectionTolerance(i);
           const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
           const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
 
@@ -587,7 +592,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to reveal other than in reveal state', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('100000'));
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('20000'));
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
@@ -783,14 +788,10 @@ describe('VoteManager', function () {
         await governance.setMinStake(20000);
         await governance.setMinSafeRazor(10000);
         await mineToNextEpoch();
-        await razor.transfer(signers[8].address, tokenAmount('190000'));
-        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('190000'));
-        await razor.transfer(signers[9].address, tokenAmount('170000'));
-        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('170000'));
 
         let epoch = await getEpoch();
-        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('190000'));
-        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('170000'));
+        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('20000'));
+        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('20000'));
 
         const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -838,7 +839,7 @@ describe('VoteManager', function () {
 
         const sortedVotes = [toBigNumber('0')];
 
-        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
 
         await assertRevert(tx, 'sortedStaker <= LVS');
       });
@@ -891,7 +892,7 @@ describe('VoteManager', function () {
         //
         const sortedVotes = [toBigNumber('0')];
         //
-        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 11, sortedVotes);
+        const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
         //
         await assertRevert(tx3, 'sortedStaker <= LVS');
       });
@@ -922,7 +923,7 @@ describe('VoteManager', function () {
         await mineToNextState();
         // dispute state
         const sortedVotes = [];
-        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 11, sortedVotes);
+        const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
         await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
@@ -1003,6 +1004,81 @@ describe('VoteManager', function () {
         } catch (err) {
           await assertRevert(tx2, 'not elected');
         }
+      });
+      it('Correct penalties need to be given even after an asset has been deactivated', async function () {
+        await mineToNextState();
+        await mineToNextState();
+        await collectionManager.setCollectionStatus(false, 9);
+        await mineToNextState();
+        let epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
+        const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+        const commitment1 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[3]).commit(epoch, commitment1);
+
+        const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
+        const commitment2 = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
+        await voteManager.connect(signers[15]).commit(epoch, commitment2);
+
+        await mineToNextState();
+
+        await voteManager.connect(signers[3]).reveal(epoch, votes,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd'); // arguments getvVote => epoch, stakerId, assetId
+
+        await voteManager.connect(signers[15]).reveal(epoch, votes2,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+        await mineToNextState();
+
+        const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+        const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800];
+        await blockManager.connect(signers[3]).propose(epoch,
+          medians,
+          iteration,
+          biggestStakerId);
+
+        const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
+        await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
+        await blockManager.connect(signers[3]).claimBlockReward();
+        await mineToNextState(); // commit
+        epoch = await getEpoch();
+        await voteManager.connect(signers[15]).commit(epoch, commitment1);
+
+        let penalty = toBigNumber(0);
+        let toAdd = toBigNumber(0);
+        let prod = toBigNumber(0);
+        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
+        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
+        for (let i = 0; i < votes2.length; i++) {
+          const tolerance = await collectionManager.getCollectionTolerance(i);
+          const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
+          const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
+
+          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
+          if (votes2[i] > maxVoteTolerance) {
+            toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+            penalty = penalty.add(toAdd);
+          } else if (votes2[i] < minVoteTolerance) {
+            toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+            penalty = penalty.add(toAdd);
+          }
+        }
+        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
+
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
+        assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
       });
     });
   });

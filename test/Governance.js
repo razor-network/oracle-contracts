@@ -15,7 +15,7 @@ describe('Governance contract Test', async () => {
   let signers;
   let snapShotId;
   let governance;
-  let assetManager;
+  let collectionManager;
   let blockManager;
   let stakeManager;
   let rewardManager;
@@ -45,7 +45,7 @@ describe('Governance contract Test', async () => {
 
   before(async () => {
     ({
-      governance, assetManager, blockManager, stakeManager, voteManager,
+      governance, collectionManager, blockManager, stakeManager, voteManager,
       rewardManager, randomNoManager, delegator, initializeContracts,
     } = await setupContracts());
     await Promise.all(await initializeContracts());
@@ -139,7 +139,7 @@ describe('Governance contract Test', async () => {
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
 
     await governance.setEpochLength(toBigNumber('11'));
-    const epochLength = await assetManager.epochLength();
+    const epochLength = await collectionManager.epochLength();
     const epochLength1 = await blockManager.epochLength();
     const epochLength2 = await stakeManager.epochLength();
     const epochLength3 = await rewardManager.epochLength();
@@ -162,7 +162,7 @@ describe('Governance contract Test', async () => {
 
     await governance.setMaxTolerance(toBigNumber('15'));
     const maxTolerance = await rewardManager.maxTolerance();
-    const maxTolerance1 = await assetManager.maxTolerance();
+    const maxTolerance1 = await collectionManager.maxTolerance();
     assertBNEqual(maxTolerance, toBigNumber('15'));
     assertBNEqual(maxTolerance1, toBigNumber('15'));
 
@@ -230,7 +230,7 @@ describe('Governance contract Test', async () => {
     const maxAltBlocksValue = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
 
-    const epochLengthValue = await assetManager.epochLength();
+    const epochLengthValue = await collectionManager.epochLength();
     assertBNEqual(epochLength, epochLengthValue);
 
     const maxAgeValue = await rewardManager.maxAge();
