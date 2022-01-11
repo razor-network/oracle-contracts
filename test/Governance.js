@@ -32,7 +32,8 @@ describe('Governance contract Test', async () => {
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
   const gracePeriod = toBigNumber('8');
-  const minimumStake = tokenAmount('1000');
+  const minimumStake = tokenAmount('20000');
+  const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
   const extendLockPenalty = toBigNumber('1');
@@ -89,6 +90,9 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setMinStake(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setMinSafeRazor(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -121,6 +125,10 @@ describe('Governance contract Test', async () => {
     assertBNEqual(minStake, toBigNumber('8'));
     assertBNEqual(minStake1, toBigNumber('8'));
     assertBNEqual(minStake2, toBigNumber('8'));
+
+    await governance.setMinSafeRazor(toBigNumber('2'));
+    const minSafeRazor = await stakeManager.minSafeRazor();
+    assertBNEqual(minSafeRazor, toBigNumber('2'));
 
     await governance.setWithdrawLockPeriod(toBigNumber('9'));
     const withdrawLockPeriod = await stakeManager.withdrawLockPeriod();
@@ -203,6 +211,9 @@ describe('Governance contract Test', async () => {
 
     const minStakeValue = await stakeManager.minStake();
     assertBNEqual(minimumStake, minStakeValue);
+
+    const minSafeRazor = await stakeManager.minSafeRazor();
+    assertBNEqual(minimumSafeRazor, minSafeRazor);
 
     const blockRewardValue = await blockManager.blockReward();
     assertBNEqual(blockReward, blockRewardValue);

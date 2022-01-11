@@ -92,28 +92,28 @@ describe('Scenarios', async () => {
     await razor.transfer(signers[4].address, razors);
     await razor.transfer(signers[5].address, razors);
 
-    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
 
     await razor.connect(signers[1]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[1]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[2]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[2]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[3]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[3]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[4]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[4]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[5]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[5]).stake(epoch, stake);
     stakes.push(stake);
@@ -380,6 +380,7 @@ describe('Scenarios', async () => {
     }
 
     await governance.setMinStake(toBigNumber('800'));
+    await governance.setMinSafeRazor(toBigNumber('500'));
 
     await mineToNextState();// propose
     await mineToNextState();// dispute
@@ -408,7 +409,7 @@ describe('Scenarios', async () => {
   });
 
   it('Staker remains inactive for a long period of time such that stake becomes less than minStake , no participation now in network', async function () {
-    const stake = tokenAmount('1000');
+    const stake = tokenAmount('20000');
     await razor.transfer(signers[6].address, stake);
     let epoch = await getEpoch();
 
@@ -541,9 +542,9 @@ describe('Scenarios', async () => {
     const votesarray = [];
     for (let i = 1; i <= 5; i++) {
       epoch = await getEpoch();
-      const razors = tokenAmount('1000');
+      const razors = tokenAmount('20000');
       await razor.transfer(signers[i].address, razors);
-      const stake = tokenAmount('1000');
+      const stake = tokenAmount('20000');
       await razor.connect(signers[i]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[i]).stake(epoch, stake);
 
@@ -565,7 +566,7 @@ describe('Scenarios', async () => {
   });
   it('Staker particpates with delegator and later delegator withdraws such that stakers stake becomes less than minStake', async function () {
     // staker participating in netwrok
-    const stake = tokenAmount('1000');
+    const stake = tokenAmount('20000');
     await razor.transfer(signers[7].address, stake);
     let epoch = await getEpoch();
 
@@ -643,7 +644,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[5]).delegate(stakerId, delegatedStake);
     stakerId = await stakeManager.stakerIds(signers[7].address);
     staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.stake, tokenAmount('1010'), 'Change in stake is incorrect');
+    assertBNEqual(staker.stake, tokenAmount('20010'), 'Change in stake is incorrect');
     assertBNEqual(await sToken.balanceOf(signers[5].address), delegatedStake, 'Amount of minted sRzR is not correct');
 
     // staker remains inactive for more than GRACE_PERIOD time and gets inactivity penalties

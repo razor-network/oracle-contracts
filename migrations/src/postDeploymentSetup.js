@@ -104,7 +104,7 @@ module.exports = async () => {
     collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
-  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, blockManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
@@ -158,7 +158,7 @@ module.exports = async () => {
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);
     const collection = collections[i];
-    await collectionManager.createCollection(collection.jobIDs, collection.aggregationMethod, collection.power, collection.name);
+    await collectionManager.createCollection(collection.tolerance, collection.power, collection.aggregationMethod, collection.jobIDs, collection.name);
     console.log(`Collection Created :  ${collection.name}`);
   }
   console.log('Contracts deployed successfully & initial setup is done');

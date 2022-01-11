@@ -19,7 +19,7 @@ contract Constants {
 
     enum AgeChanged {
         InactivityPenalty,
-        VotingPenalty
+        VotingRewardOrPenalty
     }
 
     uint8 public constant NUM_STATES = 5;

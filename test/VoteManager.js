@@ -102,30 +102,30 @@ describe('VoteManager', function () {
         await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
-        await razor.transfer(signers[2].address, tokenAmount('3000'));
+        await razor.transfer(signers[2].address, tokenAmount('30000'));
         await razor.transfer(signers[3].address, tokenAmount('423000'));
-        await razor.transfer(signers[4].address, tokenAmount('19000'));
-        await razor.transfer(signers[5].address, tokenAmount('1000'));
-        await razor.transfer(signers[6].address, tokenAmount('1000'));
-        await razor.transfer(signers[7].address, tokenAmount('2000'));
-        await razor.transfer(signers[8].address, tokenAmount('19000'));
-        await razor.transfer(signers[9].address, tokenAmount('17000'));
-        await razor.transfer(signers[15].address, tokenAmount('10000'));
+        await razor.transfer(signers[4].address, tokenAmount('20000'));
+        await razor.transfer(signers[5].address, tokenAmount('20000'));
+        await razor.transfer(signers[6].address, tokenAmount('20000'));
+        await razor.transfer(signers[7].address, tokenAmount('200000'));
+        await razor.transfer(signers[8].address, tokenAmount('20000'));
+        await razor.transfer(signers[9].address, tokenAmount('20000'));
+        await razor.transfer(signers[15].address, tokenAmount('20000'));
 
-        await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('3000'));
+        await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('30000'));
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
-        await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('19000'));
-        await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('1000'));
-        await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('1000'));
-        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('2000'));
-        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('19000'));
-        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('17000'));
-        await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('10000'));
+        await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[6]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[7]).approve(stakeManager.address, tokenAmount('200000'));
+        await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[9]).approve(stakeManager.address, tokenAmount('20000'));
+        await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('20000'));
 
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('3000'));
+        await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('30000'));
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
-        await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('19000'));
+        await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('20000'));
       });
 
       it('should not be able to initialize contracts if they are already initialized', async function () {
@@ -546,12 +546,12 @@ describe('VoteManager', function () {
       it('should not be able to commit if stake is below minstake', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('20000'));
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         const staker = await stakeManager.getStaker(stakerId);
         // slashing the staker to make his stake below minstake
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-        await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('999'));
+        await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('19999'));
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -592,7 +592,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to reveal other than in reveal state', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('1000'));
+        await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('20000'));
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = utils.solidityKeccak256(
@@ -690,6 +690,8 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
 
         await governance.setMinStake(0);
+        await governance.setMinSafeRazor(0);
+
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
         const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -783,11 +785,13 @@ describe('VoteManager', function () {
       });
 
       it('if the revealed value is zero, staker should be able to reveal', async function () {
+        await governance.setMinStake(20000);
+        await governance.setMinSafeRazor(10000);
         await mineToNextEpoch();
 
         let epoch = await getEpoch();
-        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('19000'));
-        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('17000'));
+        await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('20000'));
+        await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('20000'));
 
         const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
 
@@ -1007,7 +1011,7 @@ describe('VoteManager', function () {
         await collectionManager.setCollectionStatus(false, 9);
         await mineToNextState();
         let epoch = await getEpoch();
-        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('10000'));
+        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
         const votes = [100, 200, 300, 400, 500, 600, 700, 800];
         const commitment1 = utils.solidityKeccak256(
           ['uint32', 'uint48[]', 'bytes32'],
