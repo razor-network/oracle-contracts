@@ -71,7 +71,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     function setMinSafeRazor(uint256 _minSafeRazor) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_minSafeRazor <= minStake, "minSafeRazor can not be greater than minStake");
+        require(_minSafeRazor <= minStake, "minSafeRazor beyond minStake");
         // slither-disable-next-line events-maths
         minSafeRazor = _minSafeRazor;
     }
