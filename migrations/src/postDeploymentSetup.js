@@ -154,7 +154,7 @@ module.exports = async () => {
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);
     const collection = collections[i];
-    await assetManager.createCollection(collection.jobIDs, collection.aggregationMethod, collection.power, collection.name);
+    await assetManager.createCollection(collection.tolerance, collection.power, collection.aggregationMethod, collection.jobIDs, collection.name);
     console.log(`Collection Created :  ${collection.name}`);
   }
   console.log('Contracts deployed successfully & initial setup is done');
