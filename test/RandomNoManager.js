@@ -84,7 +84,7 @@ describe('RandomNoManager', function () {
       assertBNEqual(await randomNoManager.requests(reqid2), epoch);
 
       // Commit
-      const votes = [0];
+      const votes = [];
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']

@@ -5,7 +5,7 @@ import "./interfaces/IBlockManagerParams.sol";
 import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
-import "./interfaces/IAssetManagerParams.sol";
+import "./interfaces/ICollectionManagerParams.sol";
 import "./interfaces/IDelegatorParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
 import "../storage/Constants.sol";
@@ -20,7 +20,7 @@ contract Governance is Initializable, ACL, Constants {
     IRewardManagerParams public rewardManagerParams;
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
-    IAssetManagerParams public assetManagerParams;
+    ICollectionManagerParams public collectionManagerParams;
     IDelegatorParams public delegatorParams;
     IRandomNoManagerParams public randomNoManagerParams;
 
@@ -34,7 +34,7 @@ contract Governance is Initializable, ACL, Constants {
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
-        address assetManagerAddress,
+        address collectionManagerAddress,
         address delegatorAddress,
         address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -42,7 +42,7 @@ contract Governance is Initializable, ACL, Constants {
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
-        assetManagerParams = IAssetManagerParams(assetManagerAddress);
+        collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
         delegatorParams = IDelegatorParams(delegatorAddress);
         randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
@@ -91,6 +91,11 @@ contract Governance is Initializable, ACL, Constants {
         blockManagerParams.setMinStake(_minStake);
     }
 
+    function setMinSafeRazor(uint256 _minSafeRazor) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "minSafeRazor", _minSafeRazor, block.timestamp);
+        stakeManagerParams.setMinSafeRazor(_minSafeRazor);
+    }
+
     function setBlockReward(uint256 _blockReward) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "blockReward", _blockReward, block.timestamp);
         blockManagerParams.setBlockReward(_blockReward);
@@ -125,7 +130,7 @@ contract Governance is Initializable, ACL, Constants {
         rewardManagerParams.setEpochLength(_epochLength);
         stakeManagerParams.setEpochLength(_epochLength);
         voteManagerParams.setEpochLength(_epochLength);
-        assetManagerParams.setEpochLength(_epochLength);
+        collectionManagerParams.setEpochLength(_epochLength);
         delegatorParams.setEpochLength(_epochLength);
         randomNoManagerParams.setEpochLength(_epochLength);
     }
@@ -140,10 +145,10 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
 
-    function setMaxTolerance(uint8 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+    function setMaxTolerance(uint16 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
         require(_maxTolerance <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
-        assetManagerParams.setMaxTolerance(_maxTolerance);
+        collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);
     }
 }
