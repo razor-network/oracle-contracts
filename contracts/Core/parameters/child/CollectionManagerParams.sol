@@ -5,7 +5,7 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
-    uint16 public epochLength= 300;
+    uint16 public epochLength = 300;
     uint16 public maxTolerance = 1000;
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {

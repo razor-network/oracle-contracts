@@ -279,8 +279,7 @@ describe('Access Control Test', async () => {
     await collectionManager.grantRole(assetCreatorHash, signers[0].address);
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     const collectionName = 'Test Collection2';
-    while (Number(await getState(await stakeManager.epochLength())) !== 4) 
-    { await mineToNextState(); }
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await collectionManager.createCollection(500, 0, 1, [1], collectionName);
     await collectionManager.setCollectionStatus(false, 1);
     await collectionManager.revokeRole(assetCreatorHash, signers[0].address);
@@ -342,8 +341,7 @@ describe('Access Control Test', async () => {
 
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    while (Number(await getState(await stakeManager.epochLength())) !== 4) 
-    { await mineToNextState(); }
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await collectionManager.createCollection(500, 1, 1, [1, 2], 'test');
     await collectionManager.updateCollection(1, 500, 2, -2, [1, 2]);
     await collectionManager.revokeRole(assetModifierHash, signers[0].address);

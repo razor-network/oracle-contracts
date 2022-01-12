@@ -1,8 +1,7 @@
 const { BigNumber } = ethers;
 const {
-  ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES, STATE_LENGTH,
+  ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
-var sleep = require('sleep');
 
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);

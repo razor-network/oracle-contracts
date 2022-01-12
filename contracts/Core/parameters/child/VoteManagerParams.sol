@@ -5,7 +5,7 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
-    uint16 public epochLength= 300;
+    uint16 public epochLength = 300;
     uint256 public minStake = 20000 * (10**18);
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {

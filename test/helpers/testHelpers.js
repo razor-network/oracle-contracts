@@ -1,6 +1,5 @@
 const { assert } = require('chai');
 const { BigNumber } = require('ethers');
-var sleep = require('sleep');
 const { EPOCH_LENGTH, STATE_LENGTH } = require('./constants');
 const { getEpoch, toBigNumber } = require('./utils');
 
@@ -122,7 +121,7 @@ const mineToNextEpoch = async () => {
   const currentBlock = await web3.eth.getBlock(currentBlockNumber);
   const currentTimestamp = currentBlock.timestamp;
   const currentEpoch = await getEpoch();
-  const nextEpochBlockTimestamp = (currentEpoch + 1) * EPOCH_LENGTH.toNumber(); //currentBlocktimestamp + epochLength
+  const nextEpochBlockTimestamp = (currentEpoch + 1) * EPOCH_LENGTH.toNumber(); // currentBlocktimestamp + epochLength
   const diff = nextEpochBlockTimestamp - currentTimestamp;
   await ethers.provider.send('evm_increaseTime', [diff]);
   await ethers.provider.send('evm_mine');
