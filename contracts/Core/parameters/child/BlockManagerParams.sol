@@ -6,7 +6,7 @@ import "../../storage/Constants.sol";
 
 abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
     uint8 public maxAltBlocks = 5;
-    uint16 public epochLength = 300;
+    uint16 public epochLength= 300;
     uint256 public blockReward = 100 * (10**18);
     uint256 public minStake = 20000 * (10**18);
 

@@ -35,11 +35,11 @@ contract StateManager is Constants {
     }
 
     function _getEpoch(uint32 epochLength) internal view returns (uint32) {
-        return (uint32(block.number) / (epochLength));
+        return (uint32(block.timestamp) / (epochLength));
     }
 
     function _getState(uint32 epochLength) internal view returns (State) {
-        uint8 state = uint8(((block.number) / (epochLength / NUM_STATES)) % (NUM_STATES));
+        uint8 state = uint8(((block.timestamp) / (epochLength / NUM_STATES)) % (NUM_STATES));
         return State(state);
     }
 }

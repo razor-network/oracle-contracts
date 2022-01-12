@@ -1,5 +1,6 @@
 const { assert } = require('chai');
 const { BigNumber } = require('ethers');
+var sleep = require('sleep');
 const { EPOCH_LENGTH, STATE_LENGTH } = require('./constants');
 const { getEpoch, toBigNumber } = require('./utils');
 
@@ -118,19 +119,25 @@ const mineBlock = () => send({ method: 'evm_mine' });
 // Mines to the next Epoch from which ever block it is in the current Epoch
 const mineToNextEpoch = async () => {
   const currentBlockNumber = await web3.eth.getBlockNumber();
+  const currentBlock = await web3.eth.getBlock(currentBlockNumber);
+  const currentTimestamp = currentBlock.timestamp;
   const currentEpoch = await getEpoch();
-  const nextEpochBlockNum = (currentEpoch + 1) * EPOCH_LENGTH.toNumber();
-  const diff = nextEpochBlockNum - currentBlockNumber;
-  await waitNBlocks(diff);
+  const nextEpochBlockTimestamp = (currentEpoch + 1) * EPOCH_LENGTH.toNumber(); //currentBlocktimestamp + epochLength
+  const diff = nextEpochBlockTimestamp - currentTimestamp;
+  await ethers.provider.send('evm_increaseTime', [diff]);
+  await ethers.provider.send('evm_mine');
 };
 
 // Mines to the next state in the current epoch
 const mineToNextState = async () => {
   const currentBlockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  const temp = currentBlockNumber.div(STATE_LENGTH).add('1');
+  const currentBlock = await web3.eth.getBlock(currentBlockNumber);
+  const currentTimestamp = toBigNumber(currentBlock.timestamp);
+  const temp = currentTimestamp.div(STATE_LENGTH).add('1');
   const nextStateBlockNum = temp.mul(STATE_LENGTH);
-  const diff = nextStateBlockNum.sub(currentBlockNumber);
-  await waitNBlocks(diff.toNumber());
+  const diff = nextStateBlockNum.sub(currentTimestamp);
+  await ethers.provider.send('evm_increaseTime', [diff.toNumber()]);
+  await ethers.provider.send('evm_mine');
 };
 
 const restoreSnapshot = async (id) => {

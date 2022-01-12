@@ -43,7 +43,8 @@
     "fs": "^0.0.1-security",
     "hardhat-abi-exporter": "^2.3.0",
     "json-to-markdown-table": "^1.0.0",
-    "jsonfile": "^6.1.0"
+    "jsonfile": "^6.1.0",
+    "sleep": "^6.3.0"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.11",
