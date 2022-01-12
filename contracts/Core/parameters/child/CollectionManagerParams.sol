@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "../interfaces/IAssetManagerParams.sol";
+import "../interfaces/ICollectionManagerParams.sol";
 import "../ACL.sol";
 import "../../storage/Constants.sol";
 
-abstract contract AssetManagerParams is ACL, IAssetManagerParams, Constants {
+abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
     uint16 public epochLength = 300;
     uint16 public maxTolerance = 1000;
 

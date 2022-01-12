@@ -5,7 +5,7 @@ test cases where nobody votes, too low stake (1-4) */
 const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
-  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, ASSET_MODIFIER_ROLE,
+  DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, COLLECTION_MODIFIER_ROLE,
   STAKE_MODIFIER_ROLE,
   WITHDRAW_RELEASE_PERIOD,
   GOVERNER_ROLE,
@@ -43,13 +43,13 @@ describe('StakeManager', function () {
     let initializeContracts;
     let stakedToken;
     let stakedTokenFactory;
-    let assetManager;
+    let collectionManager;
 
     before(async () => {
       ({
         razor,
         blockManager,
-        assetManager,
+        collectionManager,
         stakeManager,
         rewardManager,
         governance,
@@ -74,7 +74,7 @@ describe('StakeManager', function () {
     });
 
     it('should not be able to stake without initialization', async () => {
-      const tx = stakeManager.connect(signers[6]).stake(await getEpoch(), tokenAmount('18000'));
+      const tx = stakeManager.connect(signers[6]).stake(await getEpoch(), tokenAmount('180000'));
       await assertRevert(tx, 'Contract should be initialized');
     });
 
@@ -91,7 +91,7 @@ describe('StakeManager', function () {
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
 
-      await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
       let name;
@@ -101,7 +101,7 @@ describe('StakeManager', function () {
       let i = 0;
       while (i < 9) {
         name = `test${i}`;
-        await assetManager.createJob(weight, power, selectorType, name, selector, url);
+        await collectionManager.createJob(weight, power, selectorType, name, selector, url);
         i++;
       }
       await mineToNextEpoch();
@@ -113,10 +113,10 @@ describe('StakeManager', function () {
       let Cname;
       for (let i = 1; i <= 8; i++) {
         Cname = `Test Collection${String(i)}`;
-        await assetManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+        await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
       }
       Cname = 'Test Collection9';
-      await assetManager.createCollection(500, 3, 1, [9, 1], Cname);
+      await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
       await mineToNextEpoch();
       const stake1 = tokenAmount('443000');
@@ -137,14 +137,6 @@ describe('StakeManager', function () {
       await assertRevert(tx1, 'AccessControl');
     });
 
-    it('should not be able to stake if stake is less than min stake', async function () {
-      const epoch = await getEpoch();
-      const stake = tokenAmount('999');
-      await razor.connect(signers[1]).approve(stakeManager.address, stake);
-      const tx = stakeManager.connect(signers[1]).stake(epoch, stake);
-      await assertRevert(tx, 'Amount below Minstake');
-    });
-
     it('should not be able to stake if contract is paused', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
@@ -160,15 +152,6 @@ describe('StakeManager', function () {
       const tx = stakeManager.connect(signers[0]).pause();
       await assertRevert(tx, 'pause');
       await stakeManager.connect(signers[0]).unpause();
-    });
-
-    it('Staker should not be able to stake if stake is below minstake', async function () {
-      const epoch = await getEpoch();
-      const stake1 = tokenAmount('10');
-
-      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
-      const tx = stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await assertRevert(tx, 'Amount below Minstake');
     });
 
     it('Staker should not be able to stake if epoch is not current epoch', async function () {
@@ -217,7 +200,7 @@ describe('StakeManager', function () {
     });
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
-      const stake = tokenAmount('19000');
+      const stake = tokenAmount('190000');
 
       await razor.connect(signers[2]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[2]).stake(epoch, stake);
@@ -294,7 +277,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
       // we're doing a partial unstake here , though full unstake has the same procedure
-      const amount = tokenAmount('20000');
+      const amount = tokenAmount('200000');
       const staker = await stakeManager.getStaker(1);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
@@ -306,7 +289,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to unstake when there is an existing lock', async function () {
-      const amount = tokenAmount('20000');
+      const amount = tokenAmount('200000');
       const tx = stakeManager.connect(signers[1]).unstake(1, amount);
       await assertRevert(tx, 'Existing Lock');
     });
@@ -338,7 +321,7 @@ describe('StakeManager', function () {
 
     it('should allow staker to add stake after withdraw if either withdrawnAmount is not the whole stake', async function () {
       const epoch = await getEpoch();
-      const stake = tokenAmount('20000');
+      const stake = tokenAmount('200000');
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
       const stakeBeforeAcc1 = (await stakeManager.stakers(stakerIdAcc1)).stake;
       await razor.connect(signers[1]).approve(stakeManager.address, stake);
@@ -379,7 +362,7 @@ describe('StakeManager', function () {
 
     it('staker should be able to withdraw even if they have participated in the withdraw lock period', async function () {
       // @notice: Checking for Staker 2
-      const stake = tokenAmount('10000');
+      const stake = tokenAmount('100000');
       let epoch = await getEpoch();
       let staker = await stakeManager.getStaker(2);
       const prevStake = staker.stake;
@@ -532,7 +515,7 @@ describe('StakeManager', function () {
 
     it('Staker should not be able to unstake,withdraw,setDelegationAcceptance,updateCommission if the staker has not staked yet',
       async function () {
-        const amount = tokenAmount('10000');
+        const amount = tokenAmount('100000');
 
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         // const staker = await stakeManager.getStaker(stakerId);
@@ -632,7 +615,7 @@ describe('StakeManager', function () {
     it('Delegator should not be able to unstake if contract is paused', async function () {
       await stakeManager.connect(signers[0]).pause();
       const stakerId = await stakeManager.stakerIds(signers[4].address);
-      const amount = tokenAmount('20000');
+      const amount = tokenAmount('200000');
       const tx = stakeManager.connect(signers[5]).unstake(stakerId, amount);
       await assertRevert(tx, 'paused');
       await stakeManager.connect(signers[0]).unpause();
@@ -1002,7 +985,7 @@ describe('StakeManager', function () {
       await governance.setSlashParams(500, 9500, 0);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
-      const stake2 = tokenAmount('20000');
+      const stake2 = tokenAmount('200000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
       const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);
       await assertRevert(tx, 'staker is slashed');
@@ -1065,7 +1048,7 @@ describe('StakeManager', function () {
     });
 
     it('admin should not be able to withdraw funds if contract is not paused', async function () {
-      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(10000));
+      await razor.connect(signers[0]).transfer(stakeManager.address, toBigNumber(100000));
       const balanceContractBefore = await razor.balanceOf(stakeManager.address);
       const balanceAdminBefore = await razor.balanceOf(signers[0].address);
       await stakeManager.connect(signers[0]).unpause();
@@ -1115,78 +1098,10 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).unpause();
     });
 
-    // Test for Issue : https://github.com/razor-network/contracts/issues/202
-    it('Conversion between RZR <> sRZR should work as expected', async function () {
-      /// Staker comes in network
-      const stakeOfStaker = tokenAmount('1000');
-      await razor.transfer(signers[8].address, stakeOfStaker); // new Delegator
-
-      // -------------------- @Step1 : Staker Stakes First Time --------------------
-      let epoch = await getEpoch();
-
-      await razor.connect(signers[8]).approve(stakeManager.address, stakeOfStaker);
-      await stakeManager.connect(signers[8]).stake(epoch, stakeOfStaker);
-      await stakeManager.connect(signers[8]).updateCommission('2');
-      await stakeManager.connect(signers[8]).setDelegationAcceptance(true);
-      const stakerId = await stakeManager.stakerIds(signers[8].address);
-      let staker = await stakeManager.stakers(stakerId);
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-
-      // sRZRs Minted should be at 1 RZR == 1 sRZR
-      assertBNEqual(await sToken.balanceOf(staker._address), staker.stake, 'Amount of minted sRzR is not correct');
-
-      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
-      // Current Stake : 1000 ** 10 ** 18, 1000 RZR
-      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
-      assertBNEqual(await staker.stake, tokenAmount('1000'), 'Stake MisMatch');
-
-      // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[8]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[8]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-
-      // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
-      await mineToNextEpoch();
-      epoch = await getEpoch();
-      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000'));
-      staker = await stakeManager.stakers(stakerId);
-
-      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
-      // Current Stake : 2000 ** 10 ** 18, 2000 RZR
-      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
-      assertBNEqual(await staker.stake, tokenAmount('2000'), 'Stake MisMatch');
-
-      // -------------------- @Step 3 : A delegator comes in network and stake 1 RZR (1 * 10 ** 18), now he should get 0.5 sRZR (0.5* 10 ** 18) ---------
-
-      await mineToNextEpoch();
-      epoch = await getEpoch();
-
-      const stakeOfDelegator = tokenAmount('1');
-      await razor.transfer(signers[9].address, stakeOfDelegator); // new Delegator
-      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfDelegator);
-      await stakeManager.connect(signers[9]).delegate(stakerId, stakeOfDelegator);
-      staker = await stakeManager.stakers(stakerId);
-
-      // TotalSupply of sRZR : 1000.5 ** 10 **18, 1000.5 sRZR
-      // Current Stake of staker : 2001 ** 10 ** 18, 1001 RZR
-      // sRZRs Staker hold : 1000 ** 10 ** 18, 1000 sRZR
-      // sRZR Delegator hold : .5 ** 10** 18, 0.5 sRZR
-
-      assertBNEqual(await sToken.totalSupply(), toBigNumber('10005').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Total Supply MisMatch');
-      assertBNEqual(await staker.stake, tokenAmount('2001'), 'Stake MisMatch');
-      assertBNEqual(await sToken.balanceOf(signers[8].address), tokenAmount('1000'), 'Staker Balance MisMatch');
-      assertBNEqual(await sToken.balanceOf(signers[9].address), toBigNumber('5').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Delegator Balance MisMatch');
-    });
     it('Delegation should revert, if staker is inactive for more than grace period', async function () {
       let epoch = await getEpoch();
-      const amount = tokenAmount('10000');
+
+      const amount = tokenAmount('100000');
       await razor.transfer(signers[9].address, amount);
       await razor.connect(signers[9]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[9]).stake(epoch, amount);
@@ -1224,7 +1139,7 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Staker is inactive');
     });
     it('Staker with minStake staked, should be able to participate', async function () {
-      const stakeOfStaker = tokenAmount('1000');
+      const stakeOfStaker = tokenAmount('20000');
       await razor.transfer(signers[9].address, stakeOfStaker);
       let epoch = await getEpoch();
 
@@ -1292,95 +1207,11 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[4]).extendLock(staker.id);
     });
 
-    // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
-    it('Scenario Test : Delegation Gain and Quotient ', async function () {
-      let epoch = await getEpoch();
-      const stake = tokenAmount('1000');
-      await razor.transfer(signers[11].address, stake);
-      await razor.connect(signers[11]).approve(stakeManager.address, stake);
-      await stakeManager.connect(signers[11]).stake(epoch, stake);
-      await stakeManager.connect(signers[11]).updateCommission(5);
-      await stakeManager.connect(signers[11]).setDelegationAcceptance(true);
-      const stakerId = await stakeManager.stakerIds(signers[11].address);
-      let staker = await stakeManager.stakers(stakerId);
-
-      // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[11]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[11]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await mineToNextEpoch();
-
-      epoch = await getEpoch();
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000')); // Staker Rewarded
-
-      // Step 2 : Delegation 1
-      const delegation1 = tokenAmount('2000');
-      await razor.transfer(signers[13].address, delegation1);
-      await razor.connect(signers[13]).approve(stakeManager.address, delegation1);
-      await stakeManager.connect(signers[13]).delegate(stakerId, delegation1);
-
-      // All checks
-      let sRZRBalance = await sToken.balanceOf(signers[13].address);
-      let initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
-      let totalSupply = await sToken.totalSupply();
-      staker = await stakeManager.stakers(stakerId);
-      let withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
-
-      assertBNEqual(sRZRBalance, tokenAmount('1000'), 'sRZR mismatch');
-      assertBNEqual(initial, tokenAmount('2000'), 'initial mismatch');
-      assertBNEqual(withdrawable, tokenAmount('2000'), 'withdrawable mismatch');
-
-      // Step 3 : Delegation 2
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('6000')); // Staker Rewarded
-
-      const delegation2 = tokenAmount('3000');
-      await razor.transfer(signers[13].address, delegation2);
-      await razor.connect(signers[13]).approve(stakeManager.address, delegation2);
-      await stakeManager.connect(signers[13]).delegate(stakerId, delegation2);
-
-      // All checks
-      sRZRBalance = await sToken.balanceOf(signers[13].address);
-      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
-      totalSupply = await sToken.totalSupply();
-      staker = await stakeManager.stakers(stakerId);
-      withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
-
-      assertBNEqual(sRZRBalance, tokenAmount('2000'), 'sRZR mismatch');
-      assertBNEqual(initial, tokenAmount('5000'), 'initial mismatch');
-      assertBNEqual(withdrawable, tokenAmount('6000'), 'withdrawable mismatch');
-
-      // Step 4 : Delegation 3
-      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('3000')); // Staker Slashed
-
-      const delegation3 = tokenAmount('3000');
-      await razor.transfer(signers[13].address, delegation3);
-      await razor.connect(signers[13]).approve(stakeManager.address, delegation3);
-      await stakeManager.connect(signers[13]).delegate(stakerId, delegation3);
-
-      // All checks
-      sRZRBalance = await sToken.balanceOf(signers[13].address);
-      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
-      totalSupply = await sToken.totalSupply();
-      staker = await stakeManager.stakers(stakerId);
-      withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
-
-      assertBNEqual(sRZRBalance, tokenAmount('5000'), 'sRZR mismatch');
-      assertBNEqual(initial, tokenAmount('8000'), 'initial mismatch');
-      assertBNEqual(withdrawable, tokenAmount('5000'), 'withdrawable mismatch');
-    });
     it('should not be able to escape inactivity penalties by unstaking multiple times', async function () {
       await mineToNextEpoch();
       let epoch = await getEpoch();
-      const stake = tokenAmount('10500');
-      let amount = tokenAmount('10000');
+      const stake = tokenAmount('105000');
+      let amount = tokenAmount('100000');
       await razor.transfer(signers[15].address, stake);
       await razor.connect(signers[15]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[15]).stake(epoch, stake);
@@ -1500,6 +1331,231 @@ describe('StakeManager', function () {
       const amount = tokenAmount('1000');
       const tx = stakeManager.connect(signers[10]).delegate(stakerIdAcc4, amount);
       await assertRevert(tx, 'Staker is slashed');
+    });
+
+    it('Staker should be able to stake amount less than minStake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('12000');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+    it('Staker should be able to stake amount more than minStake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('22000');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake amount same as minStake', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('20000');
+      await razor.transfer(signers[9].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[9]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake amount more than minSafeRazor', async function () {
+      await mineToNextEpoch();
+      const stakeOfStaker = tokenAmount('11000');
+      await razor.transfer(signers[14].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[14]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[14]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should be able to stake amount same as minSafeRazor', async function () {
+      await mineToNextEpoch();
+
+      const stakeOfStaker = tokenAmount('10000');
+
+      await razor.transfer(signers[16].address, stakeOfStaker);
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[16]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[16]).stake(epoch, stakeOfStaker);
+    });
+
+    it('Staker should not be able to stake amount less than minSafeRazor', async function () {
+      await mineToNextEpoch();
+
+      const stakeOfStaker = tokenAmount(100);
+
+      await razor.transfer(signers[17].address, stakeOfStaker);
+
+      const epoch = await getEpoch();
+
+      await razor.connect(signers[17]).approve(stakeManager.address, stakeOfStaker);
+
+      const tx = stakeManager.connect(signers[17]).stake(epoch, stakeOfStaker);
+      await assertRevert(tx, 'less than minimum safe Razor');
+    });
+
+    // Test for Issue : https://github.com/razor-network/contracts/issues/202
+    it('Conversion between RZR <> sRZR should work as expected', async function () {
+      /// Staker comes in network
+      await governance.setMinStake(1);
+      await governance.setMinSafeRazor(0);
+
+      const stakeOfStaker = tokenAmount('1000');
+      await razor.transfer(signers[8].address, stakeOfStaker); // new Delegator
+
+      // -------------------- @Step1 : Staker Stakes First Time --------------------
+      let epoch = await getEpoch();
+
+      await razor.connect(signers[8]).approve(stakeManager.address, stakeOfStaker);
+      await stakeManager.connect(signers[8]).stake(epoch, stakeOfStaker);
+      await stakeManager.connect(signers[8]).updateCommission('2');
+      await stakeManager.connect(signers[8]).setDelegationAcceptance(true);
+      const stakerId = await stakeManager.stakerIds(signers[8].address);
+      let staker = await stakeManager.stakers(stakerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+
+      // sRZRs Minted should be at 1 RZR == 1 sRZR
+      assertBNEqual(await sToken.balanceOf(staker._address), staker.stake, 'Amount of minted sRzR is not correct');
+
+      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
+      // Current Stake : 1000 ** 10 ** 18, 1000 RZR
+      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('1000'), 'Stake MisMatch');
+
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[8]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[8]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000'));
+      staker = await stakeManager.stakers(stakerId);
+
+      // TotalSupply of sRZR : 1000 ** 10 **18, 1000 sRZR
+      // Current Stake : 2000 ** 10 ** 18, 2000 RZR
+      assertBNEqual(await sToken.totalSupply(), tokenAmount('1000'), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('2000'), 'Stake MisMatch');
+
+      // -------------------- @Step 3 : A delegator comes in network and stake 1 RZR (1 * 10 ** 18), now he should get 0.5 sRZR (0.5* 10 ** 18) ---------
+
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+
+      const stakeOfDelegator = tokenAmount('1');
+      await razor.transfer(signers[9].address, stakeOfDelegator); // new Delegator
+      await razor.connect(signers[9]).approve(stakeManager.address, stakeOfDelegator);
+      await stakeManager.connect(signers[9]).delegate(stakerId, stakeOfDelegator);
+      staker = await stakeManager.stakers(stakerId);
+
+      // TotalSupply of sRZR : 1000.5 ** 10 **18, 1000.5 sRZR
+      // Current Stake of staker : 2001 ** 10 ** 18, 1001 RZR
+      // sRZRs Staker hold : 1000 ** 10 ** 18, 1000 sRZR
+      // sRZR Delegator hold : .5 ** 10** 18, 0.5 sRZR
+
+      assertBNEqual(await sToken.totalSupply(), toBigNumber('10005').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Total Supply MisMatch');
+      assertBNEqual(await staker.stake, tokenAmount('2001'), 'Stake MisMatch');
+      assertBNEqual(await sToken.balanceOf(signers[8].address), tokenAmount('1000'), 'Staker Balance MisMatch');
+      assertBNEqual(await sToken.balanceOf(signers[9].address), toBigNumber('5').mul(BigNumber.from(10).pow(BigNumber.from(17))), 'Delegator Balance MisMatch');
+    });
+
+    // Delegation Gain Scenario  https://docs.google.com/spreadsheets/d/1b8ks98mRczDIX9tayjgCxI5NvD7Hq27JSYVWyqCfXmg/edit?usp=sharing
+    it('Scenario Test : Delegation Gain and Quotient ', async function () {
+      let epoch = await getEpoch();
+
+      const stake = tokenAmount('1000');
+      await razor.transfer(signers[11].address, stake);
+      await razor.connect(signers[11]).approve(stakeManager.address, stake);
+      await stakeManager.connect(signers[11]).stake(epoch, stake);
+      await stakeManager.connect(signers[11]).updateCommission(5);
+      await stakeManager.connect(signers[11]).setDelegationAcceptance(true);
+      const stakerId = await stakeManager.stakerIds(signers[11].address);
+      let staker = await stakeManager.stakers(stakerId);
+
+      // Participation In Epoch as delegators cant delegate to a staker untill they participate
+      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[11]).commit(epoch, commitment1);
+      await mineToNextState();
+      await voteManager.connect(signers[11]).reveal(epoch, votes1,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextEpoch();
+
+      epoch = await getEpoch();
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('2000')); // Staker Rewarded
+
+      // Step 2 : Delegation 1
+      const delegation1 = tokenAmount('2000');
+      await razor.transfer(signers[13].address, delegation1);
+      await razor.connect(signers[13]).approve(stakeManager.address, delegation1);
+      await stakeManager.connect(signers[13]).delegate(stakerId, delegation1);
+
+      // All checks
+      let sRZRBalance = await sToken.balanceOf(signers[13].address);
+      let initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
+      let totalSupply = await sToken.totalSupply();
+      staker = await stakeManager.stakers(stakerId);
+      let withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
+
+      assertBNEqual(sRZRBalance, tokenAmount('1000'), 'sRZR mismatch');
+      assertBNEqual(initial, tokenAmount('2000'), 'initial mismatch');
+      assertBNEqual(withdrawable, tokenAmount('2000'), 'withdrawable mismatch');
+
+      // Step 3 : Delegation 2
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('6000')); // Staker Rewarded
+
+      const delegation2 = tokenAmount('3000');
+      await razor.transfer(signers[13].address, delegation2);
+      await razor.connect(signers[13]).approve(stakeManager.address, delegation2);
+      await stakeManager.connect(signers[13]).delegate(stakerId, delegation2);
+
+      // All checks
+      sRZRBalance = await sToken.balanceOf(signers[13].address);
+      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
+      totalSupply = await sToken.totalSupply();
+      staker = await stakeManager.stakers(stakerId);
+      withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
+
+      assertBNEqual(sRZRBalance, tokenAmount('2000'), 'sRZR mismatch');
+      assertBNEqual(initial, tokenAmount('5000'), 'initial mismatch');
+      assertBNEqual(withdrawable, tokenAmount('6000'), 'withdrawable mismatch');
+
+      // Step 4 : Delegation 3
+      await stakeManager.setStakerStake(epoch, stakerId, 1, tokenAmount('100'), tokenAmount('3000')); // Staker Slashed
+
+      const delegation3 = tokenAmount('3000');
+      await razor.transfer(signers[13].address, delegation3);
+      await razor.connect(signers[13]).approve(stakeManager.address, delegation3);
+      await stakeManager.connect(signers[13]).delegate(stakerId, delegation3);
+
+      // All checks
+      sRZRBalance = await sToken.balanceOf(signers[13].address);
+      initial = await sToken.getRZRDeposited(signers[13].address, sRZRBalance);
+      totalSupply = await sToken.totalSupply();
+      staker = await stakeManager.stakers(stakerId);
+      withdrawable = (sRZRBalance.mul(staker.stake)).div(totalSupply);
+
+      assertBNEqual(sRZRBalance, tokenAmount('5000'), 'sRZR mismatch');
+      assertBNEqual(initial, tokenAmount('8000'), 'initial mismatch');
+      assertBNEqual(withdrawable, tokenAmount('5000'), 'withdrawable mismatch');
     });
   });
 });
