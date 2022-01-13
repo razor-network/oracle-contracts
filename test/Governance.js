@@ -15,7 +15,7 @@ describe('Governance contract Test', async () => {
   let signers;
   let snapShotId;
   let governance;
-  let assetManager;
+  let collectionManager;
   let blockManager;
   let stakeManager;
   let rewardManager;
@@ -33,18 +33,20 @@ describe('Governance contract Test', async () => {
   const maxAltBlocks = toBigNumber('5');
   const epochLength = toBigNumber('300');
   const gracePeriod = toBigNumber('8');
-  const minimumStake = tokenAmount('1000');
+  const minimumStake = tokenAmount('20000');
+  const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
   const extendUnstakeLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
+  const maxTolerance = toBigNumber('1000');
   const maxCommission = toBigNumber('20');
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
 
   before(async () => {
     ({
-      governance, assetManager, blockManager, stakeManager, voteManager,
+      governance, collectionManager, blockManager, stakeManager, voteManager,
       rewardManager, randomNoManager, delegator, initializeContracts,
     } = await setupContracts());
     await Promise.all(await initializeContracts());
@@ -92,10 +94,16 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setMinStake(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setMinSafeRazor(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxAge(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMaxTolerance(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxCommission(toBigNumber('1'));
@@ -125,6 +133,9 @@ describe('Governance contract Test', async () => {
     await governance.setUnstakeLockPeriod(toBigNumber('9'));
     const unstakeLockPeriod = await stakeManager.unstakeLockPeriod();
     assertBNEqual(unstakeLockPeriod, toBigNumber('9'));
+    await governance.setMinSafeRazor(toBigNumber('2'));
+    const minSafeRazor = await stakeManager.minSafeRazor();
+    assertBNEqual(minSafeRazor, toBigNumber('2'));
 
     await governance.setWithdrawLockPeriod(toBigNumber('9'));
     const withdrawLockPeriod = await stakeManager.withdrawLockPeriod();
@@ -135,7 +146,7 @@ describe('Governance contract Test', async () => {
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
 
     await governance.setEpochLength(toBigNumber('11'));
-    const epochLength = await assetManager.epochLength();
+    const epochLength = await collectionManager.epochLength();
     const epochLength1 = await blockManager.epochLength();
     const epochLength2 = await stakeManager.epochLength();
     const epochLength3 = await rewardManager.epochLength();
@@ -156,9 +167,15 @@ describe('Governance contract Test', async () => {
     assertBNEqual(gracePeriod, toBigNumber('14'));
     assertBNEqual(gracePeriod1, toBigNumber('14'));
 
+    await governance.setMaxTolerance(toBigNumber('15'));
+    const maxTolerance = await rewardManager.maxTolerance();
+    const maxTolerance1 = await collectionManager.maxTolerance();
+    assertBNEqual(maxTolerance, toBigNumber('15'));
+    assertBNEqual(maxTolerance1, toBigNumber('15'));
+
     await governance.setWithdrawInitiationPeriod(toBigNumber('16'));
-    const withdrawReleasePeriod = await stakeManager.withdrawInitiationPeriod();
-    assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
+    const withdrawInitiationPeriod = await stakeManager.withdrawInitiationPeriod();
+    assertBNEqual(withdrawInitiationPeriod, toBigNumber('16'));
 
     await governance.setExtendUnstakeLockPenalty(toBigNumber('17'));
     const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
@@ -202,6 +219,9 @@ describe('Governance contract Test', async () => {
     const minStakeValue = await stakeManager.minStake();
     assertBNEqual(minimumStake, minStakeValue);
 
+    const minSafeRazor = await stakeManager.minSafeRazor();
+    assertBNEqual(minimumSafeRazor, minSafeRazor);
+
     const blockRewardValue = await blockManager.blockReward();
     assertBNEqual(blockReward, blockRewardValue);
 
@@ -220,11 +240,14 @@ describe('Governance contract Test', async () => {
     const maxAltBlocksValue = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
 
-    const epochLengthValue = await assetManager.epochLength();
+    const epochLengthValue = await collectionManager.epochLength();
     assertBNEqual(epochLength, epochLengthValue);
 
     const maxAgeValue = await rewardManager.maxAge();
     assertBNEqual(maxAge, maxAgeValue);
+
+    const maxToleranceValue = await rewardManager.maxTolerance();
+    assertBNEqual(maxTolerance, maxToleranceValue);
 
     const maxCommissionValue = await stakeManager.maxCommission();
     assertBNEqual(maxCommission, maxCommissionValue);

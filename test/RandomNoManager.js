@@ -15,7 +15,7 @@ const {
 } = require('./helpers/constants');
 const {
   getEpoch,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
   toBigNumber,
   tokenAmount,
@@ -84,7 +84,7 @@ describe('RandomNoManager', function () {
       assertBNEqual(await randomNoManager.requests(reqid2), epoch);
 
       // Commit
-      const votes = [0];
+      const votes = [];
       const commitment1 = utils.solidityKeccak256(
         ['uint32', 'uint48[]', 'bytes32'],
         [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
@@ -119,13 +119,13 @@ describe('RandomNoManager', function () {
       const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
       const staker = await stakeManager.getStaker(stakerIdAcc5);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
 
       await blockManager.connect(signers[5]).propose(epoch,
         [],
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
       // Dispute
       await mineToNextState();
       // Confirm

@@ -20,6 +20,8 @@ interface IStakeManagerParams {
 
     function setMinStake(uint256 _minStake) external;
 
+    function setMinSafeRazor(uint256 _minSafeRazor) external;
+
     function setGracePeriod(uint16 _gracePeriod) external;
 
     function setMaxCommission(uint8 _maxCommission) external;

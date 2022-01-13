@@ -5,7 +5,7 @@ import "./interface/IBlockManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
-import "./interface/IAssetManager.sol";
+import "./interface/ICollectionManager.sol";
 import "../randomNumber/IRandomNoProvider.sol";
 import "./storage/BlockStorage.sol";
 import "./parameters/child/BlockManagerParams.sol";
@@ -17,24 +17,24 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
     IVoteManager public voteManager;
-    IAssetManager public assetManager;
+    ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
 
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestInfluencerId, uint256 timestamp);
+    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
         address voteManagerAddress,
-        address assetManagerAddress,
+        address collectionManagerAddress,
         address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
-        assetManager = IAssetManager(assetManagerAddress);
+        collectionManager = ICollectionManager(collectionManagerAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
@@ -52,42 +52,42 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint32[] memory medians,
         uint256 iteration,
-        uint32 biggestInfluencerId
+        uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, epochLength) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, biggestInfluencerId, proposerId, epoch), "not elected");
+        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
-        require(medians.length == assetManager.getNumActiveCollections(), "invalid block proposed");
+        require(medians.length == collectionManager.getNumActiveCollections(), "invalid block proposed");
 
-        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
+        uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestInfluence);
-        bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestInfluence);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestStake);
+        bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestStake);
         epochLastProposed[proposerId] = epoch;
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, medians, iteration, biggestInfluencerId, block.timestamp);
+        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId, block.timestamp);
     }
 
     //anyone can give sorted votes in batches in dispute state
     function giveSorted(
         uint32 epoch,
-        uint16 collectionId,
+        uint16 medianIndex,
         uint32[] memory sortedStakers
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
+        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
-        uint16 collectionIndex = assetManager.getCollectionIndex(collectionId);
         if (disputes[epoch][msg.sender].accWeight == 0) {
-            disputes[epoch][msg.sender].collectionId = collectionId;
+            disputes[epoch][msg.sender].medianIndex = medianIndex;
         } else {
-            require(disputes[epoch][msg.sender].collectionId == collectionId, "AssetId not matching");
+            require(disputes[epoch][msg.sender].medianIndex == medianIndex, "MedianIndex not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedStakers.length; i++) {
@@ -97,7 +97,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
             require(vote.epoch == epoch, "staker didnt vote in this epoch");
 
-            uint48 value = vote.values[collectionIndex - 1];
+            uint48 value = vote.values[medianIndex];
             // slither-disable-next-line calls-loop
             uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
             accProd = accProd + value * influence;
@@ -120,35 +120,41 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
-        uint16[] memory deactivatedCollections = assetManager.getPendingDeactivations();
-        if (sortedProposedBlockIds[epoch].length == 0 || blockIndexToBeConfirmed == -1) {
-            assetManager.executePendingDeactivations(epoch);
-            return;
+        if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
+            uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
+            require(proposerId == stakerId, "Block Proposer mismatches");
+            _confirmBlock(epoch, proposerId);
         }
-        uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
-        require(proposerId == stakerId, "Block Proposer mismatches");
-        _confirmBlock(epoch, deactivatedCollections, proposerId);
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch) {
+            collectionManager.updateRegistry();
+        }
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch(epochLength);
-        uint16[] memory deactivatedCollections = assetManager.getPendingDeactivations();
-        if (sortedProposedBlockIds[epoch - 1].length == 0 || blockIndexToBeConfirmed == -1) {
-            assetManager.executePendingDeactivations(epoch);
-            return;
+
+        if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
+            _confirmBlock(epoch - 1, stakerId);
         }
-        _confirmBlock(epoch - 1, deactivatedCollections, stakerId);
+
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch - 1) {
+            collectionManager.updateRegistry();
+        }
     }
 
-    function disputeBiggestInfluenceProposed(
+    function disputeBiggestStakeProposed(
         uint32 epoch,
         uint8 blockIndex,
-        uint32 correctBiggestInfluencerId
+        uint32 correctBiggestStakerId
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint256 correctBiggestInfluence = voteManager.getInfluenceSnapshot(epoch, correctBiggestInfluencerId);
-        require(correctBiggestInfluence > proposedBlocks[epoch][blockId].biggestInfluence, "Invalid dispute : Influence");
+        uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
+        require(correctBiggestStake > proposedBlocks[epoch][blockId].biggestStake, "Invalid dispute : Stake");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -164,9 +170,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint16 collectionId = disputes[epoch][msg.sender].collectionId;
-        uint16 collectionIndex = assetManager.getCollectionIndex(collectionId);
-        require(proposedBlocks[epoch][blockId].medians[collectionIndex - 1] != median, "Block proposed with same medians");
+        uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
+        require(proposedBlocks[epoch][blockId].medians[medianIndex] != median, "Block proposed with same medians");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -187,27 +192,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
-    function _confirmBlock(
-        uint32 epoch,
-        uint16[] memory deactivatedCollections,
-        uint32 stakerId
-    ) internal {
+    function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
-        for (uint16 i = uint16(deactivatedCollections.length); i > 0; i--) {
-            // slither-disable-next-line calls-loop
-            uint16 index = assetManager.getCollectionIndex(deactivatedCollections[i - 1]);
-            if (index == proposedBlocks[epoch][blockId].medians.length) {
-                proposedBlocks[epoch][blockId].medians.pop();
-            } else {
-                proposedBlocks[epoch][blockId].medians[index - 1] = proposedBlocks[epoch][blockId].medians[
-                    proposedBlocks[epoch][blockId].medians.length - 1
-                ];
-                proposedBlocks[epoch][blockId].medians.pop();
-            }
-        }
         blocks[epoch] = proposedBlocks[epoch][blockId];
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
-        assetManager.executePendingDeactivations(epoch);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
     }
@@ -216,7 +204,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint32 blockId,
         uint256 iteration,
-        uint256 biggestInfluence
+        uint256 biggestStake
     ) internal returns (bool isAdded) {
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
@@ -226,11 +214,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             return true;
         }
 
-        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence > biggestInfluence) {
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestStake > biggestStake) {
             return false;
         }
 
-        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestInfluence < biggestInfluence) {
+        if (proposedBlocks[epoch][sortedProposedBlockIds[epoch][0]].biggestStake < biggestStake) {
             for (uint8 i = 0; i < sortedProposedBlockslength; i++) {
                 sortedProposedBlockIds[epoch].pop();
             }
@@ -294,7 +282,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function _isElectedProposer(
         uint256 iteration,
-        uint32 biggestInfluencerId,
+        uint32 biggestStakerId,
         uint32 stakerId,
         uint32 epoch
     ) internal view initialized returns (bool) {
@@ -310,9 +298,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
-        uint256 biggestInfluence = voteManager.getInfluenceSnapshot(epoch, biggestInfluencerId);
-        uint256 influence = voteManager.getInfluenceSnapshot(epoch, stakerId);
-        if (rand2 * (biggestInfluence) > influence * (2**32)) return (false);
+        uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
+        uint256 stake = voteManager.getStakeSnapshot(epoch, stakerId);
+        if (rand2 * (biggestStake) > stake * (2**32)) return (false);
         return true;
     }
 }

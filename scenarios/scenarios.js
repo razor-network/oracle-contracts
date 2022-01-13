@@ -24,7 +24,7 @@ const {
   calculateDisputesData,
   getEpoch,
   tokenAmount,
-  getBiggestInfluenceAndId,
+  getBiggestStakeAndId,
   getIteration,
   getVote,
   toBigNumber,
@@ -34,7 +34,7 @@ describe('Scenarios', async () => {
   let signers;
   let snapShotId;
   let blockManager;
-  let assetManager;
+  let collectionManager;
   let stakeManager;
   let voteManager;
   let initializeContracts;
@@ -49,7 +49,7 @@ describe('Scenarios', async () => {
 
   before(async () => {
     ({
-      blockManager, razor, governance, voteManager, assetManager, stakeManager, initializeContracts, stakedToken,
+      blockManager, razor, governance, voteManager, collectionManager, stakeManager, initializeContracts, stakedToken,
     } = await setupContracts());
     signers = await ethers.getSigners();
     blockReward = await blockManager.blockReward();
@@ -58,7 +58,7 @@ describe('Scenarios', async () => {
   beforeEach(async () => {
     snapShotId = await takeSnapshot();
     await Promise.all(await initializeContracts());
-    await assetManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+    await collectionManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
     await governance.grantRole(GOVERNER_ROLE, signers[0].address);
     const url = 'http://testurl.com';
     const selector = 'selector';
@@ -69,7 +69,7 @@ describe('Scenarios', async () => {
     let i = 0;
     while (i < 9) {
       name = `test${i}`;
-      await assetManager.createJob(weight, power, selectorType, name, selector, url);
+      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       i++;
     }
 
@@ -78,10 +78,10 @@ describe('Scenarios', async () => {
     let Cname;
     for (let i = 1; i <= 8; i++) {
       Cname = `Test Collection${String(i)}`;
-      await assetManager.createCollection([i, i + 1], 1, 3, Cname);
+      await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
     }
     Cname = 'Test Collection9';
-    await assetManager.createCollection([9, 1], 1, 3, Cname);
+    await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
     await mineToNextEpoch();
     const epoch = getEpoch();
@@ -93,28 +93,28 @@ describe('Scenarios', async () => {
     await razor.transfer(signers[4].address, razors);
     await razor.transfer(signers[5].address, razors);
 
-    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    let stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
 
     await razor.connect(signers[1]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[1]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[2]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[2]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[3]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[3]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[4]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[4]).stake(epoch, stake);
     stakes.push(stake);
 
-    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 442000))));
+    stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
     await razor.connect(signers[5]).approve(stakeManager.address, stake);
     await stakeManager.connect(signers[5]).stake(epoch, stake);
     stakes.push(stake);
@@ -152,12 +152,12 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[j]).propose(epoch,
           medians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
       await mineToNextState();
       // dispute
@@ -203,12 +203,12 @@ describe('Scenarios', async () => {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[j]).propose(epoch,
         medians,
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
     }
     await mineToNextState();
     // dispute
@@ -250,12 +250,12 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[j]).propose(epoch,
           medians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
       await mineToNextState();
       // dispute
@@ -314,12 +314,12 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[j]).propose(epoch,
           medians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
       await mineToNextState();
       // dispute
@@ -394,6 +394,7 @@ describe('Scenarios', async () => {
     }
 
     await governance.setMinStake(toBigNumber('800'));
+    await governance.setMinSafeRazor(toBigNumber('500'));
 
     await mineToNextState();// propose
     await mineToNextState();// dispute
@@ -422,7 +423,7 @@ describe('Scenarios', async () => {
   });
 
   it('Staker remains inactive for a long period of time such that stake becomes less than minStake , no participation now in network', async function () {
-    const stake = tokenAmount('1000');
+    const stake = tokenAmount('20000');
     await razor.transfer(signers[6].address, stake);
     let epoch = await getEpoch();
 
@@ -449,12 +450,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[6].address);
     const staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[6]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -509,12 +510,12 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[j]).propose(epoch,
           medians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
       await mineToNextState();
       // dispute
@@ -560,9 +561,9 @@ describe('Scenarios', async () => {
     const votesarray = [];
     for (let i = 1; i <= 5; i++) {
       epoch = await getEpoch();
-      const razors = tokenAmount('1000');
+      const razors = tokenAmount('20000');
       await razor.transfer(signers[i].address, razors);
-      const stake = tokenAmount('1000');
+      const stake = tokenAmount('20000');
       await razor.connect(signers[i]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[i]).stake(epoch, stake);
 
@@ -584,7 +585,7 @@ describe('Scenarios', async () => {
   });
   it('Staker particpates with delegator and later delegator withdraws such that stakers stake becomes less than minStake', async function () {
     // staker participating in netwrok
-    const stake = tokenAmount('1000');
+    const stake = tokenAmount('20000');
     await razor.transfer(signers[7].address, stake);
     let epoch = await getEpoch();
 
@@ -611,12 +612,12 @@ describe('Scenarios', async () => {
     let stakerId = await stakeManager.stakerIds(signers[7].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[7]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -662,7 +663,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[5]).delegate(stakerId, delegatedStake);
     stakerId = await stakeManager.stakerIds(signers[7].address);
     staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.stake, tokenAmount('1010'), 'Change in stake is incorrect');
+    assertBNEqual(staker.stake, tokenAmount('20010'), 'Change in stake is incorrect');
     assertBNEqual(await sToken.balanceOf(signers[5].address), delegatedStake, 'Amount of minted sRzR is not correct');
 
     // staker remains inactive for more than GRACE_PERIOD time and gets inactivity penalties
@@ -731,12 +732,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -788,12 +789,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -858,12 +859,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -919,12 +920,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState();
     // dispute
@@ -990,12 +991,12 @@ describe('Scenarios', async () => {
     let stakerId = await stakeManager.stakerIds(signers[1].address);
     let staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    let iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState(); // dispute
     const stakeBefore = await stakeManager.getStake(stakerId);
@@ -1027,11 +1028,11 @@ describe('Scenarios', async () => {
     stakerId = await stakeManager.stakerIds(signers[1].address);
     staker = await stakeManager.getStaker(stakerId);
 
-    iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState(); // dispute
     await mineToNextState(); // confirm
@@ -1058,11 +1059,11 @@ describe('Scenarios', async () => {
     stakerId = await stakeManager.stakerIds(signers[1].address);
     staker = await stakeManager.getStaker(stakerId);
 
-    iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState(); // dispute
     const stakeBefore1 = await stakeManager.getStake(stakerId);
@@ -1094,12 +1095,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     const staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     await blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await mineToNextState(); // dispute
     await mineToNextState(); // confirm
@@ -1186,12 +1187,12 @@ describe('Scenarios', async () => {
     const stakerId = await stakeManager.stakerIds(signers[1].address);
     const staker = await stakeManager.getStaker(stakerId);
 
-    const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-    const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+    const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+    const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
     const tx = blockManager.connect(signers[1]).propose(epoch,
       medians,
       iteration,
-      biggestInfluencerId);
+      biggestStakerId);
 
     await assertRevert(tx, 'stake below minimum stake');
   }).timeout(5000);
@@ -1224,18 +1225,18 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         if (j === 4) {
           await blockManager.connect(signers[j]).propose(epoch,
             medians,
             iteration,
-            biggestInfluencerId + 1);
+            biggestStakerId + 1);
         } else {
           await blockManager.connect(signers[j]).propose(epoch,
             medians,
             iteration,
-            biggestInfluencerId);
+            biggestStakerId);
         }
       }
 
@@ -1284,7 +1285,7 @@ describe('Scenarios', async () => {
       const median = await calculateDisputesData(i,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       mediansArray.push(Number(median.median));
@@ -1294,12 +1295,12 @@ describe('Scenarios', async () => {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[j]).propose(epoch,
         mediansArray,
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
     }
 
     await mineToNextState();
@@ -1348,7 +1349,7 @@ describe('Scenarios', async () => {
       const median = await calculateDisputesData(i,
         voteManager,
         stakeManager,
-        assetManager,
+        collectionManager,
         epoch);
 
       mediansArray.push(Number(median.median));
@@ -1362,18 +1363,18 @@ describe('Scenarios', async () => {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       if (j === 2) {
         await blockManager.connect(signers[j]).propose(epoch,
           wrongMedians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       } else {
         await blockManager.connect(signers[j]).propose(epoch,
           mediansArray,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
     }
     await mineToNextState();
@@ -1383,7 +1384,7 @@ describe('Scenarios', async () => {
     } = await calculateDisputesData(10,
       voteManager,
       stakeManager,
-      assetManager,
+      collectionManager,
       epoch);
     await blockManager.connect(signers[4]).giveSorted(epoch, 10, sortedStakers);
 
@@ -1480,12 +1481,12 @@ describe('Scenarios', async () => {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[j]).propose(epoch,
         medians,
         iteration,
-        biggestInfluencerId);
+        biggestStakerId);
     }
 
     await mineToNextState();
@@ -1554,12 +1555,12 @@ describe('Scenarios', async () => {
         const stakerId = await stakeManager.stakerIds(signers[j].address);
         const staker = await stakeManager.getStaker(stakerId);
 
-        const { biggestInfluence, biggestInfluencerId } = await getBiggestInfluenceAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestInfluence);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         await blockManager.connect(signers[j]).propose(epoch,
           medians,
           iteration,
-          biggestInfluencerId);
+          biggestStakerId);
       }
       await mineToNextState();
       // dispute

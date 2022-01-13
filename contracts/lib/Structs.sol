@@ -45,11 +45,11 @@ library Structs {
         uint32 proposerId;
         uint32[] medians;
         uint256 iteration;
-        uint256 biggestInfluence;
+        uint256 biggestStake;
     }
 
     struct Dispute {
-        uint16 collectionId;
+        uint16 medianIndex;
         uint32 lastVisitedStaker;
         uint256 accWeight;
         uint256 accProd;
@@ -68,7 +68,7 @@ library Structs {
     struct Collection {
         bool active;
         uint16 id;
-        uint16 assetIndex;
+        uint16 tolerance;
         int8 power;
         uint32 aggregationMethod;
         uint16[] jobIDs;

@@ -103,7 +103,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 totalSupply = 0;
 
         if (stakerId == 0) {
-            require(amount >= minStake, "Amount below Minstake");
+            require(amount >= minSafeRazor, "less than minimum safe Razor");
             numStakers = numStakers + (1);
             stakerId = numStakers;
             stakerIds[msg.sender] = stakerId;
@@ -115,7 +115,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             require(sToken.mint(msg.sender, amount, amount), "tokens not minted"); // as 1RZR = 1 sRZR
             totalSupply = amount;
         } else {
-            require(amount + stakers[stakerId].stake >= minStake, "amount + stake below min Stake");
             require(!stakers[stakerId].isSlashed, "staker is slashed");
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             totalSupply = sToken.totalSupply();
