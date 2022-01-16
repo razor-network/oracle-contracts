@@ -195,7 +195,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         return numCollections;
     }
 
-    function getNumActiveCollections() external view override returns (uint256) {
+    function getNumActiveCollections() external view override returns (uint16) {
         return numActiveCollections;
     }
 

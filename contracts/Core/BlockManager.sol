@@ -78,32 +78,28 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function giveSorted(
         uint32 epoch,
         uint16 medianIndex,
-        uint32[] memory sortedStakers
+        uint32[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
-        uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
+        uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
+
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].medianIndex = medianIndex;
         } else {
             require(disputes[epoch][msg.sender].medianIndex == medianIndex, "MedianIndex not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
-        for (uint32 i = 0; i < sortedStakers.length; i++) {
-            require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS "); // LVS : Last Visited Staker
-            lastVisitedStaker = sortedStakers[i];
-            // slither-disable-next-line calls-loop
-            Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
-            require(vote.epoch == epoch, "staker didnt vote in this epoch");
-
-            uint48 value = vote.values[medianIndex];
-            // slither-disable-next-line calls-loop
-            uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
-            accProd = accProd + value * influence;
-            accWeight = accWeight + influence;
+        for (uint32 i = 0; i < sortedValues.length; i++) {
+            require(sortedValues[i] > lastVisitedValue, "sortedStaker <= LVS "); // LVS : Last Visited Staker
+            lastVisitedValue = sortedValues[i];
+    
+            uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+            accProd = accProd + sortedValues[i] * weight;
+            accWeight = accWeight + weight;
         }
-        disputes[epoch][msg.sender].lastVisitedStaker = lastVisitedStaker;
+        disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
         disputes[epoch][msg.sender].accProd = accProd;
     }
@@ -165,7 +161,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         checkEpochAndState(State.Dispute, epoch, epochLength)
         returns (uint32)
     {
-        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
+        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
@@ -195,6 +191,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
+
+        salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians, salt)); // not iteration as it can be manipulated
+        voteManager.storeSalt(salt);
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());

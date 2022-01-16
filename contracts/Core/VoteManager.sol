@@ -18,7 +18,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     ICollectionManager public collectionManager;
 
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
-    event Revealed(uint32 epoch, uint32 stakerId, uint48[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset [] values, uint256 timestamp);
 
     function initialize(
         address stakeManagerAddress,
@@ -57,39 +57,54 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
     function reveal(
         uint32 epoch,
-        uint48[] calldata values,
+        Structs.AssignedAsset [] calldata values,
+        bytes32[][] memory proofs,
+        bytes32 root,
         bytes32 secret
     ) external initialized checkEpochAndState(State.Reveal, epoch, epochLength) {
+
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
-        uint256 stakerStake = stakeManager.getStake(stakerId);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(stakerStake >= minStake, "stake below minimum");
+        require(values.length == noOfAssetsAlloted, "values length mismatch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
+        bytes32 seed = keccak256(abi.encodePacked(salt, secret));
+        require(keccak256(abi.encodePacked(root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
 
-        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
-        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
-
-        require(values.length == collectionManager.getNumActiveCollections(), "invalid values revealed");
-
-        //TODO: REQUIRE all assets to be revealed
-        commitments[stakerId].commitmentHash = 0x0;
-        votes[stakerId].epoch = epoch;
-        votes[stakerId].values = values;
-        uint256 influence = stakeManager.getInfluence(stakerId);
-        totalInfluenceRevealed[epoch] = totalInfluenceRevealed[epoch] + influence;
-        influenceSnapshot[epoch][stakerId] = influence;
+        {
+        uint256 stakerStake = stakeManager.getStake(stakerId);
+        require(stakerStake >= minStake, "stake below minimum");
         stakeSnapshot[epoch][stakerId] = stakerStake;
-        secrets = keccak256(abi.encodePacked(secrets, secret));
+        }
+        //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
+        commitments[stakerId].commitmentHash = 0x0;
 
+        uint256 influence = stakeManager.getInfluence(stakerId);
+        influenceSnapshot[epoch][stakerId] = influence;
+ 
+       
+        
+        for (uint16 i = 0; i < values.length; i++) {
+            if (votes[epoch][stakerId][values[i].medianIndex] == 0) { // If Job Not Revealed before, please not due to this job result cant be zero
+                     require(_isAssetAllotedToStaker(seed, stakerId, i, values[i].medianIndex), "Revealed asset not alloted");
+                     //require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
+                     // TODO : Possible opt
+                     votes[epoch][stakerId][values[i].medianIndex] = values[i].value;
+                     voteWeights[epoch][values[i].medianIndex][values[i].value] = voteWeights[epoch][values[i].medianIndex][values[i].value] + influence;
+                     totalInfluenceRevealed[epoch][values[i].medianIndex] = totalInfluenceRevealed[epoch][values[i].medianIndex] + influence;
+            }
+        }
+     
+        epochLastRevealed[stakerId] = epoch; 
+        
         emit Revealed(epoch, stakerId, values, block.timestamp);
-    }
+    } 
 
-    //bounty hunter revealing secret in commit state
+    //bounty hunter revealing secret in commit st ate
     function snitch(
         uint32 epoch,
-        uint48[] calldata values,
+        bytes32 root,
         bytes32 secret,
         address stakerAddress
     ) external initialized checkEpochAndState(State.Commit, epoch, epochLength) returns (uint32) {
@@ -99,10 +114,15 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(commitments[thisStakerId].epoch == epoch, "not committed in this epoch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
-        require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+
+        bytes32 seed = keccak256(abi.encodePacked(salt, secret));
+        require(keccak256(abi.encodePacked(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
         return stakeManager.slash(epoch, thisStakerId, msg.sender);
+    }
+    function storeSalt(bytes32 _salt) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        salt = _salt;
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
@@ -110,14 +130,18 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return (commitments[stakerId]);
     }
 
-    function getVote(uint32 stakerId) external view override returns (Structs.Vote memory vote) {
-        //stakerid->votes
-        return (votes[stakerId]);
+    function getVoteValue(uint32 epoch, uint32 stakerId, uint16 medianIndex) external view override returns (uint32) {
+        //epoch -> stakerid -> asserId
+        return votes[epoch][stakerId][medianIndex];
     }
 
-    function getVoteValue(uint16 assetIndex, uint32 stakerId) external view override returns (uint48) {
-        //stakerid -> assetid -> vote
-        return (votes[stakerId].values[assetIndex]);
+    function getVoteWeight(
+        uint32 epoch,
+        uint16 medianIndex,
+        uint32 voteValue
+    ) external view override returns (uint256) {
+        //epoch -> medianIndex -> voteValue -> weight
+        return (voteWeights[epoch][medianIndex][voteValue]);
     }
 
     function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
@@ -130,9 +154,10 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return (stakeSnapshot[epoch][stakerId]);
     }
 
-    function getTotalInfluenceRevealed(uint32 epoch) external view override returns (uint256) {
-        // epoch -> asset -> stakeWeight
-        return (totalInfluenceRevealed[epoch]);
+
+    function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external view override returns (uint256) {
+        // epoch -> asseted
+        return (totalInfluenceRevealed[epoch][medianIndex]);
     }
 
     function getEpochLastCommitted(uint32 stakerId) external view override returns (uint32) {
@@ -140,10 +165,27 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     function getEpochLastRevealed(uint32 stakerId) external view override returns (uint32) {
-        return votes[stakerId].epoch;
+        return epochLastRevealed[stakerId];
+    }
+    
+    function getRandaoHash() external view override returns (bytes32) {
+        return salt;
     }
 
-    function getRandaoHash() external view override returns (bytes32) {
-        return (secrets);
+    function _isAssetAllotedToStaker(bytes32 seed, uint32 stakerId, uint16 iteration, uint16 medianIndex) internal view initialized returns (bool)
+    {   
+         // max= numAssets, prng_seed = seed+iteration+stakerId
+         // + 1 as asset id starts from 1 and prng retruns from  0 to max -1
+         uint16 max =  collectionManager.getNumActiveCollections();
+         if (_prng(keccak256(abi.encode(seed, iteration + stakerId)), max ) + 1 == medianIndex) return true;
+         return false;
+    }
+
+    function _prng(
+        bytes32 prngSeed,
+        uint256 max
+    ) internal pure returns (uint256) {
+        uint256 sum = uint256(prngSeed);
+        return (sum % max);
     }
 }

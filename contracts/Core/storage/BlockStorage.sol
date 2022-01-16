@@ -18,4 +18,6 @@ contract BlockStorage {
     int8 public blockIndexToBeConfirmed; // Index in sortedProposedBlockIds
     // epoch -> blocks
     mapping(uint32 => Structs.Block) public blocks;
+
+    bytes32 public salt;
 }

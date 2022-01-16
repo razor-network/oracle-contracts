@@ -6,7 +6,7 @@ interface ICollectionManager {
 
     function getCollectionStatus(uint16 id) external view returns (bool);
 
-    function getNumActiveCollections() external view returns (uint256);
+    function getNumActiveCollections() external view returns (uint16);
 
     function getCollectionPower(uint16 id) external view returns (int8);
 
