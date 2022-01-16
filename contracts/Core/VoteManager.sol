@@ -169,7 +169,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return epochLastRevealed[stakerId];
     }
     
-    function getRandaoHash() external view override returns (bytes32) {
+    function getSalt() external view override returns (bytes32) {
         return salt;
     }
 

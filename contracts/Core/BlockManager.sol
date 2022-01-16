@@ -196,7 +196,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         voteManager.storeSalt(salt);
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         rewardManager.giveBlockReward(stakerId, epoch);
-        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        randomNoProvider.provideSecret(epoch, voteManager.getSalt());
     }
 
     function _insertAppropriately(
@@ -288,13 +288,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
 
-        bytes32 randaoHashes = voteManager.getRandaoHash();
-        bytes32 seed1 = Random.prngHash(randaoHashes, keccak256(abi.encode(iteration)));
+        bytes32 salt = voteManager.getSalt();
+        bytes32 seed1 = Random.prngHash(salt, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
-        bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
+        bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
