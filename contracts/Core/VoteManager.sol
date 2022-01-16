@@ -10,6 +10,7 @@ import "./storage/VoteStorage.sol";
 import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
+import "../lib/MerklePosAware.sol";
 
 contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
@@ -57,20 +58,18 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
     function reveal(
         uint32 epoch,
-        Structs.AssignedAsset [] calldata values,
-        bytes32[][] memory proofs,
-        bytes32 root,
+        Structs.MerkleTree memory tree,
         bytes32 secret
     ) external initialized checkEpochAndState(State.Reveal, epoch, epochLength) {
 
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(values.length == noOfAssetsAlloted, "values length mismatch");
+        require(tree.values.length == noOfAssetsAlloted, "values length mismatch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
         bytes32 seed = keccak256(abi.encodePacked(salt, secret));
-        require(keccak256(abi.encodePacked(root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        require(keccak256(abi.encodePacked(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
 
         {
         uint256 stakerStake = stakeManager.getStake(stakerId);
@@ -85,20 +84,22 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
  
        
         
-        for (uint16 i = 0; i < values.length; i++) {
-            if (votes[epoch][stakerId][values[i].medianIndex] == 0) { // If Job Not Revealed before, please not due to this job result cant be zero
-                     require(_isAssetAllotedToStaker(seed, stakerId, i, values[i].medianIndex), "Revealed asset not alloted");
-                     //require(MerkleProof.verify(proofs[i], root, keccak256(abi.encodePacked(values[i].value))), "invalid merkle proof");
+        for (uint16 i = 0; i < tree.values.length; i++) {
+            if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) { // If Job Not Revealed before, please not due to this job result cant be zero
+                     require(_isAssetAllotedToStaker(seed, stakerId, i, tree.values[i].medianIndex), "Revealed asset not alloted");
+                     require(MerklePosAware.verify(tree.proofs[i], tree.root, keccak256(abi.encodePacked(tree.values[i].value)), tree.values[i].medianIndex,
+                        tree.depth, collectionManager.getNumActiveCollections()), "invalid merkle proof");
                      // TODO : Possible opt
-                     votes[epoch][stakerId][values[i].medianIndex] = values[i].value;
-                     voteWeights[epoch][values[i].medianIndex][values[i].value] = voteWeights[epoch][values[i].medianIndex][values[i].value] + influence;
-                     totalInfluenceRevealed[epoch][values[i].medianIndex] = totalInfluenceRevealed[epoch][values[i].medianIndex] + influence;
+                     /// Can we remove epochs ? would save lot of gas
+                     votes[epoch][stakerId][tree.values[i].medianIndex] = tree.values[i].value;
+                     voteWeights[epoch][tree.values[i].medianIndex][tree.values[i].value] = voteWeights[epoch][tree.values[i].medianIndex][tree.values[i].value] + influence;
+                     totalInfluenceRevealed[epoch][tree.values[i].medianIndex] = totalInfluenceRevealed[epoch][tree.values[i].medianIndex] + influence;
             }
         }
      
         epochLastRevealed[stakerId] = epoch; 
         
-        emit Revealed(epoch, stakerId, values, block.timestamp);
+        emit Revealed(epoch, stakerId, tree.values, block.timestamp);
     } 
 
     //bounty hunter revealing secret in commit st ate
