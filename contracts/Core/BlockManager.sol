@@ -13,6 +13,7 @@ import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 import "hardhat/console.sol";
+
 contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -96,7 +97,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         for (uint32 i = 0; i < sortedValues.length; i++) {
             require(sortedValues[i] > lastVisitedValue, "sortedStaker <= LVS "); // LVS : Last Visited Staker
             lastVisitedValue = sortedValues[i];
-    
+
             uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
             accProd = accProd + sortedValues[i] * weight;
             accWeight = accWeight + weight;
@@ -163,7 +164,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         checkEpochAndState(State.Dispute, epoch, epochLength)
         returns (uint32)
     {
-        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex), "TIR is wrong"); // TIR : total influence revealed
+        require(
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            "TIR is wrong"
+        ); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];

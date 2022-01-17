@@ -108,25 +108,27 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint64 penalty = 0;
         for (uint16 i = 0; i < mediansLastEpoch.length; i++) {
             // slither-disable-next-line calls-loop
-            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch -1, stakerId, i);
+            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, i);
 
-            if(voteValueLastEpoch !=0) // Only penalise if given asset revealed, please not here again revealed value of asset cant be zero
+            if (
+                voteValueLastEpoch != 0
+            ) // Only penalise if given asset revealed, please not here again revealed value of asset cant be zero
             {
-            // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
-            uint32 medianLastEpoch = mediansLastEpoch[i];
-            if (medianLastEpoch == 0) continue;
-            uint64 prod = age * voteValueLastEpoch;
-            // slither-disable-next-line calls-loop
-            uint16 tolerance = collectionManager.getCollectionTolerance(i);
-            tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
-            uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
-            uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
-            // if (voteWeightLastEpoch > 0) {
-            if (voteValueLastEpoch > maxVoteTolerance) {
-                penalty = penalty + (prod / maxVoteTolerance - age);
-            } else if (voteValueLastEpoch < minVoteTolerance) {
-                penalty = penalty + (age - prod / minVoteTolerance);
-            }
+                // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
+                uint32 medianLastEpoch = mediansLastEpoch[i];
+                if (medianLastEpoch == 0) continue;
+                uint64 prod = age * voteValueLastEpoch;
+                // slither-disable-next-line calls-loop
+                uint16 tolerance = collectionManager.getCollectionTolerance(i);
+                tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
+                uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                // if (voteWeightLastEpoch > 0) {
+                if (voteValueLastEpoch > maxVoteTolerance) {
+                    penalty = penalty + (prod / maxVoteTolerance - age);
+                } else if (voteValueLastEpoch < minVoteTolerance) {
+                    penalty = penalty + (age - prod / minVoteTolerance);
+                }
             }
         }
 

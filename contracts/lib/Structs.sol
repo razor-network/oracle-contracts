@@ -70,15 +70,14 @@ library Structs {
     }
 
     struct AssignedAsset {
-         uint16 medianIndex;
-         uint32 value;
-     }
+        uint16 medianIndex;
+        uint32 value;
+    }
 
     struct MerkleTree {
-        uint16 depth; // TODO : Check and Test if this is safe, or should we do it inside only 
-        Structs.AssignedAsset [] values;
+        uint16 depth; // TODO : Check and Test if this is safe, or should we do it inside only
+        Structs.AssignedAsset[] values;
         bytes32[][] proofs;
         bytes32 root;
-    }   
+    }
 }
-

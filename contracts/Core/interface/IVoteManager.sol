@@ -5,8 +5,12 @@ import "../../lib/Structs.sol";
 
 interface IVoteManager {
     function storeSalt(bytes32 _salt) external;
-    
-    function getVoteValue(uint32 epoch, uint32 stakerId, uint16 assetId) external view returns (uint32);
+
+    function getVoteValue(
+        uint32 epoch,
+        uint32 stakerId,
+        uint16 assetId
+    ) external view returns (uint32);
 
     function getVoteWeight(
         uint32 epoch,
