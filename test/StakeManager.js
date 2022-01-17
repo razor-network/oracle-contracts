@@ -553,6 +553,20 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Commission exceeds maxlimit');
     });
 
+    it('Staker should not be able to updateCommission if it exceeds the change limit which is delta commission', async function () {
+      const deltaCommission = 3;
+      await stakeManager.connect(signers[1]).updateCommission(4);
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(5);
+      for (let i = 0; i < 5; i++) await mineToNextEpoch();
+      const stakerId = await stakeManager.stakerIds(signers[1].address);
+      const staker = await stakeManager.getStaker(stakerId);
+      const currentCommission = staker.commission;
+      const commission = currentCommission + deltaCommission;
+      const tx2 = stakeManager.connect(signers[1]).updateCommission(commission + 1);
+      await assertRevert(tx2, 'Invalid Commission Update');
+    });
+
     it('Staker should be able to update commission', async function () {
       let staker = await stakeManager.getStaker(4);
       const commRate = 6;
@@ -873,17 +887,21 @@ describe('StakeManager', function () {
         assertBNLessThan(DelegatorBalance, newBalanaceUnchanged, 'Delegators should receive less amount than expected due to decrease in valuation of sRZR');
       });
 
-    it('Delegators should not be able to withdraw if withdraw within period passes', async function () {
+    it('Delegetor/Staker should not be able to call extend lock before release period passes', async function () {
       // Delagator unstakes
-
       const amount = tokenAmount('10000'); // unstaking partial amount
       const staker = await stakeManager.getStaker(4);
       await stakeManager.connect(signers[5]).unstake(staker.id, amount);
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
         await mineToNextEpoch();
       }
-      const withdrawWithin = await stakeManager.withdrawReleasePeriod();
+      const tx = stakeManager.connect(signers[5]).extendLock(staker.id);
+      await assertRevert(tx, 'Release Period Not yet passed');
+    });
 
+    it('Delegators should not be able to withdraw if withdraw within period passes', async function () {
+      const staker = await stakeManager.getStaker(4);
+      const withdrawWithin = await stakeManager.withdrawReleasePeriod();
       // Delegator withdraws
       for (let i = 0; i < withdrawWithin + 1; i++) {
         await mineToNextEpoch();

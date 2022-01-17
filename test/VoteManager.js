@@ -102,6 +102,7 @@ describe('VoteManager', function () {
         await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
+        await razor.transfer(signers[1].address, tokenAmount('30000'));
         await razor.transfer(signers[2].address, tokenAmount('30000'));
         await razor.transfer(signers[3].address, tokenAmount('423000'));
         await razor.transfer(signers[4].address, tokenAmount('20000'));
@@ -112,6 +113,7 @@ describe('VoteManager', function () {
         await razor.transfer(signers[9].address, tokenAmount('20000'));
         await razor.transfer(signers[15].address, tokenAmount('20000'));
 
+        await razor.connect(signers[1]).approve(stakeManager.address, tokenAmount('30000'));
         await razor.connect(signers[2]).approve(stakeManager.address, tokenAmount('30000'));
         await razor.connect(signers[3]).approve(stakeManager.address, tokenAmount('420000'));
         await razor.connect(signers[4]).approve(stakeManager.address, tokenAmount('20000'));
@@ -123,6 +125,7 @@ describe('VoteManager', function () {
         await razor.connect(signers[15]).approve(stakeManager.address, tokenAmount('20000'));
 
         const epoch = await getEpoch();
+        await stakeManager.connect(signers[1]).stake(epoch, tokenAmount('20000'));
         await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('30000'));
         await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('420000'));
         await stakeManager.connect(signers[4]).stake(epoch, tokenAmount('20000'));
@@ -136,13 +139,19 @@ describe('VoteManager', function () {
       it('should be able to commit', async function () {
         const epoch = await getEpoch();
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const votes1 = [100, 200, 300, 400, 500, 600, 700, 800];
 
         const commitment1 = utils.solidityKeccak256(
           ['uint32', 'uint48[]', 'bytes32'],
           [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
         );
 
+        const commitment = utils.solidityKeccak256(
+          ['uint32', 'uint48[]', 'bytes32'],
+          [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+        );
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
+        await voteManager.connect(signers[1]).commit(epoch, commitment);
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -210,6 +219,15 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'Staker does not exist');
       });
 
+      it('should not be able to reveal if length of the votes value is not same as number of active collections', async function () {
+        const epoch = await getEpoch();
+        await mineToNextState(); // reveal
+        const votes1 = [100, 200, 300, 400, 500, 600, 700, 800];
+        const tx = voteManager.connect(signers[1]).reveal(epoch, votes1,
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        await assertRevert(tx, 'invalid values revealed');
+      });
+
       it('should be able to reveal', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
@@ -218,7 +236,7 @@ describe('VoteManager', function () {
 
         const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         //
-        await mineToNextState(); // reveal
+        // await mineToNextState(); // reveal
         //
         // // const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, maxAssetsPerStaker, random);
         // const ids = [1,2,3,4,5,6,7,8,9];
@@ -278,7 +296,7 @@ describe('VoteManager', function () {
 
         await voteManager.connect(signers[3]).commit(epoch, commitment1);
 
-        const votes2 = [106, 206, 306, 406, 506, 606, 706, 806, 906];
+        const votes2 = [94, 206, 306, 406, 506, 606, 706, 806, 906];
 
         const commitment2 = utils.solidityKeccak256(
           ['uint32', 'uint48[]', 'bytes32'],
@@ -370,7 +388,7 @@ describe('VoteManager', function () {
         let toAdd2 = toBigNumber(0);
         let prod = toBigNumber(0);
         let prod2 = toBigNumber(0);
-        const votes2 = [106, 206, 306, 406, 506, 606, 706, 806, 906];
+        const votes2 = [94, 206, 306, 406, 506, 606, 706, 806, 906];
         const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
         expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
