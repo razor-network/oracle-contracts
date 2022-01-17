@@ -1,4 +1,4 @@
-const { BigNumber } = ethers;
+const { BigNumber, utils } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
@@ -56,15 +56,15 @@ const maturity = async (age) => {
   return MATURITIES[index];
 };
 
-const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, randaoHash) => {
+const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const salt1 = await web3.utils.soliditySha3(iteration);
-  const seed1 = await prngHash(randaoHash, salt1);
+  const seed1 = await prngHash(salt, salt1);
   const rand1 = await prng(numStakers, seed1);
   if (!(toBigNumber(rand1).add(1).eq(stakerId))) return false;
 
   const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
-  const seed2 = await prngHash(randaoHash, salt2);
+  const seed2 = await prngHash(salt, salt2);
   const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
   if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) return true;
 
@@ -104,15 +104,38 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   const stakerId = staker.id;
   const epoch = getEpoch();
   const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
-  const randaoHash = await voteManager.getRandaoHash();
+  const salt = await voteManager.getSalt();
   if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
   // stake 0 represents that given staker has not voted in that epoch
   // so anyway in propose its going to revert
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (isElected) return (i);
   }
   return 0;
+};
+
+const getAssignedCollections = async (numActiveCollections, seed, toAssign) => {
+  const assignedCollections = {}; // For Tree
+  const seqAllotedCollections = []; // isCollectionAlloted
+  for (let i = 0; i < toAssign; i++) {
+    // console.log(seed);
+    const assigned = await prng(
+      numActiveCollections,
+      utils.solidityKeccak256(
+        ['bytes32', 'uint256'],
+        [seed, i]
+      )
+    );
+    // console.log('isALLOTED', utils.solidityKeccak256(
+    //   ['bytes32', 'uint256'],
+    //   [seed, i]
+    // ), assigned);
+    // console.log(typeof assignedCollections[assigned]);
+    assignedCollections[assigned] = true;
+    seqAllotedCollections.push(assigned);
+  }
+  return [assignedCollections, seqAllotedCollections];
 };
 
 const getFalseIteration = async (voteManager, stakeManager, staker) => {
@@ -139,6 +162,7 @@ module.exports = {
   calculateDisputesData,
   isElectedProposer,
   // getBiggestStakeAndId,
+  getAssignedCollections,
   getBiggestStakeAndId,
   getEpoch,
   getVote,

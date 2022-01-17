@@ -12,7 +12,7 @@ import "./parameters/child/BlockManagerParams.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
-
+import "hardhat/console.sol";
 contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -48,6 +48,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // note that only one staker or no stakers selected in each iteration.
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
+
+    // TODO : Can we only make, that propose revealed assets only.
     function propose(
         uint32 epoch,
         uint32[] memory medians,

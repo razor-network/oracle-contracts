@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
+import "hardhat/console.sol";
 
 /**
  * @dev These functions deal with verification of Merkle trees (hash trees),
@@ -10,12 +11,12 @@ library MerklePosAware {
         bytes32[][] memory proofs,
         bytes32 root,
         bytes32[] memory leaves,
-        uint32[] memory assetId,
-        uint32 depth,
-        uint32 maxAssets
-    ) internal pure returns (bool) {
+        uint16[] memory medianIndex,
+        uint16 depth,
+        uint16 maxAssets
+    ) internal view returns (bool) {
         for (uint256 i = 0; i < proofs.length; i++) {
-            if (!verify(proofs[i], root, leaves[i], assetId[i], depth, maxAssets)) return false;
+            if (!verify(proofs[i], root, leaves[i], medianIndex[i], depth, maxAssets)) return false;
         }
         return true;
     }
@@ -30,15 +31,15 @@ library MerklePosAware {
         bytes32[] memory proof,
         bytes32 root,
         bytes32 leaf,
-        uint32 assetId,
-        uint32 depth,
-        uint32 maxAssets
-    ) internal pure returns (bool) {
+        uint16 medianIndex,
+        uint16 depth,
+        uint16 maxAssets
+    ) internal view returns (bool) {
         bytes32 computedHash = leaf;
-        bytes memory seq = bytes(getSequence(assetId, depth));
+        bytes memory seq = bytes(getSequence(medianIndex, depth));
 
         uint256 last_node = maxAssets;
-        uint256 my_node = assetId;
+        uint256 my_node = medianIndex + 1;
         uint256 j = depth;
         uint256 i = 0;
         while (j > 0) {
@@ -64,12 +65,11 @@ library MerklePosAware {
         return computedHash == root;
     }
 
-    function getSequence(uint256 assetId, uint256 depth) internal pure returns (bytes memory) {
+    function getSequence(uint256 medianIndex, uint256 depth) internal pure returns (bytes memory) {
         bytes memory output = new bytes(depth);
-        uint256 n = assetId - 1;
         for (uint8 i = 0; i < depth; i++) {
-            output[depth - 1 - i] = (n % 2 == 1) ? bytes1("1") : bytes1("0");
-            n /= 2;
+            output[depth - 1 - i] = (medianIndex % 2 == 1) ? bytes1("1") : bytes1("0");
+            medianIndex /= 2;
         }
         return output;
     }

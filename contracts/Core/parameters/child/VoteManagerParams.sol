@@ -6,7 +6,7 @@ import "../../storage/Constants.sol";
 
 abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
     uint16 public epochLength = 300;
-    uint16 public noOfAssetsAlloted = 3;
+    uint16 public toAssign = 3;
     uint256 public minStake = 1000 * (10**18);
    
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
@@ -19,8 +19,8 @@ abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
         minStake = _minStake;
     }
 
-    function setNoOfAssetsAlloted(uint16 _noOfAssetsAlloted) external override onlyRole(GOVERNANCE_ROLE) {
+    function setToAssign(uint16 _toAssign) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        noOfAssetsAlloted = _noOfAssetsAlloted;
+        toAssign = _toAssign;
     }
 }

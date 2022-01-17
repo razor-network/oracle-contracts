@@ -26,8 +26,8 @@ const createMerkle = async (values) => {
   return tree;
 };
 
-const getProofPath = async (tree, assetId) => {
-  let index = assetId - 1;
+const getProofPath = async (tree, medianIndex) => {
+  let index = medianIndex;
   const compactProofPath = [];
   for (let currentLevel = tree.length - 1; currentLevel > 0; currentLevel--) {
     const currentLevelNodes = tree[currentLevel];

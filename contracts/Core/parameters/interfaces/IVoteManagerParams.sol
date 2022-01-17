@@ -6,5 +6,5 @@ interface IVoteManagerParams {
 
     function setMinStake(uint256 _minStake) external;
 
-    function setNoOfAssetsAlloted(uint16 _noOfAssetsAlloted) external;
+    function setToAssign(uint16 _toAssign) external;
 }

@@ -10,6 +10,7 @@ const {
   REGISTRY_MODIFIER_ROLE,
   GOVERNANCE_ROLE,
   PAUSE_ROLE,
+  SALT_MODIFIER_ROLE,
 } = require('./constants');
 
 const setupContracts = async () => {
@@ -79,6 +80,7 @@ const setupContracts = async () => {
     rewardManager.grantRole(GOVERNANCE_ROLE, governance.address),
     stakeManager.grantRole(GOVERNANCE_ROLE, governance.address),
     voteManager.grantRole(GOVERNANCE_ROLE, governance.address),
+    voteManager.grantRole(SALT_MODIFIER_ROLE, blockManager.address),
     delegator.grantRole(GOVERNANCE_ROLE, governance.address),
     randomNoManager.grantRole(GOVERNANCE_ROLE, governance.address),
   ];

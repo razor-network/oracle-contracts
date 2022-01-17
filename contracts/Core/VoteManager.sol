@@ -11,6 +11,7 @@ import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
 import "../lib/MerklePosAware.sol";
+import "hardhat/console.sol";
 
 contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
@@ -65,11 +66,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
-        require(tree.values.length == noOfAssetsAlloted, "values length mismatch");
+        require(tree.values.length == toAssign, "values length mismatch");
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
-        bytes32 seed = keccak256(abi.encodePacked(salt, secret));
-        require(keccak256(abi.encodePacked(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        bytes32 seed = keccak256(abi.encode(salt, secret));
+        require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
 
         {
         uint256 stakerStake = stakeManager.getStake(stakerId);
@@ -85,9 +86,9 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
        
         
         for (uint16 i = 0; i < tree.values.length; i++) {
+            require(_isAssetAllotedToStaker(seed, i, tree.values[i].medianIndex), "Revealed asset not alloted");
             if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) { // If Job Not Revealed before, please not due to this job result cant be zero
-                     require(_isAssetAllotedToStaker(seed, stakerId, i, tree.values[i].medianIndex), "Revealed asset not alloted");
-                     require(MerklePosAware.verify(tree.proofs[i], tree.root, keccak256(abi.encodePacked(tree.values[i].value)), tree.values[i].medianIndex,
+                     require(MerklePosAware.verify(tree.proofs[i], tree.root, keccak256(abi.encode(tree.values[i].value)), tree.values[i].medianIndex,
                         tree.depth, collectionManager.getNumActiveCollections()), "invalid merkle proof");
                      // TODO : Possible opt
                      /// Can we remove epochs ? would save lot of gas
@@ -116,13 +117,13 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         // avoid innocent staker getting slashed due to empty secret
         require(secret != 0x0, "secret cannot be empty");
 
-        bytes32 seed = keccak256(abi.encodePacked(salt, secret));
-        require(keccak256(abi.encodePacked(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
+        bytes32 seed = keccak256(abi.encode(salt, secret));
+        require(keccak256(abi.encode(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
         return stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
-    function storeSalt(bytes32 _salt) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+    function storeSalt(bytes32 _salt) external override onlyRole(SALT_MODIFIER_ROLE) {
         salt = _salt;
     }
 
@@ -173,12 +174,17 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return salt;
     }
 
-    function _isAssetAllotedToStaker(bytes32 seed, uint32 stakerId, uint16 iteration, uint16 medianIndex) internal view initialized returns (bool)
+    function _isAssetAllotedToStaker(bytes32 seed, uint16 iterationOfLoop, uint16 medianIndex) internal view initialized returns (bool)
     {   
-         // max= numAssets, prng_seed = seed+iteration+stakerId
-         // + 1 as asset id starts from 1 and prng retruns from  0 to max -1
+       
+         // max= numAssets, prng_seed = seed+ iteration of for loop
          uint16 max =  collectionManager.getNumActiveCollections();
-         if (_prng(keccak256(abi.encode(seed, iteration + stakerId)), max ) + 1 == medianIndex) return true;
+         // console.log("isAlloted");
+         //  console.logBytes32(seed);
+         //  console.logBytes32(keccak256(abi.encode(seed, iterationOfLoop)));
+         console.log("iterationOfLoop", "medianIndex", "max", "result");
+         console.log(iterationOfLoop, medianIndex, max, _prng(keccak256(abi.encode(seed, iterationOfLoop)), max ) );
+         if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max ) == medianIndex) return true;
          return false;
     }
 
