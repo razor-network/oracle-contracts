@@ -198,6 +198,21 @@ describe('StakeManager', function () {
       assertBNEqual(await stakeManager.getInfluence(staker.id), influence1, 'influence is incorrect');
       assertBNEqual(await sToken.balanceOf(staker._address), stake1, 'Amount of minted sRzR is not correct');
     });
+
+    it('should not be able to createStakedToken from zero address', async function () {
+      const tx = stakedTokenFactory.createStakedToken('0x0000000000000000000000000000000000000000', 1);
+      await assertRevert(tx, 'zero address check');
+    });
+
+    it('should not be able to get amount of rzr deposited if srzr exceeds balance of user', async function () {
+      const stakerId = await stakeManager.stakerIds(signers[1].address);
+      const staker = await stakeManager.getStaker(stakerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const amount = tokenAmount('500000');
+      const tx = sToken.getRZRDeposited(signers[1].address, amount);
+      await assertRevert(tx, 'Amount Exceeds Balance');
+    });
+
     it('should handle second staker correctly', async function () {
       const epoch = await getEpoch();
       const stake = tokenAmount('190000');

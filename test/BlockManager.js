@@ -300,7 +300,7 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
       const numActiveCollections = await collectionManager.getNumActiveCollections();
       const {
-        totalInfluenceRevealed, sortedStakers,
+        sortedStakers,
       } = await calculateDisputesData(1,
         voteManager,
         stakeManager,
