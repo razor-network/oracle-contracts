@@ -1164,7 +1164,7 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
     });
 
-    it('should be given out inactivity penalties at the time of unstaking', async function () {
+    it('should not be given out inactivity penalties at the time of unstaking if stake does not go below minstake', async function () {
       let staker = await stakeManager.getStaker(4);
       await stakeManager.connect(signers[4]).extendLock(staker.id);
       await mineToNextEpoch();
@@ -1178,17 +1178,18 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(4);
       const prevStake = staker.stake;
       const amount = tokenAmount('100');
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      const totalSupply = await sToken.totalSupply();
 
       await stakeManager.connect(signers[4]).unstake(staker.id, amount);
-      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
       staker = await stakeManager.getStaker(4);
-      assertBNLessThan((staker.stake).add(rAmount), prevStake, 'Inactivity penalties have not been applied');
+      assertBNLessThan((staker.stake), prevStake, 'Inactivity penalties have been applied');
     });
 
-    it('should not levy inactivity penalities during commit if it has been given out during unstake', async function () {
+    it('should levy inactivity penalities during commit if it has not been given out during unstake', async function () {
       let staker = await stakeManager.getStaker(4);
+      const amount = tokenAmount('100');
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const rAmount = (amount.mul(staker.stake)).div(totalSupply);
       const prevStake = staker.stake;
       // commit
       const epoch = await getEpoch();
@@ -1199,7 +1200,7 @@ describe('StakeManager', function () {
       );
       await voteManager.connect(signers[4]).commit(epoch, commitment);
       staker = await stakeManager.getStaker(4);
-      assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
+      assertBNLessThan((staker.stake).add(rAmount), prevStake, 'Inactivity penalties have not been applied');
       const epochsJumped = WITHDRAW_RELEASE_PERIOD + 1;
       for (let i = 0; i <= epochsJumped; i++) {
         await mineToNextEpoch();
@@ -1207,47 +1208,64 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[4]).extendLock(staker.id);
     });
 
-    it('should not be able to escape inactivity penalties by unstaking multiple times', async function () {
+    it('should not be given randao penalty if delegator unstakes just after the staker commits', async function () {
       await mineToNextEpoch();
       let epoch = await getEpoch();
       const stake = tokenAmount('105000');
-      let amount = tokenAmount('100000');
+      const amount = tokenAmount('100400');
       await razor.transfer(signers[15].address, stake);
       await razor.connect(signers[15]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[15]).stake(epoch, stake);
+      await stakeManager.connect(signers[15]).updateCommission(10);
+      await stakeManager.connect(signers[15]).setDelegationAcceptance('true');
+
+      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const commitment = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[15]).commit(epoch, commitment);
+      // reveal
+      await mineToNextState();
+      await voteManager.connect(signers[15]).reveal(epoch, votes,
+        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+
+      await razor.transfer(signers[10].address, amount);
+      await razor.connect(signers[10]).approve(stakeManager.address, amount);
+      const stakerId = await stakeManager.getStakerId(signers[15].address);
+      await stakeManager.connect(signers[10]).delegate(stakerId, amount);
       await mineToNextEpoch();
-      amount = tokenAmount('1');
+
+      epoch = await getEpoch();
+      const commitment1 = utils.solidityKeccak256(
+        ['uint32', 'uint48[]', 'bytes32'],
+        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
+      );
+      await voteManager.connect(signers[15]).commit(epoch, commitment1);
+      let staker = await stakeManager.getStaker(stakerId);
+      const prevStake = staker.stake;
+
+      await stakeManager.connect(signers[10]).unstake(stakerId, amount);
+
+      staker = await stakeManager.getStaker(stakerId);
+      assertBNEqual(prevStake, staker.stake.add(amount), 'Staker got randao');
+      await mineToNextEpoch();
+      await stakeManager.connect(signers[10]).withdraw(stakerId);
+      await mineToNextEpoch();
+    });
+
+    it('should be given inactivity penalty if staker stake goes below minStake', async function () {
       const epochsJumped = GRACE_PERIOD + 2;
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
       }
-      epoch = await getEpoch();
+      const epoch = await getEpoch();
       const epochPenalized = epoch;
+      const amount = tokenAmount('100400');
       const stakerId = await stakeManager.stakerIds(signers[15].address);
       await stakeManager.connect(signers[15]).unstake(stakerId, amount);
-      let staker = await stakeManager.getStaker(stakerId);
+      const staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker not penalized');
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
-        await mineToNextEpoch();
-      }
-      epoch = await getEpoch();
-      await stakeManager.connect(signers[15]).withdraw(stakerId);
-      for (let i = 0; i < Math.ceil(GRACE_PERIOD / WITHDRAW_LOCK_PERIOD); i++) {
-        epoch = await getEpoch();
-        await stakeManager.connect(signers[15]).unstake(stakerId, amount);
-        for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
-          await mineToNextEpoch();
-        }
-        epoch = await getEpoch();
-        await stakeManager.connect(signers[15]).withdraw(stakerId);
-        staker = await stakeManager.getStaker(stakerId);
-        assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
-      }
-      await mineToNextEpoch();
-      epoch = await getEpoch();
-      await stakeManager.connect(signers[15]).unstake(stakerId, amount);
-      staker = await stakeManager.getStaker(stakerId);
-      assertBNEqual(staker.epochFirstStakedOrLastPenalized, epoch, 'Staker not penalized');
     });
     it('staker should be able to increase stake by any number of RZR token', async () => {
       let staker = await stakeManager.getStaker(4);
