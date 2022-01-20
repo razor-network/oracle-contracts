@@ -183,13 +183,16 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
 
-        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
-        rewardManager.giveInactivityPenalties(epoch, stakerId);
-
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
+        uint256 totalSupply = sToken.totalSupply();
 
-        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
+        if ((staker.stake - _convertSRZRToRZR(sAmount, staker.stake, totalSupply)) < minStake) {
+            // slither-disable-next-line reentrancy-events,reentrancy-no-eth
+            rewardManager.giveInactivityPenalties(epoch, stakerId);
+        }
+
+        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
         staker.stake = staker.stake - rAmount;
 
         // Transfer commission in case of delegators
