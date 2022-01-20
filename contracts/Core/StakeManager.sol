@@ -194,7 +194,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             rewardManager.giveInactivityPenalties(epoch, stakerId);
         }
 
-        if(prevStake != staker.stake) rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
+        if (prevStake != staker.stake) rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
         staker.stake = staker.stake - rAmount;
 
         // Transfer commission in case of delegators
