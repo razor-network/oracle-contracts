@@ -186,13 +186,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
         uint256 totalSupply = sToken.totalSupply();
+        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
+        uint256 prevStake = staker.stake;
 
-        if ((staker.stake - _convertSRZRToRZR(sAmount, staker.stake, totalSupply)) < minStake) {
+        if ((staker.stake - rAmount) < minStake) {
             // slither-disable-next-line reentrancy-events,reentrancy-no-eth
             rewardManager.giveInactivityPenalties(epoch, stakerId);
         }
 
-        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
+        if(prevStake != staker.stake) rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
         staker.stake = staker.stake - rAmount;
 
         // Transfer commission in case of delegators
