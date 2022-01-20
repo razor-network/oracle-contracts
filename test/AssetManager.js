@@ -119,6 +119,16 @@ describe('AssetManager', function () {
       assertBNEqual(collection.jobIDs[2], toBigNumber('5'));
     });
 
+    it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
+      const tx = collectionManager.createCollection(1001, 3, 1, [1, 2], 'Test Collection');
+      await assertRevert(tx, 'Invalid tolerance value');
+    });
+
+    it('should not be able to update collection if tolerance value is not less than maxTolerance', async function () {
+      const tx = collectionManager.updateCollection(1, 1001, 2, 5, [1, 2, 5]);
+      await assertRevert(tx, 'Invalid tolerance value');
+    });
+
     it('should be able to update collection', async function () {
       await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 5]);
       const collection = await collectionManager.getCollection(1);
@@ -141,6 +151,16 @@ describe('AssetManager', function () {
       assertBNEqual(job.selectorType, toBigNumber('0'));
       assertBNEqual(job.selector, 'selector', 'job selector should be "selector"');
       assertBNEqual(job.url, 'http://testurl.com', 'job url should be "http://testurl.com"');
+    });
+
+    it('should not be able to get a job if jobId is zero', async function () {
+      const tx = collectionManager.getJob(0);
+      await assertRevert(tx, 'ID cannot be 0');
+    });
+
+    it('should not be able to get collection if collectionId is zero', async function () {
+      const tx = collectionManager.getCollection(0);
+      await assertRevert(tx, 'ID cannot be 0');
     });
 
     it('should be able to get power of a collection', async function () {
@@ -207,11 +227,31 @@ describe('AssetManager', function () {
       await assertRevert(tx, 'Job ID not present');
     });
 
+    it('should not be able to get job if job does not exist', async function () {
+      const tx = collectionManager.getJob(9);
+      await assertRevert(tx, 'ID does not exist');
+    });
+
+    it('should not be able to get collection if collection does not exist', async function () {
+      const tx = collectionManager.getCollection(10);
+      await assertRevert(tx, 'ID does not exist');
+    });
+
+    it('should not be able to update job if jobId is zero', async function () {
+      const tx = collectionManager.updateJob(0, 50, 2, 0, 'http://testurl.com/4', 'selector/4');
+      await assertRevert(tx, 'ID cannot be 0');
+    });
+
     it('should not be able to update Collection status if collection does not exist', async function () {
       const tx1 = collectionManager.setCollectionStatus(true, 0);// id should not be zero
       await assertRevert(tx1, 'ID cannot be 0');
       const tx2 = collectionManager.setCollectionStatus(true, 100);// asset does not exist
       await assertRevert(tx2, 'ID does not exist');
+    });
+
+    it('should not be able to set Collection status if provided status is the same as current collectionstatus', async function () {
+      const tx1 = collectionManager.setCollectionStatus(false, 3);// status of collection with Id 3 is already false
+      await assertRevert(tx1, 'status not being changed');
     });
 
     it('should not be able to get power of any asset if not a collection', async function () {
