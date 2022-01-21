@@ -357,7 +357,7 @@ describe('Scenarios', async () => {
 
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
-    await mineToNextEpoch()
+    await mineToNextEpoch();
     // commit
     votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -539,7 +539,7 @@ describe('Scenarios', async () => {
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
-    await mineToNextEpoch()
+    await mineToNextEpoch();
     // staking again
     const votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -678,7 +678,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[5]).unstake(stakerIdAcc5.id, amount);
     const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress);
     assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
-    await mineToNextEpoch()
+    await mineToNextEpoch();
     // staker will not able to participate again because it's stake is now less than minimum stake
     epoch = await getEpoch();
     votes = await getVote(medians);
