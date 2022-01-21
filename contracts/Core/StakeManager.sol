@@ -171,10 +171,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // If this period pass, lock expires and she will have to extendLock() to able to withdraw again
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
-    function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
-        State currentState = _getState(epochLength);
-        require(currentState != State.Propose, "Unstake: NA Propose");
-        require(currentState != State.Dispute, "Unstake: NA Dispute");
+    function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused checkState(State.Confirm, epochLength) {
         uint32 epoch = _getEpoch(epochLength);
 
         Structs.Staker storage staker = stakers[stakerId];
@@ -183,18 +180,13 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(locks[msg.sender][staker.tokenAddress].amount == 0, "Existing Lock");
         require(sAmount > 0, "Non-Positive Amount");
 
+        // slither-disable-next-line reentrancy-events,reentrancy-no-eth
+        rewardManager.giveInactivityPenalties(epoch, stakerId);
+
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
-        uint256 totalSupply = sToken.totalSupply();
-        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
-        uint256 prevStake = staker.stake;
 
-        if ((staker.stake - rAmount) < minStake) {
-            // slither-disable-next-line reentrancy-events,reentrancy-no-eth
-            rewardManager.giveInactivityPenalties(epoch, stakerId);
-        }
-
-        if (prevStake != staker.stake) rAmount = _convertSRZRToRZR(sAmount, staker.stake, totalSupply);
+        uint256 rAmount = _convertSRZRToRZR(sAmount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
         // Transfer commission in case of delegators
