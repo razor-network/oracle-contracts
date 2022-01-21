@@ -21,6 +21,7 @@ const {
 } = require('./helpers/testHelpers');
 const {
   getEpoch,
+  getState,
   toBigNumber,
   tokenAmount,
   getBiggestStakeAndId,
@@ -254,6 +255,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to unstake zero amount', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const amount = tokenAmount('0');
       const tx = stakeManager.connect(signers[1]).unstake(1, amount);
       await assertRevert(tx, 'Non-Positive Amount');
@@ -274,7 +276,6 @@ describe('StakeManager', function () {
     });
 
     it('Staker should be able to unstake when there is no existing lock', async function () {
-      await mineToNextEpoch();
       const epoch = await getEpoch();
       // we're doing a partial unstake here , though full unstake has the same procedure
       const amount = tokenAmount('200000');
@@ -331,6 +332,7 @@ describe('StakeManager', function () {
     });
 
     it('should not allow staker to add stake after withdrawing whole amount', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       let epoch = await getEpoch();
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       let staker = await stakeManager.getStaker(stakerId);
@@ -356,6 +358,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to unstake if his stake is zero', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const tx = stakeManager.connect(signers[1]).unstake(1, tokenAmount('1000'));
       await assertRevert(tx, 'Nonpositive stake');
     });
@@ -515,6 +518,7 @@ describe('StakeManager', function () {
 
     it('Staker should not be able to unstake,withdraw,setDelegationAcceptance,updateCommission if the staker has not staked yet',
       async function () {
+        while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
         const amount = tokenAmount('100000');
 
         const stakerId = await stakeManager.stakerIds(signers[7].address);
@@ -628,7 +632,7 @@ describe('StakeManager', function () {
     });
 
     it('Delegator should be able to unstake when there is no existing lock', async function () {
-      await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const epoch = await getEpoch();
       const amount = tokenAmount('10000'); // unstaking partial amount
       let staker = await stakeManager.getStaker(4);
@@ -745,6 +749,7 @@ describe('StakeManager', function () {
         const stakeAfter = staker.stake;
         assertBNLessThan(stakeBefore, stakeAfter, 'Not rewarded'); // Staker 4 gets Block Reward results in increase of valuation of sRZR
         // Delagator unstakes
+        while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
         epoch = await getEpoch();
         const amount = tokenAmount('10000'); // unstaking partial amount
         staker = await stakeManager.getStaker(4);
@@ -821,6 +826,7 @@ describe('StakeManager', function () {
         // Staker 4 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
         // Delagator unstakes
         await mineToNextEpoch();
+        while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
         epoch = await getEpoch();
         const amount = tokenAmount('10000'); // unstaking partial amount
         staker = await stakeManager.getStaker(4);
@@ -875,7 +881,7 @@ describe('StakeManager', function () {
 
     it('Delegators should not be able to withdraw if withdraw within period passes', async function () {
       // Delagator unstakes
-
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const amount = tokenAmount('10000'); // unstaking partial amount
       const staker = await stakeManager.getStaker(4);
       await stakeManager.connect(signers[5]).unstake(staker.id, amount);
@@ -930,6 +936,7 @@ describe('StakeManager', function () {
     });
 
     it('if delegator transfer its sRZR to other account,than other account becomes the delegator who can unstake/withdraw', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       let staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const amount = await sToken.balanceOf(signers[5].address);
@@ -1018,6 +1025,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to withdraw if the stakemanager contract is out of funds', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const stakerIdacc3 = await stakeManager.stakerIds(signers[3].address);
       await stakeManager.connect(signers[3]).unstake(stakerIdacc3, tokenAmount('1000'));
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -1070,6 +1078,7 @@ describe('StakeManager', function () {
     });
 
     it('Staker should not be able to unstake if contract is paused', async function () {
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       const amount = tokenAmount('200');
       const tx = stakeManager.connect(signers[4]).unstake(stakerId, amount);
@@ -1174,7 +1183,7 @@ describe('StakeManager', function () {
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
       }
-
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       staker = await stakeManager.getStaker(4);
       const prevStake = staker.stake;
       const amount = tokenAmount('100');
@@ -1188,6 +1197,7 @@ describe('StakeManager', function () {
     });
 
     it('should not levy inactivity penalities during commit if it has been given out during unstake', async function () {
+      await mineToNextEpoch();
       let staker = await stakeManager.getStaker(4);
       const prevStake = staker.stake;
       // commit
@@ -1221,6 +1231,7 @@ describe('StakeManager', function () {
       for (let i = 0; i < epochsJumped; i++) {
         await mineToNextEpoch();
       }
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       epoch = await getEpoch();
       const epochPenalized = epoch;
       const stakerId = await stakeManager.stakerIds(signers[15].address);
@@ -1233,6 +1244,7 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       await stakeManager.connect(signers[15]).withdraw(stakerId);
       for (let i = 0; i < Math.ceil(GRACE_PERIOD / WITHDRAW_LOCK_PERIOD); i++) {
+        while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
         epoch = await getEpoch();
         await stakeManager.connect(signers[15]).unstake(stakerId, amount);
         for (let j = 0; j < WITHDRAW_LOCK_PERIOD; j++) {
@@ -1244,6 +1256,7 @@ describe('StakeManager', function () {
         assertBNEqual(staker.epochFirstStakedOrLastPenalized, epochPenalized, 'Staker has been penalized');
       }
       await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       epoch = await getEpoch();
       await stakeManager.connect(signers[15]).unstake(stakerId, amount);
       staker = await stakeManager.getStaker(stakerId);
@@ -1295,21 +1308,28 @@ describe('StakeManager', function () {
       assertBNEqual(staker.commission, toBigNumber('0'));
     });
 
-    it('Unstake should be blocked in Propose and Dispute', async function () {
+    it('Unstake should be blocked in Commit, Reveal, Propose and Dispute', async function () {
       await mineToNextEpoch();
 
+      // Commit
+      const stakerIdAcc = await stakeManager.stakerIds(signers[4].address);
+      const tx = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
+      await assertRevert(tx, 'incorrect state');
       await mineToNextState();
+
+      // Reveal
+      const tx1 = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
+      await assertRevert(tx1, 'incorrect state');
       await mineToNextState();
 
       // Propose
-      const stakerIdAcc = await stakeManager.stakerIds(signers[4].address);
-      const tx = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
-      await assertRevert(tx, 'Unstake: NA Propose');
+      const tx2 = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
+      await assertRevert(tx2, 'incorrect state');
       await mineToNextState();
 
       // Dispute
-      const tx1 = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
-      await assertRevert(tx1, 'Unstake: NA Dispute');
+      const tx3 = stakeManager.connect(signers[4]).unstake(stakerIdAcc, 1);
+      await assertRevert(tx3, 'incorrect state');
     });
 
     it('Delegator should not be able to delegate funds to slashed Staker', async function () {

@@ -1,7 +1,7 @@
 const { utils } = require('ethers');
 const { getState } = require('../test/helpers/utils');
 const {
-  ASSET_MODIFIER_ROLE,
+  COLLECTION_MODIFIER_ROLE,
   GRACE_PERIOD,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
@@ -57,7 +57,7 @@ describe('Scenarios', async () => {
   beforeEach(async () => {
     snapShotId = await takeSnapshot();
     await Promise.all(await initializeContracts());
-    await collectionManager.grantRole(ASSET_MODIFIER_ROLE, signers[0].address);
+    await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
     await governance.grantRole(GOVERNER_ROLE, signers[0].address);
     const url = 'http://testurl.com';
     const selector = 'selector';
@@ -343,6 +343,7 @@ describe('Scenarios', async () => {
 
     for (let i = 1; i <= 5; i++) {
       await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       epoch = await getEpoch();
       // we're doing a unstake such that stake becomes less than the minStake
 
@@ -356,7 +357,7 @@ describe('Scenarios', async () => {
 
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
-
+    await mineToNextEpoch();
     // commit
     votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -523,6 +524,7 @@ describe('Scenarios', async () => {
 
     for (let i = 1; i <= 5; i++) {
       await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const epoch = await getEpoch();
       // we're doing a partial unstake here , though full unstake has the same procedure
 
@@ -537,7 +539,7 @@ describe('Scenarios', async () => {
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
-
+    await mineToNextEpoch();
     // staking again
     const votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -667,6 +669,7 @@ describe('Scenarios', async () => {
 
     // delegator unstakes its stake
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     const stakerIdAcc5 = await stakeManager.getStaker(5);
     const sToken2 = await stakedToken.attach(stakerIdAcc5.tokenAddress);
@@ -675,7 +678,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[5]).unstake(stakerIdAcc5.id, amount);
     const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress);
     assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
-
+    await mineToNextEpoch();
     // staker will not able to participate again because it's stake is now less than minimum stake
     epoch = await getEpoch();
     votes = await getVote(medians);
@@ -726,6 +729,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -783,6 +787,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -853,6 +858,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -865,6 +871,7 @@ describe('Scenarios', async () => {
     await assertRevert(tx, 'Withdraw epoch not reached');
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).withdraw(staker.id);
 
@@ -905,6 +912,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -921,6 +929,7 @@ describe('Scenarios', async () => {
     for (let i = 0; i < WITHDRAW_RELEASE_PERIOD - 1; i++) {
       await mineToNextEpoch();
     }
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).withdraw(staker.id);
 
@@ -1246,7 +1255,7 @@ describe('Scenarios', async () => {
     await mineToNextState();// propose
     // calculating median
     const mediansArray = [];
-    for (let i = 10; i < 19; i++) {
+    for (let i = 0; i < 9; i++) {
       const median = await calculateDisputesData(i,
         voteManager,
         stakeManager,
@@ -1310,7 +1319,7 @@ describe('Scenarios', async () => {
     await mineToNextState();// propose
     // calculating median
     const mediansArray = [];
-    for (let i = 10; i < 19; i++) {
+    for (let i = 0; i < 9; i++) {
       const median = await calculateDisputesData(i,
         voteManager,
         stakeManager,
@@ -1346,15 +1355,15 @@ describe('Scenarios', async () => {
     epoch = await getEpoch();
     const {
       totalInfluenceRevealed, sortedStakers,
-    } = await calculateDisputesData(10,
+    } = await calculateDisputesData(1,
       voteManager,
       stakeManager,
       collectionManager,
       epoch);
-    await blockManager.connect(signers[4]).giveSorted(epoch, 10, sortedStakers);
+    await blockManager.connect(signers[4]).giveSorted(epoch, 0, sortedStakers);
 
     const dispute = await blockManager.disputes(epoch, signers[4].address);
-    assertBNEqual(dispute.collectionId, toBigNumber('10'), 'collectionId should match');
+    assertBNEqual(dispute.medianIndex, toBigNumber('0'), 'medianIndex should match');
     assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
     assertBNEqual(dispute.lastVisitedStaker, sortedStakers[sortedStakers.length - 1], 'lastVisited should match');
 
@@ -1546,6 +1555,7 @@ describe('Scenarios', async () => {
     }
 
     // Delagator unstakes
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     const amount = tokenAmount('100'); // unstaking
     stakerId = await stakeManager.stakerIds(signers[3].address);
