@@ -203,8 +203,14 @@ describe('Governance contract Test', async () => {
     const epochLimitForUpdateCommission = await stakeManager.epochLimitForUpdateCommission();
     assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
 
-    const tx = governance.setMaxCommission(toBigNumber('101'));
+    let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
+
+    tx = governance.setSlashParams(toBigNumber('5000'), toBigNumber('4000'), toBigNumber('3000'));
+    await assertRevert(tx, 'Slash nums addtion exceeds 10000');
+
+    tx = governance.setMaxTolerance(toBigNumber('11000'));
+    await assertRevert(tx, 'maxTolerance exceeds 10000');
   });
 
   it('parameters values should be initialized correctly', async () => {
