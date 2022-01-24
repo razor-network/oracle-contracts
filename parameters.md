@@ -8,7 +8,7 @@
 |2|blockReward  | reward for block producer | 100 RZR |  |  |
 |3|gracePeriod  | skip inactivity penalty | 8 |  |  |
 |4|maxAge  | To cap how far your influence can go | 100 | 100 epochs takes if we consider 300 as epoch length and 2 sec blocks, only 41 hours to reach max |  | |
-|5| maxTolerance  | allow small fluctuation to not harm low infl stakers  | 8 |  1000 => 10 % to high ? | |
+|5| maxTolerance  | allow small fluctuation to not harm low infl stakers  | 1000 |  1000 => 10 % to high ? | |
 |6|slashParams (bounty, burn, keep)  |  Snitch, Dispute | (500, 9500, 0) => (5%, 95%, 0) | |  |
 |7|deltaCommission  | allow to +- by only specific, in locked periods | 3 |  |  |
 |8|epochLimitForUpdateCommission  | locked updates | 100 |  |  |
