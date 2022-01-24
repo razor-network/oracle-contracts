@@ -679,7 +679,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[5]).unstake(stakerIdAcc5.id, amount);
     const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress);
     assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
-    
+
     await mineToNextEpoch();
     // staker will not able to participate again because it's stake is now less than minimum stake
     epoch = await getEpoch();
