@@ -12,8 +12,8 @@
 |6|slashParams (bounty, burn, keep)  |  Snitch, Dispute | (500, 9500, 0) => (5%, 95%, 0) | |  
 |7|deltaCommission  | allow to +- by only specific, in locked periods | 3 |  |  
 |8|epochLimitForUpdateCommission  | locked updates | 100 epochs (l-300), 1000 min  | 33 epochs (l-900), 990 mins,  |  
-|9|minStake  | least amount to participate | 20000 RZR | 100k|
-|10|minSafeRazor  | least amount to be staked first   | 10000 RZR | 75 k|
+|9|minStake  | least amount to participate | 20000 RZR | 100000 RZR|
+|10|minSafeRazor  | least amount to be staked first   | 10000 RZR | 75000 RZR|
 |11|withdrawLockPeriod  | period after unstake after which withdraw can happen   | 1 epoch(l-300) | 48 epochs(l-900), 24 hours|
 |12|withdrawReleasePeriod  | range after withdrawlock period in which only withdraw can happen   | 5 epochs(l-300) | 48 epochs(l-900), 24 hours |
 |13|extendLockPenalty  | disincentives pre-empt withdraws  | 1% |  | 
