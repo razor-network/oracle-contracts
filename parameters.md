@@ -3,7 +3,7 @@
 #### Commit [580af18](https://github.com/razor-network/contracts/tree/580af180bf20d6ca3ab487428725f15adaf9afae)
 
 |No.| Parameter  |Purpose | DefaultValue |  To Change |
-|---|---|---|---|---|---|
+|---|---|---|---|---|
 |1|penaltyNotRevealNum  | inactivity penalty | 1 => 0.01 % | 100 (1%) | 
 |2|blockReward  | reward for block producer | 100 RZR |  |  
 |3|gracePeriod  | skip inactivity penalty | 8 | 2 | 
