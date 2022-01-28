@@ -751,7 +751,6 @@ describe('StakeManager', function () {
 
       assertBNEqual(gain, toBigNumber('0'), 'Gain calculated is not expected');
       assertBNEqual(commission, toBigNumber('0'), 'Commission does not match calculated comission');
-      assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
       assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
@@ -790,8 +789,11 @@ describe('StakeManager', function () {
 
       const stakerPrevBalance = await razor.balanceOf(staker._address);
       let withdawAmount = lock.amount;
-      if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);
+      const gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      const commission = ((gain).mul(staker.commission)).div(100);
+
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
       }
 
       await (stakeManager.connect(signers[5]).unlockWithdraw(staker.id));
@@ -800,7 +802,7 @@ describe('StakeManager', function () {
 
       assertBNEqual(withdawAmount, lock.amount, 'Commission Should not be paid'); // gain=0;
       assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
-      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(lock.commission), 'Stakers should not get commission'); // gain == 0
+      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should not get commission'); // gain == 0
     });
 
     it('Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded',
@@ -856,7 +858,7 @@ describe('StakeManager', function () {
         await stakeManager.connect(signers[5]).unstake(staker.id, amount);
         let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
         assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
-        assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
+
         assertBNEqual(lock.unlockAfter, epoch + UNSTAKE_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < UNSTAKE_LOCK_PERIOD; i++) {
@@ -866,17 +868,13 @@ describe('StakeManager', function () {
         const totalSupply = await sToken.totalSupply();
         const rAmount = (amount.mul(staker.stake)).div(totalSupply);
         epoch = await getEpoch();
-        const { initial } = lock;
         await stakeManager.connect(signers[5]).initiateWithdraw(staker.id);
         lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
         const newStake = prevStake.sub(rAmount);
         staker = await stakeManager.getStaker(4);
 
-        const gain = (rAmount.sub(initial)); // commission in accordance to gain
-        const commission = ((gain).mul(staker.commission)).div(100);
         assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
         assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-        assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
         assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -889,8 +887,11 @@ describe('StakeManager', function () {
         await (stakeManager.connect(signers[5]).unlockWithdraw(staker.id));
 
         let withdawAmount = lock.amount;
-        if (lock.commission > 0) {
-          withdawAmount = withdawAmount.sub(lock.commission);
+        const gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+        const commission = ((gain).mul(staker.commission)).div(100);
+
+        if (commission > 0) {
+          withdawAmount = withdawAmount.sub(commission);
         }
 
         const newBalance = prevBalance.add(withdawAmount);
@@ -898,7 +899,7 @@ describe('StakeManager', function () {
 
         assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
         assertBNLessThan(withdawAmount, lock.amount, 'Commission Should be paid'); // gain > 0;
-        assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(lock.commission), 'Stakers should get commision'); // gain > 0
+        assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should get commision'); // gain > 0
         // As staker 4 takes in Block Rewards ,so there is increase in valuation of sRZR
         // due to which rAmount > rAmountUnchanged (Case Unchanged is when 1RZR = 1SRZR)
         const rAmountUnchanged = amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR
@@ -942,7 +943,6 @@ describe('StakeManager', function () {
         await stakeManager.connect(signers[5]).unstake(staker.id, amount);
         let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
         assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
-        assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
         assertBNEqual(lock.unlockAfter, epoch + UNSTAKE_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < UNSTAKE_LOCK_PERIOD; i++) {
@@ -952,19 +952,13 @@ describe('StakeManager', function () {
         const totalSupply = await sToken.totalSupply();
         const rAmount = (amount.mul(staker.stake)).div(totalSupply);
         epoch = await getEpoch();
-        const { initial } = lock;
         await stakeManager.connect(signers[5]).initiateWithdraw(staker.id);
         lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
         const newStake = prevStake.sub(rAmount);
         staker = await stakeManager.getStaker(4);
 
-        const gain = (rAmount.sub(initial)); // commission in accordance to gain
-        assertBNLessThan(gain, toBigNumber('0'), 'Gain calculated is not expected');
-        const commission = 0;
-
         assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
         assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-        assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
         assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
         for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -976,9 +970,14 @@ describe('StakeManager', function () {
         epoch = await getEpoch();
         await (stakeManager.connect(signers[5]).unlockWithdraw(staker.id));
         const DelegatorBalance = await razor.balanceOf(signers[5].address);
+
         let withdawAmount = lock.amount;
-        if (lock.commission > 0) {
-          withdawAmount = withdawAmount.sub(lock.commission);
+        const gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+        assertBNLessThan(gain, toBigNumber('0'), 'Gain calculated is not expected');
+        const commission = 0;
+
+        if (commission > 0) {
+          withdawAmount = withdawAmount.sub(commission);
         }
 
         const newBalance = prevBalance.add(lock.amount);
@@ -1059,11 +1058,21 @@ describe('StakeManager', function () {
         await mineToNextEpoch();
       }
 
+      let withdawAmount = lock.amount;
+      const gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      let commission = 0;
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
+      }
+
       await stakeManager.connect(signers[5]).unlockWithdraw(staker.id);
       const newDBalance = await razor.balanceOf(signers[5].address);
       const newSBalance = await razor.balanceOf(signers[4].address);
-      assertBNEqual((prevDBalance.add(lock.amount).sub(lock.commission)), newDBalance, 'Locked amount is not equal to requested lock amount');
-      assertBNEqual(prevSBalance.add(lock.commission), newSBalance, 'Withdraw after for the lock is incorrect');
+      assertBNEqual(prevDBalance.add(withdawAmount), newDBalance, 'Locked amount is not equal to requested lock amount');
+      assertBNEqual(prevSBalance.add(commission), newSBalance, 'Withdraw after for the lock is incorrect');
     });
 
     it('if delegator transfer its sRZR to other account,than other account becomes the delegator who can unstake/withdraw', async function () {
@@ -1081,7 +1090,6 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[6]).unstake(staker.id, amount);
       let lock = await stakeManager.locks(signers[6].address, staker.tokenAddress, 0);
       assertBNEqual(lock.amount, amount, 'Locked amount is not equal to requested lock amount');
-      assertBNEqual(lock.commission, 0, 'Commission does not match calculated comission');
       assertBNEqual(lock.unlockAfter, epoch + UNSTAKE_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
       for (let i = 0; i < UNSTAKE_LOCK_PERIOD; i++) {
@@ -1097,15 +1105,8 @@ describe('StakeManager', function () {
       const newStake = prevStake.sub(rAmount);
       staker = await stakeManager.getStaker(4);
 
-      const gain = (rAmount.sub(initial)); // commission in accordance to gain
-      let commission = toBigNumber('0');
-      if (gain > 0) {
-        commission = ((gain).mul(staker.commission)).div(100);
-      }
-
       assertBNEqual((staker.stake), (newStake), 'Updated stake is not equal to calculated stake');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
-      assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
       assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
       for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
@@ -1118,6 +1119,12 @@ describe('StakeManager', function () {
       await (stakeManager.connect(signers[6]).unlockWithdraw(staker.id));
       staker = await stakeManager.getStaker(4);
       assertBNEqual(staker.stake, newStake, 'Updated stake is not equal to calculated stake');
+
+      const gain = (rAmount.sub(initial)); // commission in accordance to gain
+      let commission = toBigNumber('0');
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
 
       const DelegatorBalance = await razor.balanceOf(signers[6].address);
       const newBalance = prevBalance.add(rAmount.sub(commission));
@@ -1811,12 +1818,11 @@ describe('StakeManager', function () {
 
       await mineToNextEpoch();
 
-      let stakerPrevBalance = await razor.balanceOf(staker._address);
+      const stakerPrevBalance = await razor.balanceOf(staker._address);
       staker = await stakeManager.getStaker(stakerId);
       epoch = await getEpoch();
       const sAmount = await sToken.balanceOf(signers[18].address);
       await sToken.connect(signers[18]).approve(stakeManager.address, sAmount);
-      let initial = await sToken.connect(signers[18]).getRZRDeposited(signers[18].address, sAmount);
       await stakeManager.connect(signers[18]).unstake(stakerId, sAmount);
       let lock = await stakeManager.locks(signers[18].address, staker.tokenAddress, 0);
       assertBNEqual(lock.amount, sAmount, 'Locked amount is not equal to requested lock amount');
@@ -1826,7 +1832,6 @@ describe('StakeManager', function () {
 
       const sAmount2 = await sToken.balanceOf(signers[19].address);
       await sToken.connect(signers[19]).approve(stakeManager.address, sAmount2);
-      initial = await sToken.connect(signers[19]).getRZRDeposited(signers[19].address, sAmount2);
       await stakeManager.connect(signers[19]).unstake(stakerId, sAmount2);
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 0);
       assertBNEqual(lock.amount, sAmount2, 'Locked amount is not equal to requested lock amount');
@@ -1841,14 +1846,10 @@ describe('StakeManager', function () {
       let prevStake = staker.stake;
       let totalSupply = await sToken.totalSupply();
       let rAmount = (sAmount.mul(staker.stake)).div(totalSupply);
-      initial = lock.initial;
       await stakeManager.connect(signers[18]).initiateWithdraw(stakerId);
       staker = await stakeManager.getStaker(stakerId);
 
       lock = await stakeManager.locks(signers[18].address, staker.tokenAddress, 1);
-      const gain = (rAmount.sub(initial)); // commission in accordance to gain
-      const commission = ((gain).mul(staker.commission)).div(100);
-      assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
       assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
@@ -1857,12 +1858,10 @@ describe('StakeManager', function () {
       prevStake = staker.stake;
       totalSupply = await sToken.totalSupply();
       rAmount = (sAmount2.mul(staker.stake)).div(totalSupply);
-      initial = lock.initial;
       await stakeManager.connect(signers[19]).initiateWithdraw(stakerId);
       staker = await stakeManager.getStaker(stakerId);
 
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 1);
-      assertBNEqual(lock.commission, tokenAmount('0'), 'Commission does not match calculated comission');
       assertBNEqual(amount2, rAmount, 'Incorrect rAmount calculation');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
@@ -1879,8 +1878,13 @@ describe('StakeManager', function () {
       await (stakeManager.connect(signers[18]).unlockWithdraw(staker.id));
 
       let withdawAmount = lock.amount;
-      if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);
+      let gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      let commission = 0;
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
       }
 
       let newBalance = prevBalance.add(withdawAmount);
@@ -1888,16 +1892,20 @@ describe('StakeManager', function () {
 
       assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
       assertBNLessThan(withdawAmount, lock.amount, 'Commission Should be paid'); // gain > 0;
-      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(lock.commission), 'Stakers should get commision'); // gain > 0
+      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should get commision'); // gain > 0
 
-      stakerPrevBalance = stakerPrevBalance.add(lock.commission);
       prevBalance = await razor.balanceOf(signers[19].address);
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 1);
       await (stakeManager.connect(signers[19]).unlockWithdraw(staker.id));
 
       withdawAmount = lock.amount;
-      if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);
+      gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      commission = 0;
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
       }
 
       newBalance = prevBalance.add(withdawAmount);
@@ -1940,12 +1948,11 @@ describe('StakeManager', function () {
 
       await mineToNextEpoch();
 
-      let stakerPrevBalance = await razor.balanceOf(staker._address);
+      const stakerPrevBalance = await razor.balanceOf(staker._address);
       staker = await stakeManager.getStaker(stakerId);
       epoch = await getEpoch();
       const sAmount = await sToken.balanceOf(signers[18].address);
       await sToken.connect(signers[18]).approve(stakeManager.address, sAmount);
-      let initial = await sToken.connect(signers[18]).getRZRDeposited(signers[18].address, sAmount);
       await stakeManager.connect(signers[18]).unstake(stakerId, sAmount);
       let lock = await stakeManager.locks(signers[18].address, staker.tokenAddress, 0);
       assertBNEqual(lock.amount, sAmount, 'Locked amount is not equal to requested lock amount');
@@ -1955,7 +1962,6 @@ describe('StakeManager', function () {
 
       const sAmount2 = await sToken.balanceOf(signers[19].address);
       await sToken.connect(signers[19]).approve(stakeManager.address, sAmount2);
-      initial = await sToken.connect(signers[19]).getRZRDeposited(signers[19].address, sAmount2);
       await stakeManager.connect(signers[19]).unstake(stakerId, sAmount2);
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 0);
       assertBNEqual(lock.amount, sAmount2, 'Locked amount is not equal to requested lock amount');
@@ -1971,7 +1977,6 @@ describe('StakeManager', function () {
       lock = await stakeManager.locks(signers[18].address, staker.tokenAddress, 0);
       let totalSupply = await sToken.totalSupply();
       let rAmount = (sAmount.mul(staker.stake)).div(totalSupply);
-      initial = lock.initial;
       const tx = stakeManager.connect(signers[18]).initiateWithdraw(stakerId);
       await assertRevert(tx, 'Initiation Period Passed');
 
@@ -1996,9 +2001,6 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(stakerId);
 
       lock = await stakeManager.locks(signers[18].address, staker.tokenAddress, 1);
-      const gain = (rAmount.sub(initial)); // commission in accordance to gain
-      const commission = ((gain).mul(staker.commission)).div(100);
-      assertBNEqual(lock.commission, commission, 'Commission does not match calculated comission');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
       assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
@@ -2007,7 +2009,6 @@ describe('StakeManager', function () {
       prevStake = staker.stake;
       totalSupply = await sToken.totalSupply();
       rAmount = (sAmount2.mul(staker.stake)).div(totalSupply);
-      initial = lock.initial;
       const tx2 = stakeManager.connect(signers[19]).initiateWithdraw(stakerId);
       await assertRevert(tx2, 'Initiation Period Passed');
 
@@ -2026,7 +2027,6 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(stakerId);
 
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 1);
-      assertBNEqual(lock.commission, tokenAmount('0'), 'Commission does not match calculated comission');
       assertBNEqual(amount2.sub(rPenalty), rAmount, 'Incorrect rAmount calculation');
       assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
       assertBNEqual(prevStake.sub(lock.amount), staker.stake, 'Stake not reduced');
@@ -2043,8 +2043,13 @@ describe('StakeManager', function () {
       await (stakeManager.connect(signers[18]).unlockWithdraw(staker.id));
 
       let withdawAmount = lock.amount;
-      if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);
+      let gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      let commission = 0;
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
       }
 
       let newBalance = prevBalance.add(withdawAmount);
@@ -2052,16 +2057,20 @@ describe('StakeManager', function () {
 
       assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
       assertBNLessThan(withdawAmount, lock.amount, 'Commission Should be paid'); // gain > 0;
-      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(lock.commission), 'Stakers should get commision'); // gain > 0
+      assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should get commision'); // gain > 0
 
-      stakerPrevBalance = stakerPrevBalance.add(lock.commission);
       prevBalance = await razor.balanceOf(signers[19].address);
       lock = await stakeManager.locks(signers[19].address, staker.tokenAddress, 1);
       await (stakeManager.connect(signers[19]).unlockWithdraw(staker.id));
 
       withdawAmount = lock.amount;
-      if (lock.commission > 0) {
-        withdawAmount = withdawAmount.sub(lock.commission);
+      gain = (withdawAmount.sub(lock.initial)); // commission in accordance to gain
+      commission = 0;
+      if (gain > 0) {
+        commission = ((gain).mul(staker.commission)).div(100);
+      }
+      if (commission > 0) {
+        withdawAmount = withdawAmount.sub(commission);
       }
 
       newBalance = prevBalance.add(withdawAmount);

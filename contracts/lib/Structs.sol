@@ -29,7 +29,6 @@ library Structs {
 
     struct Lock {
         uint256 amount; //amount in sRZR/RZR
-        uint256 commission; // amount
         uint256 unlockAfter; // Can be made uint32 later if packing is possible
         uint256 initial; // for unstake lock
     }

@@ -170,8 +170,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     /// @notice staker/delegator must call unstake() to lock their sRZRs
     // and should wait for params.withdraw_after period
-    // after which she can call withdraw() in withdrawReleasePeriod.
-    // If this period pass, lock expires and she will have to extendLock() to able to withdraw again
+    // after which he/she can call initiateWithdraw() in withdrawInitiationPeriod.
+    // If this period pass, lock expires and she will have to extendUnstakeLock() to able to initiateWithdraw again
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
     function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
@@ -188,7 +188,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(
             sAmount,
-            0,
             epoch + unstakeLockPeriod,
             sToken.getRZRDeposited(msg.sender, sAmount)
         );
@@ -196,6 +195,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
 
+    /// @notice staker/delegator call initiateWithdraw() to burn their locked sRZRs and lock their RAZORS
+    // RAZORS is separated from the staker's stake but can be claimed only after withdrawLockPeriod passes
+    // after which he/she can call unlockWithdraw() to claim the locked RAZORS.
+    /// @param stakerId The Id of staker associated with sRZR which user want to initiateWithdraw
     function initiateWithdraw(uint32 stakerId) external initialized whenNotPaused {
         State currentState = _getState(epochLength);
         require(currentState != State.Propose, "Unstake: NA Propose");
@@ -217,35 +220,18 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        uint256 commission = 0;
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            // Calculate Gain
-            uint256 initial = lock.initial;
-            if (rAmount > initial) {
-                uint256 gain = rAmount - initial;
-                uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
-                commission = (gain * commissionApplicable) / 100;
-            }
-        }
-
-        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, commission, epoch + withdrawLockPeriod, 0);
+        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod, lock.initial);
         require(sToken.burn(address(this), lock.amount), "Token burn Failed");
         //emit event here
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
 
-    /// @notice staker/delegator can withdraw their funds after calling unstake and withdrawAfter period.
-    // To be eligible for withdraw it must be called with in withDrawReleasePeriod(),
-    //this is added to avoid front-run unstake/withdraw.
-    // For Staker, To be eligible for withdraw she must not participate in lock duration,
-    //this is added to avoid hit and run dispute attack.
-    // For Delegator, there is no such restriction
-    // Both Staker and Delegator should have their locked funds(sRZR) present in
-    //their wallet at time of if not withdraw reverts
-    // And they have to use extendLock()
-    /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
+    /// @notice staker/delegator can claim their locked RAZORS.
+    // if a staker is calling then no commission is calculated and can claim their funds
+    // if a delegator is calling then commission is calculated on the RAZOR amount being withdrawn
+    //and deducted from withdraw balance. the new balance is sent to the delegator and staker
+    //receives the commission
+    /// @param stakerId The Id of staker associated with sRZR which user want to unlockWithdraw
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
         uint32 epoch = _getEpoch(epochLength);
         require(stakerId != 0, "staker doesnt exist");
@@ -255,7 +241,19 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(lock.unlockAfter != 0, "Did not unstake");
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
 
-        uint256 commission = lock.commission;
+        // Transfer commission in case of delegators
+        // Check commission rate >0
+        uint256 commission = 0;
+        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
+            // Calculate Gain
+            uint256 initial = lock.initial;
+            if (lock.amount > initial) {
+                uint256 gain = lock.amount - initial;
+                uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
+                commission = (gain * commissionApplicable) / 100;
+            }
+        }
+
         uint256 withdrawAmount = lock.amount - commission;
         // Reset lock
         _resetLock(stakerId);
@@ -308,7 +306,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit CommissionChanged(stakerId, commission);
     }
 
-    /// @notice Used by anyone whose lock expired or who lost funds, and want to request withdraw
+    /// @notice Used by anyone whose lock expired or who lost funds, and want to request initiateWithdraw
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function extendUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
@@ -514,18 +512,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({
-            amount: 0,
-            commission: 0,
-            unlockAfter: 0,
-            initial: 0
-        });
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({
-            amount: 0,
-            commission: 0,
-            unlockAfter: 0,
-            initial: 0
-        });
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
         emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 }
