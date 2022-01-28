@@ -7,15 +7,9 @@ import "../../storage/Constants.sol";
 abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     uint16 public penaltyNotRevealNum = 1;
     uint16 public gracePeriod = 8;
-    uint16 public epochLength = 300;
     uint32 public maxAge = 100 * 10000;
     uint256 public blockReward = 100 * (10**18);
     uint16 public maxTolerance = 1000;
-
-    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        epochLength = _epochLength;
-    }
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths

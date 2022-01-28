@@ -20,8 +20,6 @@ describe('Governance contract Test', async () => {
   let stakeManager;
   let rewardManager;
   let voteManager;
-  let randomNoManager;
-  let delegator;
   let initializeContracts;
 
   const expectedRevertMessage = 'AccessControl';
@@ -30,7 +28,6 @@ describe('Governance contract Test', async () => {
 
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
-  const epochLength = toBigNumber('300');
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('20000');
   const minimumSafeRazor = tokenAmount('10000');
@@ -46,7 +43,7 @@ describe('Governance contract Test', async () => {
   before(async () => {
     ({
       governance, collectionManager, blockManager, stakeManager, voteManager,
-      rewardManager, randomNoManager, delegator, initializeContracts,
+      rewardManager, initializeContracts,
     } = await setupContracts());
     await Promise.all(await initializeContracts());
     signers = await ethers.getSigners();
@@ -82,9 +79,6 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxAltBlocks(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
-    tx = governance.connect(signers[0]).setEpochLength(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMinStake(toBigNumber('1'));
@@ -137,22 +131,6 @@ describe('Governance contract Test', async () => {
     await governance.setMaxAltBlocks(toBigNumber('10'));
     const maxAltBlocks = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
-
-    await governance.setEpochLength(toBigNumber('11'));
-    const epochLength = await collectionManager.epochLength();
-    const epochLength1 = await blockManager.epochLength();
-    const epochLength2 = await stakeManager.epochLength();
-    const epochLength3 = await rewardManager.epochLength();
-    const epochLength4 = await voteManager.epochLength();
-    const epochLength5 = await randomNoManager.epochLength();
-    const epochLength6 = await delegator.epochLength();
-    assertBNEqual(epochLength, toBigNumber('11'));
-    assertBNEqual(epochLength1, toBigNumber('11'));
-    assertBNEqual(epochLength2, toBigNumber('11'));
-    assertBNEqual(epochLength3, toBigNumber('11'));
-    assertBNEqual(epochLength4, toBigNumber('11'));
-    assertBNEqual(epochLength5, toBigNumber('11'));
-    assertBNEqual(epochLength6, toBigNumber('11'));
 
     await governance.setGracePeriod(toBigNumber('14'));
     const gracePeriod = await rewardManager.gracePeriod();
@@ -235,9 +213,6 @@ describe('Governance contract Test', async () => {
 
     const maxAltBlocksValue = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
-
-    const epochLengthValue = await collectionManager.epochLength();
-    assertBNEqual(epochLength, epochLengthValue);
 
     const maxAgeValue = await rewardManager.maxAge();
     assertBNEqual(maxAge, maxAgeValue);

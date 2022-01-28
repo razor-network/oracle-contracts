@@ -6,8 +6,6 @@ import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
-import "./interfaces/IDelegatorParams.sol";
-import "./interfaces/IRandomNoManagerParams.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
 
@@ -21,8 +19,6 @@ contract Governance is Initializable, ACL, Constants {
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
-    IDelegatorParams public delegatorParams;
-    IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
 
@@ -34,17 +30,13 @@ contract Governance is Initializable, ACL, Constants {
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
-        address collectionManagerAddress,
-        address delegatorAddress,
-        address randomNoManagerAddress
+        address collectionManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         blockManagerParams = IBlockManagerParams(blockManagerAddress);
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
-        delegatorParams = IDelegatorParams(delegatorAddress);
-        randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
@@ -122,17 +114,6 @@ contract Governance is Initializable, ACL, Constants {
     function disableEscapeHatch() external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "escapeHatchEnabled", 0, block.timestamp);
         stakeManagerParams.disableEscapeHatch();
-    }
-
-    function setEpochLength(uint16 _epochLength) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "epochLength", _epochLength, block.timestamp);
-        blockManagerParams.setEpochLength(_epochLength);
-        rewardManagerParams.setEpochLength(_epochLength);
-        stakeManagerParams.setEpochLength(_epochLength);
-        voteManagerParams.setEpochLength(_epochLength);
-        collectionManagerParams.setEpochLength(_epochLength);
-        delegatorParams.setEpochLength(_epochLength);
-        randomNoManagerParams.setEpochLength(_epochLength);
     }
 
     function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {

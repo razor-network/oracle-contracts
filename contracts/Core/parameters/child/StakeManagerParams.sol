@@ -18,17 +18,11 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     // change the commission by 3% points
     uint8 public deltaCommission = 3;
     uint16 public gracePeriod = 8;
-    uint16 public epochLength = 300;
     uint16 public epochLimitForUpdateCommission = 100;
     SlashNums public slashNums = SlashNums(500, 9500, 0);
     // Slash Penalty = bounty + burned + kept
     uint256 public minStake = 20000 * (10**18);
     uint256 public minSafeRazor = 10000 * (10**18);
-
-    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        epochLength = _epochLength;
-    }
 
     function setSlashParams(
         uint16 _bounty,

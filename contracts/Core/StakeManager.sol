@@ -95,7 +95,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         uint256 totalSupply = 0;
 
@@ -142,7 +142,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
@@ -172,10 +172,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @param stakerId The Id of staker associated with sRZR which user want to unstake
     /// @param sAmount The Amount in sRZR
     function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
-        State currentState = _getState(epochLength);
+        State currentState = _getState();
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
 
         Structs.Staker storage staker = stakers[stakerId];
         require(staker.id != 0, "staker.id = 0");
@@ -223,7 +223,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // And they have to use extendLock()
     /// @param stakerId The Id of staker associated with sRZR which user want to withdraw
     function withdraw(uint32 stakerId) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress];
 
@@ -274,7 +274,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
             require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
@@ -288,7 +288,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function extendLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress].amount != 0, "Existing Lock doesnt exist");
         require(
             locks[msg.sender][stakers[stakerId].tokenAddress].withdrawAfter + withdrawReleasePeriod < epoch,
@@ -301,7 +301,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 penalty = (lock.amount * extendLockPenalty) / 100;
         lock.amount = lock.amount - penalty;
         lock.withdrawAfter = epoch;
-        emit ExtendLock(stakerId, msg.sender, _getEpoch(epochLength));
+        emit ExtendLock(stakerId, msg.sender, _getEpoch());
     }
 
     /// @notice External function for setting stake of the staker
@@ -365,7 +365,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @notice Allows bountyHunter to redeem their bounty once its locking period is over
     /// @param bountyId The ID of the bounty
     function redeemBounty(uint32 bountyId) external {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         uint256 bounty = bountyLocks[bountyId].amount;
 
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
@@ -485,6 +485,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress] = Structs.Lock({amount: 0, commission: 0, withdrawAfter: 0});
-        emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
+        emit ResetLock(stakerId, msg.sender, _getEpoch());
     }
 }

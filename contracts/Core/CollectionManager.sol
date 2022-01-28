@@ -65,12 +65,12 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit) {
         require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -80,16 +80,12 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
-    function setCollectionStatus(bool assetStatus, uint16 id)
-        external
-        onlyRole(COLLECTION_MODIFIER_ROLE)
-        checkState(State.Confirm, epochLength)
-    {
+    function setCollectionStatus(bool assetStatus, uint16 id) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm) {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
         require(assetStatus != collections[id].active, "status not being changed");
 
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
@@ -112,11 +108,11 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
         string calldata name
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm) {
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
 
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
@@ -140,11 +136,11 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, epochLength) {
+    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit) {
         require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
