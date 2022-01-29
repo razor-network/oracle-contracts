@@ -112,7 +112,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
             if (
                 voteValueLastEpoch != 0
-            ) // Only penalise if given asset revealed, please not here again revealed value of asset cant be zero
+            ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
             {
                 // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
                 uint32 medianLastEpoch = mediansLastEpoch[i];

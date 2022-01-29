@@ -1,0 +1,6 @@
+- Done: Remove salt from block storage
+- Done: Salt not dependant on ep-2 at all 
+- Store depth 
+- Remove epoch from mappings
+- Staker have to propose asset with prev value if not revealed this epoch
+

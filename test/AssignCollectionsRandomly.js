@@ -122,7 +122,7 @@ describe('AssignCollectionsRandomly', function () {
       /// So we suggest to node to consider votes for non-assgined to be 0 only, so they dont have to do keccakhash redundantly
       /// Please note that this tree is PosAware, so you cant just post gigantic tree root, and pick values as per convinience in reveal
 
-      /// Randao Removed : So there is no penalty as randao penalty.
+      /// @dev Randao Removed : So there is no penalty as randao penalty.
 
       /// Steps
       /// Fetch NumActiveCollection, and Salt
@@ -132,7 +132,7 @@ describe('AssignCollectionsRandomly', function () {
       /// commitment = keccak256(abi.encodePacked(tree.root, seed))
       /// seed = keccak256(abi.encodePacked(salt, secret));
       /// salt can be fetched from VoteManager
-      /// Concept : salt for epch + 1 represents nothing but = keccak256(abi.encodePacked(epoch, blocks[epoch].medians, salt));
+      /// Concept : salt for epch + 1 represents nothing but = keccak256(abi.encodePacked(epoch, blocks[epoch].medians, salt)); // TODO : REMOVE SALT
       /// So salt is dependent on block[ep -1] and ep-2
 
       /// TODO: Check case of confirmLastEpochBlock
@@ -145,6 +145,17 @@ describe('AssignCollectionsRandomly', function () {
       /// in a tree there is no repetition
       /// but in a isCollectionAlloted, input array
       /// you have to pass [2,1,1], here seq and repetation should be maintained
+
+      // Resolution
+      // confrimLastEpochBlock : Everyone can also construct
+      // if the block itself is not propsed
+      // salt = n-1
+
+      // n : proposed
+
+      // n + 100
+
+      // query salt
 
       // Staker 1
       const numActiveCollections = await collectionManager.getNumActiveCollections();
@@ -185,7 +196,12 @@ describe('AssignCollectionsRandomly', function () {
       // In reveal, staker has to pass secret, root and assigned assets
       // Format is
       // struct MerkleTree {
-      //     uint16 depth; // TODO : Check and Test if this is safe, or should we do it inside only
+      //     uint16 depth;
+
+      // TODO : Check and Test if this is safe, or should we do it inside only
+      // 2 ^ 1 , 2^ 2 calcualte and see where it falls
+      // in acivaion, deactivate, creation update depth
+
       //     Structs.AssignedAsset [] values;
       //     bytes32[][] proofs;
       //     bytes32 root;
@@ -239,6 +255,11 @@ describe('AssignCollectionsRandomly', function () {
         [0, 0, 300, 400, 0],
         iteration,
         biggestStakerId);
+
+      // Are we okay with returning 0 value for non-revealed asset for previous epoch ?
+      // 0, 0, 300, 400, 0
+      // We will pick 0 optimise
+      // Take value of previous epoch for 0 value reveal
 
       await mineToNextState();
 

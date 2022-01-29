@@ -81,11 +81,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
         uint256 influence = stakeManager.getInfluence(stakerId);
         influenceSnapshot[epoch][stakerId] = influence;
-
+        
         for (uint16 i = 0; i < tree.values.length; i++) {
             require(_isAssetAllotedToStaker(seed, i, tree.values[i].medianIndex), "Revealed asset not alloted");
             if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) {
-                // If Job Not Revealed before, please not due to this job result cant be zero
+                // Check if asset value is zero
+                // If Job Not Revealed before, please note due to this job result cant be zero
                 require(
                     MerklePosAware.verify(
                         tree.proofs[i],
