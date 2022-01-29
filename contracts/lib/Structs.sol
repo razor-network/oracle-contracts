@@ -75,7 +75,6 @@ library Structs {
     }
 
     struct MerkleTree {
-        uint16 depth; // TODO : Check and Test if this is safe, or should we do it inside only
         Structs.AssignedAsset[] values;
         bytes32[][] proofs;
         bytes32 root;

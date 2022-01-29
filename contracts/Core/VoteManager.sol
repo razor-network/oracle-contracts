@@ -93,7 +93,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                         tree.root,
                         keccak256(abi.encode(tree.values[i].value)),
                         tree.values[i].medianIndex,
-                        tree.depth,
+                        depth,
                         collectionManager.getNumActiveCollections()
                     ),
                     "invalid merkle proof"
@@ -140,6 +140,10 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         salt = _salt;
     }
 
+    function storeDepth(uint256 _depth) external override onlyRole(DEPTH_MODIFIER_ROLE) {
+        depth = _depth;
+    }
+    
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);

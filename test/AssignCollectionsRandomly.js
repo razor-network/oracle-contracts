@@ -183,7 +183,8 @@ describe('AssignCollectionsRandomly', function () {
 
       const tree = await createMerkle(leavesOfTree);
       const depth = Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections));
-      console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], depth, seqAllotedCollections);
+      console.log(depth);
+      console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], seqAllotedCollections);
       const commitment1 = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 
       await voteManager.connect(signers[1]).commit(epoch, commitment1);
@@ -196,12 +197,6 @@ describe('AssignCollectionsRandomly', function () {
       // In reveal, staker has to pass secret, root and assigned assets
       // Format is
       // struct MerkleTree {
-      //     uint16 depth;
-
-      // TODO : Check and Test if this is safe, or should we do it inside only
-      // 2 ^ 1 , 2^ 2 calcualte and see where it falls
-      // in acivaion, deactivate, creation update depth
-
       //     Structs.AssignedAsset [] values;
       //     bytes32[][] proofs;
       //     bytes32 root;
@@ -220,7 +215,6 @@ describe('AssignCollectionsRandomly', function () {
         proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
       }
       const treeRevealData = {
-        depth,
         values,
         proofs,
         root: tree[0][0],
@@ -291,5 +285,15 @@ describe('AssignCollectionsRandomly', function () {
       const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
       assertBNEqual(result2[0], toBigNumber('0'));
     });
+    // For this to test everytime, is waste, as it takes sig time
+    // it('Depth Calculation', async () => {
+    //   for (let i = 1; i < 2 ** 16; i++) {
+    //     // console.log(Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i)));
+    //     const x = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
+    //     const y = Number(await collectionManager.getDepth(i));
+    //     console.log(i);
+    //     if (x !== y) { console.log('revert', x, y, i); }
+    //   }
+    // });
   });
 });

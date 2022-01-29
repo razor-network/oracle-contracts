@@ -26,4 +26,6 @@ contract VoteStorage {
     mapping(uint32 => uint32) public epochLastRevealed;
 
     bytes32 public salt;
+
+    uint256 public depth; // uint32 possible, pack if opp arise
 }

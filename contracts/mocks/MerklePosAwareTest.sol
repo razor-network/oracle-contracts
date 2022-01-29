@@ -10,7 +10,7 @@ contract MerklePosAwareTest {
         bytes32 root,
         bytes32[] memory leaves,
         uint16[] memory medianIndex,
-        uint16 depth,
+        uint256 depth,
         uint16 maxAssets
     ) external view returns (bool) {
         return MerklePosAware.verifyMultiple(proofs, root, leaves, medianIndex, depth, maxAssets);
@@ -21,7 +21,7 @@ contract MerklePosAwareTest {
         bytes32 root,
         bytes32 leaf,
         uint16 medianIndex,
-        uint16 depth,
+        uint256 depth,
         uint16 maxAssets
     ) external view returns (bool) {
         return MerklePosAware.verify(proof, root, leaf, medianIndex, depth, maxAssets);

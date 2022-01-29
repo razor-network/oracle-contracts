@@ -12,7 +12,7 @@ library MerklePosAware {
         bytes32 root,
         bytes32[] memory leaves,
         uint16[] memory medianIndex,
-        uint16 depth,
+        uint256 depth,
         uint16 maxAssets
     ) internal view returns (bool) {
         for (uint256 i = 0; i < proofs.length; i++) {
@@ -32,7 +32,7 @@ library MerklePosAware {
         bytes32 root,
         bytes32 leaf,
         uint16 medianIndex,
-        uint16 depth,
+        uint256 depth,
         uint16 maxAssets
     ) internal view returns (bool) {
         bytes32 computedHash = leaf;
