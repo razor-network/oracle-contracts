@@ -197,8 +197,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
-        
-        bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians,  voteManager.getSalt())); // not iteration as it can be manipulated
+        bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
         voteManager.storeSalt(salt);
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
         rewardManager.giveBlockReward(stakerId, epoch);
