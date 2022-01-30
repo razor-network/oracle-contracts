@@ -158,10 +158,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
-
-        voteManager.storeDepth(_getDepth());
-
         emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
+        voteManager.storeDepth(_getDepth());
     }
 
     function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {

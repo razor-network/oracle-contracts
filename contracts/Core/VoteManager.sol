@@ -86,6 +86,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
             if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) {
                 // Check if asset value is zero
                 // If Job Not Revealed before, please note due to this job result cant be zero
+                // slither-disable-next-line calls-loop
+                // reason to ignore : its internal lib not a external call
                 require(
                     MerklePosAware.verify(
                         tree.proofs[i],

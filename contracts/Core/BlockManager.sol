@@ -97,7 +97,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         for (uint32 i = 0; i < sortedValues.length; i++) {
             require(sortedValues[i] > lastVisitedValue, "sortedStaker <= LVS "); // LVS : Last Visited Staker
             lastVisitedValue = sortedValues[i];
-
+            
+            // slither-disable-next-line calls-loop
+            // reason to ignore : has to be done, as each vote will have diff weight
             uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
             accProd = accProd + sortedValues[i] * weight;
             accWeight = accWeight + weight;
@@ -170,7 +172,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(
             proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch - 1].medians[medianIndex],
-            "Block proposed with correct medians"
+            "Block proposed with corr medians"
         );
         return _executeDispute(epoch, blockIndex, blockId);
     }
@@ -216,8 +218,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
-        voteManager.storeSalt(salt);
+        
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        
+        voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, voteManager.getSalt());
     }
