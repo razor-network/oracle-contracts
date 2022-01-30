@@ -70,7 +70,6 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(secret != 0x0, "secret cannot be empty");
         bytes32 seed = keccak256(abi.encode(salt, secret));
         require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
-
         {
             uint256 stakerStake = stakeManager.getStake(stakerId);
             require(stakerStake >= minStake, "stake below minimum");

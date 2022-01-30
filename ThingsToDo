@@ -6,7 +6,7 @@ Features :
 - Done: Staker have to propose asset with prev value if not revealed this epoch
 
 Testing :
-
+Done All :)
 Disputes Cases 
  Proposer dont reveal non assigned assets, nonAssignedDispute
  Proposer reveals non-assgined assets, dispute should not happenfrom give sorted way and from nonAssignedDispute

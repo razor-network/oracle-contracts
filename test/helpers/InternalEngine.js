@@ -48,7 +48,7 @@ const store = {};
 /// but in a isCollectionAlloted, input array
 /// you have to pass [2,1,1], here seq and repetation should be maintained
 
-const commit = async (signer, voteManager, collectionManager, secret) => {
+const commit = async (signer, deviation, voteManager, collectionManager, secret) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
   const salt = await voteManager.getSalt();
   const toAssign = await voteManager.toAssign();
@@ -65,7 +65,7 @@ const commit = async (signer, voteManager, collectionManager, secret) => {
 
   for (let i = 0; i < numActiveCollections; i++) {
     if (assignedCollections[i]) {
-      leavesOfTree.push((i + 1) * 100);
+      leavesOfTree.push((i + 1) * 100 + deviation);
       // this +1 is done only for maint vote value as 100 for 0, 200 for 1,
       // its not related to any concept, ofc 0 cant be valid vote result so we couldnr have 0 value for 0
       // this is not needed on node, as there we will have real values

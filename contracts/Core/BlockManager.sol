@@ -159,16 +159,16 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     function disputeForNonAssignedCollection(
         uint32 epoch,
-        uint16 medianIndex,
-        uint8 blockIndex
+        uint8 blockIndex,
+        uint16 medianIndex
     ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns(uint32) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Asset Revealed this epoch");
+        require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
         
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        require(proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch-1].medians[medianIndex], "Block proposed with same medians");
+        require(proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch-1].medians[medianIndex], "Block proposed with correct medians");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 

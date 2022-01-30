@@ -2,11 +2,14 @@
 test same vote values, stakes
 test penalizeEpochs */
 
+const { expect } = require('chai');
 const {
   assertBNEqual,
   mineToNextEpoch,
   mineToNextState,
   assertRevert,
+  restoreSnapshot,
+  takeSnapshot,
 } = require('./helpers/testHelpers');
 
 const { getState } = require('./helpers/utils');
@@ -17,11 +20,7 @@ const {
   COLLECTION_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
-  calculateDisputesData,
   getEpoch,
-  getBiggestStakeAndId,
-  getIteration,
-  getFalseIteration,
   toBigNumber,
   tokenAmount,
 } = require('./helpers/utils');
@@ -37,6 +36,7 @@ describe('AssignCollectionsRandomly', function () {
   let stakeManager;
   let initializeContracts;
   let delegator;
+  let snapshotId;
 
   before(async () => {
     ({
@@ -53,7 +53,7 @@ describe('AssignCollectionsRandomly', function () {
   });
 
   describe('razor', async () => {
-    it('Assign Collections Randomly', async () => {
+    it('Assign Collections Randomly End to End Flow', async () => {
       /* ///////////////////////////////////////////////////////////////
                           SETUP
       ////////////////////////////////////////////////////////////// */
@@ -100,7 +100,7 @@ describe('AssignCollectionsRandomly', function () {
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('100000'));
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-      await commit(signers[1], voteManager, collectionManager, secret);
+      await commit(signers[1], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
       await reveal(signers[1], voteManager);
@@ -109,19 +109,12 @@ describe('AssignCollectionsRandomly', function () {
       await propose(signers[1], [0, 0, 300, 400, 0], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
-      /* ///////////////////////////////////////////////////////////////
-                          DISPUTE
-      ////////////////////////////////////////////////////////////// */
       // Dispute will happen on values now, and not stakers
       // as a staker, you have to pass sorted values
       await blockManager.connect(signers[19]).giveSorted(epoch, 2, [300]);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
-
       await mineToNextState();
 
-      /* ///////////////////////////////////////////////////////////////
-                          CONFIRM
-      ////////////////////////////////////////////////////////////// */
       // Nothing is changed in confirm
       await blockManager.connect(signers[1]).claimBlockReward();
       await mineToNextState();
@@ -137,26 +130,97 @@ describe('AssignCollectionsRandomly', function () {
       const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
       assertBNEqual(result2[0], toBigNumber('0'));
     });
-    // For this to test everytime, is waste, as it takes sig time
-    // Test it whenver change to getDepth is made
-    // it('Depth Calculation', async () => {
-    //   for (let i = 1; i < 2 ** 16; i++) {
-    //     // console.log(Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i)));
-    //     const x = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
-    //     const y = Number(await collectionManager.getDepth(i));
-    //     console.log(i);
-    //     if (x !== y) { console.log('revert', x, y, i); }
-    //   }
-    // });
 
-    // it('S', async () => {
-    //   for (let i = 1; i < 2 ** 16; i++) {
-    //     // console.log(Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i)));
-    //     const x = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
-    //     const y = Number(await collectionManager.getDepth(i));
-    //     console.log(i);
-    //     if (x !== y) { console.log('revert', x, y, i); }
-    //   }
-    // });
+    it('Staker Proposes Everything correctly, none of dispute should go through', async () => {
+      await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[2], 0, voteManager, collectionManager, '0x227d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState();
+
+      await reveal(signers[1], voteManager);
+      await reveal(signers[2], voteManager);
+      await reveal(signers[3], voteManager);
+      await mineToNextState();
+
+      // Collections revealed
+      // [ 100, 200, 0, 0, 500 ]
+      // [ 100, 200, 0, 400, 0 ]
+      // [ 100, 0, 0, 0, 500 ]
+
+      snapshotId = await takeSnapshot();
+      // Staker propose correctly, 300 from previous
+      await propose(signers[1], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      // Give Sorted and FinaliseDispute on revealed asset.
+      const epoch = await getEpoch();
+      await blockManager.connect(signers[19]).giveSorted(epoch, 1, [200]);
+      await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
+
+      // Give Sorted and FinaliseDispute on non-revealed asset
+      await blockManager.connect(signers[10]).giveSorted(epoch, 2, [300]);
+      // eslint-disable-next-line max-len
+      await assertRevert(blockManager.connect(signers[10]).finalizeDispute(epoch, 0), 'VM Exception while processing transaction: reverted with panic code 0x12 (Division or modulo division by zero)');
+    });
+
+    it('Delegator should be able to fetch the non revealed asset', async () => {
+      const collectionName = 'c3';
+      const hName = utils.solidityKeccak256(['string'], [collectionName]);
+      const result1 = await delegator.getResult(hName);
+      assertBNEqual(result1[0], toBigNumber('300'));
+
+      const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
+      assertBNEqual(result2[0], toBigNumber('0'));
+    });
+
+    it('Staker Proposes revealed assets in-correctly', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      await propose(signers[1], [10, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      const epoch = await getEpoch();
+      await blockManager.connect(signers[19]).giveSorted(epoch, 0, [100]);
+      await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+
+      expect(blockIndexToBeConfirmed).to.eq(-1);
+      expect(block.valid).to.eq(false);
+    });
+
+    it('Staker Proposes non revealed assets correctly', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      await propose(signers[1], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      const epoch = await getEpoch();
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 1),
+        'Collec is revealed this epoch');
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 2),
+        'Block proposed with correct medians');
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+
+      expect(blockIndexToBeConfirmed).to.eq(0);
+      expect(block.valid).to.eq(true);
+    });
+
+    it('Staker Proposes non revealed assets in-correctly', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      await propose(signers[1], [100, 200, 30, 400, 500], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      const epoch = await getEpoch();
+
+      await blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 2);
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+
+      expect(blockIndexToBeConfirmed).to.eq(-1);
+      expect(block.valid).to.eq(false);
+    });
   });
 });
