@@ -1,10 +1,16 @@
 Features : 
 - Done: Remove salt from block storage
 - Done: Salt not dependant on ep-2 at all 
-- Done: Store depth 
+- Done: Store depth, que over opt
 - Remove epoch from mappings, Its a question ? Save SSTORE or LOOP=>delete that mapping and create new 
 - Done: Staker have to propose asset with prev value if not revealed this epoch
 
 Testing :
 
-
+Disputes Cases 
+ Proposer dont reveal non assigned assets, nonAssignedDispute
+ Proposer reveals non-assgined assets, dispute should not happenfrom give sorted way and from nonAssignedDispute
+ Proposer dont reveal assigned assets, giveSortedDispute
+ 
+Staker shouldnt be able to use gigantic merkle
+Delegator is able to fetch non assigned asset

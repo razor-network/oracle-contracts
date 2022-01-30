@@ -204,8 +204,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         // console.log("isAlloted");
         //  console.logBytes32(seed);
         //  console.logBytes32(keccak256(abi.encode(seed, iterationOfLoop)));
-        console.log("iterationOfLoop", "medianIndex", "max", "result");
-        console.log(iterationOfLoop, medianIndex, max, _prng(keccak256(abi.encode(seed, iterationOfLoop)), max));
+        // console.log("iterationOfLoop", "medianIndex", "max", "result");
+        // console.log(iterationOfLoop, medianIndex, max, _prng(keccak256(abi.encode(seed, iterationOfLoop)), max));
         if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == medianIndex) return true;
         return false;
     }
