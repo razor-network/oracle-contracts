@@ -38,17 +38,17 @@ library MerklePosAware {
         bytes32 computedHash = leaf;
         bytes memory seq = bytes(getSequence(medianIndex, depth));
 
-        uint256 last_node = maxAssets;
-        uint256 my_node = medianIndex + 1;
+        uint256 lastNode = maxAssets;
+        uint256 myNode = medianIndex + 1;
         uint256 j = depth;
         uint256 i = 0;
         while (j > 0) {
             bytes32 proofElement = proof[i];
             j--;
             //skip proof check  if my node is  last node and number of nodes on level is odd
-            if (last_node % 2 == 1 && last_node == my_node) {
-                my_node = my_node / 2 + (my_node % 2);
-                last_node = last_node / 2 + (last_node % 2);
+            if (lastNode % 2 == 1 && lastNode == myNode) {
+                myNode = myNode / 2 + (myNode % 2);
+                lastNode = lastNode / 2 + (lastNode % 2);
                 continue;
             }
             if (seq[j] == 0x30) {
@@ -58,8 +58,8 @@ library MerklePosAware {
             }
             i++;
 
-            my_node = my_node / 2 + (my_node % 2);
-            last_node = last_node / 2 + (last_node % 2);
+            myNode = myNode / 2 + (myNode % 2);
+            lastNode = lastNode / 2 + (lastNode % 2);
         }
 
         return computedHash == root;

@@ -1,7 +1,3 @@
-/* TODO:
-test same vote values, stakes
-test penalizeEpochs */
-
 const {
   assertBNEqual,
   mineToNextEpoch,
@@ -9,14 +5,15 @@ const {
   assertRevert,
   assertBNNotEqual,
 } = require('./helpers/testHelpers');
+const { commit, reveal, propose } = require('./helpers/InternalEngine');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
+  COLLECTION_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
   getEpoch,
-  getBiggestStakeAndId,
-  getIteration,
+  getState,
   toBigNumber,
   tokenAmount,
   prngHash,
@@ -32,6 +29,7 @@ describe('RandomNoManager', function () {
   let stakeManager;
   let randomNoManager;
   let initializeContracts;
+  let collectionManager;
 
   before(async () => {
     ({
@@ -39,6 +37,7 @@ describe('RandomNoManager', function () {
       razor,
       stakeManager,
       voteManager,
+      collectionManager,
       randomNoManager,
       initializeContracts,
     } = await setupContracts());
@@ -59,6 +58,28 @@ describe('RandomNoManager', function () {
 
     it('should be able to initialize', async () => {
       await Promise.all(await initializeContracts());
+      await mineToNextEpoch();
+      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+      const url = 'http://testurl.com';
+      const selector = 'selector';
+      let name;
+      const power = -2;
+      const selectorType = 0;
+      const weight = 50;
+      let i = 1;
+      while (i <= 10) {
+        name = `test${i}`;
+        await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+        i++;
+      }
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
+
+      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
+      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');
+      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c3');
+      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c4');
+      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c5');
+
       await mineToNextEpoch();
       const epoch = await getEpoch();
       await razor.transfer(signers[5].address, tokenAmount('423000'));
@@ -84,17 +105,11 @@ describe('RandomNoManager', function () {
       assertBNEqual(await randomNoManager.requests(reqid2), epoch);
 
       // Commit
-      const votes = [];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[5]).commit(epoch, commitment1);
+      await commit(signers[5], 0, voteManager, collectionManager, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
 
       // Reveal
-      await voteManager.connect(signers[5]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await reveal(signers[5], voteManager);
 
       // Registering with unique reqId
       await randomNoManager.connect(signers[1]).register();
@@ -116,16 +131,7 @@ describe('RandomNoManager', function () {
 
       // Propose
       await mineToNextState();
-      const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc5);
-
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-
-      await blockManager.connect(signers[5]).propose(epoch,
-        [],
-        iteration,
-        biggestStakerId);
+      await propose(signers[5], [0, 0, 0, 0, 0], stakeManager, blockManager, voteManager);
       // Dispute
       await mineToNextState();
       // Confirm
