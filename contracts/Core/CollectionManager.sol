@@ -11,7 +11,7 @@ import "../Initializable.sol";
 
 contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
     IDelegator public delegator;
-    IVoteManager public voteManager; 
+    IVoteManager public voteManager;
 
     event JobCreated(uint16 id, uint256 timestamp);
 
@@ -40,12 +40,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint256 timestamp
     );
 
-    function initialize(
-        address voteManagerAddress
-    ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    function initialize(address voteManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         voteManager = IVoteManager(voteManagerAddress);
     }
-
 
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
@@ -161,9 +158,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
-        
+
         voteManager.storeDepth(_getDepth());
-        
+
         emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
     }
 
@@ -221,7 +218,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return idToIndexRegistry[id];
     }
 
-     function _updateRegistry() internal {
+    function _updateRegistry() internal {
         uint16 j = 1;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
@@ -234,13 +231,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
-    function _getDepth() internal view returns(uint256 n)
-    {       
-        // numActiveCollection is uint16, so further range not needed 
+    function _getDepth() internal view returns (uint256 n) {
+        // numActiveCollection is uint16, so further range not needed
         // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
         // TODO : Looks like there is better version compared in gas
         // https://ethereum.stackexchange.com/questions/8086/logarithm-math-operation-in-solidity/32900
-        
+
         // 100000;
         // >= 2**4 , n = 4
         // 000010;
@@ -271,27 +267,28 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         // I dont know if we can use above optimised way and somehow detect that in middle(1) as well
         // So thats why lets have above as commented
-        // and check in new issue, if we could do so 
+        // and check in new issue, if we could do so
 
         //6
         //110, 6
         //011, 3
         //001, 1
-        //000, 0 
-    
+        //000, 0
+
         // 8
         // 1000
         // 0100
         // 0010
         // 0001
         // 0000
-        
+
         // Have tested function upto 2**16;
         bool flag;
-        for (n = 0; x > 1; x >>= 1) { // O(n) 1<n<=16
-            if(x % 2 != 0) flag = true; // for that (1)
+        for (n = 0; x > 1; x >>= 1) {
+            // O(n) 1<n<=16
+            if (x % 2 != 0) flag = true; // for that (1)
             n += 1;
         }
-        if(flag) n++;
+        if (flag) n++;
     }
 }

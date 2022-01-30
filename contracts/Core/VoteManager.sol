@@ -80,7 +80,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
         uint256 influence = stakeManager.getInfluence(stakerId);
         influenceSnapshot[epoch][stakerId] = influence;
-        
+
         for (uint16 i = 0; i < tree.values.length; i++) {
             require(_isAssetAllotedToStaker(seed, i, tree.values[i].medianIndex), "Revealed asset not alloted");
             if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) {
@@ -142,7 +142,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function storeDepth(uint256 _depth) external override onlyRole(DEPTH_MODIFIER_ROLE) {
         depth = _depth;
     }
-    
+
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);

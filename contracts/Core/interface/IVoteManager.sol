@@ -5,7 +5,7 @@ import "../../lib/Structs.sol";
 
 interface IVoteManager {
     function storeSalt(bytes32 _salt) external;
-    
+
     function storeDepth(uint256 _depth) external;
 
     function getVoteValue(

@@ -41,7 +41,6 @@ describe('AssignCollectionsRandomly', function () {
   before(async () => {
     ({
       blockManager,
-      governance,
       collectionManager,
       razor,
       stakeManager,

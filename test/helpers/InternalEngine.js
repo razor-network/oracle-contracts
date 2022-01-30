@@ -1,4 +1,4 @@
-const { BigNumber, utils } = ethers;
+const { utils } = ethers;
 
 const {
   getAssignedCollections, getEpoch, getBiggestStakeAndId,

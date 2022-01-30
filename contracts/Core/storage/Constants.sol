@@ -68,6 +68,6 @@ contract Constants {
     // keccak256("SALT_MODIFIER_ROLE")
     bytes32 public constant SALT_MODIFIER_ROLE = 0xf31dda80d37c96a1a0852ace387dda52a75487d7d4eb74895e749ede3e0987b4;
 
-    // keccak256("DEPTH_MODIFIER_ROLE)") 
+    // keccak256("DEPTH_MODIFIER_ROLE)")
     bytes32 public constant DEPTH_MODIFIER_ROLE = 0xdec504361dd78243e1ec4f53c4c0ff2daf8da88c57ec66ea0107a0cb80d8bc17;
 }
