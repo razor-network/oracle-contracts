@@ -64,19 +64,24 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setSlashParams(_bounty, _burn, _keep);
     }
 
+    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
+        stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
+    }
+
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "withdrawReleasePeriod", _withdrawReleasePeriod, block.timestamp);
-        stakeManagerParams.setWithdrawReleasePeriod(_withdrawReleasePeriod);
+    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "withdrawInitiationPeriod", _withdrawInitiationPeriod, block.timestamp);
+        stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
+    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", _extendLockPenalty, block.timestamp);
-        stakeManagerParams.setExtendLockPenalty(_extendLockPenalty);
+        stakeManagerParams.setExtendUnstakeLockPenalty(_extendLockPenalty);
     }
 
     function setMaxAltBlocks(uint8 _maxAltBlocks) external initialized onlyRole(GOVERNER_ROLE) {
