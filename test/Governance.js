@@ -26,6 +26,7 @@ describe('Governance contract Test', async () => {
 
   const penaltyNotRevealNumerator = toBigNumber('1');
 
+  const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
   const gracePeriod = toBigNumber('8');
@@ -33,7 +34,7 @@ describe('Governance contract Test', async () => {
   const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
-  const extendLockPenalty = toBigNumber('1');
+  const extendUnstakeLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
   const maxTolerance = toBigNumber('1000');
   const maxCommission = toBigNumber('20');
@@ -69,13 +70,16 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setUnstakeLockPeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setWithdrawLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setWithdrawReleasePeriod(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setWithdrawInitiationPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setExtendLockPenalty(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setExtendUnstakeLockPenalty(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxAltBlocks(toBigNumber('1'));
@@ -120,6 +124,9 @@ describe('Governance contract Test', async () => {
     assertBNEqual(minStake1, toBigNumber('8'));
     assertBNEqual(minStake2, toBigNumber('8'));
 
+    await governance.setUnstakeLockPeriod(toBigNumber('9'));
+    const unstakeLockPeriod = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, toBigNumber('9'));
     await governance.setMinSafeRazor(toBigNumber('2'));
     const minSafeRazor = await stakeManager.minSafeRazor();
     assertBNEqual(minSafeRazor, toBigNumber('2'));
@@ -144,13 +151,13 @@ describe('Governance contract Test', async () => {
     assertBNEqual(maxTolerance, toBigNumber('15'));
     assertBNEqual(maxTolerance1, toBigNumber('15'));
 
-    await governance.setWithdrawReleasePeriod(toBigNumber('16'));
-    const withdrawReleasePeriod = await stakeManager.withdrawReleasePeriod();
-    assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
+    await governance.setWithdrawInitiationPeriod(toBigNumber('16'));
+    const withdrawInitiationPeriod = await stakeManager.withdrawInitiationPeriod();
+    assertBNEqual(withdrawInitiationPeriod, toBigNumber('16'));
 
-    await governance.setExtendLockPenalty(toBigNumber('17'));
-    const extendLockPenalty = await stakeManager.extendLockPenalty();
-    assertBNEqual(extendLockPenalty, toBigNumber('17'));
+    await governance.setExtendUnstakeLockPenalty(toBigNumber('17'));
+    const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
+    assertBNEqual(extendUnstakeLockPenalty, toBigNumber('17'));
 
     await governance.setMaxAge(toBigNumber('18'));
     const maxAge = await rewardManager.maxAge();
@@ -205,11 +212,14 @@ describe('Governance contract Test', async () => {
     const withdrawLockPeriodValue = await stakeManager.withdrawLockPeriod();
     assertBNEqual(withdrawLockPeriod, withdrawLockPeriodValue);
 
-    const withdrawReleasePeriodValue = await stakeManager.withdrawReleasePeriod();
+    const unstakeLockPeriodValue = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, unstakeLockPeriodValue);
+
+    const withdrawReleasePeriodValue = await stakeManager.withdrawInitiationPeriod();
     assertBNEqual(withdrawReleasePeriod, withdrawReleasePeriodValue);
 
-    const extendLockPenaltyValue = await stakeManager.extendLockPenalty();
-    assertBNEqual(extendLockPenalty, extendLockPenaltyValue);
+    const extendUnstakeLockPenaltyValue = await stakeManager.extendUnstakeLockPenalty();
+    assertBNEqual(extendUnstakeLockPenalty, extendUnstakeLockPenaltyValue);
 
     const maxAltBlocksValue = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
