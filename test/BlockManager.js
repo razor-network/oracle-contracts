@@ -184,10 +184,10 @@ describe('BlockManager', function () {
       let Cname;
       for (let i = 1; i <= 8; i++) {
         Cname = `Test Collection${String(i)}`;
-        await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+        await collectionManager.createCollection(500000, 3, 1, [i, i + 1], Cname);
       }
       Cname = 'Test Collection9';
-      await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+      await collectionManager.createCollection(500000, 3, 1, [9, 1], Cname);
 
       await blockManager.connect(signers[1]).claimBlockReward();
 
@@ -1558,8 +1558,8 @@ describe('BlockManager', function () {
         voteValues = await voteManager.getVoteValue(i, stakerIdAcc17);
         prod = age * voteValues;
         const tolerance = await collectionManager.getCollectionTolerance(i);
-        const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
-        const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
+        const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
+        const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
         if (medians[i] !== 0) {
           if (voteValues > maxVoteTolerance) {
             incorrectVotingPenalty += (prod / maxVoteTolerance - age);

@@ -4,5 +4,5 @@ pragma solidity ^0.8.0;
 interface ICollectionManagerParams {
     function setEpochLength(uint16 _epochLength) external;
 
-    function setMaxTolerance(uint16 _maxTolerance) external;
+    function setMaxTolerance(uint32 _maxTolerance) external;
 }

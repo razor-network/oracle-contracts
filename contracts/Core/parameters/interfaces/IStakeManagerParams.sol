@@ -5,9 +5,9 @@ interface IStakeManagerParams {
     function setEpochLength(uint16 _epochLength) external;
 
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external;
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;

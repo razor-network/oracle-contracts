@@ -96,10 +96,10 @@ describe('VoteManager', function () {
         let Cname;
         for (let i = 1; i <= 8; i++) {
           Cname = `Test Collection${String(i)}`;
-          await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+          await collectionManager.createCollection(500000, 3, 1, [i, i + 1], Cname);
         }
         Cname = 'Test Collection10';
-        await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+        await collectionManager.createCollection(500000, 3, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
         await razor.transfer(signers[1].address, tokenAmount('30000'));
@@ -396,9 +396,8 @@ describe('VoteManager', function () {
         expectedAgeAfter3 = expectedAgeAfter3 > 1000000 ? 1000000 : expectedAgeAfter3;
         for (let i = 0; i < votes2.length; i++) {
           const tolerance = await collectionManager.getCollectionTolerance(i);
-          const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
-          const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
-
+          const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
+          const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
           if (votes2[i] > maxVoteTolerance) {
             toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
@@ -1081,8 +1080,8 @@ describe('VoteManager', function () {
         expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
         for (let i = 0; i < votes2.length; i++) {
           const tolerance = await collectionManager.getCollectionTolerance(i);
-          const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
-          const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
+          const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
+          const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
 
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
           if (votes2[i] > maxVoteTolerance) {

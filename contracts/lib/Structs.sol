@@ -67,8 +67,8 @@ library Structs {
     struct Collection {
         bool active;
         uint16 id;
-        uint16 tolerance;
         int8 power;
+        uint32 tolerance;
         uint32 aggregationMethod;
         uint16[] jobIDs;
         string name;

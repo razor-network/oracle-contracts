@@ -29,10 +29,10 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
 
     event CollectionUpdated(
         uint16 id,
+        int8 power,
         uint32 epoch,
         uint32 aggregationMethod,
-        int8 power,
-        uint16 tolerance,
+        uint32 tolerance,
         uint16[] updatedJobIDs,
         uint256 timestamp
     );
@@ -107,7 +107,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
     }
 
     function createCollection(
-        uint16 tolerance,
+        uint32 tolerance,
         int8 power,
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
@@ -125,7 +125,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
 
         numCollections = numCollections + 1;
 
-        collections[numCollections] = Structs.Collection(true, numCollections, tolerance, power, aggregationMethod, jobIDs, name);
+        collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
         updateRegistryEpoch = epoch + 1;
@@ -136,7 +136,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
 
     function updateCollection(
         uint16 collectionID,
-        uint16 tolerance,
+        uint32 tolerance,
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
@@ -150,7 +150,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
 
-        emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
+        emit CollectionUpdated(collectionID, power, epoch, aggregationMethod, tolerance, jobIDs, block.timestamp);
     }
 
     function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
@@ -177,7 +177,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         return collections[id].active;
     }
 
-    function getCollectionTolerance(uint16 i) external view override returns (uint16) {
+    function getCollectionTolerance(uint16 i) external view override returns (uint32) {
         return collections[indexToIdRegistry[i + 1]].tolerance;
     }
 

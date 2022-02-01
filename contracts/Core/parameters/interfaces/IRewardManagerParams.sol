@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 interface IRewardManagerParams {
     function setEpochLength(uint16 _epochLength) external;
 
-    function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external;
+    function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external;
 
     function setBlockReward(uint256 _blockReward) external;
 
@@ -12,5 +12,5 @@ interface IRewardManagerParams {
 
     function setMaxAge(uint32 _maxAge) external;
 
-    function setMaxTolerance(uint16 _maxTolerance) external;
+    function setMaxTolerance(uint32 _maxTolerance) external;
 }
