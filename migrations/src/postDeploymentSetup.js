@@ -108,7 +108,7 @@ module.exports = async () => {
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, blockManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
-    voteManagerAddress, collectionManagerAddress, delegatorAddress, randomNoManagerAddress));
+    voteManagerAddress, collectionManagerAddress));
 
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));

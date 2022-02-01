@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
-import "../Core/parameters/child/RandomNoManagerParams.sol";
+import "../Core/parameters/ACL.sol";
 import "./IRandomNoClient.sol";
 import "./IRandomNoProvider.sol";
 import "../Initializable.sol";
@@ -13,7 +13,7 @@ import "./RandomNoStorage.sol";
  *  @notice : Allows clients to register for random no, and pull it once available
  */
 
-contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
+contract RandomNoManager is Initializable, StateManager, RandomNoStorage, ACL, IRandomNoClient, IRandomNoProvider {
     event RandomNumberAvailable(uint32 epoch);
 
     /// @param blockManagerAddress The address of the BlockManager Contract
@@ -26,8 +26,8 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
     /// this epoch is current epoch if Protocol is in commit state, and epoch + 1 if in any other states
     /// @return requestId : unique request id
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epoch = _getEpoch(epochLength);
-        State state = _getState(epochLength);
+        uint32 epoch = _getEpoch();
+        State state = _getState();
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
         // slither-disable-next-line incorrect-equality
@@ -62,7 +62,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
     /// @notice Allows client to get generic random number of last epoch
     /// @return random number
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         return _generateRandomNumber(epoch - 1, 0);
     }
 

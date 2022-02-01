@@ -2,8 +2,6 @@
 pragma solidity ^0.8.0;
 
 interface IStakeManagerParams {
-    function setEpochLength(uint16 _epochLength) external;
-
     function setSlashParams(
         uint16 _bounty,
         uint16 _burn,

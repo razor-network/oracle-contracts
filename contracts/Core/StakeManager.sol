@@ -98,7 +98,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         uint256 totalSupply = 0;
 
@@ -145,7 +145,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
@@ -180,7 +180,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
 
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
@@ -200,12 +200,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // after which he/she can call unlockWithdraw() to claim the locked RAZORS.
     /// @param stakerId The Id of staker associated with sRZR which user want to initiateWithdraw
     function initiateWithdraw(uint32 stakerId) external initialized whenNotPaused {
-        State currentState = _getState(epochLength);
+        State currentState = _getState();
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 
         require(stakerId != 0, "staker doesnt exist");
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
         require(lock.unlockAfter != 0, "Did not unstake");
@@ -233,7 +233,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     //receives the commission
     /// @param stakerId The Id of staker associated with sRZR which user want to unlockWithdraw
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         require(stakerId != 0, "staker doesnt exist");
 
         Structs.Staker storage staker = stakers[stakerId];
@@ -296,7 +296,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
             require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
@@ -310,7 +310,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     // Here we have added penalty to avoid repeating front-run unstake/witndraw attack
     function extendUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
         require(
             locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].unlockAfter + withdrawInitiationPeriod < epoch,
@@ -328,7 +328,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         lock.amount = lock.amount - penalty;
         staker.stake = staker.stake - rPenalty;
         lock.unlockAfter = epoch;
-        emit ExtendUnstakeLock(stakerId, msg.sender, _getEpoch(epochLength));
+        emit ExtendUnstakeLock(stakerId, msg.sender, _getEpoch());
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
 
@@ -393,7 +393,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /// @notice Allows bountyHunter to redeem their bounty once its locking period is over
     /// @param bountyId The ID of the bounty
     function redeemBounty(uint32 bountyId) external {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         uint256 bounty = bountyLocks[bountyId].amount;
 
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
@@ -514,6 +514,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
-        emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
+        emit ResetLock(stakerId, msg.sender, _getEpoch());
     }
 }
