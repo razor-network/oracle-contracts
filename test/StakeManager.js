@@ -2,7 +2,6 @@
 test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
-const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, WITHDRAW_LOCK_PERIOD, COLLECTION_MODIFIER_ROLE,
@@ -21,7 +20,6 @@ const {
 } = require('./helpers/testHelpers');
 const {
   getEpoch,
-  getState,
   toBigNumber,
   tokenAmount,
   getBiggestStakeAndId,
@@ -692,16 +690,15 @@ describe('StakeManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         const numActiveCollections = await collectionManager.getNumActiveCollections();
         const medians = [];
-        for(let i = 0; i < numActiveCollections; i++)
-        medians.push(0);
+        for (let i = 0; i < numActiveCollections; i++) medians.push(0);
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         let influenceSum = toBigNumber('0');
         for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
-          let result = toBigNumber('0');
-          for(let i = 0; i < commitment[3].length; i++){
-            for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
-              result = result.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
-          } 
+        let result = toBigNumber('0');
+        for (let i = 0; i < commitment[3].length; i++) {
+          for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
+            result = result.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
+          }
           medians[(commitment[3])[i]] = result.div(influenceSum);
           result = toBigNumber('0');
         }
@@ -1154,7 +1151,7 @@ describe('StakeManager', function () {
       const prevStake = staker.stake;
       // commit
       const epoch = await getEpoch();
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      // const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
       await voteManager.connect(signers[4]).commit(epoch, commitment1[0]);
 
