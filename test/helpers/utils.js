@@ -5,37 +5,38 @@ const {
 
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
+const { createMerkle, getProofPath } = require('./MerklePosAware');
 
 const calculateDisputesData = async (medianIndex, voteManager, stakeManager, collectionManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
-  const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
-
+  // const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
+  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
   let median = toBigNumber('0');
 
-  const sortedStakers = [];
-  const votes = [];
+  const sortedValues = [];
+  // const votes = [];
   let accProd = toBigNumber(0);
   // let accWeight;
   let infl;
   let vote;
+  const checkVotes = {};
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
-    vote = await voteManager.getVote(i);
-
-    if (vote[0] === epoch) {
-      sortedStakers.push(i);
-      votes.push(vote[1][medianIndex]);
-
-      infl = await voteManager.getInfluenceSnapshot(epoch, i);
-      // accWeight += infl;
-      accProd = accProd.add(toBigNumber(vote[1][medianIndex]).mul(infl));
+    vote = await voteManager.getVoteValue(epoch, i, medianIndex);
+    // if (vote[0] === epoch) {
+    //   sortedStakers.push(i);
+    //   votes.push(vote[1][medianIndex]);
+    if ((!(checkVotes[vote])) && (vote != 0)) {
+      sortedValues.push(vote);
     }
+    checkVotes[vote] = true;
+    infl = await voteManager.getInfluenceSnapshot(epoch, i);
+    // accWeight += infl;
+    accProd = accProd.add(toBigNumber(vote).mul(infl));
   }
-
   median = accProd.div(totalInfluenceRevealed);
-
   return {
-    median, totalInfluenceRevealed, accProd, sortedStakers,
+    median, totalInfluenceRevealed, accProd, sortedValues,
   };
 };
 
@@ -144,9 +145,9 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
   const epoch = getEpoch();
   const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
   const { biggestStake } = await getBiggestStakeAndId(stakeManager, voteManager);
-  const randaoHash = await voteManager.getRandaoHash();
+  const salt = await voteManager.getSalt();
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (!isElected) return i;
   }
   return 0;
@@ -156,6 +157,70 @@ const getState = async () => {
   const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
   const state = blockNumber.div(EPOCH_LENGTH.div(NUM_STATES));
   return state.mod(NUM_STATES).toNumber();
+};
+
+const getCommitAndRevealData = async (collectionManager, voteManager, blockManager, factor) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const salt = await voteManager.getSalt();
+  const toAssign = await voteManager.toAssign();
+  const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+  const seed = utils.solidityKeccak256(
+    ['bytes32', 'bytes32'],
+    [salt, secret]
+  );
+  // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+  const assignedCollections = {}; // For Tree
+  const seqAllotedCollections = []; // isCollectionAlloted
+  for (let i = 0; i < toAssign; i++) {
+    // console.log(seed);
+    const assigned = await prng(
+      numActiveCollections,
+      utils.solidityKeccak256(
+        ['bytes32', 'uint256'],
+        [seed, i]
+      )
+    );
+    // console.log('isALLOTED', utils.solidityKeccak256(
+    //   ['bytes32', 'uint256'],
+    //   [seed, i]
+    // ), assigned);
+    // console.log(typeof assignedCollections[assigned]);
+    assignedCollections[assigned] = true;
+    seqAllotedCollections.push(assigned);
+  }
+  // const assignedCollections = result[0];
+  // const seqAllotedCollections = result[1];
+  const leavesOfTree = [];
+
+  for (let i = 0; i < numActiveCollections; i++) {
+    if (assignedCollections[i]) {
+      leavesOfTree.push(((i + 1) * 100) + factor);
+    } else leavesOfTree.push(0);
+  }
+  const tree = await createMerkle(leavesOfTree);
+  // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], depth, seqAllotedCollections);
+  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
+  const proofs = [];
+  const values = [];
+
+  for (let j = 0; j < seqAllotedCollections.length; j++) {
+    values.push({
+      medianIndex: seqAllotedCollections[j],
+      value: (((Number(seqAllotedCollections[j]) + 1) * 100) + factor),
+    });
+
+    proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
+  }
+  // console.log(values[0].value);
+  const treeRevealData = {
+    values,
+    proofs,
+    root: tree[0][0],
+  };
+  const votesValueRevealed = [];
+  for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
+
+  return [commitment, treeRevealData, secret, seqAllotedCollections, tree[0][0], assignedCollections, votesValueRevealed, seed];
 };
 
 module.exports = {
@@ -174,4 +239,5 @@ module.exports = {
   toBigNumber,
   tokenAmount,
   maturity,
+  getCommitAndRevealData,
 };

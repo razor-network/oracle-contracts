@@ -12,6 +12,7 @@ import "./StateManager.sol";
 import "../Initializable.sol";
 import "../lib/MerklePosAware.sol";
 import "hardhat/console.sol";
+import "hardhat/console.sol";
 
 contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
