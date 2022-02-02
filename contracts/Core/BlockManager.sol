@@ -95,7 +95,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedValues.length; i++) {
-            require(sortedValues[i] > lastVisitedValue, "sortedStaker <= LVS "); // LVS : Last Visited Staker
+            require(sortedValues[i] > lastVisitedValue, "sortedValue <= LVV "); // LVS : Last Visited Value
             lastVisitedValue = sortedValues[i];
 
             // slither-disable-next-line calls-loop
