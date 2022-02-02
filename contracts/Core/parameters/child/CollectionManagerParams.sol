@@ -5,6 +5,7 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
+    // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
 
     function setMaxTolerance(uint32 _maxTolerance) external override onlyRole(GOVERNANCE_ROLE) {

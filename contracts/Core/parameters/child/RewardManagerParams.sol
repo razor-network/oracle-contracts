@@ -9,6 +9,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     uint16 public gracePeriod = 8;
     uint32 public maxAge = 100 * 10000;
     uint256 public blockReward = 100 * (10**18);
+    // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
 
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {

@@ -132,6 +132,7 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+        // slither-disable-next-line too-many-digits
         require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);

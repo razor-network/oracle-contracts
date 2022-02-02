@@ -20,6 +20,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public deltaCommission = 3;
     uint16 public gracePeriod = 8;
     uint16 public epochLimitForUpdateCommission = 100;
+    // slither-disable-next-line too-many-digits
     SlashNums public slashNums = SlashNums(500000, 9500000, 0);
     // Slash Penalty = bounty + burned + kept
     uint256 public minStake = 20000 * (10**18);
