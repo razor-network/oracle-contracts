@@ -26,7 +26,7 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
     // if (vote[0] === epoch) {
     //   sortedStakers.push(i);
     //   votes.push(vote[1][medianIndex]);
-    if ((!(checkVotes[vote])) && (vote != 0)) {
+    if ((!(checkVotes[vote])) && (vote !== 0)) {
       sortedValues.push(vote);
     }
     checkVotes[vote] = true;

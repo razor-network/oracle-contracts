@@ -22,7 +22,6 @@ const {
 const { setupContracts } = require('./helpers/testSetup');
 const {
   getEpoch,
-  getState,
   getIteration,
   getBiggestStakeAndId,
   toBigNumber,
@@ -148,7 +147,7 @@ describe('VoteManager', function () {
         const age2 = await stakeManager.getAge(stakerIdAcc3);
         assertBNEqual(age1, age2, 'age1, age2 not equal');
 
-        const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
 
         const commitment3 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         await voteManager.connect(signers[4]).commit(epoch, commitment3[0]);
@@ -157,7 +156,7 @@ describe('VoteManager', function () {
         const age4 = await stakeManager.getAge(stakerIdAcc4);
         assertBNEqual(age3, age4, 'age3, age4 not equal');
 
-        const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
 
         const commitment4 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         await voteManager.connect(signers[2]).commit(epoch, commitment4[0]);
@@ -168,7 +167,7 @@ describe('VoteManager', function () {
 
       it('should not be able to commit if already commited in a particular epoch', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         const tx = voteManager.connect(signers[3]).commit(epoch, commitment1[0]);
         await assertRevert(tx, 'already commited');
@@ -182,7 +181,7 @@ describe('VoteManager', function () {
 
       it('should not be able to commit if staker does not exists', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         const tx = voteManager.connect(signers[7]).commit(epoch, commitment1[0]);
         await assertRevert(tx, 'Staker does not exist');
@@ -194,7 +193,7 @@ describe('VoteManager', function () {
 
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
 
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         //
         await mineToNextState(); // reveal
         //
@@ -212,7 +211,7 @@ describe('VoteManager', function () {
         const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
         assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex), voteValueForThatMedianIndex, 'Votes are not matching');
 
-        const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         const commitment4 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         await voteManager.connect(signers[4]).reveal(epoch, commitment4[1], commitment4[2]);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -220,7 +219,7 @@ describe('VoteManager', function () {
         dataRevealedThisEpoch.influence.push(influenceAcc4);
         dataRevealedThisEpoch.values.push(commitment4[6]);
 
-        const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         const commitment2 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         await voteManager.connect(signers[2]).reveal(epoch, commitment2[1], commitment2[2]);
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
@@ -234,7 +233,7 @@ describe('VoteManager', function () {
 
       it('should not be able to reveal if secret is zero', async function () {
         const epoch = await getEpoch();
-        const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         const commitment2 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         const tx = voteManager.connect(signers[4]).reveal(epoch, commitment2[1], '0x0000000000000000000000000000000000000000000000000000000000000000');
         await assertRevert(tx, 'secret cannot be empty');
@@ -273,17 +272,17 @@ describe('VoteManager', function () {
         await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[3]).commit(epoch, commitment1[0]);
 
-        const votes2 = [106, 206, 306, 406, 506, 606, 706, 806, 906];
+        // const votes2 = [106, 206, 306, 406, 506, 606, 706, 806, 906];
 
         const commitment2 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 20);
         await voteManager.connect(signers[4]).commit(epoch, commitment2[0]);
 
-        const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
+        // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
 
         const commitment3 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 4);
         await voteManager.connect(signers[2]).commit(epoch, commitment3[0]);
@@ -362,7 +361,7 @@ describe('VoteManager', function () {
         await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
 
@@ -408,7 +407,7 @@ describe('VoteManager', function () {
 
           // calculating for staker 4
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-          if (votes2[i] != 0) {
+          if (votes2[i] !== 0) {
             if (votes2[i] > maxVoteTolerance) {
               toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
               penalty = penalty.add(toAdd);
@@ -446,7 +445,7 @@ describe('VoteManager', function () {
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
 
         await governance.grantRole(GOVERNER_ROLE, signers[0].address);
@@ -475,7 +474,7 @@ describe('VoteManager', function () {
       it('staker should not be snitched on multiple times for same mal activity irrespective of slashPenalty', async function () {
         const epoch = await getEpoch();
 
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4], commitment1[2], signers[4].address);
 
@@ -485,7 +484,7 @@ describe('VoteManager', function () {
 
       it('staker should not be able to snitch from himself', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[4]).snitch(epoch, commitment1[4], commitment1[2], signers[4].address);
         await assertRevert(tx, 'cant snitch on yourself');
@@ -493,7 +492,7 @@ describe('VoteManager', function () {
 
       it('should not be able to snitch from a staker who does not exists', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4], commitment1[2], signers[7].address);
         await assertRevert(tx, 'Staker does not exist');
@@ -501,17 +500,19 @@ describe('VoteManager', function () {
 
       it('Should not be able to snitch with incorrect secret or values', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-        const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4], '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc', signers[4].address);
+        const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4],
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc', signers[4].address);
         await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('Should not be able to snitch from an innocent staker if secret provided is empty', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-        const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4], '0x0000000000000000000000000000000000000000000000000000000000000000', signers[4].address);
+        const tx = voteManager.connect(signers[10]).snitch(epoch, commitment1[4],
+          '0x0000000000000000000000000000000000000000000000000000000000000000', signers[4].address);
         await assertRevert(tx, 'secret cannot be empty');
       });
 
@@ -521,7 +522,7 @@ describe('VoteManager', function () {
 
         // const ageBefore = (await stakeManager.stakers(stakerIdAcc3)).age;
 
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         await mineToNextState(); // reveal
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
@@ -537,7 +538,7 @@ describe('VoteManager', function () {
 
       it('should not be able to reveal if staker does not exists', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[7]).reveal(epoch, commitment[1], commitment[2]); // arguments getvVote => epoch, stakerId, assetId
 
@@ -580,7 +581,7 @@ describe('VoteManager', function () {
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('999'));
         staker = await stakeManager.getStaker(stakerId);
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
 
         await voteManager.connect(signers[7]).commit(epoch, commitment1[0]);
@@ -590,7 +591,7 @@ describe('VoteManager', function () {
 
       it('Staker should not be able to reveal if not committed', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         await mineToNextState(); // reveal
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
@@ -600,7 +601,7 @@ describe('VoteManager', function () {
 
       it('should not be able to commit other than in commit state', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[7]).commit(epoch, commitment1[0]);
@@ -611,16 +612,16 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('20000'));
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-        const tx1 = voteManager.connect(signers[7]).commit(epoch, commitment[0]);
+        await voteManager.connect(signers[7]).commit(epoch, commitment[0]);
         const tx2 = voteManager.connect(signers[7]).reveal(epoch, commitment[1], commitment[2]);
         await assertRevert(tx2, 'incorrect state');
       });
 
       it('Should not be able to reveal others secret if not in commit state', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await mineToNextState(); // reveal
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[10]).snitch(epoch, commitment[4], commitment[2], signers[7].address);
@@ -629,7 +630,7 @@ describe('VoteManager', function () {
 
       it('Should not be able to reveal with incorrect value', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 2);
         const tx = voteManager.connect(signers[7]).reveal(epoch, commitment[1], commitment[2]);
         await assertRevert(tx, 'incorrect secret/value');
@@ -637,16 +638,17 @@ describe('VoteManager', function () {
 
       it('Should not be able to reveal with incorrect secret', async function () {
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 2);
-        const tx = voteManager.connect(signers[7]).reveal(epoch, commitment[1], '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc'); // last digit 'd' changed to 'c' for having incorrect secret
+        const tx = voteManager.connect(signers[7]).reveal(epoch, commitment[1],
+          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc'); // last digit 'd' changed to 'c' for having incorrect secret
         await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('should not be able to call snitch on a staker if staker has not commited in present epoch', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[10]).snitch(epoch, commitment[4], commitment[2], signers[4].address);
         await assertRevert(tx, 'not committed in this epoch');
@@ -655,7 +657,7 @@ describe('VoteManager', function () {
       it('Staker should not be able to commit in present epoch for commitment of next epoch', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         const tx = voteManager.connect(signers[7]).commit(epoch + 1, commitment[0]);
         await assertRevert(tx, 'incorrect epoch');
@@ -665,7 +667,7 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         const staker = await stakeManager.getStaker(stakerId);
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[7]).commit(epoch, commitment[0]);
 
@@ -687,12 +689,12 @@ describe('VoteManager', function () {
 
         await stakeManager.connect(signers[6]).stake(epoch, tokenAmount('0'));
 
-        const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment3 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[6]).commit(epoch, commitment3[0]);
 
         const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const bountyCounterBefore = await stakeManager.bountyCounter();
         await voteManager.connect(signers[10]).snitch(epoch, commitment3[4], commitment3[2], signers[6].address);
@@ -708,13 +710,13 @@ describe('VoteManager', function () {
         let epoch = await getEpoch();
         await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('1'));
 
-        const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment3 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[5]).commit(epoch, commitment3[0]);
 
         const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
         const stakeBeforeAcc5 = (await stakeManager.stakers(stakerIdAcc5)).stake;
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         const balanceBeforeAcc10 = await razor.balanceOf(signers[10].address);
 
@@ -772,7 +774,7 @@ describe('VoteManager', function () {
       //   await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('20000'));
       //   await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('20000'));
       //
-      //   const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       //
       //   const commitment1 = utils.solidityKeccak256(
       //     ['uint32', 'uint48[]', 'bytes32'],
@@ -830,7 +832,7 @@ describe('VoteManager', function () {
       //
       //   let epoch = await getEpoch();
       //
-      //   const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       //
       //   const commitment1 = utils.solidityKeccak256(
       //     ['uint32', 'uint48[]', 'bytes32'],
@@ -845,7 +847,7 @@ describe('VoteManager', function () {
       //
       //   epoch = await getEpoch();
       //
-      //   const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      //   // const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
       //   await mineToNextState(); // reveal
       //
       //   await voteManager.connect(signers[8]).reveal(epoch, votes2,
@@ -914,7 +916,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerIdAcc3);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // commit state
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[3]).commit(epoch, commitment[0]);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
@@ -959,7 +961,7 @@ describe('VoteManager', function () {
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // commit state
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[3]).commit(epoch, commitment[0]);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
@@ -968,7 +970,7 @@ describe('VoteManager', function () {
       it('slashed staker should not be able to participate after it is slashed', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+        // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const staker = await stakeManager.getStaker(stakerIdAcc4);
         const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
@@ -997,19 +999,19 @@ describe('VoteManager', function () {
       //   await mineToNextState();
       //   let epoch = await getEpoch();
       //   await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
-      //   const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+      //   // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
       //   const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
       //   await voteManager.connect(signers[3]).commit(epoch, commitment1[0]);
-      // 
-      //   // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
+      //
+      //   // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
       //   const commitment2 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 20);
       //   await voteManager.connect(signers[15]).commit(epoch, commitment2[0]);
-      // 
+      //
       //   await mineToNextState();
-      // 
+      //
       //   const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
       //   const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
-      // 
+      //
       //   await voteManager.connect(signers[3]).reveal(epoch, commitment1[1], commitment1[2]); // arguments getvVote => epoch, stakerId, assetId
       //   const influenceAcc3 = await voteManager.getInfluenceSnapshot(epoch, stakerIdAcc3);
       //   dataRevealedThisEpoch.influence.push(influenceAcc3);
@@ -1020,12 +1022,12 @@ describe('VoteManager', function () {
       //   dataRevealedThisEpoch.influence.push(influenceAcc15);
       //   dataRevealedThisEpoch.values.push(commitment2[6]);
       //   console.log('reached');
-      // 
-      // 
+      //
+      //
       //   await mineToNextState(); // propose
-      // 
+      //
       //   const staker = await stakeManager.getStaker(stakerIdAcc3);
-      // 
+      //
       //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
       //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       //   const numActiveCollections = await collectionManager.getNumActiveCollections();
@@ -1045,7 +1047,7 @@ describe('VoteManager', function () {
       //     medians,
       //     iteration,
       //     biggestStakerId);
-      // 
+      //
       //   const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
       //   await mineToNextState(); // dispute
       //   await mineToNextState(); // confirm
@@ -1053,11 +1055,11 @@ describe('VoteManager', function () {
       //   await mineToNextState(); // commit
       //   epoch = await getEpoch();
       //   await voteManager.connect(signers[15]).commit(epoch, commitment1[0]);
-      // 
+      //
       //   let penalty = toBigNumber(0);
       //   let toAdd = toBigNumber(0);
       //   let prod = toBigNumber(0);
-      //   const votes2 = [];
+      //   // const votes2 = [];
       //   for (let i = 0; i < medians.length; i++) {
       //     votes2.push(0);
       //   }
@@ -1074,7 +1076,7 @@ describe('VoteManager', function () {
       //     const tolerance = await collectionManager.getCollectionTolerance(i);
       //     const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
       //     const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-      // 
+      //
       //     prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
       //     if (votes2[i] != 0) {
       //       if (votes2[i] > maxVoteTolerance) {
