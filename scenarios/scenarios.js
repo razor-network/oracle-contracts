@@ -343,6 +343,7 @@ describe('Scenarios', async () => {
 
     for (let i = 1; i <= 5; i++) {
       await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       epoch = await getEpoch();
       // we're doing a unstake such that stake becomes less than the minStake
 
@@ -357,6 +358,7 @@ describe('Scenarios', async () => {
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
 
+    await mineToNextEpoch();
     // commit
     votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -523,6 +525,7 @@ describe('Scenarios', async () => {
 
     for (let i = 1; i <= 5; i++) {
       await mineToNextEpoch();
+      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
       const epoch = await getEpoch();
       // we're doing a partial unstake here , though full unstake has the same procedure
 
@@ -538,6 +541,7 @@ describe('Scenarios', async () => {
       assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     }
 
+    await mineToNextEpoch();
     // staking again
     const votesarray = [];
     for (let i = 1; i <= 5; i++) {
@@ -667,6 +671,7 @@ describe('Scenarios', async () => {
 
     // delegator unstakes its stake
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     const stakerIdAcc5 = await stakeManager.getStaker(5);
     const sToken2 = await stakedToken.attach(stakerIdAcc5.tokenAddress);
@@ -676,6 +681,7 @@ describe('Scenarios', async () => {
     const lock = await stakeManager.locks(signers[5].address, stakerIdAcc5.tokenAddress);
     assertBNEqual(lock.withdrawAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
+    await mineToNextEpoch();
     // staker will not able to participate again because it's stake is now less than minimum stake
     epoch = await getEpoch();
     votes = await getVote(medians);
@@ -726,6 +732,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -783,6 +790,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -853,6 +861,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -865,6 +874,7 @@ describe('Scenarios', async () => {
     await assertRevert(tx, 'Withdraw epoch not reached');
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     await stakeManager.connect(signers[1]).withdraw(staker.id);
 
@@ -905,6 +915,7 @@ describe('Scenarios', async () => {
     // confirm
 
     await mineToNextEpoch();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
 
     staker = await stakeManager.getStaker(1);
@@ -925,6 +936,7 @@ describe('Scenarios', async () => {
     await stakeManager.connect(signers[1]).withdraw(staker.id);
 
     await governance.setWithdrawReleasePeriod(2); // withdraw release period is decreased
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await stakeManager.connect(signers[1]).unstake(1, amount);
     for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
       await mineToNextEpoch();
@@ -1546,6 +1558,7 @@ describe('Scenarios', async () => {
     }
 
     // Delagator unstakes
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     epoch = await getEpoch();
     const amount = tokenAmount('100'); // unstaking
     stakerId = await stakeManager.stakerIds(signers[3].address);
