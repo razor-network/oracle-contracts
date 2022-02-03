@@ -30,6 +30,7 @@ const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
   mumbai: 80001,
+  skale: 0x17ac300421d1b,
 };
 
 module.exports = {
@@ -78,6 +79,11 @@ module.exports = {
       },
     },
     mumbai: {
+      url: PROVIDER_URL || '',
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+    },
+    skale: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],

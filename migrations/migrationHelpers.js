@@ -148,7 +148,9 @@ const getCollections = async () => {
 
 const currentState = async (numStates, stateLength) => {
   const blockNumber = await ethers.provider.getBlockNumber();
-  return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
+  const getCurrentBlock = await web3.eth.getBlock(Number(blockNumber));
+  const timestamp = getCurrentBlock.timestamp;
+  return Number(((BigNumber.from(timestamp)).div(stateLength)).mod(numStates));
 };
 
 function sleep(ms) {
