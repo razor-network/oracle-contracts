@@ -3,10 +3,10 @@ build/
 coverage/
 coverage.json
 cache/
-deployed/mumbai/abi
+deployed/skale/abi
 abi
 .env
-.env.mumbai
+.env.skale
 .env.local
 node_modules/
 .DS_Store
