@@ -109,7 +109,7 @@ describe('RandomNoManager', function () {
       await mineToNextState();
 
       // Reveal
-      await reveal(signers[5], voteManager);
+      await reveal(signers[5], 0, voteManager);
 
       // Registering with unique reqId
       await randomNoManager.connect(signers[1]).register();

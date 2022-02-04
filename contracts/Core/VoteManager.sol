@@ -82,9 +82,13 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
         for (uint16 i = 0; i < tree.values.length; i++) {
             require(_isAssetAllotedToStaker(seed, i, tree.values[i].medianIndex), "Revealed asset not alloted");
+            // If Job Not Revealed before, like its not in same reveal batch of this
+            // As it would be redundant to check
+            // please note due to this job result cant be zero
             if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) {
                 // Check if asset value is zero
-                // If Job Not Revealed before, please note due to this job result cant be zero
+                // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
+                require(tree.values[i].value != 0, "0 vote for assigned coll");
                 // slither-disable-next-line calls-loop
                 // reason to ignore : its internal lib not a external call
                 require(

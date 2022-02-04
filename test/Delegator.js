@@ -48,6 +48,7 @@ describe('Delegator', function () {
   });
   describe('Delegator', function () {
     it('Admin role should be granted', async () => {
+      await mineToNextEpoch();
       assert(await delegator.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });
 
