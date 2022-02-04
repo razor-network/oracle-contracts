@@ -169,8 +169,20 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+
+        // 0,1,2,3
+        // 1,2,3,4
+
+        // 0,1,2
+        // 1,2,4
+
+        // only 1,2 revealed
+
+        uint16 currentId = collectionManager.getIndexToIdFutureRegistryValue(medianIndex);
+        uint16 oldIndex = collectionManager.getIdToIndexRegistryValue(currentId);
+
         require(
-            proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch - 1].medians[medianIndex],
+            proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch - 1].medians[oldIndex],
             "Block proposed with corr medians"
         );
         return _executeDispute(epoch, blockIndex, blockId);

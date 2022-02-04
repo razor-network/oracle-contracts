@@ -100,8 +100,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 epoch = _getEpoch(epochLength);
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
+            // @dev : doubt @samAG9
             _updateRegistry();
         }
+        _updateRegistryFuture();
 
         if (!collections[id].active) {
             numActiveCollections = numActiveCollections + 1;
@@ -112,7 +114,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
-        voteManager.storeDepth(_getDepth());
+        voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
     }
 
     function createCollection(
@@ -131,7 +133,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
         }
-
+        _updateRegistryFuture();
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, tolerance, power, aggregationMethod, jobIDs, name);
@@ -216,15 +218,32 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return idToIndexRegistry[id];
     }
 
+    function getIndexToIdFutureRegistryValue(uint16 index) external view override returns (uint16) {
+        return indexToIdRegistryFuture[index];
+    }
+
     function _updateRegistry() internal {
         uint16 j = 1;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
                 idToIndexRegistry[i] = j;
+                // todo : opt : can we use future reg and assign directly, would save this SSTORE
                 indexToIdRegistry[j] = i;
                 j = j + 1;
             } else {
                 idToIndexRegistry[i] = 0;
+            }
+        }
+    }
+
+    function _updateRegistryFuture() internal {
+        uint16 j = 1;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                indexToIdRegistryFuture[j] = i;
+                j = j + 1;
+            } else {
+                indexToIdRegistryFuture[i] = 0;
             }
         }
     }
