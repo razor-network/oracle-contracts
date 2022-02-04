@@ -29,6 +29,8 @@ const {
   getCommitAndRevealData,
 } = require('./helpers/utils');
 
+const { commit, reveal, propose } = require('./helpers/InternalEngine');
+
 describe('VoteManager', function () {
   describe('BlockManager', function () {
     let signers;
@@ -992,106 +994,65 @@ describe('VoteManager', function () {
           await assertRevert(tx2, 'not elected');
         }
       });
-      // it('Correct penalties need to be given even after an asset has been deactivated', async function () {
-      //   await mineToNextState();
-      //   await mineToNextState();
-      //   await collectionManager.setCollectionStatus(false, 9);
-      //   await mineToNextState();
-      //   let epoch = await getEpoch();
-      //   await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
-      //   // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
-      //   const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-      //   await voteManager.connect(signers[3]).commit(epoch, commitment1[0]);
-      //
-      //   // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
-      //   const commitment2 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 20);
-      //   await voteManager.connect(signers[15]).commit(epoch, commitment2[0]);
-      //
-      //   await mineToNextState();
-      //
-      //   const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
-      //   const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
-      //
-      //   await voteManager.connect(signers[3]).reveal(epoch, commitment1[1], commitment1[2]); // arguments getvVote => epoch, stakerId, assetId
-      //   const influenceAcc3 = await voteManager.getInfluenceSnapshot(epoch, stakerIdAcc3);
-      //   dataRevealedThisEpoch.influence.push(influenceAcc3);
-      //   dataRevealedThisEpoch.values.push(commitment1[6]);
-      //   console.log('reached');
-      //   await voteManager.connect(signers[15]).reveal(epoch, commitment2[1], commitment2[2]);
-      //   const influenceAcc15 = await voteManager.getInfluenceSnapshot(epoch, stakerIdAcc15);
-      //   dataRevealedThisEpoch.influence.push(influenceAcc15);
-      //   dataRevealedThisEpoch.values.push(commitment2[6]);
-      //   console.log('reached');
-      //
-      //
-      //   await mineToNextState(); // propose
-      //
-      //   const staker = await stakeManager.getStaker(stakerIdAcc3);
-      //
-      //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      //   const numActiveCollections = await collectionManager.getNumActiveCollections();
-      //   const medians = [];
-      //   for (let i = 0; i < numActiveCollections; i++) medians.push(0);
-      //   let influenceSum = toBigNumber('0');
-      //   for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
-      //   let result = toBigNumber('0');
-      //   for (let i = 0; i < commitment1[3].length; i++) {
-      //     for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
-      //       result = result.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
-      //     }
-      //     medians[(commitment1[3])[i]] = result.div(influenceSum);
-      //     result = toBigNumber('0');
-      //   }
-      //   await blockManager.connect(signers[3]).propose(epoch,
-      //     medians,
-      //     iteration,
-      //     biggestStakerId);
-      //
-      //   const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
-      //   await mineToNextState(); // dispute
-      //   await mineToNextState(); // confirm
-      //   await blockManager.connect(signers[3]).claimBlockReward();
-      //   await mineToNextState(); // commit
-      //   epoch = await getEpoch();
-      //   await voteManager.connect(signers[15]).commit(epoch, commitment1[0]);
-      //
-      //   let penalty = toBigNumber(0);
-      //   let toAdd = toBigNumber(0);
-      //   let prod = toBigNumber(0);
-      //   // const votes2 = [];
-      //   for (let i = 0; i < medians.length; i++) {
-      //     votes2.push(0);
-      //   }
-      //   for (let j = 0; j < ((dataRevealedThisEpoch.values)[1]).length; j++) {
-      //     const voteValue = ((dataRevealedThisEpoch.values)[1])[j];
-      //     console.log(voteValue);
-      //     const val = toBigNumber(voteValue).div(toBigNumber(100));
-      //     votes2[val - 1] = voteValue;
-      //   }
-      //   dataRevealedThisEpoch = { influence: [], values: [] };
-      //   let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
-      //   expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
-      //   for (let i = 0; i < votes2.length; i++) {
-      //     const tolerance = await collectionManager.getCollectionTolerance(i);
-      //     const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-      //     const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-      //
-      //     prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-      //     if (votes2[i] != 0) {
-      //       if (votes2[i] > maxVoteTolerance) {
-      //         toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
-      //         penalty = penalty.add(toAdd);
-      //       } else if (votes2[i] < minVoteTolerance) {
-      //         toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
-      //         penalty = penalty.add(toAdd);
-      //       }
-      //     }
-      //   }
-      //   expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
-      //   const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
-      //   assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
-      // });
+      it('Correct penalties need to be given even after an asset has been deactivated', async function () {
+        await mineToNextState();
+        await mineToNextState();
+        await collectionManager.setCollectionStatus(false, 9);
+        await mineToNextState();
+        const epoch = await getEpoch();
+        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800];
+
+        const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+        await commit(signers[15], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 15, voteManager, collectionManager, secret);
+        await mineToNextState();
+
+        await reveal(signers[15], 0, voteManager);
+        await reveal(signers[3], 15, voteManager);
+        await mineToNextState();
+
+        await propose(signers[3], medians, stakeManager, blockManager, voteManager);
+        await mineToNextState();
+
+        await mineToNextState();
+
+        const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
+
+        const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
+        await blockManager.connect(signers[3]).claimBlockReward();
+        await mineToNextState(); // commit
+        await commit(signers[15], 0, voteManager, collectionManager, secret);
+
+        let penalty = toBigNumber(0);
+        let toAdd = toBigNumber(0);
+        let prod = toBigNumber(0);
+        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
+        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
+
+        const votes2 = [0, 0, 0, 415, 515, 0, 715, 0];
+
+        for (let i = 0; i < votes2.length; i++) {
+          if (votes2[i] !== 0) {
+            const tolerance = await collectionManager.getCollectionTolerance(i);
+            const maxVoteTolerance = medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR);
+            const minVoteTolerance = medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR);
+
+            prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
+            if (votes2[i] > maxVoteTolerance) {
+              toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+              penalty = penalty.add(toAdd);
+            } else if (votes2[i] < minVoteTolerance) {
+              toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+              penalty = penalty.add(toAdd);
+            }
+          }
+        }
+        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
+
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
+        assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
+      });
     });
   });
 });

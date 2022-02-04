@@ -102,7 +102,7 @@ describe('AssignCollectionsRandomly', function () {
       await commit(signers[1], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[1], voteManager);
+      await reveal(signers[1], 0, voteManager);
       await mineToNextState();
 
       await propose(signers[1], [0, 0, 300, 400, 0], stakeManager, blockManager, voteManager);
@@ -136,9 +136,9 @@ describe('AssignCollectionsRandomly', function () {
       await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
 
-      await reveal(signers[1], voteManager);
-      await reveal(signers[2], voteManager);
-      await reveal(signers[3], voteManager);
+      await reveal(signers[1], 0, voteManager);
+      await reveal(signers[2], 0, voteManager);
+      await reveal(signers[3], 0, voteManager);
       await mineToNextState();
 
       // Collections revealed

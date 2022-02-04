@@ -99,7 +99,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], voteManager);
+      await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
       await propose(signers[5], [100], stakeManager, blockManager, voteManager);
@@ -137,7 +137,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], voteManager);
+      await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
       await propose(signers[5], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
@@ -168,7 +168,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], voteManager);
+      await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
       await propose(signers[5], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
@@ -218,7 +218,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], voteManager);
+      await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
       await propose(signers[5], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);

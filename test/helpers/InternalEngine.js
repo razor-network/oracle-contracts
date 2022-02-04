@@ -100,13 +100,13 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret)
 //     bytes32[][] proofs;
 //     bytes32 root;
 // }
-const reveal = async (signer, voteManager) => {
+const reveal = async (signer, deviation, voteManager) => {
   const proofs = [];
   const values = [];
   for (let j = 0; j < store[signer.address].seqAllotedCollections.length; j++) {
     values.push({
       medianIndex: store[signer.address].seqAllotedCollections[j],
-      value: (Number(store[signer.address].seqAllotedCollections[j]) + 1) * 100,
+      value: (Number(store[signer.address].seqAllotedCollections[j]) + 1) * 100 + deviation,
       // this +1 is done only for maint vote value as 100 for 0, 200 for 1,
       // its not related to any concept, ofc 0 cant be valid vote result so we couldnr have 0 value for 0
       // this is not needed on node, as there we will have real values
