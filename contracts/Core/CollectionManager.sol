@@ -112,6 +112,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        voteManager.storeDepth(_getDepth());
     }
 
     function createCollection(
@@ -159,7 +160,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
         emit CollectionUpdated(collectionID, epoch, aggregationMethod, power, tolerance, jobIDs, block.timestamp);
-        voteManager.storeDepth(_getDepth());
     }
 
     function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
@@ -242,7 +242,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         // n = n+ 1 == 5
 
         uint256 x = numActiveCollections;
-
         // X = 2 ** n ;
 
         // Optimised way

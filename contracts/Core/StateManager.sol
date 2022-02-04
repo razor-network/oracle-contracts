@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./storage/Constants.sol";
-import "hardhat/console.sol";
 
 contract StateManager is Constants {
     modifier checkEpoch(uint32 epoch, uint32 epochLength) {

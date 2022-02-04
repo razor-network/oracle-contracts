@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
-import "hardhat/console.sol";
 
 /**
  * @dev These functions deal with verification of Merkle trees (hash trees),
@@ -14,7 +13,7 @@ library MerklePosAware {
         uint16[] memory medianIndex,
         uint256 depth,
         uint16 maxAssets
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
         for (uint256 i = 0; i < proofs.length; i++) {
             if (!verify(proofs[i], root, leaves[i], medianIndex[i], depth, maxAssets)) return false;
         }
@@ -34,7 +33,7 @@ library MerklePosAware {
         uint16 medianIndex,
         uint256 depth,
         uint16 maxAssets
-    ) internal view returns (bool) {
+    ) internal pure returns (bool) {
         bytes32 computedHash = leaf;
         bytes memory seq = bytes(getSequence(medianIndex, depth));
 
