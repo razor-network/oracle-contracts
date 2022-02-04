@@ -288,6 +288,9 @@ describe('BlockManager', function () {
         medians[(commitment[3])[i]] = result.div(influenceSum);
         result = toBigNumber('0');
       }
+      // @dev : follwoing is a quick fix for this linting error
+      // I couldnt understand what it meant
+      // eslint-disable-next-line prefer-destructuring
       validMedianIndexToBeDisputed = (commitment[3])[0];
       medians[validMedianIndexToBeDisputed] += 1;
       await blockManager.connect(signers[1]).propose(epoch,
@@ -712,6 +715,9 @@ describe('BlockManager', function () {
         result = toBigNumber('0');
       }
       const arr = commitment1[3];
+      // @dev : follwoing is a quick fix for this linting error
+      // We couldnt understand what it meant
+      // eslint-disable-next-line prefer-destructuring
       validMedianIndexToBeDisputed = arr[0];
       medians[validMedianIndexToBeDisputed] += 1;
       await blockManager.connect(signers[6]).propose(epoch,
