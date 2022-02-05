@@ -340,7 +340,7 @@ describe('BlockManager', function () {
       assertBNEqual(nblocks, toBigNumber('2'), 'Only one block has been proposed till now. Incorrect Answer');
     });
 
-    it('should be able to dispute', async function () {
+    it('Give sorted should not work if given medianIndex is invalid', async function () {
       await mineToNextState();
       const epoch = await getEpoch();
       const {
@@ -1441,7 +1441,7 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[12]).claimBlockReward();
     });
 
-    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
+    it('Should not be able to dispute the proposedBlock if correctBiggestStakerId is incorrect', async function () {
       await mineToNextEpoch();
       const epoch = await getEpoch();
 
@@ -1495,6 +1495,27 @@ describe('BlockManager', function () {
 
       await mineToNextState(); // dispute
       let stakerId;
+      if (iteration < iteration1) {
+        stakerId = await stakeManager.stakerIds(signers[9].address);
+      } else {
+        stakerId = await stakeManager.stakerIds(signers[8].address);
+      }
+      staker = await stakeManager.getStaker(stakerId);
+      assertBNEqual(await blockManager.blockIndexToBeConfirmed(), toBigNumber('0'));
+      const tx = blockManager.disputeBiggestStakeProposed(epoch, 0, 15);
+      await assertRevert(tx, 'Invalid dispute : Stake');
+    });
+
+    it('Should be able to dispute the proposedBlock with incorrect influnce', async function () {
+      const epoch = await getEpoch();
+      let stakerId;
+      const stakerIdAcc10 = await stakeManager.stakerIds(signers[9].address);
+      let staker = await stakeManager.getStaker(stakerIdAcc10);
+      const stakeMid = (await voteManager.getInfluenceSnapshot(epoch, 12));
+      const iteration = await getIteration(voteManager, stakeManager, staker, stakeMid);
+      const stakerIdAcc11 = await stakeManager.stakerIds(signers[8].address);
+      staker = await stakeManager.getStaker(stakerIdAcc11);
+      const iteration1 = await getIteration(voteManager, stakeManager, staker, stakeMid);
       if (iteration < iteration1) {
         stakerId = await stakeManager.stakerIds(signers[9].address);
       } else {
