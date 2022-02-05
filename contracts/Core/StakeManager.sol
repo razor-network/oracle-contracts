@@ -79,6 +79,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     event CommissionChanged(uint32 indexed stakerId, uint8 commision);
 
+    event Slashed(uint32 bountyId, address bountyHunter);
+
     /// @param razorAddress The address of the Razor token ERC20 contract
     /// @param rewardManagerAddress The address of the RewardManager contract
     /// @param voteManagersAddress The address of the VoteManager contract
@@ -355,7 +357,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) returns (uint32) {
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
 
         uint256 bounty;
@@ -377,17 +379,16 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         stakers[stakerId].isSlashed = true;
         _setStakerStake(epoch, stakerId, StakeChanged.Slashed, _stake + slashPenaltyAmount, _stake);
 
-        if (bounty == 0) return 0;
+        if (bounty == 0) return;
         bountyCounter = bountyCounter + 1;
         bountyLocks[bountyCounter] = Structs.BountyLock(epoch + withdrawLockPeriod, bountyHunter, bounty);
 
+        emit Slashed(bountyCounter, bountyHunter);
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
         // slither-disable-next-line unchecked-transfer
         razor.transfer(BURN_ADDRESS, amountToBeBurned);
-
-        return bountyCounter;
     }
 
     /// @notice Allows bountyHunter to redeem their bounty once its locking period is over
