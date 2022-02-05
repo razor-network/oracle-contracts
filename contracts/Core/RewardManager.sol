@@ -9,7 +9,6 @@ import "./interface/ICollectionManager.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
-import "hardhat/console.sol";
 
 /// @title StakeManager
 /// @notice StakeManager handles stake, unstake, withdraw, reward, functions
