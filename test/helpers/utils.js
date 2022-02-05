@@ -223,6 +223,64 @@ const getCommitAndRevealData = async (collectionManager, voteManager, blockManag
   return [commitment, treeRevealData, secret, seqAllotedCollections, tree[0][0], assignedCollections, votesValueRevealed, seed];
 };
 
+const getRandomCommitAndRevealData = async (collectionManager, voteManager, blockManager, medians) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const salt = await voteManager.getSalt();
+  const toAssign = await voteManager.toAssign();
+  const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+  const seed = utils.solidityKeccak256(
+    ['bytes32', 'bytes32'],
+    [salt, secret]
+  );
+  // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+  const assignedCollections = {}; // For Tree
+  const seqAllotedCollections = []; // isCollectionAlloted
+  for (let i = 0; i < toAssign; i++) {
+    // console.log(seed);
+    const assigned = await prng(
+      numActiveCollections,
+      utils.solidityKeccak256(
+        ['bytes32', 'uint256'],
+        [seed, i]
+      )
+    );
+    assignedCollections[assigned] = true;
+    seqAllotedCollections.push(assigned); // [2,3,1,0]
+  }
+  const leavesOfTree = [];
+
+  for (let i = 0; i < numActiveCollections; i++) {
+    if (assignedCollections[i]) {
+      const rand = Math.floor(Math.random() * 3);
+      const fact = (rand === 2) ? -1 : rand;
+      leavesOfTree.push((medians[i] + fact)); // [100,200,300,400]
+    } else leavesOfTree.push(0);
+  }
+  const tree = await createMerkle(leavesOfTree);
+  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
+  const proofs = [];
+  const values = [];
+
+  for (let j = 0; j < seqAllotedCollections.length; j++) {
+    values.push({
+      medianIndex: seqAllotedCollections[j],
+      value: (leavesOfTree[(seqAllotedCollections[j])]), // [300,400,200,100]
+    });
+
+    proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
+  }
+  // console.log(values[0].value);
+  const treeRevealData = {
+    values,
+    proofs,
+    root: tree[0][0],
+  };
+  const votesValueRevealed = [];
+  for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
+
+  return [commitment, treeRevealData, secret, seqAllotedCollections, tree[0][0], assignedCollections, votesValueRevealed, seed];
+};
+
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
@@ -240,4 +298,5 @@ module.exports = {
   tokenAmount,
   maturity,
   getCommitAndRevealData,
+  getRandomCommitAndRevealData,
 };
