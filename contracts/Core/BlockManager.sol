@@ -159,11 +159,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-    {
+    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
