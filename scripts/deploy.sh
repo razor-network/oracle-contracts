@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
-
-ENV=$1
-
+export $(grep -v -e '^#'  -e '^MNEMONIC' .env | xargs -0)
 # Exit immediately if a command exits with a non-zero status.
 set -e
-
+echo "Starting deployment for $ENV environment"
 # Copy address from previous deployment, if it exists
 if [[ -f "deployed/$ENV/addresses.json" ]]
 then
+    echo "Previous addresses"
+    cat deployed/$ENV/addresses.json
     cp deployed/$ENV/addresses.json .previous-deployment-addresses
     rm -rf deployed/$ENV
 fi
 
-cp .env.$ENV .env
-
 npm run compile
-npx hardhat run migrations/deploy_all.js --network $ENV
+echo "Deploying contracts on network $NETWORK"
+npx hardhat run migrations/deploy_all.js --network $NETWORK
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi
