@@ -16,7 +16,7 @@ const {
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  getEpoch, tokenAmount,
+  getEpoch, getState, tokenAmount,
 } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
@@ -279,10 +279,7 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     const collectionName = 'Test Collection2';
-    await mineToNextState();
-    await mineToNextState();
-    await mineToNextState();
-    await mineToNextState();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await assetManager.createCollection(500, 0, 1, [1], collectionName);
     await assetManager.setCollectionStatus(true, 2);
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
@@ -313,10 +310,7 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(assetConfirmerHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();
-    await mineToNextState();
-    await mineToNextState();
-    await mineToNextState();
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await assetManager.createCollection(500, 1, 1, [1, 2], 'test');
     await assetManager.setCollectionStatus(false, 3);
     await assetManager.executePendingDeactivations(1);
@@ -347,10 +341,7 @@ describe('Access Control Test', async () => {
     await assetManager.grantRole(assetCreatorHash, signers[0].address);
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();// reveal
-    await mineToNextState();// propose
-    await mineToNextState();// dispute
-    await mineToNextState();// confirm
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await assetManager.createCollection(500, 1, 1, [1, 2], 'test');
     await assetManager.revokeRole(assetCreatorHash, signers[0].address);
     await assertRevert(assetManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
@@ -379,9 +370,7 @@ describe('Access Control Test', async () => {
 
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await assetManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();// propose
-    await mineToNextState();// dispute
-    await mineToNextState();// confirm
+    while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
     await assetManager.createCollection(500, 0, 1, [1, 2], 'test');
 
     await assetManager.updateCollection(3, 500, 2, -2, [1, 2]);
