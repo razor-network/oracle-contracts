@@ -51,6 +51,20 @@ jobs:
       - store_artifacts:
           path: test
           prefix: test
+  scenarios:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: large
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run scenarios
+          command: |
+            CI=true npm run scenarios
+      - store_artifacts:
+          path: scenarios
+          prefix: scenarios
 
 
   lint:
@@ -133,6 +147,9 @@ workflows:
       - test:
           requires:
             - install_dependencies
+      - scenarios:
+          requires:
+          - install_dependencies
       - coverage:
           requires:
           - install_dependencies
