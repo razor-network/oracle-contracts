@@ -55,7 +55,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
-    ) external initialized checkEpochAndState(State.Propose, epoch, epochLength) {
+    ) external initialized checkEpochAndState(State.Propose, epoch) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
@@ -81,7 +81,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint16 medianIndex,
         uint32[] memory sortedValues
-    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
@@ -109,13 +109,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
     //O(1)
-    function claimBlockReward() external initialized checkState(State.Confirm, epochLength) {
-        uint32 epoch = _getEpoch(epochLength);
+    function claimBlockReward() external initialized checkState(State.Confirm) {
+        uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
@@ -133,7 +133,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
             _confirmBlock(epoch - 1, stakerId);
@@ -150,7 +150,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestStakerId
-    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch) returns (uint32) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
@@ -162,7 +162,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 medianIndex
-    ) external initialized checkEpochAndState(State.Dispute, epoch, epochLength) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch) returns (uint32) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
 
@@ -192,7 +192,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function finalizeDispute(uint32 epoch, uint8 blockIndex)
         external
         initialized
-        checkEpochAndState(State.Dispute, epoch, epochLength)
+        checkEpochAndState(State.Dispute, epoch)
         returns (uint32)
     {
         require(

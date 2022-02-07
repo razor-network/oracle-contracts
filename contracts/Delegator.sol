@@ -5,10 +5,10 @@ import "./Core/StateManager.sol";
 import "./Core/interface/ICollectionManager.sol";
 import "./Core/interface/IBlockManager.sol";
 import "./IDelegator.sol";
-import "./Core/parameters/child/DelegatorParams.sol";
+import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
 
-contract Delegator is StateManager, DelegatorParams, IDelegator {
+contract Delegator is StateManager, ACL, IDelegator {
     mapping(bytes32 => uint16) public ids;
 
     ICollectionManager public collectionManager;
@@ -33,7 +33,7 @@ contract Delegator is StateManager, DelegatorParams, IDelegator {
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
         uint16 index = collectionManager.getIdToIndexRegistryValue(ids[_name]);
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collectionManager.getCollectionPower(ids[_name]);
         return (medians[index - 1], power);

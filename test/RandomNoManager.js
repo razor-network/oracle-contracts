@@ -72,7 +72,7 @@ describe('RandomNoManager', function () {
         await collectionManager.createJob(weight, power, selectorType, name, selector, url);
         i++;
       }
-      while (Number(await getState(await stakeManager.epochLength())) !== 4) { await mineToNextState(); }
+      while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
 
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');

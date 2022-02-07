@@ -23,9 +23,9 @@ library Structs {
     }
 
     struct Lock {
-        uint256 amount; //amount in RZR
-        uint256 commission;
-        uint256 withdrawAfter; // Can be made uint32 later if packing is possible
+        uint256 amount; //amount in sRZR/RZR
+        uint256 unlockAfter; // Can be made uint32 later if packing is possible
+        uint256 initial; // for unstake lock
     }
 
     struct BountyLock {
@@ -62,8 +62,8 @@ library Structs {
     struct Collection {
         bool active;
         uint16 id;
-        uint16 tolerance;
         int8 power;
+        uint32 tolerance;
         uint32 aggregationMethod;
         uint16[] jobIDs;
         string name;

@@ -23,6 +23,7 @@ const {
   MNEMONIC,
   CMC_KEY,
   ETHERSCAN_KEY,
+  TENDERLY_SLUG,
 } = process.env;
 
 // Ref - https://chainid.network/chains.json
@@ -52,7 +53,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 50000,
+            runs: 0,
           },
         },
       },
@@ -99,6 +100,6 @@ module.exports = {
   },
   tenderly: {
     username: 'razor',
-    project: 'razor-network',
+    project: TENDERLY_SLUG,
   },
 };

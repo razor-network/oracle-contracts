@@ -2,19 +2,19 @@
 pragma solidity ^0.8.0;
 
 interface IStakeManagerParams {
-    function setEpochLength(uint16 _epochLength) external;
-
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external;
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external;
+    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external;
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external;
+    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external;
+
+    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external;
 
     function setMinStake(uint256 _minStake) external;
 
