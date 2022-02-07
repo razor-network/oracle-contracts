@@ -45,11 +45,11 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external initialized onlyRole(GOVERNER_ROLE) {
-        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10mil");
         emit ParameterChanged(msg.sender, "bountySlashNum", _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", _burn, block.timestamp);
         emit ParameterChanged(msg.sender, "keepSlashNum", _keep, block.timestamp);
@@ -131,8 +131,9 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
 
-    function setMaxTolerance(uint16 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000");
+    function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+        // slither-disable-next-line too-many-digits
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);

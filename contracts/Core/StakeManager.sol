@@ -366,7 +366,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // Done for stack too deep issue
         // https://soliditydeveloper.com/stacktoodeep
         {
-            (uint16 bountyNum, uint16 burnSlashNum, uint16 keepSlashNum) = (slashNums.bounty, slashNums.burn, slashNums.keep);
+            (uint32 bountyNum, uint32 burnSlashNum, uint32 keepSlashNum) = (slashNums.bounty, slashNums.burn, slashNums.keep);
             bounty = (_stake * bountyNum) / BASE_DENOMINATOR;
             amountToBeBurned = (_stake * burnSlashNum) / BASE_DENOMINATOR;
             amountToBeKept = (_stake * keepSlashNum) / BASE_DENOMINATOR;

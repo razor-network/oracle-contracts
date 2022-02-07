@@ -24,7 +24,7 @@ describe('Governance contract Test', async () => {
 
   const expectedRevertMessage = 'AccessControl';
 
-  const penaltyNotRevealNumerator = toBigNumber('1');
+  const penaltyNotRevealNumerator = toBigNumber('1000');
 
   const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
@@ -36,7 +36,7 @@ describe('Governance contract Test', async () => {
   const withdrawReleasePeriod = toBigNumber('5');
   const extendUnstakeLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
-  const maxTolerance = toBigNumber('1000');
+  const maxTolerance = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
@@ -184,11 +184,11 @@ describe('Governance contract Test', async () => {
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
 
-    tx = governance.setSlashParams(toBigNumber('5000'), toBigNumber('4000'), toBigNumber('3000'));
-    await assertRevert(tx, 'Slash nums addtion exceeds 10000');
+    tx = governance.setSlashParams(toBigNumber('5000000'), toBigNumber('4000000'), toBigNumber('3000000'));
+    await assertRevert(tx, 'Slash nums addtion exceeds 10mil');
 
-    tx = governance.setMaxTolerance(toBigNumber('11000'));
-    await assertRevert(tx, 'maxTolerance exceeds 10000');
+    tx = governance.setMaxTolerance(toBigNumber('11000000'));
+    await assertRevert(tx, 'maxTolerance exceeds 10000000');
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -196,8 +196,8 @@ describe('Governance contract Test', async () => {
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
 
     const slashParams = await stakeManager.slashNums();
-    assertBNEqual(slashParams[0], toBigNumber('500'));
-    assertBNEqual(slashParams[1], toBigNumber('9500'));
+    assertBNEqual(slashParams[0], toBigNumber('500000'));
+    assertBNEqual(slashParams[1], toBigNumber('9500000'));
     assertBNEqual(slashParams[2], toBigNumber('0'));
 
     const minStakeValue = await stakeManager.minStake();

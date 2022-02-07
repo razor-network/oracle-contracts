@@ -5,13 +5,14 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
-    uint16 public penaltyNotRevealNum = 1;
+    uint32 public penaltyNotRevealNum = 1000;
     uint16 public gracePeriod = 8;
     uint32 public maxAge = 100 * 10000;
     uint256 public blockReward = 100 * (10**18);
-    uint16 public maxTolerance = 1000;
+    // slither-disable-next-line too-many-digits
+    uint32 public maxTolerance = 1000000;
 
-    function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
+    function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
     }
@@ -31,7 +32,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
         maxAge = _maxAge;
     }
 
-    function setMaxTolerance(uint16 _maxTolerance) external override onlyRole(GOVERNANCE_ROLE) {
+    function setMaxTolerance(uint32 _maxTolerance) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only
         // and their before setting, we are emitting event

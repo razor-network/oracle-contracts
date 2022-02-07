@@ -6,9 +6,9 @@ import "../../storage/Constants.sol";
 
 abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     struct SlashNums {
-        uint16 bounty;
-        uint16 burn;
-        uint16 keep;
+        uint32 bounty;
+        uint32 burn;
+        uint32 keep;
     }
     bool public escapeHatchEnabled = true;
     uint8 public unstakeLockPeriod = 1;
@@ -20,15 +20,16 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public deltaCommission = 3;
     uint16 public gracePeriod = 8;
     uint16 public epochLimitForUpdateCommission = 100;
-    SlashNums public slashNums = SlashNums(500, 9500, 0);
+    // slither-disable-next-line too-many-digits
+    SlashNums public slashNums = SlashNums(500000, 9500000, 0);
     // Slash Penalty = bounty + burned + kept
     uint256 public minStake = 20000 * (10**18);
     uint256 public minSafeRazor = 10000 * (10**18);
 
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external override onlyRole(GOVERNANCE_ROLE) {
         require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
         // slither-disable-next-line events-maths

@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 interface IStakeManagerParams {
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external;
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
