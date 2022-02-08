@@ -95,7 +95,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 epoch = _getEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
-            // @dev : doubt @samAG9
             _updateRegistry();
         }
 
@@ -127,6 +126,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
         }
+
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
@@ -154,6 +154,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
+
         emit CollectionUpdated(collectionID, power, epoch, aggregationMethod, tolerance, jobIDs, block.timestamp);
     }
 
@@ -221,7 +222,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
                 result[j] = i;
-                j++;
+                j = j + 1;
             }
         }
         return result;

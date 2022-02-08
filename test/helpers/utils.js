@@ -128,11 +128,6 @@ const getAssignedCollections = async (numActiveCollections, seed, toAssign) => {
         [seed, i]
       )
     );
-    // console.log('isALLOTED', utils.solidityKeccak256(
-    //   ['bytes32', 'uint256'],
-    //   [seed, i]
-    // ), assigned);
-    // console.log(typeof assignedCollections[assigned]);
     assignedCollections[assigned] = true;
     seqAllotedCollections.push(assigned);
   }

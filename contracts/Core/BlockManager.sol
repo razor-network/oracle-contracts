@@ -98,14 +98,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedValues.length; i++) {
-            require(sortedValues[i] > lastVisitedValue, "sortedValue <= LVV "); // LVS : Last Visited Value
+            require(sortedValues[i] > lastVisitedValue, "sortedValue <= LVV "); // LVV : Last Visited Value
             lastVisitedValue = sortedValues[i];
 
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
             uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
-            accProd = accProd + sortedValues[i] * weight;
-            accWeight = accWeight + weight;
+            accProd = accProd + sortedValues[i] * weight; // numerator
+            accWeight = accWeight + weight; // denominator: total influence revealed for this collection
         }
         disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
@@ -245,7 +245,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         returns (uint32)
     {
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            disputes[epoch][msg.sender].accWeight == 
+            voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
@@ -286,7 +287,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
-        randomNoProvider.provideSecret(epoch, voteManager.getSalt());
+        randomNoProvider.provideSecret(epoch, salt);
     }
 
     function _insertAppropriately(
