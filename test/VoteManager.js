@@ -340,112 +340,61 @@ describe('VoteManager', function () {
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
         const staker = await stakeManager.getStaker(stakerIdAcc3);
 
+        await mineToNextState(); // propose
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-        await mineToNextState(); // propose
-        const numActiveCollections = await collectionManager.getNumActiveCollections();
-        const medians = [];
-        for (let i = 0; i < numActiveCollections; i++) medians.push(0);
-        const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-        let influenceSum = toBigNumber('0');
-        for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
-        let result = toBigNumber('0');
-        for (let i = 0; i < commitment[3].length; i++) {
-          for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
-            result = result.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
-          }
-          medians[(commitment[3])[i]] = result.div(influenceSum);
-          result = toBigNumber('0');
-        }
+        const medians = [100, 0, 0, 0, 500, 600, 0, 0, 0];
         await blockManager.connect(signers[3]).propose(epoch,
-          [0, 0, 0],
+          [1, 2, 3, 4, 5, 6, 7, 8, 9],
           medians,
           iteration,
           biggestStakerId);
-        // const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
-        // const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
-        const ageBefore = await stakeManager.getAge(stakerIdAcc3);
-        const ageBefore2 = await stakeManager.getAge(stakerIdAcc4);
-        const ageBefore3 = await stakeManager.getAge(stakerIdAcc2);
+
+        const ageBeforeStaker2 = await stakeManager.getAge(stakerIdAcc2);
+        const ageBeforeStaker4 = await stakeManager.getAge(stakerIdAcc4);
+
         await mineToNextState(); // dispute
         await mineToNextState(); // confirm
         await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
-        const commitment1 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
+        const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
 
-        await voteManager.connect(signers[2]).commit(epoch, commitment1[0]);
-        await voteManager.connect(signers[3]).commit(epoch, commitment1[0]);
-        await voteManager.connect(signers[4]).commit(epoch, commitment1[0]);
+        await voteManager.connect(signers[2]).commit(epoch, commitment[0]);
+        await voteManager.connect(signers[3]).commit(epoch, commitment[0]);
+        await voteManager.connect(signers[4]).commit(epoch, commitment[0]);
 
-        const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
+        const expectedAgeAfter2 = toBigNumber(ageBeforeStaker2).add(10000);
+        let expectedAgeAfter4 = toBigNumber(ageBeforeStaker4).add(10000);
 
-        assert(commitment1[0] === commitment2.commitmentHash, 'commitment1, commitment2 not equal');
-
-        // const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        // const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        let penalty = toBigNumber(0);
-        let penalty2 = toBigNumber(0);
-        let toAdd = toBigNumber(0);
-        let toAdd2 = toBigNumber(0);
-        let prod = toBigNumber(0);
-        let prod2 = toBigNumber(0);
-        const votes2 = [];
-        const votes3 = [];
-        for (let i = 0; i < medians.length; i++) {
-          votes2.push(0);
-          votes3.push(0);
-        }
-        for (let j = 0; j < ((dataRevealedThisEpoch.values)[1]).length; j++) {
-          const voteValue = ((dataRevealedThisEpoch.values)[1])[j];
-          const voteValue2 = ((dataRevealedThisEpoch.values)[2])[j];
-          const val = toBigNumber(voteValue).div(toBigNumber(100));
-          const val2 = toBigNumber(voteValue2).div(toBigNumber(100));
-          votes2[val - 1] = voteValue;
-          votes3[val2 - 1] = voteValue2;
-        }
-        dataRevealedThisEpoch = { influence: [], values: [] };
-        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
-        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
-        let expectedAgeAfter3 = toBigNumber(ageBefore3).add(10000);
-        expectedAgeAfter3 = expectedAgeAfter3 > 1000000 ? 1000000 : expectedAgeAfter3;
-        for (let i = 0; i < votes2.length; i++) {
+        const votes = [120, 0, 0, 0, 520, 620, 0, 0, 0];
+        let prod;
+        let penalty = toBigNumber('0');
+        for (let i = 0; i < votes.length; i++) {
           const tolerance = await collectionManager.getCollectionTolerance(i);
           const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
           const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
-          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-          if (votes2[i] !== 0) {
-            if (votes2[i] > maxVoteTolerance) {
-              toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+          prod = toBigNumber(votes[i]).mul(expectedAgeAfter2);
+          if (votes[i] !== 0) {
+            if (votes[i] > maxVoteTolerance) {
+              const toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
               penalty = penalty.add(toAdd);
-            } else if (votes2[i] < minVoteTolerance) {
-              toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+            } else if (votes[i] < minVoteTolerance) {
+              const toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
               penalty = penalty.add(toAdd);
             }
           }
-
-          // calculating for staker 2
-          prod2 = toBigNumber(votes3[i]).mul(expectedAgeAfter3);
-          if (votes3[i] > maxVoteTolerance) {
-            toAdd2 = (prod2.div(maxVoteTolerance)).sub(expectedAgeAfter3);
-            penalty2 = penalty2.add(toAdd2);
-          } else if (votes3[i] < minVoteTolerance) {
-            toAdd2 = expectedAgeAfter3.sub(prod2.div(minVoteTolerance));
-            penalty2 = penalty2.add(toAdd2);
-          }
         }
-        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
-        expectedAgeAfter3 = toBigNumber(expectedAgeAfter3).sub(penalty2);
 
-        const ageAfter = await stakeManager.getAge(stakerIdAcc3);
-        const ageAfter2 = await stakeManager.getAge(stakerIdAcc4);
+        expectedAgeAfter4 = toBigNumber(expectedAgeAfter4).sub(penalty);
 
-        assertBNEqual(penalty2, toBigNumber('0'), 'Penalty applied');
-        assertBNLessThan(toBigNumber(ageBefore), toBigNumber(ageAfter), 'Not rewarded');
-        assertBNEqual(toBigNumber(ageBefore3).add(toBigNumber(10000)), expectedAgeAfter3, 'Age Penalty should not be applied');
-        assertBNEqual(ageAfter2, expectedAgeAfter2, 'Age Penalty should be applied');
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc3);
+        const ageAfter4 = await stakeManager.getAge(stakerIdAcc4);
+
+        assertBNLessThan(toBigNumber(ageBeforeStaker2), toBigNumber(ageAfter2), 'Not Rewarded');
+        assertBNEqual(toBigNumber(ageBeforeStaker2).add(toBigNumber(10000)), ageAfter2, 'Age Penalty should not be applied');
+        assertBNEqual(ageAfter4, expectedAgeAfter4, 'Age Penalty should be applied');
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {
