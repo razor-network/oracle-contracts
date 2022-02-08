@@ -245,8 +245,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         returns (uint32)
     {
         require(
-            disputes[epoch][msg.sender].accWeight == 
-            voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
