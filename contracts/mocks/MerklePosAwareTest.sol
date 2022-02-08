@@ -12,7 +12,7 @@ contract MerklePosAwareTest {
         uint16[] memory medianIndex,
         uint256 depth,
         uint16 maxAssets
-    ) external view returns (bool) {
+    ) external pure returns (bool) {
         return MerklePosAware.verifyMultiple(proofs, root, leaves, medianIndex, depth, maxAssets);
     }
 
@@ -23,7 +23,7 @@ contract MerklePosAwareTest {
         uint16 medianIndex,
         uint256 depth,
         uint16 maxAssets
-    ) external view returns (bool) {
+    ) external pure returns (bool) {
         return MerklePosAware.verify(proof, root, leaf, medianIndex, depth, maxAssets);
     }
 

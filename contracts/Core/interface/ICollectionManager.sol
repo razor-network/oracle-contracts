@@ -18,5 +18,5 @@ interface ICollectionManager {
 
     function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
 
-    function getIndexToIdFutureRegistryValue(uint16 index) external view returns (uint16);
+    function getActiveCollectionsHash() external view returns (bytes32 hash);
 }

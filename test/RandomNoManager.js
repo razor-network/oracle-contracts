@@ -131,7 +131,7 @@ describe('RandomNoManager', function () {
 
       // Propose
       await mineToNextState();
-      await propose(signers[5], [0, 0, 0, 0, 0], stakeManager, blockManager, voteManager);
+      await propose(signers[5], [0, 0, 0, 0, 0], [0, 0, 0, 0, 0], stakeManager, blockManager, voteManager);
       // Dispute
       await mineToNextState();
       // Confirm

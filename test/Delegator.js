@@ -103,14 +103,14 @@ describe('Delegator', function () {
       await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
-      await propose(signers[5], [100], stakeManager, blockManager, voteManager);
+      await propose(signers[5], [1], [100], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
-      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('1'));
+      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to fetch the result of the desired id', async function () {
@@ -141,13 +141,13 @@ describe('Delegator', function () {
       await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
-      await propose(signers[5], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await propose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
       await blockManager.connect(signers[5]).claimBlockReward();
       for (let i = 1; i <= 9; i++) {
-        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i));
+        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i - 1));
       }
     });
 
@@ -172,13 +172,13 @@ describe('Delegator', function () {
       await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
-      await propose(signers[5], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await propose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 1;
+      let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
@@ -222,13 +222,13 @@ describe('Delegator', function () {
       await reveal(signers[5], 0, voteManager);
       await mineToNextState();
 
-      await propose(signers[5], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
+      await propose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 1;
+      let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {

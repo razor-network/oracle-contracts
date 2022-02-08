@@ -138,13 +138,14 @@ const reveal = async (signer, deviation, voteManager) => {
 // If yes pick it up and then calculate median
 // Find iteration using salt as seed
 
-const propose = async (signer, values, stakeManager, blockManager, voteManager) => {
+const propose = async (signer, ids, values, stakeManager, blockManager, voteManager) => {
   const stakerID = await stakeManager.getStakerId(signer.address);
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
   // console.log('Propose', iteration, biggestStakerId, stakerID);
   await blockManager.connect(signer).propose(getEpoch(),
+    ids,
     values,
     iteration,
     biggestStakerId);

@@ -77,6 +77,7 @@ describe('AssignCollectionsRandomly', function () {
       }
       while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
 
+      console.log(await collectionManager.numCollections());
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c3');
@@ -105,7 +106,7 @@ describe('AssignCollectionsRandomly', function () {
       await reveal(signers[1], 0, voteManager);
       await mineToNextState();
 
-      await propose(signers[1], [0, 0, 300, 400, 0], stakeManager, blockManager, voteManager);
+      await propose(signers[1], [1, 2, 3, 4, 5], [0, 0, 300, 400, 0], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       // Dispute will happen on values now, and not stakers
@@ -148,7 +149,7 @@ describe('AssignCollectionsRandomly', function () {
 
       snapshotId = await takeSnapshot();
       // Staker propose correctly, 300 from previous
-      await propose(signers[1], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await propose(signers[1], [1, 2, 3, 4, 5], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       // Give Sorted and FinaliseDispute on revealed asset.
@@ -159,7 +160,7 @@ describe('AssignCollectionsRandomly', function () {
       // Give Sorted and FinaliseDispute on non-revealed asset
       await blockManager.connect(signers[10]).giveSorted(epoch, 2, [300]);
       // eslint-disable-next-line max-len
-      await assertRevert(blockManager.connect(signers[10]).finalizeDispute(epoch, 0), 'VM Exception while processing transaction: reverted with panic code 0x12 (Division or modulo division by zero)');
+      await assertRevert(blockManager.connect(signers[10]).finalizeDispute(epoch, 0), 'Invalid dispute');
     });
 
     it('Delegator should be able to fetch the non revealed asset', async () => {
@@ -175,7 +176,7 @@ describe('AssignCollectionsRandomly', function () {
     it('Staker Proposes revealed assets in-correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      await propose(signers[1], [10, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await propose(signers[1], [1, 2, 3, 4, 5], [10, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       const epoch = await getEpoch();
@@ -191,10 +192,12 @@ describe('AssignCollectionsRandomly', function () {
     it('Staker Proposes non revealed assets correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      await propose(signers[1], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await propose(signers[1], [1, 2, 3, 4, 5], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       const epoch = await getEpoch();
+      const results = await collectionManager.getActiveCollections();
+      console.log(results);
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 2),
@@ -209,7 +212,7 @@ describe('AssignCollectionsRandomly', function () {
     it('Staker Proposes non revealed assets in-correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      await propose(signers[1], [100, 200, 30, 400, 500], stakeManager, blockManager, voteManager);
+      await propose(signers[1], [1, 2, 3, 4, 5], [100, 200, 30, 400, 500], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       const epoch = await getEpoch();

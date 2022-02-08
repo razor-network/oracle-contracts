@@ -192,14 +192,16 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'Staker does not exist');
       });
 
-      // @gaurav : modify this to reflect that reveal should revert, if revealed assets count doesnt match with toAssign
       it('should not be able to reveal if length of the votes value is not same as number of active collections', async function () {
         const epoch = await getEpoch();
+        const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
+        await voteManager.connect(signers[1]).commit(epoch, commitment[0]);
         await mineToNextState(); // reveal
-        // const votes1 = [100, 200, 300, 400, 500, 600, 700, 800];
-        // const tx = voteManager.connect(signers[1]).reveal(epoch, votes1,
-        //   '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-        // await assertRevert(tx, 'invalid values revealed');
+        const treeRevealData = commitment[1];
+        // eslint-disable-next-line prefer-destructuring
+        treeRevealData.values = [treeRevealData.values[0]];
+        const tx = voteManager.connect(signers[1]).reveal(epoch, treeRevealData, commitment[2]);
+        await assertRevert(tx, 'values length mismatch');
       });
 
       it('should be able to reveal', async function () {
@@ -208,14 +210,6 @@ describe('VoteManager', function () {
 
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
 
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        //
-        // await mineToNextState(); // reveal
-        //
-        // // const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, maxAssetsPerStaker, random);
-        // const ids = [1,2,3,4,5,6,7,8,9];
-        //
-        //
         // // Correct Reveal
         const commitment3 = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await voteManager.connect(signers[3]).reveal(epoch, commitment3[1], commitment3[2]); // arguments getvVote => epoch, stakerId, assetId
@@ -276,6 +270,7 @@ describe('VoteManager', function () {
         }
         await mineToNextState(); // propose
         await blockManager.connect(signers[3]).propose(epoch,
+          [0, 0, 0],
           medians,
           iteration,
           biggestStakerId);
@@ -363,6 +358,7 @@ describe('VoteManager', function () {
           result = toBigNumber('0');
         }
         await blockManager.connect(signers[3]).propose(epoch,
+          [0, 0, 0],
           medians,
           iteration,
           biggestStakerId);
@@ -778,118 +774,6 @@ describe('VoteManager', function () {
         await assertRevert(tx2, 'Incorrect Caller');
       });
 
-      // it('if the revealed value is zero, staker should be able to reveal', async function () {
-      //   await governance.setMinStake(20000);
-      //   await governance.setMinSafeRazor(10000);
-      //   await mineToNextEpoch();
-      //
-      //   let epoch = await getEpoch();
-      //   await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('20000'));
-      //   await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('20000'));
-      //
-      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //
-      //   const commitment1 = utils.solidityKeccak256(
-      //     ['uint32', 'uint48[]', 'bytes32'],
-      //     [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      //   );
-      //
-      //   await voteManager.connect(signers[8]).commit(epoch, commitment1);
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const commitment2 = await voteManager.getCommitment(stakerIdAcc8);
-      //
-      //   assertBNEqual(commitment1, commitment2.commitmentHash, 'commitment1, commitment2 not equal');
-      //   epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // reveal
-      //
-      //   await voteManager.connect(signers[8]).reveal(epoch, votes,
-      //     '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      //   //
-      //   // await assertRevert(tx, 'revert');
-      // });
-      // it('if the proposed value is zero, staker should be able to propose', async function () {
-      //   const epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // propose
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const staker = await stakeManager.getStaker(stakerIdAcc8);
-      //
-      //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      //
-      //   const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await blockManager.connect(signers[8]).propose(epoch,
-      //     medians,
-      //     iteration,
-      //     biggestStakerId);
-      //
-      //   // await assertRevert(tx, 'revert');
-      // });
-      //
-      // it('if the disputed value is zero, staker should not be able to dispute', async function () {
-      //   await mineToNextState(); // dispute
-      //   const epoch = await getEpoch();
-      //
-      //   const sortedVotes = [toBigNumber('0')];
-      //
-      //   const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-      //
-      //   await assertRevert(tx, 'sortedStaker <= LVS');
-      // });
-      //
-      // it('if the revealed value is zero, next epoch should work normally', async function () {
-      //   await mineToNextState(); // confirm
-      //   await blockManager.connect(signers[8]).claimBlockReward();
-      //   await mineToNextState(); // commit
-      //
-      //   let epoch = await getEpoch();
-      //
-      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //
-      //   const commitment1 = utils.solidityKeccak256(
-      //     ['uint32', 'uint48[]', 'bytes32'],
-      //     [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      //   );
-      //
-      //   await voteManager.connect(signers[8]).commit(epoch, commitment1);
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const commitment2 = await voteManager.getCommitment(stakerIdAcc8);
-      //
-      //   assertBNEqual(commitment1, commitment2.commitmentHash, 'commitment1, commitment2 not equal');
-      //
-      //   epoch = await getEpoch();
-      //
-      //   // const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await mineToNextState(); // reveal
-      //
-      //   await voteManager.connect(signers[8]).reveal(epoch, votes2,
-      //     '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      //
-      //   epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // propose
-      //
-      //   const staker = await stakeManager.getStaker(stakerIdAcc8);
-      //
-      //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      //   const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await blockManager.connect(signers[8]).propose(epoch,
-      //     medians,
-      //     iteration,
-      //     biggestStakerId);
-      //
-      //   //
-      //   await mineToNextState(); // dispute
-      //   epoch = await getEpoch();
-      //   //
-      //   const sortedVotes = [toBigNumber('0')];
-      //   //
-      //   const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-      //   //
-      //   await assertRevert(tx3, 'sortedStaker <= LVS');
-      // });
       it('Block should not be proposed when no one votes', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
@@ -903,6 +787,7 @@ describe('VoteManager', function () {
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         const tx = blockManager.connect(signers[3]).propose(epoch,
+          [],
           [],
           iteration,
           biggestStakerId);
@@ -920,7 +805,7 @@ describe('VoteManager', function () {
         const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
-        await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
+        await assertRevert(tx2, 'Invalid dispute');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
         await mineToNextEpoch();
@@ -957,6 +842,7 @@ describe('VoteManager', function () {
           result = toBigNumber('0');
         }
         await blockManager.connect(signers[3]).propose(epoch,
+          [0, 0, 0],
           medians,
           iteration,
           biggestStakerId);
@@ -996,6 +882,7 @@ describe('VoteManager', function () {
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         const tx2 = blockManager.connect(signers[4]).propose(epoch,
+          [0, 0, 0],
           [100, 200, 300, 400, 500, 600, 700, 800],
           iteration,
           biggestStakerId);
@@ -1023,7 +910,7 @@ describe('VoteManager', function () {
         await reveal(signers[3], 15, voteManager);
         await mineToNextState();
 
-        await propose(signers[3], medians, stakeManager, blockManager, voteManager);
+        await propose(signers[3], [1, 2, 3, 4, 5, 6, 7, 8], medians, stakeManager, blockManager, voteManager);
         await mineToNextState();
 
         await mineToNextState();

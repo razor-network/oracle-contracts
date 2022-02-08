@@ -38,6 +38,7 @@ library Structs {
         bool valid;
         uint32 proposerId;
         uint32[] medians;
+        uint16[] ids;
         uint256 iteration;
         uint256 biggestStake;
     }

@@ -8,6 +8,7 @@ import "./IDelegator.sol";
 import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
 
+import "hardhat/console.sol";
 contract Delegator is StateManager, ACL, IDelegator {
     mapping(bytes32 => uint16) public ids;
 
@@ -36,6 +37,6 @@ contract Delegator is StateManager, ACL, IDelegator {
         uint32 epoch = _getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collectionManager.getCollectionPower(ids[_name]);
-        return (medians[index - 1], power);
+        return (medians[index], power);
     }
 }

@@ -30,7 +30,7 @@ const {
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 
-const { BigNumber, utils } = ethers;
+const { BigNumber } = ethers;
 
 describe('StakeManager', function () {
   describe('RAZOR', async function () {
@@ -799,6 +799,7 @@ describe('StakeManager', function () {
           result = toBigNumber('0');
         }
         await blockManager.connect(signers[4]).propose(epoch,
+          [0, 0, 0],
           medians,
           iteration,
           biggestStakerId);
@@ -1717,6 +1718,7 @@ describe('StakeManager', function () {
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[17]).propose(epoch,
+        [0, 0, 0],
         [100, 200, 300, 400, 500, 600, 700, 800, 900],
         iteration,
         biggestStakerId);

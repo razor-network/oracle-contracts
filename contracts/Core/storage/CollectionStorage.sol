@@ -14,8 +14,6 @@ contract CollectionStorage {
     mapping(uint16 => uint16) public idToIndexRegistry;
     mapping(uint16 => uint16) public indexToIdRegistry;
 
-    mapping(uint16 => uint16) public indexToIdRegistryFuture;
-
     uint16 public numActiveCollections;
     uint32 public updateRegistryEpoch;
     uint16 public numCollections;
