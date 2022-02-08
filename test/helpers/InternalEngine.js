@@ -27,17 +27,14 @@ const store = {};
 /// @dev Randao Removed : So there is no penalty as randao penalty.
 
 /// Steps
-/// Fetch NumActiveCollection, and Salt
+/// Fetch NumActiveCollection
+/// Calculate Salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians))
 /// Find Assignments
 /// Construct Tree with values for assigned and 0 for non-assigned
 /// Commitment is as per
 /// commitment = keccak256(abi.encodePacked(tree.root, seed))
-/// seed = keccak256(abi.encodePacked(salt, secret));
-/// salt can be fetched from VoteManager
-/// Concept : salt for epch + 1 represents nothing but = keccak256(abi.encodePacked(epoch, blocks[epoch].medians, salt)); // TODO : REMOVE SALT
-/// So salt is dependent on block[ep -1] and ep-2
+/// where seed = keccak256(abi.encodePacked(salt, secret));
 
-/// TODO: Check case of confirmLastEpochBlock
 /// @dev
 /// There are two cryptographic parts
 /// isAssetAlloted
@@ -93,8 +90,10 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret)
                           REVEAL
 ////////////////////////////////////////////////////////////// */
 
-// In reveal, staker has to pass secret, root and assigned assets
-// Format is
+// In reveal, staker has to pass secret, root of tree, revealed values and seq of allocated colelctions
+// Input Params
+// epoch, treeRevealData, secret
+// treeRevealData (follwoing struct)
 // struct MerkleTree {
 //     Structs.AssignedAsset [] values;
 //     bytes32[][] proofs;
@@ -134,8 +133,9 @@ const reveal = async (signer, deviation, voteManager) => {
 // isElectedProposer would use salt as seed now, not randao
 
 // Steps
-// Loop Through getVoteValue to find if there is non-zero value present for a each staker
-// If yes pick it up and then calculate median
+// Index reveal events of stakers
+// Find medain on basis of revealed value and influence
+// For non revealed active collection of this epoch, use previous epoch vote value.
 // Find iteration using salt as seed
 
 const propose = async (signer, ids, values, stakeManager, blockManager, voteManager) => {

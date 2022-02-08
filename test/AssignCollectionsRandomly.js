@@ -156,9 +156,17 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
 
       // Give Sorted and FinaliseDispute on non-revealed asset
-      await blockManager.connect(signers[10]).giveSorted(epoch, 2, [300]);
-      // eslint-disable-next-line max-len
-      await assertRevert(blockManager.connect(signers[10]).finalizeDispute(epoch, 0), 'Invalid dispute');
+      await blockManager.giveSorted(epoch, 2, [300]);
+      await assertRevert(blockManager.finalizeDispute(epoch, 0), 'Invalid dispute');
+
+      // disputeForNonAssignedCollection
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 1),
+        'Collec is revealed this epoch');
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 2),
+        'Block proposed with corr medians');
+
+      // disputeForProposedCollectionIds
+      await assertRevert(blockManager.disputeForProposedCollectionIds(epoch, 0), 'Block proposed with corr ids');
     });
 
     it('Delegator should be able to fetch the non revealed asset', async () => {
@@ -185,6 +193,7 @@ describe('AssignCollectionsRandomly', function () {
 
       expect(blockIndexToBeConfirmed).to.eq(-1);
       expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
     });
 
     it('Staker Proposes non revealed assets correctly', async () => {
@@ -219,6 +228,26 @@ describe('AssignCollectionsRandomly', function () {
 
       expect(blockIndexToBeConfirmed).to.eq(-1);
       expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
+    });
+
+    it('Staker Proposes with wrong ids', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      // hypo scenrio
+      // only 1 and 2 were assigned so for 3,4,5 staker should pass prev values
+      // but he doesnt, so lets see if he can be disputed
+      await propose(signers[1], [1, 2, 3, 3, 3], [100, 200, 300, 300, 300], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+      const epoch = await getEpoch();
+
+      blockManager.disputeForProposedCollectionIds(epoch, 0);
+
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+      expect(blockIndexToBeConfirmed).to.eq(-1);
+      expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
     });
   });
 });
