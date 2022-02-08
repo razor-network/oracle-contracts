@@ -9,6 +9,7 @@ import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
 
 import "hardhat/console.sol";
+
 contract Delegator is StateManager, ACL, IDelegator {
     mapping(bytes32 => uint16) public ids;
 

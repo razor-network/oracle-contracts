@@ -48,14 +48,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // note that only one staker or no stakers selected in each iteration.
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
-   
+
     /// @dev The IDs being passed here, are only used for disputeForNonAssignedCollection
     /// for delegator, we have seprate registry
     /// If user passes invalid ids, disputeForProposedCollectionIds can happen
 
     function propose(
         uint32 epoch,
-        uint16 [] memory ids,
+        uint16[] memory ids,
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
@@ -162,8 +162,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
-
-
     // Epoch X
     // 0,1,2,3
     // 1,2,3,4
@@ -174,8 +172,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // 1,2,4
 
     // Only 1,2 revealed by stakers, in this epoch,
-    // so for 4 value should be used from previous 
-    // Follwoing function allows dispute for so 
+    // so for 4 value should be used from previous
+    // Follwoing function allows dispute for so
     function disputeForNonAssignedCollection(
         uint32 epoch,
         uint8 blockIndex,
@@ -222,10 +220,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // so as its dependant on user input, it can exploited
     // to solve so, will need to have follwoing dispute
 
-     function disputeForProposedCollectionIds(
-        uint32 epoch,
-        uint8 blockIndex
-    ) external initialized checkEpochAndState(State.Dispute, epoch) returns (uint32) {
+    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex)
+        external
+        initialized
+        checkEpochAndState(State.Dispute, epoch)
+        returns (uint32)
+    {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
@@ -233,7 +233,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 proposedHash = keccak256(abi.encodePacked(proposedBlocks[epoch][blockId].ids));
         bytes32 actualHash = collectionManager.getActiveCollectionsHash();
 
-        require(proposedHash != actualHash,"Block proposed with corr ids");
+        require(proposedHash != actualHash, "Block proposed with corr ids");
         return _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -248,9 +248,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"
         ); // TIR : total influence revealed
-        require (disputes[epoch][msg.sender].accWeight !=0, "Invalid dispute"); 
-        // Would revert if no block is proposed, or the asset specifed was not revealed 
-        
+        require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
+        // Would revert if no block is proposed, or the asset specifed was not revealed
+
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];

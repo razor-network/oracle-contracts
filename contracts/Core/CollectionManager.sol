@@ -211,10 +211,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return idToIndexRegistry[id];
     }
 
-    function getActiveCollectionsHash() external view override returns (bytes32 hash)
-    {
+    function getActiveCollectionsHash() external view override returns (bytes32 hash) {
         hash = keccak256(abi.encodePacked(getActiveCollections()));
     }
+
     function getActiveCollections() public view returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
@@ -222,7 +222,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             if (collections[i].active) {
                 result[j] = i;
                 j++;
-            } 
+            }
         }
         return result;
     }
@@ -239,7 +239,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             }
         }
     }
-
 
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed

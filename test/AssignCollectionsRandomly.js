@@ -194,7 +194,6 @@ describe('AssignCollectionsRandomly', function () {
       await mineToNextState();
 
       const epoch = await getEpoch();
-      const results = await collectionManager.getActiveCollections();
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 2),
