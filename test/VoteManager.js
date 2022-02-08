@@ -343,7 +343,7 @@ describe('VoteManager', function () {
         await mineToNextState(); // propose
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-        const medians = [100, 0, 0, 0, 500, 600, 0, 0, 0];
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
           medians,
@@ -353,34 +353,39 @@ describe('VoteManager', function () {
         const ageBeforeStaker2 = await stakeManager.getAge(stakerIdAcc2);
         const ageBeforeStaker4 = await stakeManager.getAge(stakerIdAcc4);
 
+        const commitmentPre = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         await mineToNextState(); // dispute
         await mineToNextState(); // confirm
         await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
         epoch = await getEpoch();
 
-        const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
-
-        await voteManager.connect(signers[2]).commit(epoch, commitment[0]);
-        await voteManager.connect(signers[3]).commit(epoch, commitment[0]);
-        await voteManager.connect(signers[4]).commit(epoch, commitment[0]);
+        const commitmentPost = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
+        await voteManager.connect(signers[2]).commit(epoch, commitmentPost[0]);
+        await voteManager.connect(signers[3]).commit(epoch, commitmentPost[0]);
+        await voteManager.connect(signers[4]).commit(epoch, commitmentPost[0]);
 
         const expectedAgeAfter2 = toBigNumber(ageBeforeStaker2).add(10000);
         let expectedAgeAfter4 = toBigNumber(ageBeforeStaker4).add(10000);
 
-        const votes = [120, 0, 0, 0, 520, 620, 0, 0, 0];
+        const treeRevealData = commitmentPre[1];
+        const votes = treeRevealData.values;
+        const votesSerialized = new Array(medians.length).fill(0);
+        for (let j = 0; j < votes.length; j++) {
+          votesSerialized[votes[j].medianIndex] = votes[j].value + 20;
+        }
         let prod;
         let penalty = toBigNumber('0');
-        for (let i = 0; i < votes.length; i++) {
-          const tolerance = await collectionManager.getCollectionTolerance(i);
-          const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
-          const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
-          prod = toBigNumber(votes[i]).mul(expectedAgeAfter2);
-          if (votes[i] !== 0) {
-            if (votes[i] > maxVoteTolerance) {
+        for (let i = 0; i < medians.length; i++) {
+          if (votesSerialized[i] !== 0) {
+            const tolerance = await collectionManager.getCollectionTolerance(i);
+            const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
+            const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
+            prod = toBigNumber(votesSerialized[i]).mul(expectedAgeAfter2);
+            if (votesSerialized[i] > maxVoteTolerance) {
               const toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
               penalty = penalty.add(toAdd);
-            } else if (votes[i] < minVoteTolerance) {
+            } else if (votesSerialized[i] < minVoteTolerance) {
               const toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
               penalty = penalty.add(toAdd);
             }
@@ -389,7 +394,7 @@ describe('VoteManager', function () {
 
         expectedAgeAfter4 = toBigNumber(expectedAgeAfter4).sub(penalty);
 
-        const ageAfter2 = await stakeManager.getAge(stakerIdAcc3);
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc2);
         const ageAfter4 = await stakeManager.getAge(stakerIdAcc4);
 
         assertBNLessThan(toBigNumber(ageBeforeStaker2), toBigNumber(ageAfter2), 'Not Rewarded');

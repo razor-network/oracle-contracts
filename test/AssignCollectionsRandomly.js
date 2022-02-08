@@ -76,8 +76,6 @@ describe('AssignCollectionsRandomly', function () {
         i++;
       }
       while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
-
-      console.log(await collectionManager.numCollections());
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c3');
@@ -197,7 +195,6 @@ describe('AssignCollectionsRandomly', function () {
 
       const epoch = await getEpoch();
       const results = await collectionManager.getActiveCollections();
-      console.log(results);
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
       await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 2),

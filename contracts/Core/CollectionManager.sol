@@ -292,7 +292,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         // 0000
 
         // Have tested function upto 2**16;
-        bool flag;
+        bool flag = false;
         for (n = 0; x > 1; x >>= 1) {
             // O(n) 1<n<=16
             if (x % 2 != 0) flag = true; // for that (1)

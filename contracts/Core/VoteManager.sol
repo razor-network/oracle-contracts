@@ -89,7 +89,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                 // Check if asset value is zero
                 // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
                 require(tree.values[i].value != 0, "0 vote for assigned coll");
-                // slither-disable-next-line calls-loop
+                // slither-disable-next-line calls-inside-a-loop
                 // reason to ignore : its internal lib not a external call
                 require(
                     MerklePosAware.verify(

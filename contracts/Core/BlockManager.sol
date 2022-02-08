@@ -101,7 +101,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             require(sortedValues[i] > lastVisitedValue, "sortedValue <= LVV "); // LVS : Last Visited Value
             lastVisitedValue = sortedValues[i];
 
-            // slither-disable-next-line calls-loop
+            // slither-disable-next-line calls-inside-a-loop
             // reason to ignore : has to be done, as each vote will have diff weight
             uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
             accProd = accProd + sortedValues[i] * weight;
