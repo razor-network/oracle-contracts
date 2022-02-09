@@ -150,21 +150,16 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestStakerId
-    ) external initialized checkEpochAndState(State.Dispute, epoch) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
         require(correctBiggestStake > proposedBlocks[epoch][blockId].biggestStake, "Invalid dispute : Stake");
-        return _executeDispute(epoch, blockIndex, blockId);
+        _executeDispute(epoch, blockIndex, blockId);
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-        returns (uint32)
-    {
+    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
@@ -172,7 +167,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
         require(proposedBlocks[epoch][blockId].medians[medianIndex] != median, "Block proposed with same medians");
-        return _executeDispute(epoch, blockIndex, blockId);
+        _executeDispute(epoch, blockIndex, blockId);
     }
 
     function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
@@ -257,7 +252,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 blockId
-    ) internal returns (uint32) {
+    ) internal {
         proposedBlocks[epoch][blockId].valid = false;
 
         uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
@@ -277,7 +272,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
 
         uint32 proposerId = proposedBlocks[epoch][blockId].proposerId;
-        return stakeManager.slash(epoch, proposerId, msg.sender);
+        stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
     function _isElectedProposer(
