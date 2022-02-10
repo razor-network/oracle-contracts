@@ -52,15 +52,15 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
     }
 
-    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        _giveInactivityPenalties(epoch, stakerId);
-    }
-
     /// @notice The function gives out penalties to stakers during commit.
     /// The penalties are given for inactivity, failing to reveal
     /// , deviation from the median value of particular asset
     /// @param stakerId The staker id
     /// @param epoch The Epoch value in consideration
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
+        _giveInactivityPenalties(epoch, stakerId);
+    }
+
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);

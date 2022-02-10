@@ -37,11 +37,20 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint256 timestamp
     );
 
+    /// @param newDelegatorAddress The address of the Delegator contract
     function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegatorAddress != address(0x0), "Zero Address check");
         delegator = IDelegator(newDelegatorAddress);
     }
 
+    /// @notice Creates a Job in the network.
+    /// @dev Jobs are not directly reported by staker but just stores the URL and its corresponding details
+    /// @param weight specifies the weight the result of each job carries
+    /// @param power is used to specify the decimal shifts required on the result of a Job query
+    /// @param selectorType defines the selectorType of the URL. Can be JSON/XHTML
+    /// @param name of the URL
+    /// @param selector of the URL
+    /// @param url to be used for retrieving the data
     function createJob(
         uint8 weight,
         int8 power,
@@ -58,6 +67,13 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit JobCreated(numJobs, block.timestamp);
     }
 
+    /// @notice Updates a Job in the network.
+    /// @param jobID the job id for which the details need to change
+    /// @param weight specifies the weight the result of each job carries
+    /// @param power is used to specify the decimal shifts required on the result of a Job query
+    /// @param selectorType defines the selectorType of the URL. Can be JSON/XHTML
+    /// @param selector of the URL
+    /// @param url to be used for retrieving the data
     function updateJob(
         uint16 jobID,
         uint8 weight,
@@ -80,6 +96,9 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 
+    /// @notice Sets the status of the collection in the network.
+    /// @param assetStatus the status that needs to be set for the collection
+    /// @param id the collection id for which the status needs to change
     function setCollectionStatus(bool assetStatus, uint16 id) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm) {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
@@ -102,6 +121,14 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
     }
 
+    /// @notice Creates a collection in the network.
+    /// @dev Collections are to be reported by staker by querying the URLs in each job assigned in the collection
+    /// and aggregating them based on the aggregation method specified in the collection
+    /// @param tolerance specifies the percentage by which the staker's value can deviate from the value decided by the network
+    /// @param power is used to specify the decimal shifts required on the result of a Collection
+    /// @param aggregationMethod specifies the aggregation method to be used by the stakers
+    /// @param jobIDs an array that holds which jobs should the stakers query for the stakers to report for the collection
+    /// @param name of the collection
     function createCollection(
         uint32 tolerance,
         int8 power,
@@ -130,6 +157,12 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         delegator.setIDName(name, numCollections);
     }
 
+    /// @notice Updates a Collection in the network.
+    /// @param collectionID the collection id for which the details need to change
+    /// @param tolerance specifies the percentage by which the staker's value can deviate from the value decided by the network
+    /// @param aggregationMethod specifies the aggregation method to be used by the stakers
+    /// @param power is used to specify the decimal shifts required on the result of a Collection
+    /// @param jobIDs an array that holds which jobs should the stakers query for the stakers to report for the collection
     function updateCollection(
         uint16 collectionID,
         uint32 tolerance,
@@ -149,10 +182,13 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         emit CollectionUpdated(collectionID, power, epoch, aggregationMethod, tolerance, jobIDs, block.timestamp);
     }
 
+    /// @inheritdoc ICollectionManager
     function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
         _updateRegistry();
     }
 
+    /// @param id the id of the job
+    /// @return job the Struct of the job information
     function getJob(uint16 id) external view returns (Structs.Job memory job) {
         require(id != 0, "ID cannot be 0");
         require(id <= numJobs, "ID does not exist");
@@ -160,6 +196,8 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         return jobs[id];
     }
 
+    /// @param id the id of the collection
+    /// @return collection the Struct of the collection information
     function getCollection(uint16 id) external view returns (Structs.Collection memory collection) {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
@@ -167,38 +205,46 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         return collections[id];
     }
 
+    /// @inheritdoc ICollectionManager
     function getCollectionStatus(uint16 id) external view override returns (bool) {
         require(id <= numCollections, "ID does not exist");
 
         return collections[id].active;
     }
 
+    /// @inheritdoc ICollectionManager
     function getCollectionTolerance(uint16 i) external view override returns (uint32) {
         return collections[indexToIdRegistry[i + 1]].tolerance;
     }
 
+    /// @inheritdoc ICollectionManager
     function getCollectionPower(uint16 id) external view override returns (int8) {
         require(id <= numCollections, "ID does not exist");
 
         return collections[id].power;
     }
 
+    /// @return total number of jobs
     function getNumJobs() external view returns (uint16) {
         return numJobs;
     }
 
+    /// @inheritdoc ICollectionManager
     function getNumCollections() external view override returns (uint16) {
         return numCollections;
     }
 
+    /// @inheritdoc ICollectionManager
     function getNumActiveCollections() external view override returns (uint256) {
         return numActiveCollections;
     }
 
+    /// @inheritdoc ICollectionManager
     function getUpdateRegistryEpoch() external view override returns (uint32) {
         return updateRegistryEpoch;
     }
 
+    /// @inheritdoc ICollectionManager
     function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
         return idToIndexRegistry[id];
     }

@@ -8,16 +8,22 @@ contract StakeStorage {
         Unstake,
         Withdraw
     }
+    /// @notice total number of stakers
     // slither-disable-next-line constable-states
     uint32 public numStakers;
+    /// @notice total number of bounties given out
     // slither-disable-next-line constable-states
     uint32 public bountyCounter;
 
+    /// @notice mapping of staker address -> staker id info
     mapping(address => uint32) public stakerIds;
+    /// @notice mapping of staker id -> staker info
     mapping(uint32 => Structs.Staker) public stakers;
+    /// @notice mapping of staker/delegator address -> staker sRZR address -> LockType -> Lock info
     mapping(address => mapping(address => mapping(LockType => Structs.Lock))) public locks;
+    /// @notice mapping of bounty id -> bounty lock info
     mapping(uint32 => Structs.BountyLock) public bountyLocks;
-    //[math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
+    /// @notice maturity calculation for each index = [math.floor(math.sqrt(i*10000)/2) for i in range(1,100)]
     uint16[101] public maturities = [
         50,
         70,

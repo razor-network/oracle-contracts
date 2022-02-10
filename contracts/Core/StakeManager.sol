@@ -96,6 +96,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
     /// @notice stake during commit state only
     /// we check epoch during every transaction to avoid withholding and rebroadcasting attacks
+    /// @dev An ERC20 token corresponding to each new staker is created called sRZRs.
+    /// For a new staker, amount of sRZR minted is equal to amount of RAZOR staked.
+    /// For adding stake, amount of sRZR minted depends on sRZR:(RAZOR staked) valuation.
     /// @param epoch The Epoch value for which staker is requesting to stake
     /// @param amount The amount in RZR
     function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) whenNotPaused {
@@ -142,6 +145,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @notice Delegation
+    /// @dev the delegator receives the sRZR for the stakerID to which he/she delegates. 
+    /// The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
@@ -264,7 +269,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
-    /// @notice remove all funds in case of emergency
+    /// @inheritdoc IStakeManager
     function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
         if (escapeHatchEnabled) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
@@ -273,6 +278,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         }
     }
 
+    /// @inheritdoc IStakeManager
     function srzrTransfer(
         address from,
         address to,
@@ -332,10 +338,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
 
-    /// @notice External function for setting stake of the staker
-    /// Used by RewardManager
-    /// @param _id of the staker
-    /// @param _stake the amount of Razor tokens staked
+    /// @inheritdoc IStakeManager
     function setStakerStake(
         uint32 _epoch,
         uint32 _id,
@@ -346,11 +349,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
-    /// @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
-    /// to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
-    /// transfer to bounty hunter half the "slashPenaltyAmount" of the staker
-    /// @param stakerId The ID of the staker who is penalised
-    /// @param bountyHunter The address of the bounty hunter
+    /// @inheritdoc IStakeManager
     function slash(
         uint32 epoch,
         uint32 stakerId,
@@ -402,13 +401,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
 
-    /// @notice External function for setting epochLastPenalized of the staker
-    /// Used by RewardManager
-    /// @param _id of the staker
+    /// @inheritdoc IStakeManager
     function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external override onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].epochFirstStakedOrLastPenalized = _epoch;
     }
 
+    /// @inheritdoc IStakeManager
     function setStakerAge(
         uint32 _epoch,
         uint32 _id,
@@ -419,19 +417,17 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit AgeChange(_epoch, _id, _age, reason, block.timestamp);
     }
 
-    /// @param _address Address of the staker
-    /// @return The staker ID
+    /// @inheritdoc IStakeManager
     function getStakerId(address _address) external view override returns (uint32) {
         return (stakerIds[_address]);
     }
 
-    /// @param _id The staker ID
-    /// @return staker The Struct of staker information
+    /// @inheritdoc IStakeManager
     function getStaker(uint32 _id) external view override returns (Structs.Staker memory staker) {
         return (stakers[_id]);
     }
 
-    /// @return The number of stakers in the razor network
+    /// @inheritdoc IStakeManager
     function getNumStakers() external view override returns (uint32) {
         return (numStakers);
     }
@@ -441,16 +437,17 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         return stakers[stakerId].age;
     }
 
-    /// @return influence of staker
+    /// @inheritdoc IStakeManager
     function getInfluence(uint32 stakerId) external view override returns (uint256) {
         return _getMaturity(stakerId) * stakers[stakerId].stake;
     }
 
-    /// @return stake of staker
+    /// @inheritdoc IStakeManager
     function getStake(uint32 stakerId) external view override returns (uint256) {
         return stakers[stakerId].stake;
     }
 
+    /// @inheritdoc IStakeManager
     function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view override returns (uint32) {
         return stakers[stakerId].epochFirstStakedOrLastPenalized;
     }
@@ -511,6 +508,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         return ((_amount * _totalSupply) / _currentStake);
     }
 
+    /// @notice a private function being called when the staker
+    /// successfully withdraws his funds from the network. This is 
+    /// being done so that the staker can unstake and withdraw his remaining funds
+    /// incase of partial unstake
+    /// @param stakerId of the staker
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
