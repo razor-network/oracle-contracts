@@ -12,6 +12,7 @@ import "./parameters/child/BlockManagerParams.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
+import "hardhat/console.sol";
 
 contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;

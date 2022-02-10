@@ -219,8 +219,10 @@ const getCommitAndRevealData = async (collectionManager, voteManager, blockManag
   };
   const votesValueRevealed = [];
   for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
-
-  return [commitment, treeRevealData, secret, seqAllotedCollections, tree[0][0], assignedCollections, votesValueRevealed, seed];
+  const root = tree[0][0];
+  return {
+    commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
+  };
 };
 
 const getRandomCommitAndRevealData = async (collectionManager, voteManager, blockManager, medians) => {
@@ -277,8 +279,27 @@ const getRandomCommitAndRevealData = async (collectionManager, voteManager, bloc
   };
   const votesValueRevealed = [];
   for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
+  const root = tree[0][0];
+  return {
+    commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
+  };
+};
 
-  return [commitment, treeRevealData, secret, seqAllotedCollections, tree[0][0], assignedCollections, votesValueRevealed, seed];
+const getMedians = async (dataRevealedThisEpoch, result, collectionManager) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const medians = [];
+  for (let i = 0; i < numActiveCollections; i++) medians.push(0);
+  let influenceSum = toBigNumber('0');
+  for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
+  let helper = toBigNumber('0');
+  for (let i = 0; i < result.seqAllotedCollections.length; i++) {
+    for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
+      helper = helper.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
+    }
+    medians[(result.seqAllotedCollections)[i]] = helper.div(influenceSum);
+    helper = toBigNumber('0');
+  }
+  return medians;
 };
 
 module.exports = {
@@ -299,4 +320,5 @@ module.exports = {
   maturity,
   getCommitAndRevealData,
   getRandomCommitAndRevealData,
+  getMedians,
 };
