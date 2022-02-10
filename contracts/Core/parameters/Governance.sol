@@ -106,6 +106,7 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     function setMaxAge(uint32 _maxAge) external initialized onlyRole(GOVERNER_ROLE) {
+        require(_maxAge <= 100 * 10000, "Invalid Max Age Update");
         emit ParameterChanged(msg.sender, "maxAge", _maxAge, block.timestamp);
         rewardManagerParams.setMaxAge(_maxAge);
     }
