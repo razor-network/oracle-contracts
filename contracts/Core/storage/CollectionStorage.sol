@@ -13,7 +13,7 @@ contract CollectionStorage {
     /// @notice mapping for CollectionID -> Collection Info
     mapping(uint16 => Structs.Collection) public collections;
 
-    /// @notice mapping for collectionid -> index in block medians 
+    /// @notice mapping for collectionid -> index in block medians
     mapping(uint16 => uint16) public idToIndexRegistry;
     /// @notice mapping for index in block medians -> collectionid
     mapping(uint16 => uint16) public indexToIdRegistry;

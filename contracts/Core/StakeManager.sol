@@ -145,7 +145,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @notice Delegation
-    /// @dev the delegator receives the sRZR for the stakerID to which he/she delegates. 
+    /// @dev the delegator receives the sRZR for the stakerID to which he/she delegates.
     /// The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation
     /// @param amount The amount in RZR
     /// @param stakerId The Id of staker whom you want to delegate
@@ -509,7 +509,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @notice a private function being called when the staker
-    /// successfully withdraws his funds from the network. This is 
+    /// successfully withdraws his funds from the network. This is
     /// being done so that the staker can unstake and withdraw his remaining funds
     /// incase of partial unstake
     /// @param stakerId of the staker
