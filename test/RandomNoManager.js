@@ -109,7 +109,7 @@ describe('RandomNoManager', function () {
       await mineToNextState();
 
       // Reveal
-      await reveal(signers[5], 0, voteManager);
+      await reveal(signers[5], 0, voteManager, stakeManager, collectionManager);
 
       // Registering with unique reqId
       await randomNoManager.connect(signers[1]).register();
@@ -131,7 +131,7 @@ describe('RandomNoManager', function () {
 
       // Propose
       await mineToNextState();
-      await propose(signers[5], [0, 0, 0, 0, 0], stakeManager, blockManager, voteManager);
+      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
       // Dispute
       await mineToNextState();
       // Confirm

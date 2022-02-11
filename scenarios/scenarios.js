@@ -6,8 +6,6 @@ const {
   UNSTAKE_LOCK_PERIOD,
   GOVERNER_ROLE,
   WITHDRAW_INITIATION_PERIOD,
-  BURN_ADDRESS,
-  BASE_DENOMINATOR,
 } = require('../test/helpers/constants');
 const {
   assertBNEqual,

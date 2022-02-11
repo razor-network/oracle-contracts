@@ -1684,7 +1684,7 @@ describe('StakeManager', function () {
 
       // propose
       await mineToNextState();
-      await propose(signers[17], stakeManager, blockManager, voteManager);
+      await propose(signers[17], stakeManager, blockManager, voteManager, collectionManager);
       await reset();
 
       staker = await stakeManager.getStaker(stakerId);

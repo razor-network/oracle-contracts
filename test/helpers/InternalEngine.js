@@ -175,7 +175,8 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
   // console.log('Propose', iteration, biggestStakerId, stakerID);
-  const numActiveCollections = 9;
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  // const numActiveCollections = 9;
   const medians = [];
   let helper;
   for (let i = 0; i < numActiveCollections; i++) medians.push(0);
