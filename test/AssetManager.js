@@ -16,6 +16,8 @@ const {
   mineToNextEpoch,
 } = require('./helpers/testHelpers');
 
+const { utils } = ethers;
+
 const {
   toBigNumber,
   getEpoch,
@@ -25,6 +27,7 @@ const {
 describe('AssetManager', function () {
   let signers;
   let blockManager;
+  let delegator;
   let collectionManager;
   let razor;
   let stakeManager;
@@ -34,6 +37,7 @@ describe('AssetManager', function () {
     ({
       collectionManager,
       blockManager,
+      delegator,
       stakeManager,
       razor,
       initializeContracts,
@@ -264,12 +268,6 @@ describe('AssetManager', function () {
       const collectionName = 'Test Collection2';
       const tx1 = collectionManager.createCollection(0, 0, 1, [], collectionName);
       await assertRevert(tx1, 'no jobs added');
-    });
-
-    it('should not create collection if same named collection exists', async function () {
-      const collectionName = 'Test Collection2';
-      const tx = collectionManager.createCollection(0, 0, 1, [1, 2], collectionName);
-      await assertRevert(tx, 'Similar collection exists');
     });
 
     it('updateCollection should only work for collections which exists', async function () {
