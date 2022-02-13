@@ -16,8 +16,6 @@ const {
   mineToNextEpoch,
 } = require('./helpers/testHelpers');
 
-const { utils } = ethers;
-
 const {
   toBigNumber,
   getEpoch,
@@ -27,7 +25,6 @@ const {
 describe('AssetManager', function () {
   let signers;
   let blockManager;
-  let delegator;
   let collectionManager;
   let razor;
   let stakeManager;
@@ -37,7 +34,6 @@ describe('AssetManager', function () {
     ({
       collectionManager,
       blockManager,
-      delegator,
       stakeManager,
       razor,
       initializeContracts,
