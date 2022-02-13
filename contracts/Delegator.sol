@@ -23,7 +23,6 @@ contract Delegator is StateManager, ACL, IDelegator {
 
     function setIDName(string calldata name, uint16 _id) external override onlyRole(DELEGATOR_MODIFIER_ROLE) {
         bytes32 _name = keccak256(abi.encodePacked(name));
-        require(ids[_name] == 0, "Similar collection exists");
         ids[_name] = _id;
     }
 
@@ -36,6 +35,14 @@ contract Delegator is StateManager, ACL, IDelegator {
         uint32 epoch = _getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collectionManager.getCollectionPower(ids[_name]);
+        return (medians[index - 1], power);
+    }
+
+    function getResultFromID(uint16 _id) external view override returns (uint32, int8) {
+        uint16 index = collectionManager.getIdToIndexRegistryValue(_id);
+        uint32 epoch = _getEpoch();
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
+        int8 power = collectionManager.getCollectionPower(_id);
         return (medians[index - 1], power);
     }
 }

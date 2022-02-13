@@ -140,6 +140,12 @@ describe('Delegator', function () {
       assertBNEqual(result[1], toBigNumber('3'));
     });
 
+    it('should be able to fetch result using id', async function () {
+      const result = await delegator.getResultFromID(1);
+      assertBNEqual(result[0], toBigNumber('100'));
+      assertBNEqual(result[1], toBigNumber('3'));
+    });
+
     it('should update registry when multiple collections are created', async function () {
       await mineToNextState();
       await mineToNextState();
@@ -308,8 +314,27 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection3';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
+      const collectionID = await delegator.ids(hName);
+      assertBNEqual(collectionID, toBigNumber('3'));
       assertBNEqual(result[0], toBigNumber('300'));
       assertBNEqual(result[1], toBigNumber('2'));
+    });
+
+    it('should be able to create collection with same name', async function () {
+      await mineToNextEpoch();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      const epoch = await getEpoch();
+      const collectionName = 'Test Collection3';
+      const power = 2;
+      await collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
+      const hName = utils.solidityKeccak256(['string'], [collectionName]);
+      const collectionID = await delegator.ids(hName);
+      assertBNEqual(collectionID, toBigNumber('10'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
+      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('1'));
     });
   });
 });
