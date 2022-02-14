@@ -2,9 +2,7 @@
 pragma solidity ^0.8.0;
 
 interface IDelegator {
-    function updateAddress(address newDelegateAddress, address newResultAddres) external;
-
-    function setIDName(string calldata name, uint16 _id) external;
+    function updateAddress(address newDelegateAddress) external;
 
     function getResult(bytes32 _name) external view returns (uint32, int8);
 

@@ -52,9 +52,6 @@ module.exports = async () => {
   // keccak256("VOTE_MODIFIER_ROLE")
   const VOTE_MODIFIER_ROLE = '0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5';
 
-  // keccak256("DELEGATOR_MODIFIER_ROLE")
-  const DELEGATOR_MODIFIER_ROLE = '0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597';
-
   // keccak256("REGISTRY_MODIFIER_ROLE")
   const REGISTRY_MODIFIER_ROLE = '0xca51085219bef34771da292cb24ee4fcf0ae6bdba1a62c17d1fb7d58be802883';
 
@@ -102,14 +99,14 @@ module.exports = async () => {
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     collectionManagerAddress, randomNoManagerAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress));
-
+  pendingTransactions.push(await collectionManager.initialize(blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
@@ -131,8 +128,6 @@ module.exports = async () => {
   pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
-  pendingTransactions.push(await delegator.grantRole(DELEGATOR_MODIFIER_ROLE, collectionManagerAddress));
-  pendingTransactions.push(await collectionManager.upgradeDelegator(delegatorAddress));
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
@@ -153,7 +148,7 @@ module.exports = async () => {
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
   const numStates = await stakeManager.NUM_STATES();
-  const stateLength = (BigNumber.from(await stakeManager.epochLength())).div(numStates);
+  const stateLength = (BigNumber.from(await stakeManager.EPOCH_LENGTH())).div(numStates);
 
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);

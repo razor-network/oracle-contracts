@@ -2,13 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ICollectionManager.sol";
-import "../IDelegator.sol";
+import "./interface/IBlockManager.sol";
 import "./storage/CollectionStorage.sol";
+import "../Initializable.sol";
 import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
 
-contract CollectionManager is CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
-    IDelegator public delegator;
+contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
+    IBlockManager blockManager;
 
     event JobCreated(uint16 id, uint256 timestamp);
 
@@ -37,9 +38,8 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         uint256 timestamp
     );
 
-    function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newDelegatorAddress != address(0x0), "Zero Address check");
-        delegator = IDelegator(newDelegatorAddress);
+    function initialize(address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+        blockManager = IBlockManager(blockManagerAddress);
     }
 
     function createJob(
@@ -127,7 +127,7 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         updateRegistryEpoch = epoch + 1;
         emit CollectionCreated(numCollections, block.timestamp);
 
-        delegator.setIDName(name, numCollections);
+        _setIDName(name, numCollections);
     }
 
     function updateCollection(
@@ -165,6 +165,22 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
         require(id <= numCollections, "ID does not exist");
 
         return collections[id];
+    }
+
+    function getResult(bytes32 _name) external view override returns (uint32, int8) {
+        uint16 index = idToIndexRegistry[ids[_name]];
+        uint32 epoch = _getEpoch();
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
+        int8 power = collections[ids[_name]].power;
+        return (medians[index - 1], power);
+    }
+
+    function getResultFromID(uint16 _id) external view override returns (uint32, int8) {
+        uint16 index = idToIndexRegistry[_id];
+        uint32 epoch = _getEpoch();
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
+        int8 power = collections[_id].power;
+        return (medians[index - 1], power);
     }
 
     function getCollectionStatus(uint16 id) external view override returns (bool) {
@@ -214,5 +230,10 @@ contract CollectionManager is CollectionStorage, StateManager, CollectionManager
                 idToIndexRegistry[i] = 0;
             }
         }
+    }
+
+    function _setIDName(string calldata name, uint16 _id) internal {
+        bytes32 _name = keccak256(abi.encodePacked(name));
+        ids[_name] = _id;
     }
 }

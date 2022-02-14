@@ -17,4 +17,8 @@ interface ICollectionManager {
     function getCollectionTolerance(uint16 id) external view returns (uint32);
 
     function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+
+    function getResult(bytes32 _name) external view returns (uint32, int8);
+
+    function getResultFromID(uint16 _id) external view returns (uint32, int8);
 }
