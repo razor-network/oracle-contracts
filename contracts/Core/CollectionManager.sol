@@ -9,7 +9,7 @@ import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
 
 contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
-    IBlockManager blockManager;
+    IBlockManager public blockManager;
 
     event JobCreated(uint16 id, uint256 timestamp);
 
@@ -193,10 +193,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return collections[indexToIdRegistry[i + 1]].tolerance;
     }
 
-    function getCollectionPower(uint16 id) external view override returns (int8) {
-        require(id <= numCollections, "ID does not exist");
-
-        return collections[id].power;
+    function getCollectionID(bytes32 _hname) external view override returns (uint16) {
+        return ids[_hname];
     }
 
     function getNumJobs() external view returns (uint16) {
@@ -213,10 +211,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     function getUpdateRegistryEpoch() external view override returns (uint32) {
         return updateRegistryEpoch;
-    }
-
-    function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
-        return idToIndexRegistry[id];
     }
 
     function _updateRegistry() internal {

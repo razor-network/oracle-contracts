@@ -8,15 +8,13 @@ interface ICollectionManager {
 
     function getNumActiveCollections() external view returns (uint256);
 
-    function getCollectionPower(uint16 id) external view returns (int8);
-
     function getNumCollections() external view returns (uint16);
 
     function getUpdateRegistryEpoch() external view returns (uint32);
 
     function getCollectionTolerance(uint16 id) external view returns (uint32);
 
-    function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+    function getCollectionID(bytes32 _name) external view returns (uint16);
 
     function getResult(bytes32 _name) external view returns (uint32, int8);
 

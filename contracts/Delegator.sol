@@ -19,6 +19,10 @@ contract Delegator is StateManager, ACL, IDelegator {
         return collectionManager.getNumActiveCollections();
     }
 
+    function getCollectionID(bytes32 _hname) external view override returns (uint16) {
+        return collectionManager.getCollectionID(_hname);
+    }
+
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
         return collectionManager.getResult(_name);
     }
