@@ -162,12 +162,7 @@ describe('AssetManager', function () {
       const tx = collectionManager.getCollection(0);
       await assertRevert(tx, 'ID cannot be 0');
     });
-
-    it('should be able to get power of a collection', async function () {
-      const cPower = await collectionManager.getCollectionPower(1);
-      assertBNEqual(cPower, toBigNumber('5'));
-    });
-
+    
     it('should not be able to get the active status of any asset is not a collection', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
@@ -252,12 +247,6 @@ describe('AssetManager', function () {
     it('should not be able to set Collection status if provided status is the same as current collectionstatus', async function () {
       const tx1 = collectionManager.setCollectionStatus(false, 3);// status of collection with Id 3 is already false
       await assertRevert(tx1, 'status not being changed');
-    });
-
-    it('should not be able to get power of any asset if not a collection', async function () {
-      const numCollections = await collectionManager.getNumCollections();
-      const tx2 = collectionManager.getCollectionPower(numCollections + 1);
-      await assertRevert(tx2, 'ID does not exist');
     });
 
     it('should not create collection if it does not have any jobIDs', async function () {
