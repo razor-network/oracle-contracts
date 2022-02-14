@@ -47,7 +47,6 @@ module.exports = {
         },
       },
     ],
-    
   },
   networks: {
     local: {
