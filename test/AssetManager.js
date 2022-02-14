@@ -162,7 +162,7 @@ describe('AssetManager', function () {
       const tx = collectionManager.getCollection(0);
       await assertRevert(tx, 'ID cannot be 0');
     });
-    
+
     it('should not be able to get the active status of any asset is not a collection', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
