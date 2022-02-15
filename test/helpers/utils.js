@@ -7,6 +7,9 @@ const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
+const store = {};
+const leavesOfTree = {};
+
 const calculateDisputesData = async (medianIndex, voteManager, stakeManager, collectionManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
@@ -120,7 +123,6 @@ const getAssignedCollections = async (numActiveCollections, seed, toAssign) => {
   const assignedCollections = {}; // For Tree
   const seqAllotedCollections = []; // isCollectionAlloted
   for (let i = 0; i < toAssign; i++) {
-    // console.log(seed);
     const assigned = await prng(
       numActiveCollections,
       utils.solidityKeccak256(
@@ -128,11 +130,6 @@ const getAssignedCollections = async (numActiveCollections, seed, toAssign) => {
         [seed, i]
       )
     );
-    // console.log('isALLOTED', utils.solidityKeccak256(
-    //   ['bytes32', 'uint256'],
-    //   [seed, i]
-    // ), assigned);
-    // console.log(typeof assignedCollections[assigned]);
     assignedCollections[assigned] = true;
     seqAllotedCollections.push(assigned);
   }
@@ -159,148 +156,238 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
-const getCommitAndRevealData = async (collectionManager, voteManager, blockManager, factor) => {
+// const getCommitAndRevealData = async (collectionManager, voteManager, blockManager, factor) => {
+//   const numActiveCollections = await collectionManager.getNumActiveCollections();
+//   const salt = await voteManager.getSalt();
+//   const toAssign = await voteManager.toAssign();
+//   const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+//   const seed = utils.solidityKeccak256(
+//     ['bytes32', 'bytes32'],
+//     [salt, secret]
+//   );
+//   // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+//   const assignedCollections = {}; // For Tree
+//   const seqAllotedCollections = []; // isCollectionAlloted
+//   for (let i = 0; i < toAssign; i++) {
+//     // console.log(seed);
+//     const assigned = await prng(
+//       numActiveCollections,
+//       utils.solidityKeccak256(
+//         ['bytes32', 'uint256'],
+//         [seed, i]
+//       )
+//     );
+//     // console.log('isALLOTED', utils.solidityKeccak256(
+//     //   ['bytes32', 'uint256'],
+//     //   [seed, i]
+//     // ), assigned);
+//     // console.log(typeof assignedCollections[assigned]);
+//     assignedCollections[assigned] = true;
+//     seqAllotedCollections.push(assigned);
+//   }
+//   // const assignedCollections = result[0];
+//   // const seqAllotedCollections = result[1];
+//   const leavesOfTree = [];
+//
+//   for (let i = 0; i < numActiveCollections; i++) {
+//     if (assignedCollections[i]) {
+//       leavesOfTree.push(((i + 1) * 100) + factor);
+//     } else leavesOfTree.push(0);
+//   }
+//   const tree = await createMerkle(leavesOfTree);
+//   // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], depth, seqAllotedCollections);
+//   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
+//   const proofs = [];
+//   const values = [];
+//
+//   for (let j = 0; j < seqAllotedCollections.length; j++) {
+//     values.push({
+//       medianIndex: seqAllotedCollections[j],
+//       value: (((Number(seqAllotedCollections[j]) + 1) * 100) + factor),
+//     });
+//
+//     proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
+//   }
+//   // console.log(values[0].value);
+//   const treeRevealData = {
+//     values,
+//     proofs,
+//     root: tree[0][0],
+//   };
+//   const votesValueRevealed = [];
+//   for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
+//   const root = tree[0][0];
+//   return {
+//     commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
+//   };
+// };
+
+const randomCommit = async (medians, signer, deviation, voteManager, collectionManager, secret) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
   const salt = await voteManager.getSalt();
   const toAssign = await voteManager.toAssign();
-  const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-  const seed = utils.solidityKeccak256(
+  // const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+  const seed1 = utils.solidityKeccak256(
     ['bytes32', 'bytes32'],
     [salt, secret]
   );
-  // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
-  const assignedCollections = {}; // For Tree
-  const seqAllotedCollections = []; // isCollectionAlloted
-  for (let i = 0; i < toAssign; i++) {
-    // console.log(seed);
-    const assigned = await prng(
-      numActiveCollections,
-      utils.solidityKeccak256(
-        ['bytes32', 'uint256'],
-        [seed, i]
-      )
-    );
-    // console.log('isALLOTED', utils.solidityKeccak256(
-    //   ['bytes32', 'uint256'],
-    //   [seed, i]
-    // ), assigned);
-    // console.log(typeof assignedCollections[assigned]);
-    assignedCollections[assigned] = true;
-    seqAllotedCollections.push(assigned);
-  }
-  // const assignedCollections = result[0];
-  // const seqAllotedCollections = result[1];
-  const leavesOfTree = [];
-
-  for (let i = 0; i < numActiveCollections; i++) {
-    if (assignedCollections[i]) {
-      leavesOfTree.push(((i + 1) * 100) + factor);
-    } else leavesOfTree.push(0);
-  }
-  const tree = await createMerkle(leavesOfTree);
-  // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], depth, seqAllotedCollections);
-  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
-  const proofs = [];
-  const values = [];
-
-  for (let j = 0; j < seqAllotedCollections.length; j++) {
-    values.push({
-      medianIndex: seqAllotedCollections[j],
-      value: (((Number(seqAllotedCollections[j]) + 1) * 100) + factor),
-    });
-
-    proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
-  }
-  // console.log(values[0].value);
-  const treeRevealData = {
-    values,
-    proofs,
-    root: tree[0][0],
-  };
-  const votesValueRevealed = [];
-  for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
-  const root = tree[0][0];
-  return {
-    commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
-  };
-};
-
-const getRandomCommitAndRevealData = async (collectionManager, voteManager, blockManager, medians) => {
-  const numActiveCollections = await collectionManager.getNumActiveCollections();
-  const salt = await voteManager.getSalt();
-  const toAssign = await voteManager.toAssign();
-  const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-  const seed = utils.solidityKeccak256(
-    ['bytes32', 'bytes32'],
-    [salt, secret]
-  );
-  // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
-  const assignedCollections = {}; // For Tree
-  const seqAllotedCollections = []; // isCollectionAlloted
-  for (let i = 0; i < toAssign; i++) {
-    // console.log(seed);
-    const assigned = await prng(
-      numActiveCollections,
-      utils.solidityKeccak256(
-        ['bytes32', 'uint256'],
-        [seed, i]
-      )
-    );
-    assignedCollections[assigned] = true;
-    seqAllotedCollections.push(assigned); // [2,3,1,0]
-  }
-  const leavesOfTree = [];
-
+  const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+  const assignedCollections = result[0];
+  const seqAllotedCollections = result[1];
+  const helper = [];
   for (let i = 0; i < numActiveCollections; i++) {
     if (assignedCollections[i]) {
       const rand = Math.floor(Math.random() * 3);
       const fact = (rand === 2) ? -1 : rand;
-      leavesOfTree.push((medians[i] + fact)); // [100,200,300,400]
-    } else leavesOfTree.push(0);
+      helper.push((medians[i] + fact)); // [100,200,300,400]
+    } else helper.push(0);
   }
-  const tree = await createMerkle(leavesOfTree);
-  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
+  leavesOfTree[signer.address] = helper;
+  const tree = await createMerkle(leavesOfTree[signer.address]);
+
+  store[signer.address] = {
+    assignedCollections,
+    seqAllotedCollections,
+    leavesOfTree,
+    tree,
+    secret,
+  };
+  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
+  await voteManager.connect(signer).commit(getEpoch(), commitment);
+};
+
+const randomReveal = async (signer, deviation, voteManager) => {
   const proofs = [];
   const values = [];
-
-  for (let j = 0; j < seqAllotedCollections.length; j++) {
+  const sac = store[signer.address].seqAllotedCollections;
+  for (let j = 0; j < sac.length; j++) {
     values.push({
-      medianIndex: seqAllotedCollections[j],
-      value: (leavesOfTree[(seqAllotedCollections[j])]), // [300,400,200,100]
+      medianIndex: sac[j],
+      value: ((leavesOfTree[signer.address])[(sac)[j]]), // [300,400,200,100]
     });
-
-    proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
+    proofs.push(await getProofPath(store[signer.address].tree, Number(store[signer.address].seqAllotedCollections[j])));
   }
-  // console.log(values[0].value);
   const treeRevealData = {
     values,
     proofs,
-    root: tree[0][0],
+    root: store[signer.address].tree[0][0],
   };
-  const votesValueRevealed = [];
-  for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
-  const root = tree[0][0];
-  return {
-    commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
-  };
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
 };
 
-const getMedians = async (dataRevealedThisEpoch, result, collectionManager) => {
-  const numActiveCollections = await collectionManager.getNumActiveCollections();
-  const medians = [];
-  for (let i = 0; i < numActiveCollections; i++) medians.push(0);
-  let influenceSum = toBigNumber('0');
-  for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
-  let helper = toBigNumber('0');
-  for (let i = 0; i < result.seqAllotedCollections.length; i++) {
-    for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
-      helper = helper.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
-    }
-    medians[(result.seqAllotedCollections)[i]] = helper.div(influenceSum);
-    helper = toBigNumber('0');
-  }
-  return medians;
+// const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
+//   const stakerID = await stakeManager.getStakerId(signer.address);
+//   const staker = await stakeManager.getStaker(stakerID);
+//   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
+//   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+//   // console.log('Propose', iteration, biggestStakerId, stakerID);
+//   const numActiveCollections = await collectionManager.getNumActiveCollections();
+//   // const numActiveCollections = 9;
+//   const medians = [];
+//   let helper;
+//   for (let i = 0; i < numActiveCollections; i++) medians.push(0);
+//   for (let j = 0; j < numActiveCollections; j++) {
+//     if (Number(influenceSum[j]) !== 0) {
+//       helper = (res[j]).div(influenceSum[j]);
+//       medians[j] = helper;
+//     }
+//   }
+//   median[signer.address] = medians;
+//   await blockManager.connect(signer).propose(getEpoch(),
+//     medians,
+//     iteration,
+//     biggestStakerId);
+// };
+
+const randomPropose = async (medians, signer, stakeManager, blockManager, voteManager) => {
+  const stakerID = await stakeManager.getStakerId(signer.address);
+  const staker = await stakeManager.getStaker(stakerID);
+  const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
+  const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+  await blockManager.connect(signer).propose(getEpoch(),
+    medians,
+    iteration,
+    biggestStakerId);
 };
+
+const getData = async (signer) => (store[signer.address]);
+
+// const getRandomCommitAndRevealData = async (collectionManager, voteManager, blockManager, medians) => {
+//   const numActiveCollections = await collectionManager.getNumActiveCollections();
+//   const salt = await voteManager.getSalt();
+//   const toAssign = await voteManager.toAssign();
+//   const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+//   const seed = utils.solidityKeccak256(
+//     ['bytes32', 'bytes32'],
+//     [salt, secret]
+//   );
+//   // const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+//   const assignedCollections = {}; // For Tree
+//   const seqAllotedCollections = []; // isCollectionAlloted
+//   for (let i = 0; i < toAssign; i++) {
+//     // console.log(seed);
+//     const assigned = await prng(
+//       numActiveCollections,
+//       utils.solidityKeccak256(
+//         ['bytes32', 'uint256'],
+//         [seed, i]
+//       )
+//     );
+//     assignedCollections[assigned] = true;
+//     seqAllotedCollections.push(assigned); // [2,3,1,0]
+//   }
+//   const leavesOfTree = [];
+//
+//   for (let i = 0; i < numActiveCollections; i++) {
+//     if (assignedCollections[i]) {
+//       const rand = Math.floor(Math.random() * 3);
+//       const fact = (rand === 2) ? -1 : rand;
+//       leavesOfTree.push((medians[i] + fact)); // [100,200,300,400]
+//     } else leavesOfTree.push(0);
+//   }
+//   const tree = await createMerkle(leavesOfTree);
+//   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed]);
+//   const proofs = [];
+//   const values = [];
+//
+//   for (let j = 0; j < seqAllotedCollections.length; j++) {
+//     values.push({
+//       medianIndex: seqAllotedCollections[j],
+//       value: (leavesOfTree[(seqAllotedCollections[j])]), // [300,400,200,100]
+//     });
+//
+//     proofs.push(await getProofPath(tree, Number(seqAllotedCollections[j])));
+//   }
+//   // console.log(values[0].value);
+//   const treeRevealData = {
+//     values,
+//     proofs,
+//     root: tree[0][0],
+//   };
+//   const votesValueRevealed = [];
+//   for (let i = 0; i < 3; i++) votesValueRevealed.push((treeRevealData.values)[i].value);
+//   const root = tree[0][0];
+//   return {
+//     commitment, treeRevealData, secret, seqAllotedCollections, root, assignedCollections, votesValueRevealed, seed,
+//   };
+// };
+
+// const getMedians = async (dataRevealedThisEpoch, result, collectionManager) => {
+//   const numActiveCollections = await collectionManager.getNumActiveCollections();
+//   const medians = [];
+//   for (let i = 0; i < numActiveCollections; i++) medians.push(0);
+//   let influenceSum = toBigNumber('0');
+//   for (let i = 0; i < ((dataRevealedThisEpoch.influence).length); i++) influenceSum = influenceSum.add((dataRevealedThisEpoch.influence)[i]);
+//   let helper = toBigNumber('0');
+//   for (let i = 0; i < result.seqAllotedCollections.length; i++) {
+//     for (let j = 0; j < (dataRevealedThisEpoch.influence).length; j++) {
+//       helper = helper.add((toBigNumber((dataRevealedThisEpoch.values)[j][i])).mul((dataRevealedThisEpoch.influence)[j]));
+//     }
+//     medians[(result.seqAllotedCollections)[i]] = helper.div(influenceSum);
+//     helper = toBigNumber('0');
+//   }
+//   return medians;
+// };
 
 module.exports = {
   calculateDisputesData,
@@ -318,7 +405,11 @@ module.exports = {
   toBigNumber,
   tokenAmount,
   maturity,
-  getCommitAndRevealData,
-  getRandomCommitAndRevealData,
-  getMedians,
+  // getCommitAndRevealData,
+  // getRandomCommitAndRevealData,
+  // getMedians,
+  randomCommit,
+  randomReveal,
+  randomPropose,
+  getData,
 };
