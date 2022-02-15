@@ -120,20 +120,12 @@ describe('AssetManager', function () {
     });
 
     it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
-<<<<<<< HEAD
-      const tx = collectionManager.createCollection(1001, 3, 1, [1, 2], 'Test Collection');
-=======
       const tx = collectionManager.createCollection(1000001, 3, 1, [1, 2], 'Test Collection');
->>>>>>> upstream/master
       await assertRevert(tx, 'Invalid tolerance value');
     });
 
     it('should not be able to update collection if tolerance value is not less than maxTolerance', async function () {
-<<<<<<< HEAD
-      const tx = collectionManager.updateCollection(1, 1001, 2, 5, [1, 2, 5]);
-=======
       const tx = collectionManager.updateCollection(1, 1000001, 2, 5, [1, 2, 5]);
->>>>>>> upstream/master
       await assertRevert(tx, 'Invalid tolerance value');
     });
 
