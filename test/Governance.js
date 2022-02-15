@@ -20,25 +20,23 @@ describe('Governance contract Test', async () => {
   let stakeManager;
   let rewardManager;
   let voteManager;
-  let randomNoManager;
-  let delegator;
   let initializeContracts;
 
   const expectedRevertMessage = 'AccessControl';
 
-  const penaltyNotRevealNumerator = toBigNumber('1');
+  const penaltyNotRevealNumerator = toBigNumber('1000');
 
+  const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
-  const epochLength = toBigNumber('300');
   const gracePeriod = toBigNumber('8');
   const minimumStake = tokenAmount('20000');
   const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
-  const extendLockPenalty = toBigNumber('1');
+  const extendUnstakeLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
-  const maxTolerance = toBigNumber('1000');
+  const maxTolerance = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
@@ -46,7 +44,7 @@ describe('Governance contract Test', async () => {
   before(async () => {
     ({
       governance, collectionManager, blockManager, stakeManager, voteManager,
-      rewardManager, randomNoManager, delegator, initializeContracts,
+      rewardManager, initializeContracts,
     } = await setupContracts());
     await Promise.all(await initializeContracts());
     signers = await ethers.getSigners();
@@ -72,19 +70,19 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setUnstakeLockPeriod(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setWithdrawLockPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setWithdrawReleasePeriod(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setWithdrawInitiationPeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setExtendLockPenalty(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setExtendUnstakeLockPenalty(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMaxAltBlocks(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
-    tx = governance.connect(signers[0]).setEpochLength(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMinStake(toBigNumber('1'));
@@ -126,6 +124,9 @@ describe('Governance contract Test', async () => {
     assertBNEqual(minStake1, toBigNumber('8'));
     assertBNEqual(minStake2, toBigNumber('8'));
 
+    await governance.setUnstakeLockPeriod(toBigNumber('9'));
+    const unstakeLockPeriod = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, toBigNumber('9'));
     await governance.setMinSafeRazor(toBigNumber('2'));
     const minSafeRazor = await stakeManager.minSafeRazor();
     assertBNEqual(minSafeRazor, toBigNumber('2'));
@@ -137,22 +138,6 @@ describe('Governance contract Test', async () => {
     await governance.setMaxAltBlocks(toBigNumber('10'));
     const maxAltBlocks = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
-
-    await governance.setEpochLength(toBigNumber('11'));
-    const epochLength = await collectionManager.epochLength();
-    const epochLength1 = await blockManager.epochLength();
-    const epochLength2 = await stakeManager.epochLength();
-    const epochLength3 = await rewardManager.epochLength();
-    const epochLength4 = await voteManager.epochLength();
-    const epochLength5 = await randomNoManager.epochLength();
-    const epochLength6 = await delegator.epochLength();
-    assertBNEqual(epochLength, toBigNumber('11'));
-    assertBNEqual(epochLength1, toBigNumber('11'));
-    assertBNEqual(epochLength2, toBigNumber('11'));
-    assertBNEqual(epochLength3, toBigNumber('11'));
-    assertBNEqual(epochLength4, toBigNumber('11'));
-    assertBNEqual(epochLength5, toBigNumber('11'));
-    assertBNEqual(epochLength6, toBigNumber('11'));
 
     await governance.setGracePeriod(toBigNumber('14'));
     const gracePeriod = await rewardManager.gracePeriod();
@@ -166,13 +151,13 @@ describe('Governance contract Test', async () => {
     assertBNEqual(maxTolerance, toBigNumber('15'));
     assertBNEqual(maxTolerance1, toBigNumber('15'));
 
-    await governance.setWithdrawReleasePeriod(toBigNumber('16'));
-    const withdrawReleasePeriod = await stakeManager.withdrawReleasePeriod();
-    assertBNEqual(withdrawReleasePeriod, toBigNumber('16'));
+    await governance.setWithdrawInitiationPeriod(toBigNumber('16'));
+    const withdrawInitiationPeriod = await stakeManager.withdrawInitiationPeriod();
+    assertBNEqual(withdrawInitiationPeriod, toBigNumber('16'));
 
-    await governance.setExtendLockPenalty(toBigNumber('17'));
-    const extendLockPenalty = await stakeManager.extendLockPenalty();
-    assertBNEqual(extendLockPenalty, toBigNumber('17'));
+    await governance.setExtendUnstakeLockPenalty(toBigNumber('17'));
+    const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
+    assertBNEqual(extendUnstakeLockPenalty, toBigNumber('17'));
 
     await governance.setMaxAge(toBigNumber('18'));
     const maxAge = await rewardManager.maxAge();
@@ -199,11 +184,11 @@ describe('Governance contract Test', async () => {
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
 
-    tx = governance.setSlashParams(toBigNumber('5000'), toBigNumber('4000'), toBigNumber('3000'));
-    await assertRevert(tx, 'Slash nums addtion exceeds 10000');
+    tx = governance.setSlashParams(toBigNumber('5000000'), toBigNumber('4000000'), toBigNumber('3000000'));
+    await assertRevert(tx, 'Slash nums addtion exceeds 10mil');
 
-    tx = governance.setMaxTolerance(toBigNumber('11000'));
-    await assertRevert(tx, 'maxTolerance exceeds 10000');
+    tx = governance.setMaxTolerance(toBigNumber('11000000'));
+    await assertRevert(tx, 'maxTolerance exceeds 10000000');
   });
 
   it('parameters values should be initialized correctly', async () => {
@@ -211,8 +196,8 @@ describe('Governance contract Test', async () => {
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
 
     const slashParams = await stakeManager.slashNums();
-    assertBNEqual(slashParams[0], toBigNumber('500'));
-    assertBNEqual(slashParams[1], toBigNumber('9500'));
+    assertBNEqual(slashParams[0], toBigNumber('500000'));
+    assertBNEqual(slashParams[1], toBigNumber('9500000'));
     assertBNEqual(slashParams[2], toBigNumber('0'));
 
     const minStakeValue = await stakeManager.minStake();
@@ -227,17 +212,17 @@ describe('Governance contract Test', async () => {
     const withdrawLockPeriodValue = await stakeManager.withdrawLockPeriod();
     assertBNEqual(withdrawLockPeriod, withdrawLockPeriodValue);
 
-    const withdrawReleasePeriodValue = await stakeManager.withdrawReleasePeriod();
+    const unstakeLockPeriodValue = await stakeManager.unstakeLockPeriod();
+    assertBNEqual(unstakeLockPeriod, unstakeLockPeriodValue);
+
+    const withdrawReleasePeriodValue = await stakeManager.withdrawInitiationPeriod();
     assertBNEqual(withdrawReleasePeriod, withdrawReleasePeriodValue);
 
-    const extendLockPenaltyValue = await stakeManager.extendLockPenalty();
-    assertBNEqual(extendLockPenalty, extendLockPenaltyValue);
+    const extendUnstakeLockPenaltyValue = await stakeManager.extendUnstakeLockPenalty();
+    assertBNEqual(extendUnstakeLockPenalty, extendUnstakeLockPenaltyValue);
 
     const maxAltBlocksValue = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, maxAltBlocksValue);
-
-    const epochLengthValue = await collectionManager.epochLength();
-    assertBNEqual(epochLength, epochLengthValue);
 
     const maxAgeValue = await rewardManager.maxAge();
     assertBNEqual(maxAge, maxAgeValue);

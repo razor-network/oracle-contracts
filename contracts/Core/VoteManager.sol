@@ -32,7 +32,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         collectionManager = ICollectionManager(collectionManagerAddress);
     }
 
-    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, epochLength) {
+    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch) {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(!stakeManager.getStaker(stakerId).isSlashed, "VM : staker is slashed");
@@ -59,7 +59,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint32 epoch,
         uint48[] calldata values,
         bytes32 secret
-    ) external initialized checkEpochAndState(State.Reveal, epoch, epochLength) {
+    ) external initialized checkEpochAndState(State.Reveal, epoch) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         uint256 stakerStake = stakeManager.getStake(stakerId);
         require(stakerId > 0, "Staker does not exist");
@@ -92,7 +92,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch, epochLength) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Commit, epoch) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
@@ -102,7 +102,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        return stakeManager.slash(epoch, thisStakerId, msg.sender);
+        stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {

@@ -1,3 +1,5 @@
+# Environment where you deploying contracts
+ENV=
 # Seed phrase from which accounts are derived
 MNEMONIC=
 
@@ -17,3 +19,6 @@ RAZOR_ADDRESS=
 # List of Stakers
 STAKER_ADDRESSES=
 SEED_AMOUNT=
+
+#Tenderly SLUG
+TENDERLY_SLUG= 

@@ -6,8 +6,6 @@ import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
-import "./interfaces/IDelegatorParams.sol";
-import "./interfaces/IRandomNoManagerParams.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
 
@@ -21,8 +19,6 @@ contract Governance is Initializable, ACL, Constants {
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
-    IDelegatorParams public delegatorParams;
-    IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
 
@@ -34,17 +30,13 @@ contract Governance is Initializable, ACL, Constants {
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
-        address collectionManagerAddress,
-        address delegatorAddress,
-        address randomNoManagerAddress
+        address collectionManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         blockManagerParams = IBlockManagerParams(blockManagerAddress);
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
-        delegatorParams = IDelegatorParams(delegatorAddress);
-        randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
@@ -53,15 +45,20 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     function setSlashParams(
-        uint16 _bounty,
-        uint16 _burn,
-        uint16 _keep
+        uint32 _bounty,
+        uint32 _burn,
+        uint32 _keep
     ) external initialized onlyRole(GOVERNER_ROLE) {
-        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10mil");
         emit ParameterChanged(msg.sender, "bountySlashNum", _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", _burn, block.timestamp);
         emit ParameterChanged(msg.sender, "keepSlashNum", _keep, block.timestamp);
         stakeManagerParams.setSlashParams(_bounty, _burn, _keep);
+    }
+
+    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
+        stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
     }
 
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
@@ -69,14 +66,14 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
 
-    function setWithdrawReleasePeriod(uint8 _withdrawReleasePeriod) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "withdrawReleasePeriod", _withdrawReleasePeriod, block.timestamp);
-        stakeManagerParams.setWithdrawReleasePeriod(_withdrawReleasePeriod);
+    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "withdrawInitiationPeriod", _withdrawInitiationPeriod, block.timestamp);
+        stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
 
-    function setExtendLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
+    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", _extendLockPenalty, block.timestamp);
-        stakeManagerParams.setExtendLockPenalty(_extendLockPenalty);
+        stakeManagerParams.setExtendUnstakeLockPenalty(_extendLockPenalty);
     }
 
     function setMaxAltBlocks(uint8 _maxAltBlocks) external initialized onlyRole(GOVERNER_ROLE) {
@@ -124,17 +121,6 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.disableEscapeHatch();
     }
 
-    function setEpochLength(uint16 _epochLength) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "epochLength", _epochLength, block.timestamp);
-        blockManagerParams.setEpochLength(_epochLength);
-        rewardManagerParams.setEpochLength(_epochLength);
-        stakeManagerParams.setEpochLength(_epochLength);
-        voteManagerParams.setEpochLength(_epochLength);
-        collectionManagerParams.setEpochLength(_epochLength);
-        delegatorParams.setEpochLength(_epochLength);
-        randomNoManagerParams.setEpochLength(_epochLength);
-    }
-
     function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
@@ -145,8 +131,9 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
 
-    function setMaxTolerance(uint16 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000");
+    function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+        // slither-disable-next-line too-many-digits
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);
