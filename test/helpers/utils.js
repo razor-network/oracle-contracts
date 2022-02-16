@@ -38,6 +38,7 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
     accProd = accProd.add(toBigNumber(vote).mul(infl));
   }
   median = accProd.div(totalInfluenceRevealed);
+  sortedValues.sort();
   return {
     median, totalInfluenceRevealed, accProd, sortedValues,
   };

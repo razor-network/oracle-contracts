@@ -1045,7 +1045,7 @@ describe('Scenarios', async () => {
       let { seqAllotedCollections } = data;
       const numActiveCollections = await collectionManager.getNumActiveCollections();
       for (let k = 0; k < numActiveCollections; k++) helper[k] = 0;
-      for (let i = 0; i < 7; i++) { // [4,5,6,3,2,1,1]
+      for (let i = 0; i < 7; i++) {
         const medianIndex = seqAllotedCollections[i];
         const median = await calculateDisputesData(medianIndex,
           voteManager,
