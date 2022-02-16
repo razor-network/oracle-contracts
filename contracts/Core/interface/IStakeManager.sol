@@ -49,5 +49,5 @@ interface IStakeManager {
 
     function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view returns (uint32);
 
-    function maturitiesLength() external view returns (uint8);
+    function maturitiesLength() external view returns (uint32);
 }

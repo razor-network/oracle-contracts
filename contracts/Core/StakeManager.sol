@@ -455,8 +455,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         return stakers[stakerId].epochFirstStakedOrLastPenalized;
     }
 
-    function maturitiesLength() external view override returns (uint8) {
-        return uint8(maturities.length);
+    function maturitiesLength() external view override returns (uint32) {
+        return uint32(maturities.length);
     }
 
     /// @notice Internal function for setting stake of the staker

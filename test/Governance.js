@@ -184,7 +184,7 @@ describe('Governance contract Test', async () => {
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
 
-    tx = governance.setMaxAge(toBigNumber('1000001'));
+    tx = governance.setMaxAge(toBigNumber('1010001'));
     await assertRevert(tx, 'Invalid Max Age Update');
 
     tx = governance.setSlashParams(toBigNumber('5000000'), toBigNumber('4000000'), toBigNumber('3000000'));
