@@ -92,7 +92,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint48[] calldata values,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Commit, epoch) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
@@ -102,7 +102,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(keccak256(abi.encodePacked(epoch, values, secret)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        return stakeManager.slash(epoch, thisStakerId, msg.sender);
+        stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
