@@ -82,4 +82,7 @@ module.exports = {
     username: 'razor',
     project: TENDERLY_SLUG,
   },
+  mocha: {
+    timeout : 25000
+  }
 };
