@@ -228,6 +228,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     function _setIDName(string calldata name, uint16 _id) internal {
         bytes32 _name = keccak256(abi.encodePacked(name));
+        require(ids[_name] == 0, "Collection exists with same name");
         ids[_name] = _id;
     }
 }

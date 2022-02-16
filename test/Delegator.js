@@ -12,6 +12,7 @@ const {
   assertBNEqual,
   mineToNextState,
   mineToNextEpoch,
+  assertRevert,
 } = require('./helpers/testHelpers');
 
 const {
@@ -320,20 +321,16 @@ describe('Delegator', function () {
       assertBNEqual(result[1], toBigNumber('2'));
     });
 
-    it('should be able to create collection with same name', async function () {
+    it('should not be able to create collection with same name', async function () {
       await mineToNextEpoch();
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();
-      const epoch = await getEpoch();
       const collectionName = 'Test Collection3';
       const power = 2;
-      await collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
-      const hName = utils.solidityKeccak256(['string'], [collectionName]);
-      const collectionID = await collectionManager.ids(hName);
-      assertBNEqual(collectionID, toBigNumber('10'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
+      const tx = collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
+      await assertRevert(tx, 'Collection exists with same name');
     });
   });
 });
