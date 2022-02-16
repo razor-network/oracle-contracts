@@ -28,7 +28,7 @@ const {
   tokenAmount,
 } = require('./helpers/utils');
 const {
-  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, calculateMedians,
+  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, calculateMedians, getData,
 } = require('./helpers/InternalEngine');
 
 describe('VoteManager', function () {
@@ -42,7 +42,7 @@ describe('VoteManager', function () {
     let voteManager;
     let initializeContracts;
     let collectionManager;
-    let data = [];
+    const data = [];
 
     before(async () => {
       ({
@@ -184,30 +184,32 @@ describe('VoteManager', function () {
         await assertRevert(tx, 'Staker does not exist');
       });
 
+      it('should not be able to reveal if length of the votes value is not same as number of active collections', async function () {
+        const epoch = await getEpoch();
+        // const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
+        // await voteManager.connect(signers[1]).commit(epoch, commitment[0]);
+        await mineToNextState(); // reveal
+        // const treeRevealData = commitment[1];
+        // // eslint-disable-next-line prefer-destructuring
+        // treeRevealData.values = [treeRevealData.values[0]];
+        // const tx = voteManager.connect(signers[1]).reveal(epoch, treeRevealData, commitment[2]);
+        // await assertRevert(tx, 'values length mismatch');
+      });
+
       it('should be able to reveal', async function () {
         const epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
-
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
-
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        //
-        await mineToNextState(); // reveal
-        //
-        // // const assignedAssets = await getAssignedAssets(numAssets, stakerIdAcc3, votes, maxAssetsPerStaker, random);
-        // const ids = [1,2,3,4,5,6,7,8,9];
-        //
-        //
-        // // Correct Reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager); // arguments getvVote => epoch, stakerId, assetId
+        // Correct Reveal
+        await reveal(signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
         const anymedianIndex = await getAnyAssignedIndex(signers[3]);
         const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
         assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex), voteValueForThatMedianIndex, 'Votes are not matching');
 
         // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        await reveal(signers[4], 4, voteManager, stakeManager, collectionManager);
+        await reveal(signers[4], 4, voteManager, stakeManager);
         // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        await reveal(signers[2], 4, voteManager, stakeManager, collectionManager);
+        await reveal(signers[2], 4, voteManager, stakeManager);
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
@@ -234,20 +236,16 @@ describe('VoteManager', function () {
         await reset();
         await mineToNextState(); // commit
         const epoch = await getEpoch();
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
         let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
         await commit(signers[3], 0, voteManager, collectionManager, secret);
 
-        // const votes2 = [106, 206, 306, 406, 506, 606, 706, 806, 906];
-
+        // Signer 4 is voting incoherently
         secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9e02481415c0823ea49d847ecb9ddd';
         await commit(signers[4], 20, voteManager, collectionManager, secret);
 
-        // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-
         secret = '0x727d5c9e6d18ed15ce7ac8d3ece6ec8a0e9e02481415c0823ea49d747ecb9ddd';
-        await commit(signers[2], 4, voteManager, collectionManager, secret);
+        await commit(signers[2], 0, voteManager, collectionManager, secret);
 
         const commitment4 = await voteManager.getCommitment(stakerIdAcc3);
         const commitment = await getCommitment(signers[3]);
@@ -263,13 +261,13 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
 
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(signers[3], 0, voteManager, stakeManager);
         const anymedianIndex = await getAnyAssignedIndex(signers[3]);
         const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
         assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex)), voteValueForThatMedianIndex, 'Votes are not matching');
 
-        await reveal(signers[4], 20, voteManager, stakeManager, collectionManager);
-        await reveal(signers[2], 4, voteManager, stakeManager, collectionManager);
+        await reveal(signers[4], 20, voteManager, stakeManager);
+        await reveal(signers[2], 0, voteManager, stakeManager);
         const data2 = await getValuesArrayRevealed(signers[2]);
         const data4 = await getValuesArrayRevealed(signers[4]);
         data.push(data4);
@@ -277,102 +275,66 @@ describe('VoteManager', function () {
       });
 
       it('account 4 should be penalised for incorrect voting in the previous epoch but not account 2 due to asset tolerance', async function () {
+        let epoch = await getEpoch();
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc3);
+
         await mineToNextState(); // propose
-        await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
-        const medians = await calculateMedians(collectionManager);
-        await reset();
-        // const stakeBefore = ((await stakeManager.stakers(stakerIdAcc3)).stake);
-        // const stakeBefore2 = ((await stakeManager.stakers(stakerIdAcc4)).stake);
-        const ageBefore = await stakeManager.getAge(stakerIdAcc3);
-        const ageBefore2 = await stakeManager.getAge(stakerIdAcc4);
-        const ageBefore3 = await stakeManager.getAge(stakerIdAcc2);
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+        const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        await blockManager.connect(signers[3]).propose(epoch,
+          [1, 2, 3, 4, 5, 6, 7, 8, 9],
+          medians,
+          iteration,
+          biggestStakerId);
+
+        const ageBeforeStaker2 = await stakeManager.getAge(stakerIdAcc2);
+        const ageBeforeStaker4 = await stakeManager.getAge(stakerIdAcc4);
         await mineToNextState(); // dispute
         await mineToNextState(); // confirm
         await blockManager.connect(signers[3]).claimBlockReward();
         await mineToNextState(); // commit
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const incoherntRevealOfLastEpoch = await getData(signers[4]);
+        epoch = await getEpoch();
 
-        let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
+        const secret = '0x727d5c9e6d18ed15ce7ac8d3c8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
+        await commit(signers[4], 0, voteManager, collectionManager, secret);
         await commit(signers[2], 0, voteManager, collectionManager, secret);
-
-        secret = '0x727d5c9e6d186d15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
         await commit(signers[3], 0, voteManager, collectionManager, secret);
 
-        secret = '0x727d5c9e6d18ed15ce7ac8d3c8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[4], 0, voteManager, collectionManager, secret);
+        let expectedAgeAfter4 = toBigNumber(ageBeforeStaker4).add(10000);
 
-        const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
-        const commitment = await getCommitment(signers[3]);
-
-        assert(commitment === commitment2.commitmentHash, 'commitment, commitment2 not equal');
-
-        // const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
-        // const stakeAfter2 = (await stakeManager.stakers(stakerIdAcc4)).stake;
-        let penalty = toBigNumber(0);
-        let penalty2 = toBigNumber(0);
-        let toAdd = toBigNumber(0);
-        let toAdd2 = toBigNumber(0);
-        let prod = toBigNumber(0);
-        let prod2 = toBigNumber(0);
-        const votes2 = [];
-        const votes3 = [];
+        const votesSerialized = incoherntRevealOfLastEpoch.leavesOfTree;
+        let prod;
+        let penalty = toBigNumber('0');
         for (let i = 0; i < medians.length; i++) {
-          votes2.push(0);
-          votes3.push(0);
-        }
-        for (let j = 0; j < (data[0]).length; j++) {
-          const voteValue = ((data[0])[j]).value;
-          votes2[((data[0])[j]).medianIndex] = voteValue;
-        }
-        for (let j = 0; j < (data[0]).length; j++) {
-          const voteValue = ((data[1])[j]).value;
-          votes3[((data[1])[j]).medianIndex] = voteValue;
-        }
-        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
-        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
-        let expectedAgeAfter3 = toBigNumber(ageBefore3).add(10000);
-        expectedAgeAfter3 = expectedAgeAfter3 > 1000000 ? 1000000 : expectedAgeAfter3;
-        for (let i = 0; i < medians.length; i++) {
-          const tolerance = await collectionManager.getCollectionTolerance(i);
-          const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-          const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-          // calculating for signers[4]
-          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-          if (votes2[i] !== 0) {
-            if (votes2[i] > maxVoteTolerance) {
-              toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+          if (votesSerialized[i] !== 0) {
+            const tolerance = await collectionManager.getCollectionTolerance(i);
+            const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
+            const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
+            prod = toBigNumber(votesSerialized[i]).mul(expectedAgeAfter4);
+            if (votesSerialized[i] > maxVoteTolerance) {
+              const toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter4);
               penalty = penalty.add(toAdd);
-            } else if (votes2[i] < minVoteTolerance) {
-              toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+            } else if (votesSerialized[i] < minVoteTolerance) {
+              const toAdd = expectedAgeAfter4.sub(prod.div(minVoteTolerance));
               penalty = penalty.add(toAdd);
             }
           }
-          // calculating for signers[2]
-          prod2 = toBigNumber(votes3[i]).mul(expectedAgeAfter3);
-          if (votes3[i] !== 0) {
-            if (votes3[i] > maxVoteTolerance) {
-              toAdd2 = (prod2.div(maxVoteTolerance)).sub(expectedAgeAfter3);
-              penalty2 = penalty2.add(toAdd2);
-            } else if (votes3[i] < minVoteTolerance) {
-              toAdd2 = expectedAgeAfter3.sub(prod2.div(minVoteTolerance));
-              penalty2 = penalty2.add(toAdd2);
-            }
-          }
         }
-        data = [];
-        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
-        expectedAgeAfter3 = toBigNumber(expectedAgeAfter3).sub(penalty2);
 
-        const ageAfter = await stakeManager.getAge(stakerIdAcc3);
-        const ageAfter2 = await stakeManager.getAge(stakerIdAcc4);
+        expectedAgeAfter4 = toBigNumber(expectedAgeAfter4).sub(penalty);
 
-        assertBNEqual(penalty2, toBigNumber('0'), 'Penalty applied');
-        assertBNLessThan(toBigNumber(ageBefore), toBigNumber(ageAfter), 'Not rewarded');
-        assertBNEqual(toBigNumber(ageBefore3).add(toBigNumber(10000)), expectedAgeAfter3, 'Age Penalty should not be applied');
-        assertBNEqual(ageAfter2, expectedAgeAfter2, 'Age Penalty should be applied');
+        const ageAfter2 = await stakeManager.getAge(stakerIdAcc2);
+        const ageAfter4 = await stakeManager.getAge(stakerIdAcc4);
+        console.log(ageAfter2.toString());
+        // 2s age should increase
+        assertBNEqual(toBigNumber(ageBeforeStaker2).add(toBigNumber(10000)), ageAfter2, 'Age Penalty should not be applied');
+        // 4s age should decrease, age penalty should be applied
+        assertBNEqual(ageAfter4, expectedAgeAfter4, 'Age Penalty should be applied');
       });
 
       it('Account 4 should have his stake slashed for leaking out his secret to another account before the reveal state', async function () {
@@ -465,7 +427,7 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
 
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(signers[3], 0, voteManager, stakeManager);
         const anymedianIndex = await getAnyAssignedIndex(signers[3]);
         const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
         assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex)), voteValueForThatMedianIndex, 'Votes not matching');
@@ -702,118 +664,6 @@ describe('VoteManager', function () {
         await assertRevert(tx2, 'Incorrect Caller');
       });
 
-      // it('if the revealed value is zero, staker should not be able to reveal', async function () {
-      //   await governance.setMinStake(20000);
-      //   await governance.setMinSafeRazor(10000);
-      //   await mineToNextEpoch();
-      //
-      //   let epoch = await getEpoch();
-      //   await stakeManager.connect(signers[8]).stake(epoch, tokenAmount('20000'));
-      //   await stakeManager.connect(signers[9]).stake(epoch, tokenAmount('20000'));
-      //
-      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //
-      //   const res1 = utils.solidityKeccak256(
-      //     ['uint32', 'uint48[]', 'bytes32'],
-      //     [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      //   );
-      //
-      //   await voteManager.connect(signers[8]).commit(epoch, res1);
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const commitment2 = await voteManager.getCommitment(stakerIdAcc8);
-      //
-      //   assertBNEqual(res1, commitment2.commitmentHash, 'res1, commitment2 not equal');
-      //   epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // reveal
-      //
-      //   await voteManager.connect(signers[8]).reveal(epoch, votes,
-      //     '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      //   //
-      //   // await assertRevert(tx, 'revert');
-      // });
-      // it('if the proposed value is zero, staker should be able to propose', async function () {
-      //   const epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // propose
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const staker = await stakeManager.getStaker(stakerIdAcc8);
-      //
-      //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      //
-      //   const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await blockManager.connect(signers[8]).propose(epoch,
-      //     medians,
-      //     iteration,
-      //     biggestStakerId);
-      //
-      //   // await assertRevert(tx, 'revert');
-      // });
-      //
-      // it('if the disputed value is zero, staker should not be able to dispute', async function () {
-      //   await mineToNextState(); // dispute
-      //   const epoch = await getEpoch();
-      //
-      //   const sortedVotes = [toBigNumber('0')];
-      //
-      //   const tx = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-      //
-      //   await assertRevert(tx, 'sortedStaker <= LVS');
-      // });
-      //
-      // it('if the revealed value is zero, next epoch should work normally', async function () {
-      //   await mineToNextState(); // confirm
-      //   await blockManager.connect(signers[8]).claimBlockReward();
-      //   await mineToNextState(); // commit
-      //
-      //   let epoch = await getEpoch();
-      //
-      //   // const votes = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //
-      //   const res1 = utils.solidityKeccak256(
-      //     ['uint32', 'uint48[]', 'bytes32'],
-      //     [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      //   );
-      //
-      //   await voteManager.connect(signers[8]).commit(epoch, res1);
-      //   const stakerIdAcc8 = await stakeManager.stakerIds(signers[8].address);
-      //   const commitment2 = await voteManager.getCommitment(stakerIdAcc8);
-      //
-      //   assertBNEqual(res1, commitment2.commitmentHash, 'res1, commitment2 not equal');
-      //
-      //   epoch = await getEpoch();
-      //
-      //   // const votes2 = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await mineToNextState(); // reveal
-      //
-      //   await voteManager.connect(signers[8]).reveal(epoch, votes2,
-      //     '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      //
-      //   epoch = await getEpoch();
-      //
-      //   await mineToNextState(); // propose
-      //
-      //   const staker = await stakeManager.getStaker(stakerIdAcc8);
-      //
-      //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      //   const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      //   await blockManager.connect(signers[8]).propose(epoch,
-      //     medians,
-      //     iteration,
-      //     biggestStakerId);
-      //
-      //   //
-      //   await mineToNextState(); // dispute
-      //   epoch = await getEpoch();
-      //   //
-      //   const sortedVotes = [toBigNumber('0')];
-      //   //
-      //   const tx3 = blockManager.connect(signers[9]).giveSorted(epoch, 1, sortedVotes);
-      //   //
-      //   await assertRevert(tx3, 'sortedStaker <= LVS');
-      // });
       it('Block should not be proposed when no one votes', async function () {
         await mineToNextEpoch();
         const epoch = await getEpoch();
@@ -827,6 +677,7 @@ describe('VoteManager', function () {
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         const tx = blockManager.connect(signers[3]).propose(epoch,
+          [],
           [],
           iteration,
           biggestStakerId);
@@ -844,7 +695,7 @@ describe('VoteManager', function () {
         const tx1 = blockManager.connect(signers[3]).giveSorted(epoch, 1, sortedVotes);
         const tx2 = blockManager.connect(signers[3]).finalizeDispute(epoch, 0);
         assert(tx1, 'should be able to give sorted votes');
-        await assertRevert(tx2, 'reverted with panic code 0x12 (Division or modulo division by zero)');
+        await assertRevert(tx2, 'Invalid dispute');
       });
       it('In next epoch everything should work as expected if in previous epoch no one votes', async function () {
         await mineToNextEpoch();
@@ -858,7 +709,7 @@ describe('VoteManager', function () {
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         await mineToNextState();
         // reveal state
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(signers[3], 0, voteManager, stakeManager);
         await mineToNextState(); // propose state
         await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
         await reset();
@@ -897,78 +748,78 @@ describe('VoteManager', function () {
           await assertRevert(tx2, 'not elected');
         }
       });
-      it('Correct penalties need to be given even after an asset has been deactivated', async function () {
-        await mineToNextState();
-        await mineToNextState();
-        await collectionManager.setCollectionStatus(false, 9);
-        await mineToNextEpoch();
-        await reset();
-        let epoch = await getEpoch();
-        await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
-        let secret = '0x277d5c9e6d18ed45ce7ac843dde6eca80e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+      // it('Correct penalties need to be given even after an asset has been deactivated', async function () {
+      //   await mineToNextState();
+      //   await mineToNextState();
+      //   await collectionManager.setCollectionStatus(false, 9);
+      //   await mineToNextEpoch();
+      //   await reset();
+      //   let epoch = await getEpoch();
+      //   await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
+      //   // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
+      //   let secret = '0x277d5c9e6d18ed45ce7ac843dde6eca80e9c02481415c0823ea49d847ccb9ddd';
+      //   await commit(signers[3], 0, voteManager, collectionManager, secret);
 
-        // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
-        secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[15], 0, voteManager, collectionManager, secret);
+      //   // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
+      //   secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c02481415c0823ea49d847ccb9ddd';
+      //   await commit(signers[15], 0, voteManager, collectionManager, secret);
 
-        await mineToNextState();
+      //   await mineToNextState();
 
-        const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
+      //   const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
 
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
-        await reveal(signers[15], 0, voteManager, stakeManager, collectionManager);
-        const data3 = await getValuesArrayRevealed(signers[3]);
-        data.push(data3);
+      //   await reveal(signers[3], 0, voteManager, stakeManager);
+      //   await reveal(signers[15], 0, voteManager, stakeManager);
+      //   const data3 = await getValuesArrayRevealed(signers[3]);
+      //   data.push(data3);
 
-        await mineToNextState(); // propose
+      //   await mineToNextState(); // propose
 
-        await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
-        const medians = await calculateMedians(collectionManager);
-        await reset();
-        const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
-        await mineToNextState(); // dispute
-        await mineToNextState(); // confirm
-        await blockManager.connect(signers[3]).claimBlockReward();
-        await mineToNextState(); // commit
-        epoch = await getEpoch();
-        secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c024814e5c0823ea49d847ccb9ddd';
-        await commit(signers[15], 0, voteManager, collectionManager, secret);
+      //   await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
+      //   const medians = await calculateMedians(collectionManager);
+      //   await reset();
+      //   const ageBefore2 = await stakeManager.getAge(stakerIdAcc15);
+      //   await mineToNextState(); // dispute
+      //   await mineToNextState(); // confirm
+      //   await blockManager.connect(signers[3]).claimBlockReward();
+      //   await mineToNextState(); // commit
+      //   epoch = await getEpoch();
+      //   secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c024814e5c0823ea49d847ccb9ddd';
+      //   await commit(signers[15], 0, voteManager, collectionManager, secret);
 
-        let penalty = toBigNumber(0);
-        let toAdd = toBigNumber(0);
-        let prod = toBigNumber(0);
-        const votes2 = [];
-        for (let i = 0; i < medians.length; i++) {
-          votes2.push(0);
-        }
-        for (let j = 0; j < (data[0]).length; j++) {
-          const voteValue = ((data[0])[j]).value;
-          votes2[((data[0])[j]).medianIndex] = voteValue;
-        }
-        let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
-        expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
-        for (let i = 0; i < medians.length; i++) {
-          const tolerance = await collectionManager.getCollectionTolerance(i);
-          const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-          const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
+      //   let penalty = toBigNumber(0);
+      //   let toAdd = toBigNumber(0);
+      //   let prod = toBigNumber(0);
+      //   const votes2 = [];
+      //   for (let i = 0; i < medians.length; i++) {
+      //     votes2.push(0);
+      //   }
+      //   for (let j = 0; j < (data[0]).length; j++) {
+      //     const voteValue = ((data[0])[j]).value;
+      //     votes2[((data[0])[j]).medianIndex] = voteValue;
+      //   }
+      //   let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
+      //   expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
+      //   for (let i = 0; i < medians.length; i++) {
+      //     const tolerance = await collectionManager.getCollectionTolerance(i);
+      //     const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
+      //     const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
 
-          prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
-          if (votes2[i] !== 0) {
-            if (votes2[i] > maxVoteTolerance) {
-              toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
-              penalty = penalty.add(toAdd);
-            } else if (votes2[i] < minVoteTolerance) {
-              toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
-              penalty = penalty.add(toAdd);
-            }
-          }
-        }
-        expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
-        const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
-        assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
-      });
+      //     prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
+      //     if (votes2[i] !== 0) {
+      //       if (votes2[i] > maxVoteTolerance) {
+      //         toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter2);
+      //         penalty = penalty.add(toAdd);
+      //       } else if (votes2[i] < minVoteTolerance) {
+      //         toAdd = expectedAgeAfter2.sub(prod.div(minVoteTolerance));
+      //         penalty = penalty.add(toAdd);
+      //       }
+      //     }
+      //   }
+      //   expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
+      //   const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
+      //   assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
+      // });
     });
   });
 });

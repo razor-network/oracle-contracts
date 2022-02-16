@@ -1,5 +1,5 @@
 const {
-  getState, randomCommit, randomReveal, getData, randomPropose,
+  getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
 const {
   COLLECTION_MODIFIER_ROLE,
@@ -46,7 +46,7 @@ describe('Scenarios', async () => {
   let stakes = [];
 
   const medians = [5906456, 402349, 5914274, 402337, 5907868, 401854, 5877418, 399082, 5906773];
-
+  const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9];
   before(async () => {
     ({
       blockManager, razor, governance, voteManager, collectionManager, stakeManager, initializeContracts, stakedToken,
@@ -139,17 +139,17 @@ describe('Scenarios', async () => {
       // commit
       const epoch = await getEpoch();
       for (let j = 1; j <= 5; j++) {
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 5; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 5; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
       await mineToNextState();
       // dispute
@@ -180,17 +180,17 @@ describe('Scenarios', async () => {
     let epoch = await getEpoch();
     // commit
     for (let j = 1; j <= 5; j++) {
-      await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+      await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
     }
     await mineToNextState();
     // reveal
     for (let j = 1; j <= 5; j++) {
-      await randomReveal(signers[j], 0, voteManager);
+      await adhocReveal(signers[j], 0, voteManager);
     }
     await mineToNextState();
     // propose
     for (let j = 1; j <= 5; j++) {
-      await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
     }
     await mineToNextState();
     // dispute
@@ -217,18 +217,18 @@ describe('Scenarios', async () => {
       // commit
       const epoch = await getEpoch();
       for (let j = 1; j <= 4; j++) {
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
 
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 4; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 4; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
       await mineToNextState();
       // dispute
@@ -248,7 +248,7 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
-    await randomCommit(medians, signers[5], 0, voteManager, collectionManager, secret[4]);
+    await adhocCommit(medians, signers[5], 0, voteManager, collectionManager, secret[4]);
     const stakeAfter = await stakeManager.getStake(5);
     assertBNLessThan(stakeAfter, stakeBefore, 'Inactivity Penalties have not been levied');
   }).timeout(80000);
@@ -264,17 +264,17 @@ describe('Scenarios', async () => {
       // commit
       const epoch = await getEpoch();
       for (let j = 1; j <= 5; j++) {
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 5; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 5; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
       await mineToNextState();
       // dispute
@@ -327,12 +327,12 @@ describe('Scenarios', async () => {
     }
     // commit
     for (let i = 1; i <= 5; i++) {
-      await randomCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
     }
     await mineToNextState(); // reveal
     for (let i = 1; i <= 5; i++) {
       epoch = await getEpoch();
-      const tx = randomReveal(signers[i], 0, voteManager);
+      const tx = adhocReveal(signers[i], 0, voteManager);
       await assertRevert(tx, 'not committed in this epoch');
     }
     await governance.setMinStake(toBigNumber('800'));
@@ -344,13 +344,13 @@ describe('Scenarios', async () => {
     await mineToNextState();// commit
 
     for (let i = 1; i <= 5; i++) {
-      await randomCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
     }
     await mineToNextState();
 
     for (let i = 1; i <= 5; i++) {
       epoch = await getEpoch();
-      await randomReveal(signers[i], 0, voteManager);
+      await adhocReveal(signers[i], 0, voteManager);
     }
   });
 
@@ -367,15 +367,15 @@ describe('Scenarios', async () => {
     epoch = await getEpoch();
     // commit
 
-    await randomCommit(medians, signers[6], 0, voteManager, collectionManager, secret[0]);
+    await adhocCommit(medians, signers[6], 0, voteManager, collectionManager, secret[0]);
 
     await mineToNextState();
     // Reveal
-    await randomReveal(signers[6], 0, voteManager);
+    await adhocReveal(signers[6], 0, voteManager);
 
     await mineToNextState();
 
-    await randomPropose(medians, signers[6], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[6], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState();
     // dispute
@@ -389,10 +389,10 @@ describe('Scenarios', async () => {
     }
     epoch = await getEpoch();
 
-    await randomCommit(medians, signers[6], 0, voteManager, collectionManager, secret[1]);
+    await adhocCommit(medians, signers[6], 0, voteManager, collectionManager, secret[1]);
 
     await mineToNextState();
-    const tx = randomReveal(signers[6], 0, voteManager);
+    const tx = adhocReveal(signers[6], 0, voteManager);
     await assertRevert(tx, 'not committed in this epoch');
   }).timeout(400000);
 
@@ -408,17 +408,17 @@ describe('Scenarios', async () => {
       epoch = await getEpoch();
       // commit
       for (let j = 1; j <= 5; j++) {
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 5; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 5; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
       await mineToNextState();
       // dispute
@@ -469,13 +469,13 @@ describe('Scenarios', async () => {
       await razor.connect(signers[i]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[i]).stake(epoch, stake);
 
-      await randomCommit(medians, signers[i], 0, voteManager, collectionManager, secret[5 - i]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[5 - i]);
     }
 
     await mineToNextState();
 
     for (let i = 1; i <= 5; i++) {
-      await randomReveal(signers[i], 0, voteManager);
+      await adhocReveal(signers[i], 0, voteManager);
     }
   });
   it('Staker particpates with delegator and later delegator withdraws such that stakers stake becomes less than minStake', async function () {
@@ -507,9 +507,9 @@ describe('Scenarios', async () => {
     await mineToNextEpoch();
     epoch = await getEpoch();
     // Participation In Epoch as delegators cant delegate to a staker untill they participate
-    await randomCommit(medians, signers[7], 0, voteManager, collectionManager, secret[1]);
+    await adhocCommit(medians, signers[7], 0, voteManager, collectionManager, secret[1]);
     await mineToNextState();
-    await randomReveal(signers[7], 0, voteManager);
+    await adhocReveal(signers[7], 0, voteManager);
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
@@ -543,7 +543,7 @@ describe('Scenarios', async () => {
 
     // commiting to get inactivity penalties
 
-    await randomCommit(medians, signers[7], 0, voteManager, collectionManager, secret[2]);
+    await adhocCommit(medians, signers[7], 0, voteManager, collectionManager, secret[2]);
 
     // delegator unstakes its stake
     await mineToNextEpoch();
@@ -560,23 +560,23 @@ describe('Scenarios', async () => {
     stakerId = await stakeManager.stakerIds(signers[7].address);
     staker = await stakeManager.getStaker(stakerId);
     epoch = await getEpoch();
-    await randomCommit(medians, signers[7], 0, voteManager, collectionManager, secret[3]);
+    await adhocCommit(medians, signers[7], 0, voteManager, collectionManager, secret[3]);
     await mineToNextState();
-    const tx = randomReveal(signers[7], 0, voteManager);
+    const tx = adhocReveal(signers[7], 0, voteManager);
     await assertRevert(tx, 'not committed in this epoch');
   }).timeout(400000);
 
   it('Front-Run Unstake Call', async function () {
     // If the attacker can call unstake though they don't want to withdraw and withdraw anytime after withdraw after period is passed
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState();
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState();
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState();
     // dispute
@@ -610,15 +610,15 @@ describe('Scenarios', async () => {
     // If the attacker can call unstake though they don't want to withdraw and withdraw anytime after withdraw after period is passed
     let epoch = await getEpoch();
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState();
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState();
 
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState();
     // dispute
@@ -666,15 +666,15 @@ describe('Scenarios', async () => {
   });
   it('Staker unstakes and in withdraw lock period, there is a change in governance parameter and withdraw lock period is reduced', async function () {
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState();
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState();
 
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState();
     // dispute
@@ -711,14 +711,14 @@ describe('Scenarios', async () => {
   });
   it('Staker unstakes and in withdraw release period, there is a change in governance parameter and withdraw release period is reduced', async function () {
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState();
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState();
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState();
     // dispute
@@ -763,15 +763,15 @@ describe('Scenarios', async () => {
   });
   it('BlockReward changes both before or after confirming block, check for block reward', async () => {
     let secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState(); // reveal
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState(); // propose
     const stakerId = await stakeManager.stakerIds(signers[1].address);
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState(); // dispute
     const stakeBefore = await stakeManager.getStake(stakerId);
@@ -786,14 +786,14 @@ describe('Scenarios', async () => {
     await mineToNextEpoch();
 
     secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555ebec0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState(); // reveal
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState(); // propose
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
     await mineToNextState(); // dispute
     await mineToNextState(); // confirm
     await blockManager.connect(signers[1]).claimBlockReward();
@@ -802,14 +802,14 @@ describe('Scenarios', async () => {
     await mineToNextEpoch();
 
     secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555ebec0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
 
     await mineToNextState(); // reveal
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState(); // propose
-    await randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
 
     await mineToNextState(); // dispute
     const stakeBefore1 = await stakeManager.getStake(stakerId);
@@ -821,65 +821,13 @@ describe('Scenarios', async () => {
     assertBNEqual(stakeAfter1, stakeBefore1.add(tokenAmount('300')), 'Block Reward not given correctly');
   }).timeout(5000);
 
-  // it('BlockReward changes both before or after confirming block, check for randao penalty', async () => {
-  //   // Randao Penalty should be applied correctly when
-  //   let epoch = await getEpoch();
-  //     const commitment = await getRandomCommitAndRevealData(collectionManager, voteManager, blockManager, medians);
-  //     await voteManager.connect(signers[1]).commit(epoch, commitment[0]);
-  //
-  //     await mineToNextState(); // reveal
-  //
-  //     await voteManager.connect(signers[1]).reveal(epoch, commitment[1], commitment[2]);
-  //
-  //   await mineToNextState(); // propose
-  //
-  //   const stakerId = await stakeManager.stakerIds(signers[1].address);
-  //   const staker = await stakeManager.getStaker(stakerId);
-  //
-  //   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-  //   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-  //   await blockManager.connect(signers[1]).propose(epoch,
-  //     medians,
-  //     iteration,
-  //     biggestStakerId);
-  //
-  //   await mineToNextState(); // dispute
-  //   await mineToNextState(); // confirm
-  //   let stake = await stakeManager.getStake(stakerId);
-  //   await blockManager.connect(signers[1]).claimBlockReward();
-  //
-  //   stake = await stakeManager.getStake(stakerId);
-  //   const updateBlockRewardTo = stake.sub(tokenAmount('100'));
-  //   await governance.connect(signers[0]).setBlockReward(updateBlockRewardTo);
-  //
-  //   await mineToNextEpoch();
-  //   epoch = await getEpoch();
-  //
-  //   const commitment2 = await getRandomCommitAndRevealData(collectionManager, voteManager, blockManager, medians);
-  //   await voteManager.connect(signers[1]).commit(epoch, commitment2[0]);
-  //
-  //   await mineToNextState(); // didn't reveal
-  //   await mineToNextState(); // didn't propose
-  //   await mineToNextState(); // didn't dispute
-  //   await mineToNextState(); // didn't confirmed
-  //
-  //   await mineToNextEpoch();
-  //   epoch = await getEpoch();
-  //   const stakeBefore = await stakeManager.getStake(stakerId);
-  //   const commitment3 = await getRandomCommitAndRevealData(collectionManager, voteManager, blockManager, medians);
-  //   await voteManager.connect(signers[1]).commit(epoch, commitment3[0]);
-  //   stake = await stakeManager.getStake(stakerId);
-  //
-  //   assertBNEqual(stake, stakeBefore.sub(updateBlockRewardTo), 'Randao Penalty is not being applied correctly');
-  // }).timeout(5000);
-
   it('Staker will not be able to reveal if minstake increases to currentStake of staker during reveal state', async () => {
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8ebc555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
     await mineToNextState(); // reveal
     // const updateMinStakeTo = stake.add(tokenAmount('100'));
     await governance.connect(signers[0]).setMinStake(tokenAmount('1000000'));
-    const tx = randomReveal(signers[1], 0, voteManager);
+    const tx = adhocReveal(signers[1], 0, voteManager);
     await assertRevert(tx, 'stake below minimum');
     await governance.connect(signers[0]).setMinStake(tokenAmount('20000'));
   }).timeout(500);
@@ -887,18 +835,18 @@ describe('Scenarios', async () => {
   it('Minstake increases more than currentStake of staker during propose states', async () => {
     // staker should not be able to propose
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8ebc555c0823ea4ecececececec';
-    await randomCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
+    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret);
     // const stakerId = await stakeManager.stakerIds(signers[1].address);
     // const stake = await stakeManager.getStaker(stakerId);
 
     await mineToNextState(); // reveal
     // const updateMinStakeTo = stake.add(tokenAmount('100'));
 
-    await randomReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManager);
 
     await mineToNextState(); // propose
     await governance.connect(signers[0]).setMinStake(tokenAmount('1000000'));
-    const tx = randomPropose(medians, signers[1], stakeManager, blockManager, voteManager);
+    const tx = adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
     await assertRevert(tx, 'stake below minimum stake');
   }).timeout(2000);
 
@@ -916,17 +864,17 @@ describe('Scenarios', async () => {
       // commit
       for (let j = 1; j <= 5; j++) {
         // epoch = await getEpoch();
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 5; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 5; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
 
       const proposedBlocksLength = await blockManager.getNumProposedBlocks(epoch);
@@ -962,12 +910,12 @@ describe('Scenarios', async () => {
     secret.push('0x717e5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ecececececec');
     // commit
     for (let j = 1; j <= 5; j++) {
-      await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+      await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
     }
     await mineToNextState();
     // reveal
     for (let j = 1; j <= 5; j++) {
-      await randomReveal(signers[j], 0, voteManager);
+      await adhocReveal(signers[j], 0, voteManager);
     }
     await mineToNextState();// propose
     // calculating median
@@ -990,7 +938,7 @@ describe('Scenarios', async () => {
       mediansArray.push(helper);
       seqAllotedCollections = [];
     }
-
+    const ids = await collectionManager.getActiveCollections();
     for (let j = 1; j <= 5; j++) {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
@@ -998,6 +946,7 @@ describe('Scenarios', async () => {
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[j]).propose(epoch,
+        ids,
         mediansArray[j - 1],
         iteration,
         biggestStakerId);
@@ -1029,12 +978,12 @@ describe('Scenarios', async () => {
     secret.push('0x757d5c9e6d18ed15ce7ac8dececece8abcbcbcbcbcbcbcb23ea4ecececececec');
     // commit
     for (let j = 1; j <= 3; j++) {
-      await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+      await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
     }
     await mineToNextState();
     // reveal
     for (let j = 1; j <= 3; j++) {
-      await randomReveal(signers[j], 0, voteManager);
+      await adhocReveal(signers[j], 0, voteManager);
     }
     await mineToNextState();// propose
     // calculating median
@@ -1066,6 +1015,8 @@ describe('Scenarios', async () => {
       }
       wrongMedians.push(helper);
     }
+    const ids = await collectionManager.getActiveCollections();
+
     for (let j = 1; j <= 3; j++) {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
       const staker = await stakeManager.getStaker(stakerId);
@@ -1074,11 +1025,13 @@ describe('Scenarios', async () => {
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       if (j === 2) {
         await blockManager.connect(signers[j]).propose(epoch,
+          ids,
           wrongMedians[j - 1],
           iteration,
           biggestStakerId);
       } else {
         await blockManager.connect(signers[j]).propose(epoch,
+          ids,
           mediansArray[j - 1],
           iteration,
           biggestStakerId);
@@ -1171,14 +1124,15 @@ describe('Scenarios', async () => {
     secret.push('0x717e5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ecececececec');
     // commit
     for (let j = 1; j <= 5; j++) {
-      await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+      await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
     }
     await mineToNextState();
     // reveal
     for (let j = 1; j <= 5; j++) {
-      await randomReveal(signers[j], 0, voteManager);
+      await adhocReveal(signers[j], 0, voteManager);
     }
     await mineToNextState();// propose
+    const ids = await collectionManager.getActiveCollections();
 
     for (let j = 1; j <= 5; j++) {
       const stakerId = await stakeManager.stakerIds(signers[j].address);
@@ -1187,6 +1141,7 @@ describe('Scenarios', async () => {
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       await blockManager.connect(signers[j]).propose(epoch,
+        ids,
         medians,
         iteration,
         biggestStakerId);
@@ -1247,17 +1202,17 @@ describe('Scenarios', async () => {
       epoch = await getEpoch();
       // commit
       for (let j = 1; j <= 5; j++) {
-        await randomCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
       }
       await mineToNextState();
       // reveal
       for (let j = 1; j <= 5; j++) {
-        await randomReveal(signers[j], 0, voteManager);
+        await adhocReveal(signers[j], 0, voteManager);
       }
       await mineToNextState();
       // propose
       for (let j = 1; j <= 5; j++) {
-        await randomPropose(medians, signers[j], stakeManager, blockManager, voteManager);
+        await adhocPropose(signers[j], ids, medians, stakeManager, blockManager, voteManager);
       }
       await mineToNextState();
       // dispute

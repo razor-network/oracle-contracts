@@ -1,3 +1,4 @@
+/* eslint-disable prefer-destructuring */
 const { BigNumber, utils } = ethers;
 const toBigNumber = (value) => BigNumber.from(value);
 
@@ -8,19 +9,14 @@ const {
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
 let store = {};
-let influenceSum = [];
-let res = [];
+let influenceSum = new Array(100).fill(toBigNumber('0'));
+let res = new Array(100).fill(toBigNumber('0'));
 let root = {};
 let commitments = {};
 let valuesRevealed = {};
-let median = {};
 let treeData = {};
 let votes = {};
-// const numActiveCollections = await collectionManager.getNumActiveCollections();
-for (let k = 0; k < 9; k++) {
-  influenceSum[k] = toBigNumber(0);
-  res[k] = toBigNumber(0);
-}
+
 /* ///////////////////////////////////////////////////////////////
                           COMMIT
 ////////////////////////////////////////////////////////////// */
@@ -40,17 +36,14 @@ for (let k = 0; k < 9; k++) {
 /// @dev Randao Removed : So there is no penalty as randao penalty.
 
 /// Steps
-/// Fetch NumActiveCollection, and Salt
+/// Fetch NumActiveCollection
+/// Calculate Salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians))
 /// Find Assignments
 /// Construct Tree with values for assigned and 0 for non-assigned
 /// Commitment is as per
 /// commitment = keccak256(abi.encodePacked(tree.root, seed))
-/// seed = keccak256(abi.encodePacked(salt, secret));
-/// salt can be fetched from VoteManager
-/// Concept : salt for epch + 1 represents nothing but = keccak256(abi.encodePacked(epoch, blocks[epoch].medians, salt)); // TODO : REMOVE SALT
-/// So salt is dependent on block[ep -1] and ep-2
+/// where seed = keccak256(abi.encodePacked(salt, secret));
 
-/// TODO: Check case of confirmLastEpochBlock
 /// @dev
 /// There are two cryptographic parts
 /// isAssetAlloted
@@ -108,14 +101,16 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret)
                           REVEAL
 ////////////////////////////////////////////////////////////// */
 
-// In reveal, staker has to pass secret, root and assigned assets
-// Format is
+// In reveal, staker has to pass secret, root of tree, revealed values and seq of allocated colelctions
+// Input Params
+// epoch, treeRevealData, secret
+// treeRevealData (follwoing struct)
 // struct MerkleTree {
 //     Structs.AssignedAsset [] values;
 //     bytes32[][] proofs;
 //     bytes32 root;
 // }
-const reveal = async (signer, deviation, voteManager, stakeManager, collectionManager) => {
+const reveal = async (signer, deviation, voteManager, stakeManager) => {
   const proofs = [];
   const values = [];
   for (let j = 0; j < store[signer.address].seqAllotedCollections.length; j++) {
@@ -136,7 +131,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager, collectionMa
   };
   treeData[signer.address] = treeRevealData;
   await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
-
+  // console.log(treeRevealData);
   const helper = {};
   const arr = [];
   for (let i = 0; i < store[signer.address].seqAllotedCollections.length; i++) {
@@ -165,8 +160,9 @@ const reveal = async (signer, deviation, voteManager, stakeManager, collectionMa
 // isElectedProposer would use salt as seed now, not randao
 
 // Steps
-// Loop Through getVoteValue to find if there is non-zero value present for a each staker
-// If yes pick it up and then calculate median
+// Index reveal events of stakers
+// Find medain on basis of revealed value and influence
+// For non revealed active collection of this epoch, use previous epoch vote value.
 // Find iteration using salt as seed
 
 const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
@@ -177,17 +173,30 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
   // console.log('Propose', iteration, biggestStakerId, stakerID);
   const numActiveCollections = await collectionManager.getNumActiveCollections();
   // const numActiveCollections = 9;
-  const medians = [];
-  let helper;
-  for (let i = 0; i < numActiveCollections; i++) medians.push(0);
-  for (let j = 0; j < numActiveCollections; j++) {
+  const medians = new Array(numActiveCollections).fill(0);
+  const ids = await collectionManager.getActiveCollections();
+  console.log(ids);
+  let temp;
+  const epoch = await getEpoch();
+  // console.log(epoch);
+  console.log(await blockManager.getBlock(epoch - 1));
+  const block = await blockManager.getBlock(epoch - 1);
+  for (let j = 0; j < ids.length; j++) {
     if (Number(influenceSum[j]) !== 0) {
-      helper = (res[j]).div(influenceSum[j]);
-      medians[j] = helper;
+      console.log(j);
+      temp = (res[j]).div(influenceSum[j]);
+      medians[j] = temp;
+    } else if (block.medians.length !== 0) {
+      const oldIndex = await collectionManager.getIdToIndexRegistryValue(ids[j]);
+      const oldMedian = (await blockManager.getBlock(epoch - 1)).medians[oldIndex];
+      medians[oldIndex] = oldMedian;
+
+      console.log(ids[j], oldIndex, oldMedian);
     }
   }
-  median[signer.address] = medians;
-  await blockManager.connect(signer).propose(getEpoch(),
+  console.log('medians', medians);
+  await blockManager.connect(signer).propose(epoch,
+    ids,
     medians,
     iteration,
     biggestStakerId);
@@ -209,16 +218,11 @@ const calculateMedians = async (collectionManager) => {
 
 const reset = async () => {
   store = {};
-  influenceSum = {};
-  res = {};
+  influenceSum = new Array(100).fill(toBigNumber('0'));
+  res = new Array(100).fill(toBigNumber('0'));
   root = {};
-  for (let k = 0; k < 9; k++) {
-    influenceSum[k] = toBigNumber(0);
-    res[k] = toBigNumber(0);
-  }
   commitments = {};
   valuesRevealed = {};
-  median = {};
   treeData = {};
   votes = {};
 };

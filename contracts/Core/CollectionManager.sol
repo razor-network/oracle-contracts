@@ -95,10 +95,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 epoch = _getEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
-            // @dev : doubt @samAG9
             _updateRegistry();
         }
-        _updateRegistryFuture();
 
         if (!collections[id].active) {
             numActiveCollections = numActiveCollections + 1;
@@ -128,7 +126,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         if (updateRegistryEpoch <= epoch) {
             _updateRegistry();
         }
-        _updateRegistryFuture();
+
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
@@ -156,6 +154,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
         collections[collectionID].jobIDs = jobIDs;
+
         emit CollectionUpdated(collectionID, power, epoch, aggregationMethod, tolerance, jobIDs, block.timestamp);
     }
 
@@ -184,7 +183,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[indexToIdRegistry[i + 1]].tolerance;
+        return collections[indexToIdRegistry[i]].tolerance;
     }
 
     function getCollectionPower(uint16 id) external view override returns (int8) {
@@ -213,32 +212,31 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return idToIndexRegistry[id];
     }
 
-    function getIndexToIdFutureRegistryValue(uint16 index) external view override returns (uint16) {
-        return indexToIdRegistryFuture[index];
+    function getActiveCollectionsHash() external view override returns (bytes32 hash) {
+        hash = keccak256(abi.encodePacked(getActiveCollections()));
+    }
+
+    function getActiveCollections() public view returns (uint16[] memory) {
+        uint16[] memory result = new uint16[](numActiveCollections);
+        uint16 j = 0;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                result[j] = i;
+                j = j + 1;
+            }
+        }
+        return result;
     }
 
     function _updateRegistry() internal {
-        uint16 j = 1;
+        uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
                 idToIndexRegistry[i] = j;
-                // todo : opt : can we use future reg and assign directly, would save this SSTORE
                 indexToIdRegistry[j] = i;
                 j = j + 1;
             } else {
                 idToIndexRegistry[i] = 0;
-            }
-        }
-    }
-
-    function _updateRegistryFuture() internal {
-        uint16 j = 1;
-        for (uint16 i = 1; i <= numCollections; i++) {
-            if (collections[i].active) {
-                indexToIdRegistryFuture[j] = i;
-                j = j + 1;
-            } else {
-                indexToIdRegistryFuture[i] = 0;
             }
         }
     }
@@ -294,7 +292,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         // 0000
 
         // Have tested function upto 2**16;
-        bool flag;
+        bool flag = false;
         for (n = 0; x > 1; x >>= 1) {
             // O(n) 1<n<=16
             if (x % 2 != 0) flag = true; // for that (1)

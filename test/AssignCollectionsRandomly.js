@@ -1,7 +1,4 @@
-/* TODO:
-test same vote values, stakes
-test penalizeEpochs */
-
+/* eslint-disable prefer-destructuring */
 const { expect } = require('chai');
 const {
   assertBNEqual,
@@ -15,7 +12,7 @@ const {
 const { getState, calculateDisputesData } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  commit, reveal, propose, getData, reset, calculateMedians,
+  commit, reveal, propose, getData, reset,
 } = require('./helpers/InternalEngine');
 
 const {
@@ -24,8 +21,7 @@ const {
 const {
   getEpoch,
   tokenAmount,
-  getBiggestStakeAndId,
-  getIteration,
+  adhocPropose,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -55,12 +51,6 @@ describe('AssignCollectionsRandomly', function () {
   });
 
   describe('razor', async () => {
-    let vote;
-    let medians;
-    let validMedianIndexToBeDisputed;
-    const nonRevealedAssets = [];
-    const nonRevealedAssetsPreviousEpoch = [];
-    const revealedAssets = [];
     it('Assign Collections Randomly End to End Flow', async () => {
       /* ///////////////////////////////////////////////////////////////
                           SETUP
@@ -114,11 +104,23 @@ describe('AssignCollectionsRandomly', function () {
       await commit(signers[1], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[1], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
+
+      // Block Proposed
+      // [
+      //   100, 200,   0, 0,
+      //     0,   0, 700
+      // ],
+      // [
+      //   1, 2, 3, 4,
+      //   5, 6, 7
+      // ]
+
       await mineToNextState();
+
       // Dispute will happen on values now, and not stakers
       // as a staker, you have to pass sorted values
       const data = await getData(signers[1]);
@@ -132,48 +134,63 @@ describe('AssignCollectionsRandomly', function () {
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
+
       await mineToNextState();
-      medians = await calculateMedians(collectionManager);
-      vote = medians[3];
-      for (let j = 0; j < medians.length; j++) {
-        if (medians[j] === 0) nonRevealedAssetsPreviousEpoch.push(j);
-      }
+      // medians = await calculateMedians(collectionManager);
+      // vote = medians[3];
+      // for (let j = 0; j < medians.length; j++) {
+      //   if (medians[j] === 0) nonRevealedAssetsPreviousEpoch.push(j);
+      // }
+
       // Nothing is changed in confirm
       await blockManager.connect(signers[1]).claimBlockReward();
       await mineToNextState();
+
       /* ///////////////////////////////////////////////////////////////
                           DELEGATOR
       ////////////////////////////////////////////////////////////// */
-      const collectionName = 'c3';
+      const collectionName = 'c0';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result1 = await delegator.getResult(hName);
-      assertBNEqual(result1[0], vote);
-      vote = medians[1];
-      const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
-      assertBNEqual(result2[0], vote);
-      // await reset();
+      assertBNEqual(result1[0], 100);
+      const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c2']));
+      assertBNEqual(result2[0], 0);
+
+      await reset();
     });
 
     it('Staker Proposes Everything correctly, none of dispute should go through', async () => {
       // await mineToNextEpoch();
       await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await commit(signers[2], 0, voteManager, collectionManager, '0x227d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       await mineToNextState();
 
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
-      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[1], 0, voteManager, stakeManager);
+      await reveal(signers[2], 0, voteManager, stakeManager);
+      await reveal(signers[3], 0, voteManager, stakeManager);
       await mineToNextState();
 
       // Collections revealed
-      // [ 100, 200, 0, 0, 500 ]
-      // [ 100, 200, 0, 400, 0 ]
-      // [ 100, 0, 0, 0, 500 ]
+      // [500, 500, 200]
+      // [600, 200, 100]
+      // [600, 100, 100]
+      // So resultant for this block
+      // [100, 200, --, --, 500, 600, --, --, --]
 
       snapshotId = await takeSnapshot();
-      // Staker propose correctly, 300 from previous
+      // Staker propose correctly, 700 from previous
+
       await propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
+      // Block Proposed
+      // [
+      //   100, 200,   0, 0,
+      //     500, 600, 700
+      // ],
+      // [
+      //   1, 2, 3, 4,
+      //   5, 6, 7
+      // ]
       await mineToNextState();
       // Give Sorted and FinaliseDispute on revealed asset.
       const epoch = await getEpoch();
@@ -190,94 +207,54 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
 
       // Give Sorted and FinaliseDispute on non-revealed asset
-      await blockManager.connect(signers[10]).giveSorted(epoch, 2, [300]);
-      // eslint-disable-next-line max-len
-      await assertRevert(blockManager.connect(signers[10]).finalizeDispute(epoch, 0), 'VM Exception while processing transaction: reverted with panic code 0x12 (Division or modulo division by zero)');
-      // await mineToNextState();
-      // await blockManager.connect(signers[1]).claimBlockReward();
+      await blockManager.giveSorted(epoch, 6, [700]);
+      await assertRevert(blockManager.finalizeDispute(epoch, 0), 'Invalid dispute');
+
+      // disputeForNonAssignedCollection
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 1),
+        'Collec is revealed this epoch');
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 6),
+        'Block proposed with corr medians');
+
+      // disputeForProposedCollectionIds
+      await assertRevert(blockManager.disputeForProposedCollectionIds(epoch, 0), 'Block proposed with corr ids');
     });
 
     it('Delegator should be able to fetch the non revealed asset', async () => {
-      // await mineToNextEpoch();
-      for (let i = 0; i < medians.length; i++) {
-        if (medians[i] === 0) nonRevealedAssets.push(i);
-        else revealedAssets.push(i);
-      }
-      for (let j = 0; j < nonRevealedAssets.length; j++) {
-        const collectionName = `c${nonRevealedAssets[j]}`;
-        const vote = medians[nonRevealedAssets[j]];
-        const hName = utils.solidityKeccak256(['string'], [collectionName]);
-        const result1 = await delegator.getResult(hName);
-        assertBNEqual(result1[0], vote);
-      }
+      const collectionName = 'c6';
+      const hName = utils.solidityKeccak256(['string'], [collectionName]);
+      const result = await delegator.getResult(hName);
+      assertBNEqual(result[0], 700);
     });
 
     it('Staker Proposes revealed assets in-correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      medians = await calculateMedians(collectionManager);
-      const wrongMedians = [];
-      for (let i = 0; i < medians.length; i++) wrongMedians.push(medians[i]);
-      const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
-      const staker1 = await stakeManager.getStaker(stakerIdAcc1);
-      const { biggestStake, biggestStakerId } = await await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker1, biggestStake);
-      validMedianIndexToBeDisputed = revealedAssets[0];
-      wrongMedians[validMedianIndexToBeDisputed] -= 90;
-      const epoch = await getEpoch();
-      await blockManager.connect(signers[1]).propose(epoch,
-        wrongMedians,
-        iteration,
-        biggestStakerId);
+      await adhocPropose(signers[1], [1, 2, 3, 4, 5, 6, 7], [10, 200, 0, 0, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
-      const {
-        sortedValues,
-      } = await calculateDisputesData(validMedianIndexToBeDisputed,
-        voteManager,
-        stakeManager,
-        collectionManager,
-        epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
+      const epoch = await getEpoch();
+      await blockManager.connect(signers[19]).giveSorted(epoch, 0, [100]);
       await blockManager.connect(signers[19]).finalizeDispute(epoch, 0);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
 
       expect(blockIndexToBeConfirmed).to.eq(-1);
       expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
     });
-
     it('Staker Proposes non revealed assets correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      const wrongMedians = [];
-      for (let i = 0; i < medians.length; i++) wrongMedians.push(medians[i]);
-      const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
-      const staker1 = await stakeManager.getStaker(stakerIdAcc1);
-      const { biggestStake, biggestStakerId } = await await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker1, biggestStake);
-      for (let j = 0; j < nonRevealedAssets.length; j++) {
-        if (nonRevealedAssetsPreviousEpoch[j] === nonRevealedAssets[j]) {
-          wrongMedians[nonRevealedAssets[j]] = 0;
-        } else {
-          wrongMedians[nonRevealedAssets[j]] = (nonRevealedAssets[j] + 1) * 100;
-        }
-      }
-      validMedianIndexToBeDisputed = nonRevealedAssets[0];
-      const epoch = await getEpoch();
-      await blockManager.connect(signers[1]).propose(epoch,
-        wrongMedians,
-        iteration,
-        biggestStakerId);
-      // await propose(signers[1], [100, 200, 300, 400, 500], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[1], [1, 2, 3, 4, 5, 6, 7], [100, 200, 0, 0, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
-
-      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, revealedAssets[0]),
+      const epoch = await getEpoch();
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
-      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, validMedianIndexToBeDisputed),
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6),
         'Block proposed with corr medians');
-
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
+
       expect(blockIndexToBeConfirmed).to.eq(0);
       expect(block.valid).to.eq(true);
     });
@@ -285,31 +262,37 @@ describe('AssignCollectionsRandomly', function () {
     it('Staker Proposes non revealed assets in-correctly', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      // await propose(signers[1], [100, 200, 30, 400, 500], stakeManager, blockManager, voteManager);
-      // await mineToNextState();
-      //
-      // const epoch = await getEpoch();
-
-      const wrongMedians = [];
-      for (let i = 0; i < medians.length; i++) wrongMedians.push(medians[i]);
-      const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
-      const staker1 = await stakeManager.getStaker(stakerIdAcc1);
-      const { biggestStake, biggestStakerId } = await await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker1, biggestStake);
-      validMedianIndexToBeDisputed = nonRevealedAssets[0];
-      wrongMedians[validMedianIndexToBeDisputed] += 30;
-      const epoch = await getEpoch();
-      await blockManager.connect(signers[1]).propose(epoch,
-        wrongMedians,
-        iteration,
-        biggestStakerId);
+      await adhocPropose(signers[1], [1, 2, 3, 4, 5, 6, 7], [100, 200, 0, 0, 500, 600, 70], stakeManager, blockManager, voteManager);
       await mineToNextState();
-      await blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, validMedianIndexToBeDisputed);
+
+      const epoch = await getEpoch();
+
+      await blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
 
       expect(blockIndexToBeConfirmed).to.eq(-1);
       expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
+    });
+
+    it('Staker Proposes with wrong ids', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      // hypo scenrio
+      // only 1 and 2 were assigned so for 3,4,5 staker should pass prev values
+      // but he doesnt, so lets see if he can be disputed
+      await adhocPropose(signers[1], [1, 2, 3, 3, 3, 3, 3], [100, 200, 300, 300, 300, 300, 300], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+      const epoch = await getEpoch();
+
+      blockManager.disputeForProposedCollectionIds(epoch, 0);
+
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+      expect(blockIndexToBeConfirmed).to.eq(-1);
+      expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
     });
   });
 });

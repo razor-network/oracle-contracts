@@ -18,11 +18,10 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
+  adhocPropose,
 } = require('./helpers/utils');
 
-const {
-  commit, reveal, propose, reset, calculateMedians,
-} = require('./helpers/InternalEngine');
+const { commit, reveal } = require('./helpers/InternalEngine');
 
 const { utils } = ethers;
 
@@ -49,7 +48,6 @@ describe('Delegator', function () {
     signers = await ethers.getSigners();
   });
   describe('Delegator', function () {
-    let vote;
     it('Admin role should be granted', async () => {
       await mineToNextEpoch();
       assert(await delegator.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
@@ -103,17 +101,17 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
+      await adhocPropose(signers[5], [1], [100], stakeManager, blockManager, voteManager);
       await mineToNextState();
-      await reset();
+
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
-      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('1'));
+      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to fetch the result of the desired id', async function () {
@@ -141,16 +139,16 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
+
       await mineToNextState();
-      await reset();
       await blockManager.connect(signers[5]).claimBlockReward();
       for (let i = 1; i <= 9; i++) {
-        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i));
+        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i - 1));
       }
     });
 
@@ -172,19 +170,16 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
+      await adhocPropose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
-      const medians = await calculateMedians(collectionManager);
-      vote = medians[1]; /* actually 4 should be the index as value of collection5 is being fetched by delegator
-      but since collections are deactivated collection5 will be now at index 1 */
-      await reset();
+
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 1;
+      let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
@@ -198,8 +193,7 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection5';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-
-      assertBNEqual(result[0], vote);
+      assertBNEqual(result[0], toBigNumber('500'));
       assertBNEqual(result[1], toBigNumber('2'));
     });
 
@@ -226,18 +220,16 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager, collectionManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
-      const medians = await calculateMedians(collectionManager);
-      vote = medians[2]; // 3 is the index as collection3 is being deactivated
-      await reset();
+
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 1;
+      let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
@@ -251,7 +243,7 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection3';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-      assertBNEqual(result[0], vote);
+      assertBNEqual(result[0], toBigNumber('300'));
       assertBNEqual(result[1], toBigNumber('2'));
     });
   });

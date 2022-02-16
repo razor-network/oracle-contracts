@@ -89,8 +89,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                 // Check if asset value is zero
                 // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
                 require(tree.values[i].value != 0, "0 vote for assigned coll");
-                // slither-disable-next-line calls-loop
                 // reason to ignore : its internal lib not a external call
+                // slither-disable-next-line calls-loop
                 require(
                     MerklePosAware.verify(
                         tree.proofs[i],
@@ -125,7 +125,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         bytes32 root,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Commit, epoch) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
@@ -137,7 +137,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(keccak256(abi.encode(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        return stakeManager.slash(epoch, thisStakerId, msg.sender);
+        stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     function storeSalt(bytes32 _salt) external override onlyRole(SALT_MODIFIER_ROLE) {
