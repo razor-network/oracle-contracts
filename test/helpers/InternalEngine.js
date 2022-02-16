@@ -1,4 +1,6 @@
-const { utils } = ethers;
+/* eslint-disable prefer-destructuring */
+const { BigNumber, utils } = ethers;
+const toBigNumber = (value) => BigNumber.from(value);
 
 const {
   getAssignedCollections, getEpoch, getBiggestStakeAndId,
@@ -6,7 +8,14 @@ const {
 } = require('./utils');
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
-const store = {};
+let store = {};
+let influenceSum = new Array(100).fill(toBigNumber('0'));
+let res = new Array(100).fill(toBigNumber('0'));
+let root = {};
+let commitments = {};
+let valuesRevealed = {};
+let treeData = {};
+let votes = {};
 
 /* ///////////////////////////////////////////////////////////////
                           COMMIT
@@ -83,7 +92,9 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret)
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 
+  commitments[signer.address] = commitment;
   await voteManager.connect(signer).commit(getEpoch(), commitment);
+  root[signer.address] = tree[0][0];
 };
 
 /* ///////////////////////////////////////////////////////////////
@@ -99,7 +110,7 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret)
 //     bytes32[][] proofs;
 //     bytes32 root;
 // }
-const reveal = async (signer, deviation, voteManager) => {
+const reveal = async (signer, deviation, voteManager, stakeManager) => {
   const proofs = [];
   const values = [];
   for (let j = 0; j < store[signer.address].seqAllotedCollections.length; j++) {
@@ -110,16 +121,32 @@ const reveal = async (signer, deviation, voteManager) => {
       // its not related to any concept, ofc 0 cant be valid vote result so we couldnr have 0 value for 0
       // this is not needed on node, as there we will have real values
     });
-
     proofs.push(await getProofPath(store[signer.address].tree, Number(store[signer.address].seqAllotedCollections[j])));
   }
+  valuesRevealed[signer.address] = values;
   const treeRevealData = {
     values,
     proofs,
     root: store[signer.address].tree[0][0],
   };
-  // console.log(treeRevealData);
+  treeData[signer.address] = treeRevealData;
   await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  // console.log(treeRevealData);
+  const helper = {};
+  const arr = [];
+  for (let i = 0; i < store[signer.address].seqAllotedCollections.length; i++) {
+    const stakerId = await stakeManager.stakerIds(signer.address);
+    const influence = await voteManager.getInfluenceSnapshot(getEpoch(), stakerId);
+    const medianIndex = (store[signer.address].seqAllotedCollections)[i];
+    const voteValue = values[i].value;
+    arr.push(voteValue);
+    if (!(helper[medianIndex])) {
+      influenceSum[medianIndex] = (influenceSum[medianIndex]).add(influence);
+      res[medianIndex] = (res[medianIndex]).add(influence.mul(voteValue));
+      helper[medianIndex] = true;
+    }
+  }
+  votes[signer.address] = arr;
 };
 
 /* ///////////////////////////////////////////////////////////////
@@ -138,21 +165,89 @@ const reveal = async (signer, deviation, voteManager) => {
 // For non revealed active collection of this epoch, use previous epoch vote value.
 // Find iteration using salt as seed
 
-const propose = async (signer, ids, values, stakeManager, blockManager, voteManager) => {
+const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
   const stakerID = await stakeManager.getStakerId(signer.address);
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
   // console.log('Propose', iteration, biggestStakerId, stakerID);
-  await blockManager.connect(signer).propose(getEpoch(),
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  // const numActiveCollections = 9;
+  const medians = new Array(numActiveCollections).fill(0);
+  const ids = await collectionManager.getActiveCollections();
+  let temp;
+  const epoch = await getEpoch();
+  const block = await blockManager.getBlock(epoch - 1);
+  for (let j = 0; j < ids.length; j++) {
+    if (Number(influenceSum[j]) !== 0) {
+      temp = (res[j]).div(influenceSum[j]);
+      medians[j] = temp;
+    } else if (block.medians.length !== 0) {
+      const oldIndex = await collectionManager.getIdToIndexRegistryValue(ids[j]);
+      const oldMedian = (await blockManager.getBlock(epoch - 1)).medians[oldIndex];
+      medians[oldIndex] = oldMedian;
+    }
+  }
+  await blockManager.connect(signer).propose(epoch,
     ids,
-    values,
+    medians,
     iteration,
     biggestStakerId);
 };
+
+const calculateMedians = async (collectionManager) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const medians = [];
+  let helper;
+  for (let i = 0; i < numActiveCollections; i++) medians.push(0);
+  for (let j = 0; j < numActiveCollections; j++) {
+    if (Number(influenceSum[j]) !== 0) {
+      helper = (res[j]).div(influenceSum[j]);
+      medians[j] = helper;
+    }
+  }
+  return (medians);
+};
+
+const reset = async () => {
+  store = {};
+  influenceSum = new Array(100).fill(toBigNumber('0'));
+  res = new Array(100).fill(toBigNumber('0'));
+  root = {};
+  commitments = {};
+  valuesRevealed = {};
+  treeData = {};
+  votes = {};
+};
+
+const getAnyAssignedIndex = async (signer) => {
+  const index = (store[signer.address].seqAllotedCollections)[0];
+  return index;
+};
+
+const getRoot = async (signer) => (root[signer.address]);
+
+const getCommitment = async (signer) => (commitments[signer.address]);
+
+const getData = async (signer) => (store[signer.address]);
+
+const getValuesArrayRevealed = async (signer) => (valuesRevealed[signer.address]);
+
+const getTreeRevealData = async (signer) => (treeData[signer.address]);
+
+const getVoteValues = async (signer) => (votes[signer.address]);
 
 module.exports = {
   commit,
   reveal,
   propose,
+  reset,
+  getAnyAssignedIndex,
+  getRoot,
+  getCommitment,
+  getData,
+  getVoteValues,
+  getTreeRevealData,
+  getValuesArrayRevealed,
+  calculateMedians,
 };

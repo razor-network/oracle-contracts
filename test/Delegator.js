@@ -18,9 +18,10 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
+  adhocPropose,
 } = require('./helpers/utils');
 
-const { commit, reveal, propose } = require('./helpers/InternalEngine');
+const { commit, reveal } = require('./helpers/InternalEngine');
 
 const { utils } = ethers;
 
@@ -100,10 +101,10 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], [1], [100], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[5], [1], [100], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
@@ -138,10 +139,10 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
@@ -169,10 +170,10 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();
@@ -219,10 +220,10 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager);
+      await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await propose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       await mineToNextState();

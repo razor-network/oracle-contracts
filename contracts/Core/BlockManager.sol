@@ -12,6 +12,7 @@ import "./parameters/child/BlockManagerParams.sol";
 import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
+import "hardhat/console.sol";
 
 contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
@@ -178,7 +179,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 medianIndex
-    ) external initialized checkEpochAndState(State.Dispute, epoch) returns (uint32) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
 
@@ -220,12 +221,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // so as its dependant on user input, it can exploited
     // to solve so, will need to have follwoing dispute
 
-    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-        returns (uint32)
-    {
+    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
@@ -238,12 +234,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-        returns (uint32)
-    {
+    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"
