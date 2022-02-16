@@ -221,11 +221,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // so as its dependant on user input, it can exploited
     // to solve so, will need to have follwoing dispute
 
-    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-    {
+    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
@@ -238,11 +234,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint32 epoch, uint8 blockIndex)
-        external
-        initialized
-        checkEpochAndState(State.Dispute, epoch)
-    {
+    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"

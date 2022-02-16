@@ -175,26 +175,19 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
   // const numActiveCollections = 9;
   const medians = new Array(numActiveCollections).fill(0);
   const ids = await collectionManager.getActiveCollections();
-  console.log(ids);
   let temp;
   const epoch = await getEpoch();
-  // console.log(epoch);
-  console.log(await blockManager.getBlock(epoch - 1));
   const block = await blockManager.getBlock(epoch - 1);
   for (let j = 0; j < ids.length; j++) {
     if (Number(influenceSum[j]) !== 0) {
-      console.log(j);
       temp = (res[j]).div(influenceSum[j]);
       medians[j] = temp;
     } else if (block.medians.length !== 0) {
       const oldIndex = await collectionManager.getIdToIndexRegistryValue(ids[j]);
       const oldMedian = (await blockManager.getBlock(epoch - 1)).medians[oldIndex];
       medians[oldIndex] = oldMedian;
-
-      console.log(ids[j], oldIndex, oldMedian);
     }
   }
-  console.log('medians', medians);
   await blockManager.connect(signer).propose(epoch,
     ids,
     medians,

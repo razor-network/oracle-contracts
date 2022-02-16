@@ -28,7 +28,7 @@ const {
   tokenAmount,
 } = require('./helpers/utils');
 const {
-  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, calculateMedians, getData,
+  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, getData,
 } = require('./helpers/InternalEngine');
 
 describe('VoteManager', function () {
@@ -185,7 +185,7 @@ describe('VoteManager', function () {
       });
 
       it('should not be able to reveal if length of the votes value is not same as number of active collections', async function () {
-        const epoch = await getEpoch();
+        // const epoch = await getEpoch();
         // const commitment = await getCommitAndRevealData(collectionManager, voteManager, blockManager, 0);
         // await voteManager.connect(signers[1]).commit(epoch, commitment[0]);
         await mineToNextState(); // reveal
