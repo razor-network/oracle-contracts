@@ -1,41 +1,46 @@
-const { BigNumber } = ethers;
+const { BigNumber, utils } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
 
 const toBigNumber = (value) => BigNumber.from(value);
 const tokenAmount = (value) => toBigNumber(value).mul(ONE_ETHER);
+const { createMerkle, getProofPath } = require('./MerklePosAware');
+
+const store = {};
+const leavesOfTree = {};
 
 const calculateDisputesData = async (medianIndex, voteManager, stakeManager, collectionManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
-  const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
-
+  // const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
+  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
   let median = toBigNumber('0');
 
-  const sortedStakers = [];
-  const votes = [];
+  const sortedValues = [];
+  // const votes = [];
   let accProd = toBigNumber(0);
   // let accWeight;
   let infl;
   let vote;
+  const checkVotes = {};
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
-    vote = await voteManager.getVote(i);
-
-    if (vote[0] === epoch) {
-      sortedStakers.push(i);
-      votes.push(vote[1][medianIndex]);
-
-      infl = await voteManager.getInfluenceSnapshot(epoch, i);
-      // accWeight += infl;
-      accProd = accProd.add(toBigNumber(vote[1][medianIndex]).mul(infl));
+    vote = await voteManager.getVoteValue(epoch, i, medianIndex);
+    // if (vote[0] === epoch) {
+    //   sortedStakers.push(i);
+    //   votes.push(vote[1][medianIndex]);
+    if ((!(checkVotes[vote])) && (vote !== 0)) {
+      sortedValues.push(vote);
     }
+    checkVotes[vote] = true;
+    infl = await voteManager.getInfluenceSnapshot(epoch, i);
+    // accWeight += infl;
+    accProd = accProd.add(toBigNumber(vote).mul(infl));
   }
-
   median = accProd.div(totalInfluenceRevealed);
-
+  sortedValues.sort();
   return {
-    median, totalInfluenceRevealed, accProd, sortedStakers,
+    median, totalInfluenceRevealed, accProd, sortedValues,
   };
 };
 
@@ -56,15 +61,15 @@ const maturity = async (age) => {
   return MATURITIES[index];
 };
 
-const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, randaoHash) => {
+const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const salt1 = await web3.utils.soliditySha3(iteration);
-  const seed1 = await prngHash(randaoHash, salt1);
+  const seed1 = await prngHash(salt, salt1);
   const rand1 = await prng(numStakers, seed1);
   if (!(toBigNumber(rand1).add(1).eq(stakerId))) return false;
 
   const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
-  const seed2 = await prngHash(randaoHash, salt2);
+  const seed2 = await prngHash(salt, salt2);
   const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
   if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) return true;
 
@@ -104,15 +109,32 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   const stakerId = staker.id;
   const epoch = getEpoch();
   const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
-  const randaoHash = await voteManager.getRandaoHash();
+  const salt = await voteManager.getSalt();
   if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
   // stake 0 represents that given staker has not voted in that epoch
   // so anyway in propose its going to revert
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (isElected) return (i);
   }
   return 0;
+};
+
+const getAssignedCollections = async (numActiveCollections, seed, toAssign) => {
+  const assignedCollections = {}; // For Tree
+  const seqAllotedCollections = []; // isCollectionAlloted
+  for (let i = 0; i < toAssign; i++) {
+    const assigned = await prng(
+      numActiveCollections,
+      utils.solidityKeccak256(
+        ['bytes32', 'uint256'],
+        [seed, i]
+      )
+    );
+    assignedCollections[assigned] = true;
+    seqAllotedCollections.push(assigned);
+  }
+  return [assignedCollections, seqAllotedCollections];
 };
 
 const getFalseIteration = async (voteManager, stakeManager, staker) => {
@@ -121,9 +143,9 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
   const epoch = getEpoch();
   const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
   const { biggestStake } = await getBiggestStakeAndId(stakeManager, voteManager);
-  const randaoHash = await voteManager.getRandaoHash();
+  const salt = await voteManager.getSalt();
   for (let i = 0; i < 10000000000; i++) {
-    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, randaoHash);
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (!isElected) return i;
   }
   return 0;
@@ -135,10 +157,77 @@ const getState = async () => {
   return state.mod(NUM_STATES).toNumber();
 };
 
+const adhocCommit = async (medians, signer, deviation, voteManager, collectionManager, secret) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const salt = await voteManager.getSalt();
+  const toAssign = await voteManager.toAssign();
+  // const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+  const seed1 = utils.solidityKeccak256(
+    ['bytes32', 'bytes32'],
+    [salt, secret]
+  );
+  const result = await getAssignedCollections(numActiveCollections, seed1, toAssign);
+  const assignedCollections = result[0];
+  const seqAllotedCollections = result[1];
+  const helper = [];
+  for (let i = 0; i < numActiveCollections; i++) {
+    if (assignedCollections[i]) {
+      const rand = Math.floor(Math.random() * 3);
+      const fact = (rand === 2) ? -1 : rand;
+      helper.push((medians[i] + fact)); // [100,200,300,400]
+    } else helper.push(0);
+  }
+  leavesOfTree[signer.address] = helper;
+  const tree = await createMerkle(leavesOfTree[signer.address]);
+
+  store[signer.address] = {
+    assignedCollections,
+    seqAllotedCollections,
+    leavesOfTree,
+    tree,
+    secret,
+  };
+  const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
+  await voteManager.connect(signer).commit(getEpoch(), commitment);
+};
+
+const adhocReveal = async (signer, deviation, voteManager) => {
+  const proofs = [];
+  const values = [];
+  const sac = store[signer.address].seqAllotedCollections;
+  for (let j = 0; j < sac.length; j++) {
+    values.push({
+      medianIndex: sac[j],
+      value: ((leavesOfTree[signer.address])[(sac)[j]]), // [300,400,200,100]
+    });
+    proofs.push(await getProofPath(store[signer.address].tree, Number(store[signer.address].seqAllotedCollections[j])));
+  }
+  const treeRevealData = {
+    values,
+    proofs,
+    root: store[signer.address].tree[0][0],
+  };
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+};
+
+const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, voteManager) => {
+  const stakerID = await stakeManager.getStakerId(signer.address);
+  const staker = await stakeManager.getStaker(stakerID);
+  const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
+  const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+  await blockManager.connect(signer).propose(getEpoch(),
+    ids,
+    medians,
+    iteration,
+    biggestStakerId);
+};
+
+const getData = async (signer) => (store[signer.address]);
+
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
-  // getBiggestStakeAndId,
+  getAssignedCollections,
   getBiggestStakeAndId,
   getEpoch,
   getVote,
@@ -150,4 +239,8 @@ module.exports = {
   toBigNumber,
   tokenAmount,
   maturity,
+  adhocCommit,
+  adhocReveal,
+  adhocPropose,
+  getData,
 };

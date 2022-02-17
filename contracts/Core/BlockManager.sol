@@ -48,8 +48,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // note that only one staker or no stakers selected in each iteration.
     // stakers elected in higher iterations can also propose hoping that
     // stakers with lower iteration do not propose for some reason
+
+    /// @dev The IDs being passed here, are only used for disputeForNonAssignedCollection
+    /// for delegator, we have seprate registry
+    /// If user passes invalid ids, disputeForProposedCollectionIds can happen
+
     function propose(
         uint32 epoch,
+        uint16[] memory ids,
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
@@ -65,7 +71,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, iteration, biggestStake);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, ids, iteration, biggestStake);
         bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestStake);
         epochLastProposed[proposerId] = epoch;
         if (isAdded) {
@@ -78,32 +84,30 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function giveSorted(
         uint32 epoch,
         uint16 medianIndex,
-        uint32[] memory sortedStakers
+        uint32[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 accProd = disputes[epoch][msg.sender].accProd;
-        uint32 lastVisitedStaker = disputes[epoch][msg.sender].lastVisitedStaker;
+        uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
+
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].medianIndex = medianIndex;
         } else {
             require(disputes[epoch][msg.sender].medianIndex == medianIndex, "MedianIndex not matching");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
-        for (uint32 i = 0; i < sortedStakers.length; i++) {
-            require(sortedStakers[i] > lastVisitedStaker, "sortedStaker <= LVS "); // LVS : Last Visited Staker
-            lastVisitedStaker = sortedStakers[i];
-            // slither-disable-next-line calls-loop
-            Structs.Vote memory vote = voteManager.getVote(lastVisitedStaker);
-            require(vote.epoch == epoch, "staker didnt vote in this epoch");
+        for (uint32 i = 0; i < sortedValues.length; i++) {
+            require(sortedValues[i] > lastVisitedValue, "sortedValue <= LVV "); // LVV : Last Visited Value
+            lastVisitedValue = sortedValues[i];
 
-            uint48 value = vote.values[medianIndex];
+            // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
-            uint256 influence = voteManager.getInfluenceSnapshot(epoch, lastVisitedStaker);
-            accProd = accProd + value * influence;
-            accWeight = accWeight + influence;
+            uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+            accProd = accProd + sortedValues[i] * weight; // numerator
+            accWeight = accWeight + weight; // denominator: total influence revealed for this collection
         }
-        disputes[epoch][msg.sender].lastVisitedStaker = lastVisitedStaker;
+        disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
         disputes[epoch][msg.sender].accProd = accProd;
     }
@@ -158,9 +162,84 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
+    // Epoch X
+    // 0,1,2,3
+    // 1,2,3,4
+    // Deactivate 3
+
+    // Epoch X+1
+    // 0,1,2
+    // 1,2,4
+
+    // Only 1,2 revealed by stakers, in this epoch,
+    // so for 4 value should be used from previous
+    // Follwoing function allows dispute for so
+    function disputeForNonAssignedCollection(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint16 medianIndex
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
+        require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
+
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+
+        uint16 currentId = proposedBlocks[epoch][blockId].ids[medianIndex];
+        uint16 oldIndex = collectionManager.getIdToIndexRegistryValue(currentId);
+        require(
+            proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch - 1].medians[oldIndex],
+            "Block proposed with corr medians"
+        );
+        _executeDispute(epoch, blockIndex, blockId);
+    }
+
+    // Epoch X
+    // 0,1,2,3
+    // 1,2,3,4
+    // Deactivate 3
+
+    // Epoch X+1
+    // 0,1,2
+    // 1,2,4
+
+    // Propose
+    // [1,2,4]
+    // [100,200,400]
+    // In Dispute I pass 2nd Index
+
+    // Here thing is there is nothing stopping me from passing any deactivated asset also in place of 4
+    // 1,2,3
+    // 100,200,300
+    // This will pass in disputeForNonAssignedCollection(), as indeed value is 300 for id 3 in last epoch
+    // Or even repeating same thing
+    // For ex. consider case when there are lot of assets
+    // 1,2,4,4,4,4,4
+    // 100,200,400,400,400.....
+    // so as its dependant on user input, it can exploited
+    // to solve so, will need to have follwoing dispute
+
+    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+
+        bytes32 proposedHash = keccak256(abi.encodePacked(proposedBlocks[epoch][blockId].ids));
+        bytes32 actualHash = collectionManager.getActiveCollectionsHash();
+
+        require(proposedHash != actualHash, "Block proposed with corr ids");
+        _executeDispute(epoch, blockIndex, blockId);
+    }
+
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
-        require(disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch), "TIR is wrong"); // TIR : total influence revealed
+        require(
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            "TIR is wrong"
+        ); // TIR : total influence revealed
+        require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
+        // Would revert if no block is proposed, or the asset specifed was not revealed
         uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
         require(median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
@@ -190,9 +269,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
+        bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
+
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+
+        voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
-        randomNoProvider.provideSecret(epoch, voteManager.getRandaoHash());
+        randomNoProvider.provideSecret(epoch, salt);
     }
 
     function _insertAppropriately(
@@ -284,13 +367,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // generating pseudo random number (range 0..(totalstake - 1)), add (+1) to the result,
         // since prng returns 0 to max-1 and staker start from 1
 
-        bytes32 randaoHashes = voteManager.getRandaoHash();
-        bytes32 seed1 = Random.prngHash(randaoHashes, keccak256(abi.encode(iteration)));
+        bytes32 salt = voteManager.getSalt();
+        bytes32 seed1 = Random.prngHash(salt, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
-        bytes32 seed2 = Random.prngHash(randaoHashes, keccak256(abi.encode(stakerId, iteration)));
+        bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
