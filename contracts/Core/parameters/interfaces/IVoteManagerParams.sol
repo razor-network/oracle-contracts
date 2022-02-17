@@ -3,4 +3,6 @@ pragma solidity ^0.8.0;
 
 interface IVoteManagerParams {
     function setMinStake(uint256 _minStake) external;
+
+    function setToAssign(uint16 _toAssign) external;
 }

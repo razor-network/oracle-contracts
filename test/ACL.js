@@ -1,4 +1,4 @@
-const { assert } = require('chai');
+const { assert, expect } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   BLOCK_CONFIRMER_ROLE,
@@ -10,13 +10,15 @@ const {
   ZERO_ADDRESS,
   GOVERNER_ROLE,
   STOKEN_ROLE,
+  DEPTH_MODIFIER_ROLE,
+  SALT_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
-  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch,
+  assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch, assertBNEqual,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  getEpoch, tokenAmount,
+  getEpoch, tokenAmount, toBigNumber,
 } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
@@ -29,11 +31,13 @@ describe('Access Control Test', async () => {
   let rewardManager;
   let initializeContracts;
   let delegator;
+  let voteManager;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
       blockManager, governance, collectionManager, stakeManager, rewardManager, initializeContracts, delegator,
+      voteManager,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -352,6 +356,30 @@ describe('Access Control Test', async () => {
     await collectionManager.updateCollection(1, 500, 2, -2, [1, 2]);
     await collectionManager.revokeRole(assetModifierHash, signers[0].address);
     await assertRevert(collectionManager.updateCollection(1, 500, 2, -2, [1, 2]), expectedRevertMessage);
+  });
+
+  it('storeDepth() should not be accessable by anyone besides Depth Modifier', async () => {
+    await assertRevert(voteManager.storeDepth(2), expectedRevertMessage);
+    await voteManager.grantRole(SALT_MODIFIER_ROLE, signers[0].address);
+    await assertRevert(voteManager.storeDepth(2), expectedRevertMessage);
+  });
+
+  it('storeDepth() should be accessable by only Depth Modifier', async () => {
+    await voteManager.grantRole(DEPTH_MODIFIER_ROLE, signers[0].address);
+    await voteManager.storeDepth(2);
+    assertBNEqual(await voteManager.depth(), toBigNumber('2'));
+  });
+
+  it('storeSalt() should not be accessable by anyone besides Salt Modifier', async () => {
+    await assertRevert(voteManager.storeSalt(ethers.utils.hexZeroPad('0x0', 32)), expectedRevertMessage);
+    await voteManager.grantRole(DEPTH_MODIFIER_ROLE, signers[0].address);
+    await assertRevert(voteManager.storeSalt(ethers.utils.hexZeroPad('0x0', 32)), expectedRevertMessage);
+  });
+
+  it('storeSalt() should be accessable by only Salt Modifier', async () => {
+    await voteManager.grantRole(SALT_MODIFIER_ROLE, signers[0].address);
+    await voteManager.storeSalt(ethers.utils.hexZeroPad('0x0', 32));
+    expect(await voteManager.salt()).to.eq(ethers.utils.hexZeroPad('0x0', 32));
   });
 
   it('Only Governer should able to update Block Reward', async () => {
