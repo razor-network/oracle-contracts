@@ -6,7 +6,7 @@ interface ICollectionManager {
 
     function getCollectionStatus(uint16 id) external view returns (bool);
 
-    function getNumActiveCollections() external view returns (uint256);
+    function getNumActiveCollections() external view returns (uint16);
 
     function getNumCollections() external view returns (uint16);
 
@@ -19,4 +19,8 @@ interface ICollectionManager {
     function getResult(bytes32 _name) external view returns (uint32, int8);
 
     function getResultFromID(uint16 _id) external view returns (uint32, int8);
+
+    function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+
+    function getActiveCollectionsHash() external view returns (bytes32 hash);
 }

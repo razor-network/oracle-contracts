@@ -2,7 +2,6 @@
 test unstake and withdraw
 test cases where nobody votes, too low stake (1-4) */
 
-const { utils } = require('ethers');
 const { assert } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH, GRACE_PERIOD, UNSTAKE_LOCK_PERIOD, COLLECTION_MODIFIER_ROLE,
@@ -21,11 +20,12 @@ const {
   mineToNextState,
 } = require('./helpers/testHelpers');
 const {
+  commit, reveal, propose, reset,
+} = require('./helpers/InternalEngine');
+const {
   getEpoch,
   toBigNumber,
   tokenAmount,
-  getBiggestStakeAndId,
-  getIteration,
   maturity,
 } = require('./helpers/utils');
 const { setupContracts } = require('./helpers/testSetup');
@@ -427,26 +427,15 @@ describe('StakeManager', function () {
       assertBNEqual(lock.unlockAfter, toBigNumber(epoch + UNSTAKE_LOCK_PERIOD), 'Withdraw after for the lock is incorrect');
       // Next Epoch
       await mineToNextEpoch();
-
-      // Participation In Epoch
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
       epoch = await getEpoch();
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
+      let secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02581415c0823ea49d847ccb9cdd';
+      await commit(signers[2], 0, voteManager, collectionManager, secret);
 
-      // Commit
-      await voteManager.connect(signers[2]).commit(epoch, commitment1);
-      await mineToNextState();
-
-      // Reveal
-      await voteManager.connect(signers[2]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState(); // reveal
+      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
 
       // Next Epoch
-      await mineToNextEpoch();
+      await mineToNextEpoch(); // propose
       epoch = await getEpoch();
       staker = await stakeManager.getStaker(2);
       const totalSupply = await sToken.totalSupply();
@@ -460,21 +449,13 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
 
       // Participation In Epoch
-      const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       epoch = await getEpoch();
-      const commitment2 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes2, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
+      secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9cdd';
+      await commit(signers[2], 0, voteManager, collectionManager, secret);
 
-      // Commit
-      await voteManager.connect(signers[2]).commit(epoch, commitment2);
-      await mineToNextState();
-
-      // Reveal
-      await voteManager.connect(signers[2]).reveal(epoch, votes2,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState(); // reveal
+      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
 
       // Next Epoch
       await mineToNextEpoch();
@@ -501,17 +482,11 @@ describe('StakeManager', function () {
 
       // commit
       epoch = await getEpoch();
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a0e9c02481415c0823ea49d847ccb9cdd';
+      await commit(signers[3], 0, voteManager, collectionManager, secret);
 
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[3]).commit(epoch, commitment1);
-      await mineToNextState();
-
-      await voteManager.connect(signers[3]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await mineToNextState(); // reveal
+      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
 
       staker = await stakeManager.stakers(3);
       assertBNNotEqual(staker.stake, stake, 'Stake should have decreased due to penalty');
@@ -519,7 +494,6 @@ describe('StakeManager', function () {
 
     it('should not penalize staker if number of inactive epochs is smaller than / equal to grace_period', async function () {
       await mineToNextEpoch();
-      let epoch = await getEpoch();
       let staker = await stakeManager.getStaker(3);
       const { stake } = staker;
 
@@ -533,21 +507,11 @@ describe('StakeManager', function () {
       // Staker 3 was inactive for 32 - 23 - 1 = 8 epochs
 
       // commit
-      epoch = await getEpoch();
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[3]).commit(epoch, commitment);
-
-      // reveal
-      await mineToNextState();
-
+      const secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a1e9c02481415c0823ea49d847ccb9cdd';
+      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await mineToNextState(); // reveal
       // Staker is not penalised because no. of inactive epochs (8) <= max allowed inactive epochs i.e grace_period (8)
-      await voteManager.connect(signers[3]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
       staker = await stakeManager.stakers(3);
       assertBNEqual(staker.stake, stake, 'Stake should not change');
     });
@@ -577,18 +541,10 @@ describe('StakeManager', function () {
       epoch = await getEpoch();
       staker = await stakeManager.getStaker(3);
       const newStake = staker.stake;
-
       // commit in epoch 42 , outside grace_period
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-
-      await voteManager.connect(signers[3]).commit(epoch, commitment);
+      const secret = '0x727d5c9e6d18ed45ce7ac7d3cee6ec0a1e9c01481415c0823ea49d847ccb9cdd';
+      await commit(signers[3], 0, voteManager, collectionManager, secret);
       staker = await stakeManager.getStaker(3);
-
       // Total no of inactive epochs = 42 - 32 - 1 = 9
       // Staker 3 is penalised because total inactive epochs(9) > max allowed inactive epochs i.e grace_period (8)
       assertBNNotEqual(staker.stake, newStake, 'Stake should have decreased due to inactivity penalty');
@@ -666,17 +622,12 @@ describe('StakeManager', function () {
     it('staker should accept delegation', async function () {
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       const staker = await stakeManager.getStaker(4);
-      const epoch = await getEpoch();
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[4]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[4]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x727d5c9e6d18ed35ce7ac8d3cee6ec8a1e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
       const { acceptDelegation } = staker;
       assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
@@ -814,27 +765,15 @@ describe('StakeManager', function () {
 
         // commit
         epoch = await getEpoch();
-        const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const secret = '0x727d5c5e5d18ed35ce7ac8d3cee6ec8a1e9c02481415c0823ea49d847ccb9eee';
+        await commit(signers[4], 0, voteManager, collectionManager, secret);
 
-        const commitment = utils.solidityKeccak256(
-          ['uint32', 'uint48[]', 'bytes32'],
-          [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
-        await voteManager.connect(signers[4]).commit(epoch, commitment);
-
-        // reveal
-        await mineToNextState();
-
-        await voteManager.connect(signers[4]).reveal(epoch, votes,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        await mineToNextState(); // reveal
+        await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
         // propose
         await mineToNextState();
-        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-        await blockManager.connect(signers[4]).propose(epoch,
-          [100, 200, 300, 400, 500, 600, 700, 800, 900],
-          iteration,
-          biggestStakerId);
+        await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
+        await reset();
         const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
         assertBNEqual(proposedBlock.proposerId, toBigNumber('4'), 'incorrect proposalID'); // 4th staker proposed
 
@@ -919,18 +858,11 @@ describe('StakeManager', function () {
         }
         // commit
         let epoch = await getEpoch();
-        const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const commitment = utils.solidityKeccak256(
-          ['uint32', 'uint48[]', 'bytes32'],
-          [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-        );
-        await voteManager.connect(signers[4]).commit(epoch, commitment);
+        const secret = '0x727d5c9e6d18ed45ce7ac8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+        await commit(signers[4], 0, voteManager, collectionManager, secret);
 
-        // reveal
-        await mineToNextState();
-
-        await voteManager.connect(signers[4]).reveal(epoch, votes1,
-          '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+        await mineToNextState(); // reveal
+        await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
         // Staker 4 is penalised because no of inactive epochs (9) > max allowed inactive epochs i.e grace_period (8)
         // Delagator unstakes
         await mineToNextEpoch();
@@ -1277,15 +1209,11 @@ describe('StakeManager', function () {
       const stakerId = await stakeManager.stakerIds(signers[9].address);
 
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[9]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[9]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x427d5c9e6d18ed45ce7ac8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[9], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[9], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
 
       // delegation working as expected till staker is active
@@ -1315,18 +1243,12 @@ describe('StakeManager', function () {
       await mineToNextEpoch();
 
       // Participation In Epoch
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       epoch = await getEpoch();
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      // Commit
-      await voteManager.connect(signers[9]).commit(epoch, commitment1);
-      await mineToNextState();
-      // Reveal
-      await voteManager.connect(signers[9]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x427d5c9e6d18ed45ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[9], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[9], 0, voteManager, stakeManager, collectionManager);
       // Next Epoch
       await mineToNextEpoch();
     });
@@ -1373,13 +1295,10 @@ describe('StakeManager', function () {
       let staker = await stakeManager.getStaker(4);
       const prevStake = staker.stake;
       // commit
-      const epoch = await getEpoch();
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[4]).commit(epoch, commitment);
+      // const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const secret = '0x427d5c9e6d18ed45ce7aa8e3cce6ec8a0e9c02491415c0823ea49d847ccb9ddd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret);
+
       staker = await stakeManager.getStaker(4);
       assertBNEqual(prevStake, staker.stake, 'Inactivity penalties have been levied');
       // const epochsJumped = WITHDRAW_INITIATION_PERIOD + 1;
@@ -1477,7 +1396,6 @@ describe('StakeManager', function () {
     it('staker should be able to increase the commission by only alloted commission increase percentage after epoch limit', async function () {
       let staker = await stakeManager.getStaker(4);
       await governance.connect(signers[0]).setEpochLimitForUpdateCommission(10);
-      // console.log(Number(await parameters.epochCommissionLastUpdated()));
       for (let i = 0; i < 10; i++) {
         await mineToNextEpoch();
       }
@@ -1519,15 +1437,11 @@ describe('StakeManager', function () {
       const epoch = await getEpoch();
 
       const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[4]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[4]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x427d5c9e0d18ed45ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
       await governance.setSlashParams(500, 4500, 0); // slashing only half stake
       await stakeManager.slash(epoch, stakerIdAcc4, signers[10].address); // slashing signers[1]
       const amount = tokenAmount('1000');
@@ -1630,15 +1544,11 @@ describe('StakeManager', function () {
       assertBNEqual(await staker.stake, tokenAmount('1000'), 'Stake MisMatch');
 
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[8]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[8]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x427d5c9e0d18ed89ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[8], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[8], 0, voteManager, stakeManager, collectionManager);
 
       // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
       await mineToNextEpoch();
@@ -1688,15 +1598,11 @@ describe('StakeManager', function () {
       let staker = await stakeManager.stakers(stakerId);
 
       // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const votes1 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      const commitment1 = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes1, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[11]).commit(epoch, commitment1);
-      await mineToNextState();
-      await voteManager.connect(signers[11]).reveal(epoch, votes1,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      const secret = '0x427e5c9e0d18ed89ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[11], 0, voteManager, collectionManager, secret);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[11], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
 
       epoch = await getEpoch();
@@ -1770,27 +1676,16 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[17]).updateCommission(10);
       await stakeManager.connect(signers[17]).setDelegationAcceptance('true');
       let staker = await stakeManager.getStaker(stakerId);
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const secret = '0x427d5c9e0d18ed89ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9eed';
+      await commit(signers[17], 0, voteManager, collectionManager, secret);
 
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[17]).commit(epoch, commitment);
+      await mineToNextState(); // reveal
+      await reveal(signers[17], 0, voteManager, stakeManager, collectionManager);
 
-      // reveal
-      await mineToNextState();
-
-      await voteManager.connect(signers[17]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       // propose
       await mineToNextState();
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      await blockManager.connect(signers[17]).propose(epoch,
-        [100, 200, 300, 400, 500, 600, 700, 800, 900],
-        iteration,
-        biggestStakerId);
+      await propose(signers[17], stakeManager, blockManager, voteManager, collectionManager);
+      await reset();
 
       staker = await stakeManager.getStaker(stakerId);
       const stakeBefore = staker.stake;
@@ -1917,19 +1812,12 @@ describe('StakeManager', function () {
     it('delegator should be able to unstake properly even after extending lock when multiple delegators unstake', async function () {
       await mineToNextEpoch();
       let epoch = await getEpoch();
-      const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const secret = '0x427d5c9e0d18ed89ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9dee';
+      await commit(signers[17], 0, voteManager, collectionManager, secret);
 
-      const commitment = utils.solidityKeccak256(
-        ['uint32', 'uint48[]', 'bytes32'],
-        [epoch, votes, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd']
-      );
-      await voteManager.connect(signers[17]).commit(epoch, commitment);
+      await mineToNextState(); // reveal
+      await reveal(signers[17], 0, voteManager, stakeManager, collectionManager);
 
-      // reveal
-      await mineToNextState();
-
-      await voteManager.connect(signers[17]).reveal(epoch, votes,
-        '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
       const stakerId = await stakeManager.getStakerId(signers[17].address);
       let staker = await stakeManager.getStaker(stakerId);
       const sToken = await stakedToken.attach(staker.tokenAddress);

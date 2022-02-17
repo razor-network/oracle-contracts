@@ -138,4 +138,9 @@ contract Governance is Initializable, ACL, Constants {
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);
     }
+
+    function setToAssign(uint16 _toAssign) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "toAssign", _toAssign, block.timestamp);
+        voteManagerParams.setToAssign(_toAssign);
+    }
 }

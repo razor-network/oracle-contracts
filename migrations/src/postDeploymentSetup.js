@@ -49,9 +49,6 @@ module.exports = async () => {
   // keccak256("COLLECTION_MODIFIER_ROLE")
   const COLLECTION_MODIFIER_ROLE = '0xa3a75e7cd2b78fcc3ae2046ab93bfa4ac0b87ed7ea56646a312cbcb73eabd294';
 
-  // keccak256("VOTE_MODIFIER_ROLE")
-  const VOTE_MODIFIER_ROLE = '0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5';
-
   // keccak256("REGISTRY_MODIFIER_ROLE")
   const REGISTRY_MODIFIER_ROLE = '0xca51085219bef34771da292cb24ee4fcf0ae6bdba1a62c17d1fb7d58be802883';
 
@@ -63,6 +60,12 @@ module.exports = async () => {
 
   // keccak256("PAUSE_ROLE")
   const PAUSE_ROLE = '0x139c2898040ef16910dc9f44dc697df79363da767d8bc92f2e310312b816e46d';
+
+  // keccak256("SALT_MODIFER_ROLE")
+  const SALT_MODIFIER_ROLE = '0xf31dda80d37c96a1a0852ace387dda52a75487d7d4eb74895e749ede3e0987b4';
+
+  // keccak256("DEPTH_MODIFIER_ROLE")
+  const DEPTH_MODIFIER_ROLE = '0xdec504361dd78243e1ec4f53c4c0ff2daf8da88c57ec66ea0107a0cb80d8bc17';
 
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
@@ -106,7 +109,8 @@ module.exports = async () => {
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await collectionManager.initialize(blockManagerAddress));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
+
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
@@ -124,11 +128,12 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
-  pendingTransactions.push(await voteManager.grantRole(VOTE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
+  pendingTransactions.push(await voteManager.grantRole(SALT_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await voteManager.grantRole(DEPTH_MODIFIER_ROLE, collectionManagerAddress));
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {

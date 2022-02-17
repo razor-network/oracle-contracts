@@ -3,13 +3,16 @@ pragma solidity ^0.8.0;
 
 import "./interface/ICollectionManager.sol";
 import "./interface/IBlockManager.sol";
+import "./interface/IVoteManager.sol";
 import "./storage/CollectionStorage.sol";
 import "../Initializable.sol";
 import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
+import "../Initializable.sol";
 
 contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
     IBlockManager public blockManager;
+    IVoteManager public voteManager;
 
     event JobCreated(uint16 id, uint256 timestamp);
 
@@ -38,7 +41,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint256 timestamp
     );
 
-    function initialize(address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    function initialize(address voteManagerAddress, address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+        voteManager = IVoteManager(voteManagerAddress);
         blockManager = IBlockManager(blockManagerAddress);
     }
 
@@ -100,6 +104,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
+        voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
     }
 
     function createCollection(
@@ -128,6 +133,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
+        voteManager.storeDepth(_getDepth()); // TODO : Create method called as createCollectionBatch and update storeDepth only once
     }
 
     function updateCollection(
@@ -172,7 +178,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 epoch = _getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collections[ids[_name]].power;
-        return (medians[index - 1], power);
+        return (medians[index], power);
     }
 
     function getResultFromID(uint16 _id) external view override returns (uint32, int8) {
@@ -180,7 +186,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 epoch = _getEpoch();
         uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
         int8 power = collections[_id].power;
-        return (medians[index - 1], power);
+        return (medians[index], power);
     }
 
     function getCollectionStatus(uint16 id) external view override returns (bool) {
@@ -190,7 +196,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[indexToIdRegistry[i + 1]].tolerance;
+        return collections[indexToIdRegistry[i]].tolerance;
     }
 
     function getCollectionID(bytes32 _hname) external view override returns (uint16) {
@@ -205,7 +211,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return numCollections;
     }
 
-    function getNumActiveCollections() external view override returns (uint256) {
+    function getNumActiveCollections() external view override returns (uint16) {
         return numActiveCollections;
     }
 
@@ -213,8 +219,28 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return updateRegistryEpoch;
     }
 
+    function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
+        return idToIndexRegistry[id];
+    }
+
+    function getActiveCollectionsHash() external view override returns (bytes32 hash) {
+        hash = keccak256(abi.encodePacked(getActiveCollections()));
+    }
+
+    function getActiveCollections() public view returns (uint16[] memory) {
+        uint16[] memory result = new uint16[](numActiveCollections);
+        uint16 j = 0;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                result[j] = i;
+                j = j + 1;
+            }
+        }
+        return result;
+    }
+
     function _updateRegistry() internal {
-        uint16 j = 1;
+        uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
                 idToIndexRegistry[i] = j;
@@ -230,5 +256,65 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         bytes32 _name = keccak256(abi.encodePacked(name));
         require(ids[_name] == 0, "Collection exists with same name");
         ids[_name] = _id;
+    }
+
+    function _getDepth() internal view returns (uint256 n) {
+        // numActiveCollection is uint16, so further range not needed
+        // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
+        // TODO : Looks like there is better version compared in gas
+        // https://ethereum.stackexchange.com/questions/8086/logarithm-math-operation-in-solidity/32900
+
+        // 100000;
+        // >= 2**4 , n = 4
+        // 000010;
+        // >= 2**1
+        // n = n+ 1 == 5
+
+        uint256 x = numActiveCollections;
+        // X = 2 ** n ;
+
+        // Optimised way
+        // for (; x > 0; x >>= 1) {
+        // if (x >= 2**8) { x >>= 8; n += 8; }
+        // if (x >= 2**4) { x >>= 4; n += 4; }
+        // if (x >= 2**2) { x >>= 2; n += 2; }
+        // if (x >= 2**1) { x >>= 1; n += 1; }
+        // if (x == 1) { x >>= 1; n += 1; }
+        // }
+
+        // for 6
+        // 110
+        // optimised version of above would return 2
+        // 000
+        // but we want 3
+        // so we have to give importance to 1(1)0 as well
+        // as in our case result for 100 and 110 is diff
+        // so thats why we have to go unoptimised way
+
+        // I dont know if we can use above optimised way and somehow detect that in middle(1) as well
+        // So thats why lets have above as commented
+        // and check in new issue, if we could do so
+
+        //6
+        //110, 6
+        //011, 3
+        //001, 1
+        //000, 0
+
+        // 8
+        // 1000
+        // 0100
+        // 0010
+        // 0001
+        // 0000
+
+        // Have tested function upto 2**16;
+        bool flag = false;
+        for (n = 0; x > 1; x >>= 1) {
+            // O(n) 1<n<=16
+            if (x % 2 != 0) flag = true; // for that (1)
+            n += 1;
+        }
+        if (flag) n++;
     }
 }
