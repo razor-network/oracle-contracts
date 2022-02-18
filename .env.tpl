@@ -1,3 +1,5 @@
+# Environment where you deploying contracts
+ENV=
 # Seed phrase from which accounts are derived
 MNEMONIC=
 

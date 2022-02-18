@@ -22,7 +22,7 @@ const {
   tokenAmount,
 } = require('./helpers/utils');
 
-describe('AssetManager', function () {
+describe('CollectionManager', function () {
   let signers;
   let blockManager;
   let collectionManager;
@@ -41,7 +41,7 @@ describe('AssetManager', function () {
     signers = await ethers.getSigners();
   });
 
-  describe('AssetManager', function () {
+  describe('CollectionManager', function () {
     it('Admin role should be granted', async () => {
       assert(await collectionManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === true, 'Role was not Granted');
     });

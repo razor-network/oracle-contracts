@@ -28,7 +28,7 @@ interface IStakeManager {
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external returns (uint32);
+    ) external;
 
     /** @notice External function for setting staker age of the staker
      * Used by RewardManager
@@ -97,4 +97,6 @@ interface IStakeManager {
      * @return epochFirstStakedOrLastPenalized of staker
      */
     function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view returns (uint32);
+
+    function maturitiesLength() external view returns (uint32);
 }

@@ -67,26 +67,14 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint256 newStake = thisStaker.stake;
         uint32 previousAge = thisStaker.age;
         uint32 newAge = thisStaker.age;
-        Constants.StakeChanged reason = StakeChanged.RandaoPenalty;
-
-        uint32 epochLastCommitted = voteManager.getEpochLastCommitted(stakerId);
 
         if (inactiveEpochs > gracePeriod) {
             (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
-            reason = StakeChanged.InactivityPenalty;
         }
-
-        // Not reveal penalty due to Randao
-        if (epochLastRevealed < epochLastCommitted) {
-            uint256 randaoPenalty = newStake < blockReward ? newStake : blockReward;
-            newStake = newStake - randaoPenalty;
-            newAge = 0;
-        }
-
         // uint256 currentStake = previousStake;
         if (newStake < previousStake) {
             stakeManager.setStakerEpochFirstStakedOrLastPenalized(epoch, stakerId);
-            stakeManager.setStakerStake(epoch, stakerId, reason, previousStake, newStake);
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.InactivityPenalty, previousStake, newStake);
         }
         if (newAge < previousAge) {
             stakeManager.setStakerAge(epoch, stakerId, newAge, AgeChanged.InactivityPenalty);
@@ -112,21 +100,27 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint64 penalty = 0;
         for (uint16 i = 0; i < mediansLastEpoch.length; i++) {
             // slither-disable-next-line calls-loop
-            uint64 voteValueLastEpoch = voteManager.getVoteValue(i, stakerId);
-            // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
-            uint32 medianLastEpoch = mediansLastEpoch[i];
-            if (medianLastEpoch == 0) continue;
-            uint64 prod = age * voteValueLastEpoch;
-            // slither-disable-next-line calls-loop
-            uint32 tolerance = collectionManager.getCollectionTolerance(i);
-            tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
-            uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
-            uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
-            // if (voteWeightLastEpoch > 0) {
-            if (voteValueLastEpoch > maxVoteTolerance) {
-                penalty = penalty + (prod / maxVoteTolerance - age);
-            } else if (voteValueLastEpoch < minVoteTolerance) {
-                penalty = penalty + (age - prod / minVoteTolerance);
+            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, i);
+
+            if (
+                voteValueLastEpoch != 0
+            ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
+            {
+                // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
+                uint32 medianLastEpoch = mediansLastEpoch[i];
+                if (medianLastEpoch == 0) continue;
+                uint64 prod = age * voteValueLastEpoch;
+                // slither-disable-next-line calls-loop
+                uint32 tolerance = collectionManager.getCollectionTolerance(i);
+                tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
+                uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                // if (voteWeightLastEpoch > 0) {
+                if (voteValueLastEpoch > maxVoteTolerance) {
+                    penalty = penalty + (prod / maxVoteTolerance - age);
+                } else if (voteValueLastEpoch < minVoteTolerance) {
+                    penalty = penalty + (age - prod / minVoteTolerance);
+                }
             }
         }
 

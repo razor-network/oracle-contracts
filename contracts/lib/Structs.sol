@@ -2,11 +2,6 @@
 pragma solidity ^0.8.0;
 
 library Structs {
-    struct Vote {
-        uint32 epoch;
-        uint48[] values;
-    }
-
     struct Commitment {
         uint32 epoch;
         bytes32 commitmentHash;
@@ -43,13 +38,14 @@ library Structs {
         bool valid;
         uint32 proposerId;
         uint32[] medians;
+        uint16[] ids;
         uint256 iteration;
         uint256 biggestStake;
     }
 
     struct Dispute {
         uint16 medianIndex;
-        uint32 lastVisitedStaker;
+        uint32 lastVisitedValue;
         uint256 accWeight;
         uint256 accProd;
     }
@@ -72,5 +68,16 @@ library Structs {
         uint32 aggregationMethod;
         uint16[] jobIDs;
         string name;
+    }
+
+    struct AssignedAsset {
+        uint16 medianIndex;
+        uint32 value;
+    }
+
+    struct MerkleTree {
+        Structs.AssignedAsset[] values;
+        bytes32[][] proofs;
+        bytes32 root;
     }
 }

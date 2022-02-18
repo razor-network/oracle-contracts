@@ -18,7 +18,7 @@ interface ICollectionManager {
     /**
      * @return total number of active collections
      */
-    function getNumActiveCollections() external view returns (uint256);
+    function getNumActiveCollections() external view returns (uint16);
 
     /**
      * @param id the id of the collection
@@ -47,4 +47,9 @@ interface ICollectionManager {
      * @return the index of the collection from idToIndexRegistry
      */
     function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+
+    /**
+     * @return hash of active collections array
+     */
+    function getActiveCollectionsHash() external view returns (bytes32 hash);
 }
