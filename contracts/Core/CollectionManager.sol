@@ -174,19 +174,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     function getResult(bytes32 _name) external view override returns (uint32, int8) {
-        uint16 index = idToIndexRegistry[ids[_name]];
-        uint32 epoch = _getEpoch();
-        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
-        int8 power = collections[ids[_name]].power;
-        return (medians[index], power);
-    }
-
-    function getResultFromID(uint16 _id) external view override returns (uint32, int8) {
-        uint16 index = idToIndexRegistry[_id];
-        uint32 epoch = _getEpoch();
-        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
-        int8 power = collections[_id].power;
-        return (medians[index], power);
+        uint16 id = ids[_name];
+        return getResultFromID(id);
     }
 
     function getCollectionStatus(uint16 id) external view override returns (bool) {
@@ -225,6 +214,14 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     function getActiveCollectionsHash() external view override returns (bytes32 hash) {
         hash = keccak256(abi.encodePacked(getActiveCollections()));
+    }
+
+    function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
+        uint16 index = idToIndexRegistry[_id];
+        uint32 epoch = _getEpoch();
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
+        int8 power = collections[_id].power;
+        return (medians[index], power);
     }
 
     function getActiveCollections() public view returns (uint16[] memory) {
