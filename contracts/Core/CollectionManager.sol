@@ -8,7 +8,6 @@ import "./storage/CollectionStorage.sol";
 import "../Initializable.sol";
 import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
-import "../Initializable.sol";
 
 contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
     IBlockManager public blockManager;
