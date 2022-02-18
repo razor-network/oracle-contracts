@@ -3,30 +3,41 @@ pragma solidity ^0.8.0;
 
 import "./storage/Constants.sol";
 
+/** @title StateManager
+ * @notice StateManager manages the state of the network
+ */
+
 contract StateManager is Constants {
-    /// @notice a check to ensure the epoch value sent in the function is of the currect epoch
+    /**
+     * @notice a check to ensure the epoch value sent in the function is of the currect epoch
+     */
     modifier checkEpoch(uint32 epoch) {
         // slither-disable-next-line incorrect-equality
         require(epoch == _getEpoch(), "incorrect epoch");
         _;
     }
 
-    /// @notice a check to ensure the function was called in the state specified
+    /**
+     * @notice a check to ensure the function was called in the state specified
+     */
     modifier checkState(State state) {
         // slither-disable-next-line incorrect-equality
         require(state == _getState(), "incorrect state");
         _;
     }
 
-    /// @notice a check to ensure the function was not called in the state specified
+    /**
+     * @notice a check to ensure the function was not called in the state specified
+     */
     modifier notState(State state) {
         // slither-disable-next-line incorrect-equality
         require(state != _getState(), "incorrect state");
         _;
     }
 
-    /// @notice a check to ensure the epoch value sent in the function is of the currect epoch
-    /// and was called in the state specified
+    /** @notice a check to ensure the epoch value sent in the function is of the currect epoch
+     * and was called in the state specified
+     */
     modifier checkEpochAndState(State state, uint32 epoch) {
         // slither-disable-next-line incorrect-equality
         require(epoch == _getEpoch(), "incorrect epoch");
