@@ -6,6 +6,7 @@ import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
+import "./../interface/IStakeManager.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
 
@@ -19,6 +20,7 @@ contract Governance is Initializable, ACL, Constants {
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
+    IStakeManager public stakeManager;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
 
@@ -37,6 +39,7 @@ contract Governance is Initializable, ACL, Constants {
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
+        stakeManager = IStakeManager(stakeManagerAddress);
     }
 
     function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
@@ -106,6 +109,7 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     function setMaxAge(uint32 _maxAge) external initialized onlyRole(GOVERNER_ROLE) {
+        require(_maxAge <= stakeManager.maturitiesLength() * 10000, "Invalid Max Age Update");
         emit ParameterChanged(msg.sender, "maxAge", _maxAge, block.timestamp);
         rewardManagerParams.setMaxAge(_maxAge);
     }
