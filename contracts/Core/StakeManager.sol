@@ -575,7 +575,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         return uint32(maturities.length);
     }
 
-    /** 
+    /**
      * @notice Internal function for setting stake of the staker
      * @param _id of the staker
      * @param _stake the amount of Razor tokens staked

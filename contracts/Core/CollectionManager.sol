@@ -317,7 +317,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function getActiveCollectionsHash() external view override returns (bytes32 hash) {
         hash = keccak256(abi.encodePacked(getActiveCollections()));
     }
-    
+
     /**
      * @return array of active collections
      */
