@@ -17,6 +17,8 @@ contract CollectionStorage {
     mapping(uint16 => uint16) public idToIndexRegistry;
     /// @notice mapping for index in block medians -> collectionid
     mapping(uint16 => uint16) public indexToIdRegistry;
+    /// @notice mapping for name of collection in bytes32 -> collectionid
+    mapping(bytes32 => uint16) public ids;
 
     /// @notice number of active collections in the network
     uint16 public numActiveCollections;

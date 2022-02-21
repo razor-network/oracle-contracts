@@ -48,7 +48,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
     }
 
-    ///
+    /// @inheritdoc IRewardManager
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }

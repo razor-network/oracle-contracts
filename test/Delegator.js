@@ -12,6 +12,7 @@ const {
   assertBNEqual,
   mineToNextState,
   mineToNextEpoch,
+  assertRevert,
 } = require('./helpers/testHelpers');
 
 const {
@@ -79,7 +80,7 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection';
       await collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
-      const collectionID = await delegator.ids(hName);
+      const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
@@ -119,6 +120,12 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
+      assertBNEqual(result[0], toBigNumber('100'));
+      assertBNEqual(result[1], toBigNumber('3'));
+    });
+
+    it('should be able to fetch result using id', async function () {
+      const result = await delegator.getResultFromID(1);
       assertBNEqual(result[0], toBigNumber('100'));
       assertBNEqual(result[1], toBigNumber('3'));
     });
@@ -243,8 +250,22 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection3';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
+      const collectionID = await collectionManager.ids(hName);
+      assertBNEqual(collectionID, toBigNumber('3'));
       assertBNEqual(result[0], toBigNumber('300'));
       assertBNEqual(result[1], toBigNumber('2'));
+    });
+
+    it('should not be able to create collection with same name', async function () {
+      await mineToNextEpoch();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      const collectionName = 'Test Collection3';
+      const power = 2;
+      const tx = collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
+      await assertRevert(tx, 'Collection exists with same name');
     });
   });
 });
