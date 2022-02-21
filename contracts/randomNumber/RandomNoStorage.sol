@@ -2,10 +2,10 @@
 pragma solidity ^0.8.0;
 
 contract RandomNoStorage {
-    // client => nonce
+    /// @notice mapping of client address => nonce
     mapping(address => uint32) public nonce;
-    // requestId => epoch
+    /// @notice mapping of requestId => epoch
     mapping(bytes32 => uint32) public requests;
-    // epoch => secrets
+    /// @notice mapping of epoch => secrets
     mapping(uint32 => bytes32) public secrets;
 }
