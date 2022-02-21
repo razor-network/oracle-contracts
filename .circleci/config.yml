@@ -156,6 +156,7 @@ workflows:
           requires:
             - checkout_source
       - publish-npm:
+          context: Stag
           requires:
             - checkout_source
       # - test:
