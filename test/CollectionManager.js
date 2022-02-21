@@ -163,11 +163,6 @@ describe('CollectionManager', function () {
       await assertRevert(tx, 'ID cannot be 0');
     });
 
-    it('should be able to get power of a collection', async function () {
-      const cPower = await collectionManager.getCollectionPower(1);
-      assertBNEqual(cPower, toBigNumber('5'));
-    });
-
     it('should not be able to get the active status of any asset is not a collection', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
@@ -254,22 +249,10 @@ describe('CollectionManager', function () {
       await assertRevert(tx1, 'status not being changed');
     });
 
-    it('should not be able to get power of any asset if not a collection', async function () {
-      const numCollections = await collectionManager.getNumCollections();
-      const tx2 = collectionManager.getCollectionPower(numCollections + 1);
-      await assertRevert(tx2, 'ID does not exist');
-    });
-
     it('should not create collection if it does not have any jobIDs', async function () {
       const collectionName = 'Test Collection2';
       const tx1 = collectionManager.createCollection(0, 0, 1, [], collectionName);
       await assertRevert(tx1, 'no jobs added');
-    });
-
-    it('should not create collection if same named collection exists', async function () {
-      const collectionName = 'Test Collection2';
-      const tx = collectionManager.createCollection(0, 0, 1, [1, 2], collectionName);
-      await assertRevert(tx, 'Similar collection exists');
     });
 
     it('updateCollection should only work for collections which exists', async function () {

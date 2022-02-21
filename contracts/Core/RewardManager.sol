@@ -10,18 +10,21 @@ import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
 
-/// @title StakeManager
-/// @notice StakeManager handles stake, unstake, withdraw, reward, functions
-/// for stakers
+/** @title RewardManager
+ * @notice RewardManager gives penalties and rewards to stakers based on
+ * their behaviour
+ */
+
 contract RewardManager is Initializable, Constants, RewardManagerParams, IRewardManager {
     IStakeManager public stakeManager;
     IVoteManager public voteManager;
     IBlockManager public blockManager;
     ICollectionManager public collectionManager;
 
-    /// @param stakeManagerAddress The address of the VoteManager contract
-    /// @param voteManagersAddress The address of the VoteManager contract
-    /// @param blockManagerAddress The address of the BlockManager contract
+    /** @param stakeManagerAddress The address of the VoteManager contract
+     * @param voteManagersAddress The address of the VoteManager contract
+     * @param blockManagerAddress The address of the BlockManager contract
+     */
     function initialize(
         address stakeManagerAddress,
         address voteManagersAddress,
@@ -34,33 +37,22 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         collectionManager = ICollectionManager(collectionManagerAddress);
     }
 
-    /// @notice gives penalty to stakers for failing to reveal or
-    /// reveal value deviations
-    /// @param stakerId The id of staker currently in consideration
-    /// @param epoch the epoch value
-    /// todo reduce complexity
+    /// @inheritdoc IRewardManager
     function givePenalties(uint32 epoch, uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _givePenalties(epoch, stakerId);
     }
 
-    /// @notice The function gives block reward for one valid proposer in the
-    /// previous epoch by increasing stake of staker
-    /// called from confirmBlock function of BlockManager contract
-    /// @param stakerId The ID of the staker
+    /// @inheritdoc IRewardManager
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
         uint256 prevStake = stakeManager.getStake(stakerId);
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
     }
 
+    /// @inheritdoc IRewardManager
     function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }
 
-    /// @notice The function gives out penalties to stakers during commit.
-    /// The penalties are given for inactivity, failing to reveal
-    /// , deviation from the median value of particular asset
-    /// @param stakerId The staker id
-    /// @param epoch The Epoch value in consideration
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -137,9 +129,10 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age), AgeChanged.VotingRewardOrPenalty);
     }
 
-    /// @notice Calculates the stake and age inactivity penalties of the staker
-    /// @param epochs The difference of epochs where the staker was inactive
-    /// @param stakeValue The Stake that staker had in last epoch
+    /** @notice Calculates the stake and age inactivity penalties of the staker
+     * @param epochs The difference of epochs where the staker was inactive
+     * @param stakeValue The Stake that staker had in last epoch
+     */
     function _calculateInactivityPenalties(
         uint32 epochs,
         uint256 stakeValue,

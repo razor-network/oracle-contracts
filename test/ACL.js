@@ -402,19 +402,11 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
   it('Only Admin should be able to call updateAddress in Delegator', async () => {
-    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address), expectedRevertMessage);
+    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address), 'Zero Address check');
-    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS), 'Zero Address check');
-  });
-  it('Only Admin should be able to call upgradeDelegator in collectionManager', async () => {
-    assert(await collectionManager.connect(signers[0]).upgradeDelegator(signers[2].address));
-    await assertRevert(collectionManager.connect(signers[1]).upgradeDelegator(signers[2].address), expectedRevertMessage);
-  });
-  it('upgradeDelegator should not accept zero Address', async function () {
-    await assertRevert(collectionManager.connect(signers[0]).upgradeDelegator(ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS), 'Zero Address check');
   });
   it('only sToken Address should be able to call the srzrTransfer Method', async function () {
     await assertRevert(stakeManager.connect(signers[0]).srzrTransfer(signers[0].address, signers[1].address, tokenAmount('100'), 1), expectedRevertMessage);
