@@ -15,15 +15,16 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
   // We should rethink about overloading functions.
   // const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
   const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
+  const medianWeight = totalInfluenceRevealed.div(2);
   let median = toBigNumber('0');
 
   const sortedValues = [];
   // const votes = [];
-  let accProd = toBigNumber(0);
+  let accWeight = toBigNumber(0);
   // let accWeight;
-  let infl;
   let vote;
   const checkVotes = {};
+  let weight;
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
     vote = await voteManager.getVoteValue(epoch, i, medianIndex);
     // if (vote[0] === epoch) {
@@ -33,14 +34,18 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
       sortedValues.push(vote);
     }
     checkVotes[vote] = true;
-    infl = await voteManager.getInfluenceSnapshot(epoch, i);
-    // accWeight += infl;
-    accProd = accProd.add(toBigNumber(vote).mul(infl));
   }
-  median = accProd.div(totalInfluenceRevealed);
+  // median = accProd.div(totalInfluenceRevealed);
   sortedValues.sort();
+  for (let i = 0; i < sortedValues.length; i++) {
+    weight = await voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+    accWeight = accWeight.add(weight);
+    if (Number(median) === 0 && accWeight.gt(medianWeight)) {
+      median = sortedValues[i];
+    }
+  }
   return {
-    median, totalInfluenceRevealed, accProd, sortedValues,
+    median, totalInfluenceRevealed, sortedValues,
   };
 };
 
@@ -93,7 +98,7 @@ const getBiggestStakeAndId = async (stakeManager, voteManager) => {
   const numStakers = await stakeManager.numStakers();
   let biggestStake = toBigNumber('0');
   let biggestStakerId = toBigNumber('0');
-  const epoch = getEpoch();
+  const epoch = await getEpoch();
   for (let i = 1; i <= numStakers; i++) {
     const stake = await voteManager.getStakeSnapshot(epoch, i);
     if (stake.gt(biggestStake)) {
