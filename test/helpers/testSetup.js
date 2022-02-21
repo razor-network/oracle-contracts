@@ -11,6 +11,7 @@ const {
   PAUSE_ROLE,
   SALT_MODIFIER_ROLE,
   DEPTH_MODIFIER_ROLE,
+  ESCAPE_HATCH_ROLE,
 } = require('./constants');
 
 const setupContracts = async () => {
@@ -71,6 +72,7 @@ const setupContracts = async () => {
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
+    stakeManager.grantRole(ESCAPE_HATCH_ROLE, signers[0].address),
 
     collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManager.address),
 
