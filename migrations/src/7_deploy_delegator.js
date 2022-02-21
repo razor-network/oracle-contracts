@@ -13,7 +13,7 @@ const deployDelegator = async () => {
     }
 
     // eslint-disable-next-line no-console
-    console.log('Re-using Razor instance deployed at', Delegator);
+    console.log('Re-using Delegator instance deployed at', Delegator);
     await appendDeploymentFile({ Delegator });
   }
 };
