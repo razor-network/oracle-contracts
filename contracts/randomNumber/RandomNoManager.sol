@@ -18,7 +18,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, ACL, I
 
     /**
      * @param blockManagerAddress The address of the BlockManager Contract
-     */ 
+     */
     function initialize(address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         grantRole(SECRETS_MODIFIER_ROLE, blockManagerAddress);
     }

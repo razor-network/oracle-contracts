@@ -21,7 +21,7 @@ interface IStakeManagerParams {
      * @param _withdrawLockPeriod updated value to be set for withdrawLockPeriod
      */
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
-    
+
     /**
      * @notice changing the number of epochs for which the sRZRs are locked for calling unstake()
      * @dev can be called only by the the address that has the governance role
@@ -37,7 +37,7 @@ interface IStakeManagerParams {
     function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external;
 
     /**
-     * @notice changing percentage stake penalty from the locked amount for extending unstake lock 
+     * @notice changing percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
      * @dev can be called only by the the address that has the governance role
      * @param _extendLockPenalty updated value to be set for extendLockPenalty

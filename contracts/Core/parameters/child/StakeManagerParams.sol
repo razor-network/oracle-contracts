@@ -8,7 +8,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     struct SlashNums {
         // percent bounty from staker's stake to be received by the bounty hunter
         uint32 bounty;
-        // percent RAZOR burn from staker's stake 
+        // percent RAZOR burn from staker's stake
         uint32 burn;
         // percent from staker's stake to be kept by staker
         uint32 keep;
@@ -21,8 +21,8 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public withdrawLockPeriod = 1;
     /// @notice the number of epochs where staker/delegator needs to initiate withdraw
     uint8 public withdrawInitiationPeriod = 5;
-    /** 
-     * @notice percentage stake penalty from the locked amount for extending unstake lock 
+    /**
+     * @notice percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
      */
     uint8 public extendUnstakeLockPenalty = 1;
@@ -31,7 +31,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     /// @notice maximum commission change a staker can do
     uint8 public deltaCommission = 3;
     /**
-     * @notice the number of epochs for which the staker wont be given inactivity penalties. 
+     * @notice the number of epochs for which the staker wont be given inactivity penalties.
      * Stakers inactive for more than grace period will be penalized
      */
     uint16 public gracePeriod = 8;

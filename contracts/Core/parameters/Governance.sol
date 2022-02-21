@@ -24,7 +24,7 @@ contract Governance is Initializable, ACL, Constants {
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
 
-    /** 
+    /**
      * @notice emitted when any governance parameter value changes.
      * @param admin address of the admin
      * @param parameterName the parameter that is changing
@@ -33,7 +33,7 @@ contract Governance is Initializable, ACL, Constants {
      */
     event ParameterChanged(address admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
 
-    /** 
+    /**
      * @param blockManagerAddress The address of the BlockManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -115,7 +115,7 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     /**
-     * @notice changing percentage stake penalty from the locked amount for extending unstake lock 
+     * @notice changing percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
      * @dev can be called only by the the address that has the governer role
      * @param _extendLockPenalty updated value to be set for extendLockPenalty

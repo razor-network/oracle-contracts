@@ -8,7 +8,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice percentage stake penalty to be given out for inactivity
     uint32 public penaltyNotRevealNum = 1000;
     /**
-     * @notice the number of epochs for which the staker wont be given inactivity penalties. 
+     * @notice the number of epochs for which the staker wont be given inactivity penalties.
      * Stakers inactive for more than grace period will be penalized
      */
     uint16 public gracePeriod = 8;

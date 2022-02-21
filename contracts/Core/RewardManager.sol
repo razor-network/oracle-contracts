@@ -21,7 +21,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     IBlockManager public blockManager;
     ICollectionManager public collectionManager;
 
-    /** 
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param voteManagersAddress The address of the VoteManager contract
      * @param blockManagerAddress The address of the BlockManager contract
