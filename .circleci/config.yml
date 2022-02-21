@@ -131,8 +131,19 @@ jobs:
               git checkout $CIRCLE_BRANCH
               npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
               
-
-
+  publish-npm:
+    docker:
+      - image: 'cimg/node:16.5'
+    resource_class: medium
+    steps:
+      - attach_workspace:
+          at: .
+      - run:
+          name: Authenticate with registry
+          command: echo "//registry.npmjs.org/:_authToken=$npm_token" > ~/repo/.npmrc
+      - run:
+          name: Publish package
+          command: npm publish
 notify:
   webhooks:
     - url: >-
@@ -144,21 +155,24 @@ workflows:
       - install_dependencies:
           requires:
             - checkout_source
-      - test:
+      - publish-npm:
           requires:
-            - install_dependencies
-      - scenarios:
-          requires:
-          - install_dependencies
-      - coverage:
-          requires:
-          - install_dependencies
-      - slither:
-          requires:
-          - install_dependencies
-      - lint:
-          requires:
-          - install_dependencies
-      - gasCompare:
-          requires:
-          - install_dependencies
+            - checkout_source
+      # - test:
+      #     requires:
+      #       - install_dependencies
+      # - scenarios:
+      #     requires:
+      #     - install_dependencies
+      # - coverage:
+      #     requires:
+      #     - install_dependencies
+      # - slither:
+      #     requires:
+      #     - install_dependencies
+      # - lint:
+      #     requires:
+      #     - install_dependencies
+      # - gasCompare:
+      #     requires:
+      #     - install_dependencies
