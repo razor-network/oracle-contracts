@@ -155,25 +155,30 @@ workflows:
       - install_dependencies:
           requires:
             - checkout_source
+      - test:
+          requires:
+            - install_dependencies
+      - scenarios:
+          requires:
+          - install_dependencies
+      - coverage:
+          requires:
+          - install_dependencies
+      - slither:
+          requires:
+          - install_dependencies
+      - lint:
+          requires:
+          - install_dependencies
+      - gasCompare:
+          requires:
+          - install_dependencies
       - publish-npm:
           context: Stag
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
           requires:
             - checkout_source
-      # - test:
-      #     requires:
-      #       - install_dependencies
-      # - scenarios:
-      #     requires:
-      #     - install_dependencies
-      # - coverage:
-      #     requires:
-      #     - install_dependencies
-      # - slither:
-      #     requires:
-      #     - install_dependencies
-      # - lint:
-      #     requires:
-      #     - install_dependencies
-      # - gasCompare:
-      #     requires:
-      #     - install_dependencies
