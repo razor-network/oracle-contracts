@@ -2,15 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ICollectionManager.sol";
-import "../IDelegator.sol";
+import "./interface/IBlockManager.sol";
 import "./interface/IVoteManager.sol";
 import "./storage/CollectionStorage.sol";
+import "../Initializable.sol";
 import "./parameters/child/CollectionManagerParams.sol";
 import "./StateManager.sol";
-import "../Initializable.sol";
 
 contract CollectionManager is Initializable, CollectionStorage, StateManager, CollectionManagerParams, ICollectionManager {
-    IDelegator public delegator;
+    IBlockManager public blockManager;
     IVoteManager public voteManager;
 
     event JobCreated(uint16 id, uint256 timestamp);
@@ -40,13 +40,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint256 timestamp
     );
 
-    function initialize(address voteManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
+    function initialize(address voteManagerAddress, address blockManagerAddress) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         voteManager = IVoteManager(voteManagerAddress);
-    }
-
-    function upgradeDelegator(address newDelegatorAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newDelegatorAddress != address(0x0), "Zero Address check");
-        delegator = IDelegator(newDelegatorAddress);
+        blockManager = IBlockManager(blockManagerAddress);
     }
 
     function createJob(
@@ -135,7 +131,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         updateRegistryEpoch = epoch + 1;
         emit CollectionCreated(numCollections, block.timestamp);
 
-        delegator.setIDName(name, numCollections);
+        _setIDName(name, numCollections);
         voteManager.storeDepth(_getDepth()); // TODO : Create method called as createCollectionBatch and update storeDepth only once
     }
 
@@ -176,6 +172,11 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return collections[id];
     }
 
+    function getResult(bytes32 _name) external view override returns (uint32, int8) {
+        uint16 id = ids[_name];
+        return getResultFromID(id);
+    }
+
     function getCollectionStatus(uint16 id) external view override returns (bool) {
         require(id <= numCollections, "ID does not exist");
 
@@ -186,10 +187,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return collections[indexToIdRegistry[i]].tolerance;
     }
 
-    function getCollectionPower(uint16 id) external view override returns (int8) {
-        require(id <= numCollections, "ID does not exist");
-
-        return collections[id].power;
+    function getCollectionID(bytes32 _hname) external view override returns (uint16) {
+        return ids[_hname];
     }
 
     function getNumJobs() external view returns (uint16) {
@@ -216,6 +215,14 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         hash = keccak256(abi.encodePacked(getActiveCollections()));
     }
 
+    function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
+        uint16 index = idToIndexRegistry[_id];
+        uint32 epoch = _getEpoch();
+        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
+        int8 power = collections[_id].power;
+        return (medians[index], power);
+    }
+
     function getActiveCollections() public view returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
@@ -239,6 +246,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
                 idToIndexRegistry[i] = 0;
             }
         }
+    }
+
+    function _setIDName(string calldata name, uint16 _id) internal {
+        bytes32 _name = keccak256(abi.encodePacked(name));
+        require(ids[_name] == 0, "Collection exists with same name");
+        ids[_name] = _id;
     }
 
     function _getDepth() internal view returns (uint256 n) {

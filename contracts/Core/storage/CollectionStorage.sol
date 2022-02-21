@@ -11,6 +11,8 @@ contract CollectionStorage {
     mapping(uint16 => Structs.Job) public jobs;
     mapping(uint16 => Structs.Collection) public collections;
 
+    mapping(bytes32 => uint16) public ids;
+
     mapping(uint16 => uint16) public idToIndexRegistry;
     mapping(uint16 => uint16) public indexToIdRegistry;
 
