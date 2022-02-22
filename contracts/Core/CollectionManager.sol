@@ -347,6 +347,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return (medians[index], power);
     }
 
+    /**
+     * @dev updates the idToIndexRegistry and indexToIdRegistry everytime a collection has been activated/deactivated/created
+     */
     function _updateRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -360,12 +363,18 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
+    /**
+     * @dev hashes the name of the collection and the hashed value is mapped to its corresponding collection ID
+     */
     function _setIDName(string calldata name, uint16 _id) internal {
         bytes32 _name = keccak256(abi.encodePacked(name));
         require(ids[_name] == 0, "Collection exists with same name");
         ids[_name] = _id;
     }
 
+    /**
+     * @dev calculates the current depth of the merkle tree that stakers have to submit at the time of commit/reveal
+     */
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed
         // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
