@@ -25,6 +25,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param voteManagersAddress The address of the VoteManager contract
      * @param blockManagerAddress The address of the BlockManager contract
+     * @param collectionManagerAddress The address of the CollectionManager contract
      */
     function initialize(
         address stakeManagerAddress,
