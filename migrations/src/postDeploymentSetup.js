@@ -1,4 +1,5 @@
 /* eslint-disable no-console */
+const { ESCAPE_HATCH_ROLE } = require('../../test/helpers/constants');
 const {
   getdeployedContractInstance,
   readDeploymentFile,
@@ -128,6 +129,7 @@ module.exports = async () => {
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(ESCAPE_HATCH_ROLE, signers[0].address));
   pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));

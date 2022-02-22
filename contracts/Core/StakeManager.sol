@@ -379,7 +379,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @inheritdoc IStakeManager
-    function escape(address _address) external override initialized onlyRole(DEFAULT_ADMIN_ROLE) whenPaused {
+    function escape(address _address) external override initialized onlyRole(ESCAPE_HATCH_ROLE) whenPaused {
         if (escapeHatchEnabled) {
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {

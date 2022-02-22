@@ -413,4 +413,9 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[0]).grantRole(STOKEN_ROLE, signers[2].address);
     assert(await stakeManager.connect(signers[2]).srzrTransfer(signers[0].address, signers[1].address, tokenAmount('100'), 1), 'STOKEN_ROLE not granted');
   });
+  it('only Escape Hatch Role should be able to call escape method', async function () {
+    await assertRevert(stakeManager.connect(signers[1]).escape(signers[2].address), expectedRevertMessage);
+    await stakeManager.pause();
+    await stakeManager.escape(signers[2].address);
+  });
 });
