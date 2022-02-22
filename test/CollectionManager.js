@@ -1,7 +1,7 @@
 /* TODO:
 test same vote values, stakes
 test penalizeEpochs */
-
+const { utils } = require('ethers');
 const { assert } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -29,6 +29,7 @@ describe('CollectionManager', function () {
   let razor;
   let stakeManager;
   let initializeContracts;
+  let delegator;
 
   before(async () => {
     ({
@@ -37,6 +38,7 @@ describe('CollectionManager', function () {
       stakeManager,
       razor,
       initializeContracts,
+      delegator,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -93,14 +95,17 @@ describe('CollectionManager', function () {
       await collectionManager.createCollection(tolerance, power, 2, [1], collectionName2);
       const collection1 = await collectionManager.getCollection(1);
       const collection2 = await collectionManager.getCollection(2);
+      const collectionId = await delegator.getCollectionID(utils.formatBytes32String('Test Collection'));
       assert(collection1.name === collectionName);
       assert(collection2.name === collectionName2);
       assertBNEqual(collection1.aggregationMethod, toBigNumber('1'));
       assertBNEqual(collection2.aggregationMethod, toBigNumber('2'));
       assert((collection1.jobIDs).length === 2);
       assert((collection2.jobIDs).length === 1);
+      assertBNEqual(collectionId, toBigNumber('0'));
       assertBNEqual((await collectionManager.getNumCollections()), toBigNumber('2'));
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
+      assertBNEqual(await collectionManager.getCollectionPower(1), toBigNumber('3'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
@@ -163,10 +168,16 @@ describe('CollectionManager', function () {
       await assertRevert(tx, 'ID cannot be 0');
     });
 
-    it('should not be able to get the active status of any asset is not a collection', async function () {
+    it('should not be able to get the active status of any asset which is not a collection', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
       await assertRevert(tx2, 'ID does not exist');
+    });
+
+    it('should not be able to get the power of any collection which does not exists', async function () {
+      const numCollections = await collectionManager.getNumCollections();
+      const tx = collectionManager.getCollectionPower(numCollections + 1);
+      await assertRevert(tx, 'ID does not exist');
     });
 
     it('should be able to remove job from collection', async function () {
