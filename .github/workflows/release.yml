@@ -18,5 +18,5 @@ jobs:
     - run: yarn compile
     - run: yarn semantic-release
       env:
-        GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.RAZORNETWORKBOT }}
+        NPM_TOKEN: ${{ secrets.RAZORDEPLOYER }}
