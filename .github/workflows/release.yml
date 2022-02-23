@@ -13,9 +13,9 @@ jobs:
     - uses: actions/setup-node@v1
       with:
         node-version: "16.x"
+    - run: yarn cp-ci-env
     - run: yarn install
     - run: yarn compile
-    - run: yarn cp-ci-env
     - run: yarn semantic-release
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
