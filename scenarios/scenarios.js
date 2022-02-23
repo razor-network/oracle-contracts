@@ -830,7 +830,7 @@ describe('Scenarios', async () => {
     const tx = adhocReveal(signers[1], 0, voteManager);
     await assertRevert(tx, 'stake below minimum');
     await governance.connect(signers[0]).setMinStake(tokenAmount('20000'));
-  }).timeout(500);
+  }).timeout(5000);
 
   it('Minstake increases more than currentStake of staker during propose states', async () => {
     // staker should not be able to propose
