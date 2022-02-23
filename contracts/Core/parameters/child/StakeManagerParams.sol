@@ -51,7 +51,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         uint32 _burn,
         uint32 _keep
     ) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10000");
+        require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "params sum exceeds denominator");
         // slither-disable-next-line events-maths
         slashNums = SlashNums(_bounty, _burn, _keep);
     }

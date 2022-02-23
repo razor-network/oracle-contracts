@@ -8,6 +8,7 @@ const {
   STAKE_MODIFIER_ROLE,
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
+  GOVERNANCE_ROLE,
   PAUSE_ROLE,
   WITHDRAW_INITIATION_PERIOD,
 } = require('./helpers/constants');
@@ -590,6 +591,16 @@ describe('StakeManager', function () {
       const commRate = await stakeManager.maxCommission();
       const tx = stakeManager.connect(signers[4]).updateCommission(commRate + 1);
       await assertRevert(tx, 'Commission exceeds maxlimit');
+    });
+
+    it('stakeManager setter functions should revert as expected', async function () {
+      await stakeManager.grantRole(GOVERNANCE_ROLE, signers[1].address);
+      let tx = stakeManager.connect(signers[1]).setMinSafeRazor(tokenAmount('200000'));
+      await assertRevert(tx, 'minSafeRazor beyond minStake');
+      tx = stakeManager.connect(signers[1]).setMaxCommission(101);
+      await assertRevert(tx, 'Invalid Max Commission Update');
+      tx = stakeManager.connect(signers[1]).setSlashParams(toBigNumber('500000'), toBigNumber('9500000'), toBigNumber('500000'));
+      await assertRevert(tx, 'params sum exceeds denominator');
     });
 
     it('Staker should not be able to updateCommission if it exceeds the change limit which is delta commission', async function () {

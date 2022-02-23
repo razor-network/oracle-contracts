@@ -29,7 +29,7 @@ const {
 } = require('./helpers/utils');
 // const { createMerkle, getProofPath } = require('./MerklePosAware');
 const {
-  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, getData,
+  commit, reveal, propose, getAnyAssignedIndex, reset, getRoot, getCommitment, getValuesArrayRevealed, getTreeRevealData, getData, calculateMedians,
 } = require('./helpers/InternalEngine');
 
 describe('VoteManager', function () {
@@ -391,6 +391,10 @@ describe('VoteManager', function () {
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         const medians = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+        const data = await getData(signers[3]);
+        const { seqAllotedCollections } = data;
+        medians[seqAllotedCollections[0]] = 0; // here we are intentionally givig 0 medianvalue for an asset whose vote is non-zero
+        // this is done to increase coverage on rewardManager however it doesn't affects the motive of the test
         await blockManager.connect(signers[3]).propose(epoch,
           [1, 2, 3, 4, 5, 6, 7, 8, 9],
           medians,
@@ -418,6 +422,8 @@ describe('VoteManager', function () {
         let penalty = toBigNumber('0');
         for (let i = 0; i < medians.length; i++) {
           if (votesSerialized[i] !== 0) {
+            // eslint-disable-next-line no-continue
+            if (medians[i] === 0) continue;
             const tolerance = await collectionManager.getCollectionTolerance(i);
             const maxVoteTolerance = Math.round(medians[i] + ((medians[i] * tolerance) / BASE_DENOMINATOR));
             const minVoteTolerance = Math.round(medians[i] - ((medians[i] * tolerance) / BASE_DENOMINATOR));
@@ -867,21 +873,22 @@ describe('VoteManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret);
 
         // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
-        secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[15], 0, voteManager, collectionManager, secret);
+        await commit(signers[15], -99, voteManager, collectionManager, secret);
 
         await mineToNextState();
 
         const stakerIdAcc15 = await stakeManager.stakerIds(signers[15].address);
         data = [];
         await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
-        await reveal(signers[15], 0, voteManager, stakeManager, collectionManager);
-        const data3 = await getValuesArrayRevealed(signers[3]);
+        await reveal(signers[15], -99, voteManager, stakeManager, collectionManager);
+        const data3 = await getValuesArrayRevealed(signers[15]);
         data.push(data3);
         await mineToNextState(); // propose
 
         await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
-        const medians = [100, 200, 300, 400, 500, 600, 700, 800];
+        const medians = await calculateMedians(collectionManager);
+        // await propose(signers[15], stakeManager, blockManager, voteManager, collectionManager);
+        // const medians = [100, 200, 300, 400, 500, 600, 700, 800];
         // to reduce the use of helpers functions we have given medians manually above this may not be the correct
         // medians but this won't affect the motive of what we are testing
         await reset();
@@ -896,7 +903,7 @@ describe('VoteManager', function () {
         let penalty = toBigNumber(0);
         let toAdd = toBigNumber(0);
         let prod = toBigNumber(0);
-        const votes2 = new Array(100).fill(0);
+        const votes2 = new Array(9).fill(0);
         for (let j = 0; j < (data[0]).length; j++) {
           const voteValue = ((data[0])[j]).value;
           votes2[((data[0])[j]).medianIndex] = voteValue;
@@ -907,7 +914,6 @@ describe('VoteManager', function () {
           const tolerance = await collectionManager.getCollectionTolerance(i);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-
           prod = toBigNumber(votes2[i]).mul(expectedAgeAfter2);
           if (votes2[i] !== 0) {
             if (votes2[i] > maxVoteTolerance) {
@@ -919,9 +925,10 @@ describe('VoteManager', function () {
             }
           }
         }
+        penalty = penalty > expectedAgeAfter2 ? expectedAgeAfter2 : penalty;
         expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
         const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
-        assertBNEqual(toBigNumber(ageAfter2), (toBigNumber(ageBefore2).add(toBigNumber('10000')).sub(penalty)), 'Incorrect Penalties given');
+        assertBNEqual(expectedAgeAfter2, ageAfter2, 'Incorrect Penalties given');
       });
     });
   });
