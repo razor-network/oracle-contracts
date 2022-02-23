@@ -16,6 +16,8 @@ PROVIDER_URL=
 # Schelling Coin Address (if want to reuse already deployed instance)
 RAZOR_ADDRESS=
 
+DELEGATOR_ADDRESS=
+
 # List of Stakers
 STAKER_ADDRESSES=
 SEED_AMOUNT=

@@ -139,6 +139,7 @@ describe('VoteManager', function () {
       });
 
       it('should be able to commit', async function () {
+        const epoch = await getEpoch();
         let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
         await commit(signers[3], 0, voteManager, collectionManager, secret);
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
@@ -147,6 +148,7 @@ describe('VoteManager', function () {
         const commitment2 = await voteManager.getCommitment(stakerIdAcc3);
         const commitment = await getCommitment(signers[3]);
         assertBNEqual(commitment, commitment2.commitmentHash, 'commitment, commitment2 not equal');
+        assertBNEqual(epoch, await voteManager.getEpochLastCommitted(stakerIdAcc3), 'epoch last committed does not match');
 
         const age1 = 10000;
         const age2 = await stakeManager.getAge(stakerIdAcc3);
@@ -252,6 +254,52 @@ describe('VoteManager', function () {
         // await commit(signers[1], 0, voteManager, collectionManager, secret);
         const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret);
         await assertRevert(tx, '0 vote for assigned coll');
+      });
+      it('should not be able to reveal non alloted assets', async function () {
+        const epoch = await getEpoch();
+        const signer3secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+        const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dec';
+        const data = await getData(signers[3]);
+        const { seqAllotedCollections } = data;
+        const { tree } = data;
+        const root3 = tree[0][0];
+        const values3 = [];
+        let nonAssignedCollection;
+        const numActiveCollections = await collectionManager.getNumActiveCollections();
+        for (let i = 0; i < numActiveCollections; i++) {
+          if (!(seqAllotedCollections[i])) {
+            nonAssignedCollection = i;
+            break;
+          }
+        }
+        for (let j = 0; j < seqAllotedCollections.length; j++) {
+          if (j === 0) {
+            values3.push({
+              medianIndex: Number(nonAssignedCollection),
+              value: (Number(seqAllotedCollections[j]) + 1) * 100,
+            });
+          } else {
+            values3.push({
+              medianIndex: Number(seqAllotedCollections[j]),
+              value: (Number(seqAllotedCollections[j]) + 1) * 100,
+            });
+          }
+        }
+        const treeRevealData = {
+          values: values3,
+          proofs: [
+            [
+              randomBytes,
+            ],
+            [
+              randomBytes,
+            ],
+          ],
+          root: root3,
+        };
+        // await commit(signers[1], 0, voteManager, collectionManager, secret);
+        const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret);
+        await assertRevert(tx, 'Revealed asset not alloted');
       });
 
       it('should be able to reveal', async function () {

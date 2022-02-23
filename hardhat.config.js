@@ -94,6 +94,6 @@ module.exports = {
     project: TENDERLY_SLUG,
   },
   mocha: {
-    timeout: 30000,
+    timeout: 50000,
   },
 };
