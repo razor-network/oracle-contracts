@@ -25,7 +25,19 @@
     "test": "hardhat test",
     "scenarios": "hardhat test scenarios/scenarios.js",
     "gas": "CI=true npm run test && node scripts/gasAnalyze.js",
-    "gasCompare": "node scripts/gasCompare.js"
+    "gasCompare": "node scripts/gasCompare.js",
+    "postinstall": "husky install",
+    "prepack": "pinst --disable",
+    "postpack": "pinst --enable"
+  },
+  "release": {
+    "plugins": [
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/changelog",
+      "@semantic-release/npm",
+      "@semantic-release/git",
+      "@semantic-release/github"
+    ]
   },
   "repository": {
     "type": "git",
@@ -37,15 +49,20 @@
   },
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^4.3.1",
+    "@openzeppelin/contracts": "4.5.0",
+    "@semantic-release/changelog": "^6.0.1",
+    "@semantic-release/git": "^10.0.1",
     "circleci-pr-commenter": "^0.1.2",
     "fs": "^0.0.1-security",
     "hardhat-abi-exporter": "^2.3.0",
     "json-to-markdown-table": "^1.0.0",
-    "jsonfile": "^6.1.0"
+    "jsonfile": "^6.1.0",
+    "semantic-release": "^19.0.2"
   },
   "devDependencies": {
     "@codechecks/client": "^0.1.11",
+    "@commitlint/cli": "^16.2.1",
+    "@commitlint/config-conventional": "^16.2.1",
     "@nomiclabs/hardhat-ethers": "2.0.2",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
     "@nomiclabs/hardhat-truffle5": "^2.0.0",
@@ -64,6 +81,8 @@
     "get-json": "^1.0.1",
     "hardhat": "2.6.3",
     "hardhat-gas-reporter": "1.0.4",
+    "husky": "^7.0.4",
+    "pinst": "^3.0.0",
     "prettier": "^2.3.2",
     "prettier-plugin-solidity": "^1.0.0-beta.17",
     "solhint": "~3.3.6",
