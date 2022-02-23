@@ -10,12 +10,13 @@ const { createMerkle, getProofPath } = require('./MerklePosAware');
 
 let store = {};
 let influenceSum = new Array(100).fill(toBigNumber('0'));
-let res = new Array(100).fill(toBigNumber('0'));
+let res = {};
 let root = {};
 let commitments = {};
 let valuesRevealed = {};
 let treeData = {};
 let votes = {};
+const voteWeights = {};
 
 /* ///////////////////////////////////////////////////////////////
                           COMMIT
@@ -141,8 +142,17 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
     const voteValue = values[i].value;
     arr.push(voteValue);
     if (!(helper[medianIndex])) {
+      let flag = false;
       influenceSum[medianIndex] = (influenceSum[medianIndex]).add(influence);
-      res[medianIndex] = (res[medianIndex]).add(influence.mul(voteValue));
+      if (res[medianIndex] === undefined) res[medianIndex] = [];
+      for (let j = 0; j < res[medianIndex].length; j++) {
+        if (res[medianIndex][j] === voteValue) {
+          flag = true;
+        }
+      }
+      if (!flag) res[medianIndex].push(voteValue);
+      if (voteWeights[voteValue] === undefined) voteWeights[voteValue] = toBigNumber(0);
+      voteWeights[voteValue] = voteWeights[voteValue].add(influence);
       helper[medianIndex] = true;
     }
   }
@@ -175,13 +185,18 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
   // const numActiveCollections = 9;
   const medians = new Array(numActiveCollections).fill(0);
   const ids = await collectionManager.getActiveCollections();
-  let temp;
   const epoch = await getEpoch();
   const block = await blockManager.getBlock(epoch - 1);
   for (let j = 0; j < ids.length; j++) {
     if (Number(influenceSum[j]) !== 0) {
-      temp = (res[j]).div(influenceSum[j]);
-      medians[j] = temp;
+      let accWeight = toBigNumber(0);
+      res[j].sort();
+      for (let i = 0; i < res[j].length; i++) {
+        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        if (medians[j] === 0 && accWeight.gt((influenceSum[j].div(2)))) {
+          medians[j] = res[j][i];
+        }
+      }
     } else if (block.medians.length !== 0) {
       const oldIndex = await collectionManager.getIdToIndexRegistryValue(ids[j]);
       const oldMedian = (await blockManager.getBlock(epoch - 1)).medians[oldIndex];
@@ -198,12 +213,17 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
 const calculateMedians = async (collectionManager) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
   const medians = [];
-  let helper;
   for (let i = 0; i < numActiveCollections; i++) medians.push(0);
   for (let j = 0; j < numActiveCollections; j++) {
     if (Number(influenceSum[j]) !== 0) {
-      helper = (res[j]).div(influenceSum[j]);
-      medians[j] = helper;
+      let accWeight = toBigNumber(0);
+      res[j].sort();
+      for (let i = 0; i < res[j].length; i++) {
+        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        if (medians[j] === 0 && accWeight.gt((influenceSum[j].div(2)))) {
+          medians[j] = res[j][i];
+        }
+      }
     }
   }
   return (medians);
@@ -212,7 +232,7 @@ const calculateMedians = async (collectionManager) => {
 const reset = async () => {
   store = {};
   influenceSum = new Array(100).fill(toBigNumber('0'));
-  res = new Array(100).fill(toBigNumber('0'));
+  res = {};
   root = {};
   commitments = {};
   valuesRevealed = {};

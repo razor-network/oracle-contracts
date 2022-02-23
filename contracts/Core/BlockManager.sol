@@ -87,8 +87,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
+        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, medianIndex) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-        uint256 accProd = disputes[epoch][msg.sender].accProd;
         uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
         if (disputes[epoch][msg.sender].accWeight == 0) {
@@ -104,12 +104,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
             uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
-            accProd = accProd + sortedValues[i] * weight; // numerator
-            accWeight = accWeight + weight; // denominator: total influence revealed for this collection
+            accWeight = accWeight + weight; // total influence revealed for this collection
+            if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
+                disputes[epoch][msg.sender].median = sortedValues[i];
+            }
         }
         disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
-        disputes[epoch][msg.sender].accProd = accProd;
     }
 
     // //if any mistake made during giveSorted, resetDispute and start again
@@ -240,12 +241,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
         // Would revert if no block is proposed, or the asset specifed was not revealed
-        uint32 median = uint32(disputes[epoch][msg.sender].accProd / disputes[epoch][msg.sender].accWeight);
-        require(median > 0, "median can not be zero");
+        require(disputes[epoch][msg.sender].median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
-        require(proposedBlocks[epoch][blockId].medians[medianIndex] != median, "Block proposed with same medians");
+        require(
+            proposedBlocks[epoch][blockId].medians[medianIndex] != disputes[epoch][msg.sender].median,
+            "Block proposed with same medians"
+        );
         _executeDispute(epoch, blockIndex, blockId);
     }
 

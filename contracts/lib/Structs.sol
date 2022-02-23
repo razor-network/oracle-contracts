@@ -45,9 +45,9 @@ library Structs {
 
     struct Dispute {
         uint16 medianIndex;
+        uint32 median;
         uint32 lastVisitedValue;
         uint256 accWeight;
-        uint256 accProd;
     }
 
     struct Job {
