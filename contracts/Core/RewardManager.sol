@@ -90,7 +90,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
     /**
      * @dev Penalties are given to stakers based their activity if they have been inactive for more than the grace period
-     * and their votes in the previous epoch compared to the medians confirmed. Penalties on botes depend upon how far were
+     * and their votes in the previous epoch compared to the medians confirmed. Penalties on votes depend upon how far were
      * the staker's votes from the median value. There is tolerance being added for each collection thereby not penalizing
      * stakers of their vote was within the tolerance limits of the collection
      */
