@@ -600,7 +600,7 @@ describe('StakeManager', function () {
       tx = stakeManager.connect(signers[1]).setMaxCommission(101);
       await assertRevert(tx, 'Invalid Max Commission Update');
       tx = stakeManager.connect(signers[1]).setSlashParams(toBigNumber('500000'), toBigNumber('9500000'), toBigNumber('500000'));
-      await assertRevert(tx, 'Slash nums addition exceeds 10million');
+      await assertRevert(tx, 'params sum exceeds denominator');
     });
 
     it('Staker should not be able to updateCommission if it exceeds the change limit which is delta commission', async function () {
