@@ -15,6 +15,7 @@ jobs:
         node-version: "16.x"
     - run: yarn install
     - run: yarn compile
+    - run: yarn cp-ci-env
     - run: yarn semantic-release
       env:
         GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
