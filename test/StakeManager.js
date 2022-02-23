@@ -172,7 +172,7 @@ describe('StakeManager', function () {
       const stake1 = tokenAmount('420000');
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       const tx = stakeManager.connect(signers[1]).stake(epoch, tokenAmount('430000'));
-      await assertRevert(tx, 'ERC20: transfer amount exceeds allowance');
+      await assertRevert(tx, 'ERC20: insufficient allowance');
     });
 
     it('should be able to stake and sToken should be deployed', async function () {
@@ -636,7 +636,7 @@ describe('StakeManager', function () {
     it('Delegator should not be able to delegate more than his rzr balance', async function () {
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       const tx = stakeManager.connect(signers[5]).delegate(stakerId, tokenAmount('500000'));
-      await assertRevert(tx, 'ERC20: transfer amount exceeds balance');
+      await assertRevert(tx, 'ERC20: insufficient allowance');
     });
 
     it('chosen staker should stake atleast once', async function () {
