@@ -21,9 +21,11 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     IBlockManager public blockManager;
     ICollectionManager public collectionManager;
 
-    /** @param stakeManagerAddress The address of the VoteManager contract
+    /**
+     * @param stakeManagerAddress The address of the StakeManager contract
      * @param voteManagersAddress The address of the VoteManager contract
      * @param blockManagerAddress The address of the BlockManager contract
+     * @param collectionManagerAddress The address of the CollectionManager contract
      */
     function initialize(
         address stakeManagerAddress,
@@ -53,6 +55,11 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         _giveInactivityPenalties(epoch, stakerId);
     }
 
+    /**
+     * @dev inactivity penalties are given to stakers if they have been inactive for more than the grace period.
+     * For each inactive epoch, stakers lose their age by 1*10000 and their stake by penaltyNotRevealNum.
+     * Activity is calculated based on the epoch the staker last revealed in.
+     */
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
@@ -81,6 +88,12 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         }
     }
 
+    /**
+     * @dev Penalties are given to stakers based their activity if they have been inactive for more than the grace period
+     * and their votes in the previous epoch compared to the medians confirmed. Penalties on votes depend upon how far were
+     * the staker's votes from the median value. There is tolerance being added for each collection thereby not penalizing
+     * stakers of their vote was within the tolerance limits of the collection
+     */
     function _givePenalties(uint32 epoch, uint32 stakerId) internal {
         _giveInactivityPenalties(epoch, stakerId);
         Structs.Staker memory thisStaker = stakeManager.getStaker(stakerId);
