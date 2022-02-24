@@ -1050,7 +1050,7 @@ describe('Scenarios', async () => {
       epoch);
     await blockManager.connect(signers[4]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
     const dispute = await blockManager.disputes(epoch, signers[4].address);
-    assertBNEqual(dispute.medianIndex, validMedianIndexToBeDisputed, 'collectionId should match');
+    assertBNEqual(dispute.activeCollectionIndex, validMedianIndexToBeDisputed, 'collectionId should match');
     assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
     assertBNEqual(dispute.lastVisitedValue, sortedValues[sortedValues.length - 1], 'lastVisitedValue should match');
 
