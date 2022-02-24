@@ -131,6 +131,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
     root: store[signer.address].tree[0][0],
   };
   treeData[signer.address] = treeRevealData;
+  // console.log('reveal', treeRevealData.values);
   await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
   // console.log(treeRevealData);
   const helper = {};
@@ -180,55 +181,81 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-  // console.log('Propose', iteration, biggestStakerId, stakerID);
-  const numActiveCollections = await collectionManager.getNumActiveCollections();
-  // const numActiveCollections = 9;
-  const medians = new Array(numActiveCollections).fill(0);
-  const ids = await collectionManager.getActiveCollections();
+  const activeCollectionIds = await collectionManager.getActiveCollections();
   const epoch = await getEpoch();
-  const block = await blockManager.getBlock(epoch - 1);
-  for (let j = 0; j < ids.length; j++) {
+  const idsRevealedThisEpoch = [];
+  const mediansValues = [];
+
+  for (let j = 0; j < activeCollectionIds.length; j++) {
     if (Number(influenceSum[j]) !== 0) {
+      idsRevealedThisEpoch.push(activeCollectionIds[j]);
       let accWeight = toBigNumber(0);
       res[j].sort();
       for (let i = 0; i < res[j].length; i++) {
         accWeight = accWeight.add(voteWeights[res[j][i]]);
-        if (medians[j] === 0 && accWeight.gt((influenceSum[j].div(2)))) {
-          medians[j] = res[j][i];
+        if (accWeight.gt((influenceSum[j].div(2)))) {
+          mediansValues.push(res[j][i]);
+          break;
         }
       }
-    } else if (block.medians.length !== 0) {
-      const oldIndex = await collectionManager.getIdToIndexRegistryValue(ids[j]);
-      const oldMedian = (await blockManager.getBlock(epoch - 1)).medians[oldIndex];
-      medians[oldIndex] = oldMedian;
     }
   }
+  // console.log('propose', idsRevealedThisEpoch, mediansValues);
   await blockManager.connect(signer).propose(epoch,
-    ids,
-    medians,
+    idsRevealedThisEpoch,
+    mediansValues,
     iteration,
     biggestStakerId);
 };
 
 const calculateMedians = async (collectionManager) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
-  const medians = [];
-  for (let i = 0; i < numActiveCollections; i++) medians.push(0);
+
+  // const idsRevealedThisEpoch = [];
+  const mediansValues = [];
+
   for (let j = 0; j < numActiveCollections; j++) {
     if (Number(influenceSum[j]) !== 0) {
       let accWeight = toBigNumber(0);
       res[j].sort();
       for (let i = 0; i < res[j].length; i++) {
         accWeight = accWeight.add(voteWeights[res[j][i]]);
-        if (medians[j] === 0 && accWeight.gt((influenceSum[j].div(2)))) {
-          medians[j] = res[j][i];
+        if (accWeight.gt((influenceSum[j].div(2)))) {
+          mediansValues.push(res[j][i]);
+          break;
         }
       }
     }
   }
-  return (medians);
+  return (mediansValues);
 };
 
+const calculateInvalidMedians = async (collectionManager, deviation) => {
+  const numActiveCollections = await collectionManager.getNumActiveCollections();
+
+  // const idsRevealedThisEpoch = [];
+  const mediansValues = [];
+  let validMedianIndexToBeDisputed = 0;
+  for (let j = 0; j < numActiveCollections; j++) {
+    if (Number(influenceSum[j]) !== 0) {
+      let accWeight = toBigNumber(0);
+      res[j].sort();
+      for (let i = 0; i < res[j].length; i++) {
+        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        if (accWeight.gt((influenceSum[j].div(2)))) {
+          if (validMedianIndexToBeDisputed === 0) {
+            validMedianIndexToBeDisputed = j;
+            mediansValues.push(res[j][i] + deviation);
+          } else {
+            mediansValues.push(res[j][i]);
+          }
+          break;
+        }
+      }
+    }
+  }
+  return [mediansValues, validMedianIndexToBeDisputed];
+};
 const reset = async () => {
   store = {};
   influenceSum = new Array(100).fill(toBigNumber('0'));
@@ -270,4 +297,5 @@ module.exports = {
   getTreeRevealData,
   getValuesArrayRevealed,
   calculateMedians,
+  calculateInvalidMedians,
 };

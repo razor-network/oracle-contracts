@@ -153,11 +153,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
-        // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch <= epoch) {
-            _updateRegistry();
-        }
-
         if (!collections[id].active) {
             numActiveCollections = numActiveCollections + 1;
         } else {
@@ -165,7 +160,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
 
         collections[id].active = assetStatus;
-        updateRegistryEpoch = epoch + 1;
+        _updateRegistry();
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
     }
@@ -189,19 +184,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
-        uint32 epoch = _getEpoch();
-
-        // slither-disable-next-line incorrect-equality
-        if (updateRegistryEpoch <= epoch) {
-            _updateRegistry();
-        }
-
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
-        updateRegistryEpoch = epoch + 1;
+        _updateRegistry();
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
@@ -309,20 +297,15 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getUpdateRegistryEpoch() external view override returns (uint32) {
-        return updateRegistryEpoch;
-    }
-
-    /// @inheritdoc ICollectionManager
     function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
+        require(collections[id].active, "Query for Inactive Collection");
         return idToIndexRegistry[id];
     }
 
     /// @inheritdoc ICollectionManager
-    function getActiveCollectionsHash() external view override returns (bytes32 hash) {
-        hash = keccak256(abi.encodePacked(getActiveCollections()));
+    function getIndexToIdRegistryValue(uint16 index) external view override returns (uint16) {
+        return indexToIdRegistry[index];
     }
-
     /**
      * @return array of active collections
      */
@@ -340,11 +323,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
-        uint16 index = idToIndexRegistry[_id];
-        uint32 epoch = _getEpoch();
-        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
-        int8 power = collections[_id].power;
-        return (medians[index], power);
+        return (blockManager.getLatestResults(_id), collections[_id].power);
     }
 
     /**

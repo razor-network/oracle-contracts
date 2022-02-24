@@ -9,4 +9,6 @@ interface IBlockManager {
     function getBlock(uint32 epoch) external view returns (Structs.Block memory _block);
 
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
+
+    function getLatestResults(uint16) external view returns(uint32);
 }

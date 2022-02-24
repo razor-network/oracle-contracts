@@ -11,7 +11,8 @@ contract BlockStorage {
     mapping(uint32 => uint32[]) public sortedProposedBlockIds;
     //stakerId->epoch
     mapping(uint32 => uint32) public epochLastProposed;
-
+    // @notice mapping for latest results of collection id->result
+    mapping(uint16 => uint32) public latestResults;
     // slither-disable-next-line constable-states
     uint32 public numProposedBlocks;
     // slither-disable-next-line constable-states

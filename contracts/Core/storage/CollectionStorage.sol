@@ -22,8 +22,6 @@ contract CollectionStorage {
 
     /// @notice number of active collections in the network
     uint16 public numActiveCollections;
-    /// @notice epoch in which the registry needs to be updated
-    uint32 public updateRegistryEpoch;
     /// @notice number of collections in the network
     uint16 public numCollections;
     /// @notice number of jobs in the network

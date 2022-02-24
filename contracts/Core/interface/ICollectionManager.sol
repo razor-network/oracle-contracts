@@ -32,11 +32,6 @@ interface ICollectionManager {
     function getNumCollections() external view returns (uint16);
 
     /**
-     * @return epoch in which the registry needs to be updated
-     */
-    function getUpdateRegistryEpoch() external view returns (uint32);
-
-    /**
      * @param i the index of the collection
      * @return tolerance of the collection
      */
@@ -47,6 +42,12 @@ interface ICollectionManager {
      * @return the index of the collection from idToIndexRegistry
      */
     function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+
+    /**
+     * @param index, the index of the collection
+     * @return the id of the collection
+     */
+    function getIndexToIdRegistryValue(uint16 index) external view returns (uint16);
 
     /**
      * @param _name the name of the collection in bytes32
@@ -69,9 +70,4 @@ interface ICollectionManager {
      * @return power of the resultant collection
      */
     function getResultFromID(uint16 _id) external view returns (uint32, int8);
-
-    /**
-     * @return hash of active collections array
-     */
-    function getActiveCollectionsHash() external view returns (bytes32 hash);
 }
