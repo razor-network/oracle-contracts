@@ -310,7 +310,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     /**
      * @return array of active collections
      */
-    function getActiveCollections() public view returns (uint16[] memory) {
+    function getActiveCollections() external view returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {

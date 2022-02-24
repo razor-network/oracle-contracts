@@ -193,7 +193,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].activeCollectionIndex),
+            disputes[epoch][msg.sender].accWeight ==
+                voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].activeCollectionIndex),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");

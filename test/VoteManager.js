@@ -308,9 +308,10 @@ describe('VoteManager', function () {
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // Correct Reveal
         await reveal(signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
-        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex), voteValueForThatactiveCollectionIndex, 'Votes are not matching');
+        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex), voteValueForThatActiveCollectionIndex,
+          'Votes are not matching');
 
         // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         await reveal(signers[4], 4, voteManager, stakeManager);
@@ -368,9 +369,10 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex)), voteValueForThatactiveCollectionIndex, 'Votes are not matching');
+        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex)), voteValueForThatActiveCollectionIndex,
+          'Votes are not matching');
 
         await reveal(signers[4], 20, voteManager, stakeManager);
         await reveal(signers[2], 0, voteManager, stakeManager);
@@ -539,9 +541,10 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex)), voteValueForThatactiveCollectionIndex, 'Votes not matching');
+        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex)), voteValueForThatActiveCollectionIndex,
+          'Votes not matching');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
