@@ -266,9 +266,15 @@ describe('StakeManager', function () {
       assertBNEqual(await sToken.balanceOf(staker._address), prevBalance.add(sAmount), 'Amount of minted sRzR is not correct');
     });
 
-    it('Staker should not be able to withdraw if didnt unstake', async function () {
+    it('Staker should not be able to initiate withdraw if didnt unstake', async function () {
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const tx = stakeManager.connect(signers[1]).initiateWithdraw(stakerId);
+      await assertRevert(tx, 'Did not unstake');
+    });
+
+    it('Staker should not be able to unlock withdraw if didnt unstake', async function () {
+      const stakerId = await stakeManager.stakerIds(signers[1].address);
+      const tx = stakeManager.connect(signers[1]).unlockWithdraw(stakerId);
       await assertRevert(tx, 'Did not unstake');
     });
 
@@ -669,9 +675,15 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).unpause();
     });
 
-    it('Delegator should not be able to withdraw if didnt unstake', async function () {
+    it('Delegator should not be able to initiate withdraw if didnt unstake', async function () {
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const tx = stakeManager.connect(signers[5]).initiateWithdraw(stakerId);
+      await assertRevert(tx, 'Did not unstake');
+    });
+
+    it('Staker should not be able to unlock withdraw if didnt unstake', async function () {
+      const stakerId = await stakeManager.stakerIds(signers[1].address);
+      const tx = stakeManager.connect(signers[5]).unlockWithdraw(stakerId);
       await assertRevert(tx, 'Did not unstake');
     });
 
