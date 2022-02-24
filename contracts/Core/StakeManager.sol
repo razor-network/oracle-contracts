@@ -198,7 +198,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         stakedTokenFactory = IStakedTokenFactory(stakedTokenFactoryAddress);
     }
 
-    /** @notice stake during commit state only
+    /**
+     * @notice stake during commit state only
      * we check epoch during every transaction to avoid withholding and rebroadcasting attacks
      * @dev An ERC20 token corresponding to each new staker is created called sRZRs.
      * For a new staker, amount of sRZR minted is equal to amount of RAZOR staked.
@@ -249,7 +250,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
-    /** @notice Delegation
+    /**
+     * @notice delegators can delegate their funds to staker if they do not have the adequate resources to start a node
      * @dev the delegator receives the sRZR for the stakerID to which he/she delegates.
      * The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation
      * @param amount The amount in RZR

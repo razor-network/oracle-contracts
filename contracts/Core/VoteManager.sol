@@ -12,6 +12,10 @@ import "./StateManager.sol";
 import "../Initializable.sol";
 import "../lib/MerklePosAware.sol";
 
+/** @title VoteManager
+ * @notice VoteManager manages the commitments of votes of the stakers
+ */
+
 contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerParams, IVoteManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -21,6 +25,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
     event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, uint256 timestamp);
 
+    /**
+     * @param stakeManagerAddress The address of the StakeManager contract
+     * @param rewardManagerAddress The address of the RewardManager contract
+     * @param blockManagerAddress The address of the BlockManager contract
+     * @param collectionManagerAddress The address of the CollectionManager contract
+     */
     function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
@@ -33,6 +43,20 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         collectionManager = ICollectionManager(collectionManagerAddress);
     }
 
+    /**
+     * @notice stakers query the jobs in each collection, aggregate and instead of revealing them instantly,
+     * they need to submit a hash of their results which becomes their commitment and send it to the protocol
+     * @dev after query and aggregation is done, the staker would have to create a merkle tree of their votes.
+     * the commitment sent by the staker is hash of root of the merkle tree and seed, which
+     * is the hash of the salt and the staker's secret.
+     * collection allocation of each staker is done using seed and the staker would know in commit itself their allocations
+     * but wouldn't know other staker's allocation unless they have their seed.
+     * Before the staker's commitment is registered, the staker confirms the block of the previous epoch incase the initial
+     * proposer had not confirmed the block. The staker then gets the block reward if confirmed by the staker and is then
+     * given out penalties based on their votes in the previous epoch or incase of inactivity.
+     * @param epoch epoch when the commitment was sent
+     * @param commitment the commitment
+     */
     function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch) {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
@@ -56,6 +80,13 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         }
     }
 
+    /**
+     * @notice staker reveal the votes that they had committed to the protocol in the commit state.
+     * Stakers would only reveal the collections they have been allocated, the rest of their votes wont matter
+     * @param epoch epoch when the revealed their votes
+     * @param tree the merkle tree struct of the staker
+     * @param secret staker's secret using which seed would be calculated and thereby checking for collection allocation
+     */
     function reveal(
         uint32 epoch,
         Structs.MerkleTree memory tree,
@@ -119,7 +150,17 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         emit Revealed(epoch, stakerId, tree.values, block.timestamp);
     }
 
-    //bounty hunter revealing secret in commit st ate
+    //bounty hunter revealing secret in commit state
+    /**
+     * @notice incase the staker's secret and root of the merkle tree is leaked before the staker reveals,
+     * a bounty hunter can snitch on the staker and reveal the root and secret to the protocol
+     * @dev when the staker is correctly snitched, their stake is slashed and the bounty hunter receives
+     * a part of their stake based on the Slash Nums parameters. A staker can be snitched only in the commit state
+     * @param epoch epoch when the bounty hunter snitched.
+     * @param root of the staker's merkle tree
+     * @param secret secret of the staker being snitched
+     * @param stakerAddress the address of the staker
+     */
     function snitch(
         uint32 epoch,
         bytes32 root,
@@ -140,10 +181,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
+    /// @inheritdoc IVoteManager
     function storeSalt(bytes32 _salt) external override onlyRole(SALT_MODIFIER_ROLE) {
         salt = _salt;
     }
 
+    /// @inheritdoc IVoteManager
     function storeDepth(uint256 _depth) external override onlyRole(DEPTH_MODIFIER_ROLE) {
         depth = _depth;
     }
@@ -153,6 +196,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return (commitments[stakerId]);
     }
 
+    /// @inheritdoc IVoteManager
     function getVoteValue(
         uint32 epoch,
         uint32 stakerId,
@@ -162,6 +206,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return votes[epoch][stakerId][medianIndex];
     }
 
+    /// @inheritdoc IVoteManager
     function getVoteWeight(
         uint32 epoch,
         uint16 medianIndex,
@@ -171,33 +216,45 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return (voteWeights[epoch][medianIndex][voteValue]);
     }
 
+    /// @inheritdoc IVoteManager
     function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
         //epoch -> stakerId
         return (influenceSnapshot[epoch][stakerId]);
     }
 
+    /// @inheritdoc IVoteManager
     function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view override returns (uint256) {
         //epoch -> stakerId
         return (stakeSnapshot[epoch][stakerId]);
     }
 
+    /// @inheritdoc IVoteManager
     function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external view override returns (uint256) {
         // epoch -> asseted
         return (totalInfluenceRevealed[epoch][medianIndex]);
     }
 
+    /// @inheritdoc IVoteManager
     function getEpochLastCommitted(uint32 stakerId) external view override returns (uint32) {
         return commitments[stakerId].epoch;
     }
 
+    /// @inheritdoc IVoteManager
     function getEpochLastRevealed(uint32 stakerId) external view override returns (uint32) {
         return epochLastRevealed[stakerId];
     }
 
+    /// @inheritdoc IVoteManager
     function getSalt() external view override returns (bytes32) {
         return salt;
     }
 
+    /**
+     * @dev an internal function used to check whether the particular collection was allocated to the staker
+     * @param seed hash of salt and staker's secret
+     * @param iterationOfLoop positioning of the collection allocation sequence
+     * @param medianIndex index of the collection that is being checked for allotment
+     */
     function _isAssetAllotedToStaker(
         bytes32 seed,
         uint16 iterationOfLoop,
@@ -209,6 +266,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         return false;
     }
 
+    /**
+     * @dev an internal function used by _isAssetAllotedToStaker to check for allocation
+     * @param prngSeed hash of seed and exact position in sequence
+     * @param max total number of active collections
+     */
     function _prng(bytes32 prngSeed, uint256 max) internal pure returns (uint256) {
         uint256 sum = uint256(prngSeed);
         return (sum % max);
