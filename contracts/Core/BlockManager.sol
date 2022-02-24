@@ -77,18 +77,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     //anyone can give sorted votes in batches in dispute state
     function giveSorted(
         uint32 epoch,
-        uint16 medianIndex,
+        uint16 activeCollectionIndex,
         uint32[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
-        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, medianIndex) / 2;
+        require(activeCollectionIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid activeCollectionIndex");
+        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, activeCollectionIndex) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
         if (disputes[epoch][msg.sender].accWeight == 0) {
-            disputes[epoch][msg.sender].medianIndex = medianIndex;
+            disputes[epoch][msg.sender].activeCollectionIndex = activeCollectionIndex;
         } else {
-            require(disputes[epoch][msg.sender].medianIndex == medianIndex, "MedianIndex not matching");
+            require(disputes[epoch][msg.sender].activeCollectionIndex == activeCollectionIndex, "activeCollectionIndex mismatch");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedValues.length; i++) {
@@ -97,7 +97,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
-            uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+            uint256 weight = voteManager.getVoteWeight(epoch, activeCollectionIndex, sortedValues[i]);
             accWeight = accWeight + weight; // total influence revealed for this collection
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sortedValues[i];
@@ -160,8 +160,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
 
-        uint16 medianIndex = collectionManager.getIdToIndexRegistryValue(id);
-        uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
+        uint16 activeCollectionIndex = collectionManager.getIdToIndexRegistryValue(id);
+        uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, activeCollectionIndex);
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
 
@@ -193,7 +193,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // Complexity O(1)
     function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].activeCollectionIndex),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
@@ -201,9 +201,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(disputes[epoch][msg.sender].median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
-        // get position in block for that medianIndex
-        uint16 id = collectionManager.getIndexToIdRegistryValue(medianIndex);
+        uint16 activeCollectionIndex = disputes[epoch][msg.sender].activeCollectionIndex;
+        // get position in block for that activeCollectionIndex
+        uint16 id = collectionManager.getIndexToIdRegistryValue(activeCollectionIndex);
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
 

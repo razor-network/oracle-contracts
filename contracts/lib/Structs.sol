@@ -44,7 +44,7 @@ library Structs {
     }
 
     struct Dispute {
-        uint16 medianIndex;
+        uint16 activeCollectionIndex;
         uint32 median;
         uint32 lastVisitedValue;
         uint256 accWeight;
@@ -71,7 +71,7 @@ library Structs {
     }
 
     struct AssignedAsset {
-        uint16 medianIndex;
+        uint16 activeCollectionIndex;
         uint32 value;
     }
 

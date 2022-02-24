@@ -116,7 +116,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   const values = [];
   for (let j = 0; j < store[signer.address].seqAllotedCollections.length; j++) {
     values.push({
-      medianIndex: store[signer.address].seqAllotedCollections[j],
+      activeCollectionIndex: store[signer.address].seqAllotedCollections[j],
       value: (Number(store[signer.address].seqAllotedCollections[j]) + 1) * 100 + deviation,
       // this +1 is done only for maint vote value as 100 for 0, 200 for 1,
       // its not related to any concept, ofc 0 cant be valid vote result so we couldnr have 0 value for 0
@@ -139,22 +139,22 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   for (let i = 0; i < store[signer.address].seqAllotedCollections.length; i++) {
     const stakerId = await stakeManager.stakerIds(signer.address);
     const influence = await voteManager.getInfluenceSnapshot(getEpoch(), stakerId);
-    const medianIndex = (store[signer.address].seqAllotedCollections)[i];
+    const activeCollectionIndex = (store[signer.address].seqAllotedCollections)[i];
     const voteValue = values[i].value;
     arr.push(voteValue);
-    if (!(helper[medianIndex])) {
+    if (!(helper[activeCollectionIndex])) {
       let flag = false;
-      influenceSum[medianIndex] = (influenceSum[medianIndex]).add(influence);
-      if (res[medianIndex] === undefined) res[medianIndex] = [];
-      for (let j = 0; j < res[medianIndex].length; j++) {
-        if (res[medianIndex][j] === voteValue) {
+      influenceSum[activeCollectionIndex] = (influenceSum[activeCollectionIndex]).add(influence);
+      if (res[activeCollectionIndex] === undefined) res[activeCollectionIndex] = [];
+      for (let j = 0; j < res[activeCollectionIndex].length; j++) {
+        if (res[activeCollectionIndex][j] === voteValue) {
           flag = true;
         }
       }
-      if (!flag) res[medianIndex].push(voteValue);
+      if (!flag) res[activeCollectionIndex].push(voteValue);
       if (voteWeights[voteValue] === undefined) voteWeights[voteValue] = toBigNumber(0);
       voteWeights[voteValue] = voteWeights[voteValue].add(influence);
-      helper[medianIndex] = true;
+      helper[activeCollectionIndex] = true;
     }
   }
   votes[signer.address] = arr;
@@ -235,7 +235,7 @@ const calculateInvalidMedians = async (collectionManager, deviation) => {
 
   // const idsRevealedThisEpoch = [];
   const mediansValues = [];
-  let validMedianIndexToBeDisputed = 0;
+  let validActiveCollectionIndexToBeDisputed = 0;
   for (let j = 0; j < numActiveCollections; j++) {
     if (Number(influenceSum[j]) !== 0) {
       let accWeight = toBigNumber(0);
@@ -243,8 +243,8 @@ const calculateInvalidMedians = async (collectionManager, deviation) => {
       for (let i = 0; i < res[j].length; i++) {
         accWeight = accWeight.add(voteWeights[res[j][i]]);
         if (accWeight.gt((influenceSum[j].div(2)))) {
-          if (validMedianIndexToBeDisputed === 0) {
-            validMedianIndexToBeDisputed = j;
+          if (validActiveCollectionIndexToBeDisputed === 0) {
+            validActiveCollectionIndexToBeDisputed = j;
             mediansValues.push(res[j][i] + deviation);
           } else {
             mediansValues.push(res[j][i]);
@@ -254,7 +254,7 @@ const calculateInvalidMedians = async (collectionManager, deviation) => {
       }
     }
   }
-  return [mediansValues, validMedianIndexToBeDisputed];
+  return [mediansValues, validActiveCollectionIndexToBeDisputed];
 };
 const reset = async () => {
   store = {};

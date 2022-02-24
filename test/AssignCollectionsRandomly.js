@@ -117,15 +117,15 @@ describe('AssignCollectionsRandomly', function () {
       // Dispute will happen on values now, and not stakers
       // as a staker, you have to pass sorted values
       const data = await getData(signers[1]);
-      const validMedianIndexToBeDisputed = (data.seqAllotedCollections)[0];
+      const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
       const {
         sortedValues,
-      } = await calculateDisputesData(validMedianIndexToBeDisputed,
+      } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
         voteManager,
         stakeManager,
         collectionManager,
         epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
+      await blockManager.connect(signers[19]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
 
       await mineToNextState();
@@ -175,15 +175,15 @@ describe('AssignCollectionsRandomly', function () {
       // Give Sorted and FinaliseDispute on revealed asset.
       const epoch = await getEpoch();
       const data = await getData(signers[1]);
-      const validMedianIndexToBeDisputed = (data.seqAllotedCollections)[0];
+      const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
       const {
         sortedValues,
-      } = await calculateDisputesData(validMedianIndexToBeDisputed,
+      } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
         voteManager,
         stakeManager,
         collectionManager,
         epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
+      await blockManager.connect(signers[19]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0), 'Block proposed with same medians');
 
       // Give Sorted and FinaliseDispute on non-revealed asset

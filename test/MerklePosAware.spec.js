@@ -24,17 +24,17 @@ describe('Unit tests', function () {
         const tree = await createMerkle(votesThisItr);
         // console.log(tree);
         const proofs = [];
-        const medianIndex = [];
+        const activeCollectionIndex = [];
         const leaves = [];
         const depth = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
         for (let j = 0; j < i; j++) {
           const tree = await createMerkle(votesThisItr);
           proofs.push(await getProofPath(tree, j));
           leaves.push(ethers.utils.solidityKeccak256(['uint256'], [votes[j]]));
-          medianIndex.push(j);
+          activeCollectionIndex.push(j);
         }
-        // console.log('asdasd', proofs, tree[0][0], leaves, medianIndex, depth);
-        expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, medianIndex, depth, i)).to.be.true;
+        // console.log('asdasd', proofs, tree[0][0], leaves, activeCollectionIndex, depth);
+        expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, activeCollectionIndex, depth, i)).to.be.true;
       }
     });
   });

@@ -197,8 +197,8 @@ describe('VoteManager', function () {
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
         const treeRevealData = {
           values: [
-            { medianIndex: 1, value: 120 },
-            { medianIndex: 3, value: 420 },
+            { activeCollectionIndex: 1, value: 120 },
+            { activeCollectionIndex: 3, value: 420 },
           ],
           proofs: [
             [
@@ -229,12 +229,12 @@ describe('VoteManager', function () {
         for (let j = 0; j < seqAllotedCollections.length; j++) {
           if (j === 0) {
             values3.push({
-              medianIndex: Number(seqAllotedCollections[j]),
+              activeCollectionIndex: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 0,
             });
           } else {
             values3.push({
-              medianIndex: Number(seqAllotedCollections[j]),
+              activeCollectionIndex: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           }
@@ -275,12 +275,12 @@ describe('VoteManager', function () {
         for (let j = 0; j < seqAllotedCollections.length; j++) {
           if (j === 0) {
             values3.push({
-              medianIndex: Number(nonAssignedCollection),
+              activeCollectionIndex: Number(nonAssignedCollection),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           } else {
             values3.push({
-              medianIndex: Number(seqAllotedCollections[j]),
+              activeCollectionIndex: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           }
@@ -308,9 +308,9 @@ describe('VoteManager', function () {
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // Correct Reveal
         await reveal(signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
-        const anymedianIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
-        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex), voteValueForThatMedianIndex, 'Votes are not matching');
+        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex), voteValueForThatactiveCollectionIndex, 'Votes are not matching');
 
         // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         await reveal(signers[4], 4, voteManager, stakeManager);
@@ -368,9 +368,9 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anymedianIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex)), voteValueForThatMedianIndex, 'Votes are not matching');
+        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex)), voteValueForThatactiveCollectionIndex, 'Votes are not matching');
 
         await reveal(signers[4], 20, voteManager, stakeManager);
         await reveal(signers[2], 0, voteManager, stakeManager);
@@ -539,9 +539,9 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anymedianIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatMedianIndex = (anymedianIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anymedianIndex)), voteValueForThatMedianIndex, 'Votes not matching');
+        const anyactiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatactiveCollectionIndex = (anyactiveCollectionIndex.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyactiveCollectionIndex)), voteValueForThatactiveCollectionIndex, 'Votes not matching');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
         // assertBNEqual(ageBefore.add(10000), ageAfter);
@@ -906,7 +906,7 @@ describe('VoteManager', function () {
         const votes2 = new Array(9).fill(0);
         for (let j = 0; j < (data[0]).length; j++) {
           const voteValue = ((data[0])[j]).value;
-          votes2[((data[0])[j]).medianIndex] = voteValue;
+          votes2[((data[0])[j]).activeCollectionIndex] = voteValue;
         }
         let expectedAgeAfter2 = toBigNumber(ageBefore2).add(10000);
         expectedAgeAfter2 = expectedAgeAfter2 > 1000000 ? 1000000 : expectedAgeAfter2;
