@@ -12,11 +12,11 @@ contract BlockStorage {
     /// @notice mapping of stakerId->epoch
     mapping(uint32 => uint32) public epochLastProposed;
 
-    // slither-disable-next-line constable-states
     /// @notice total number of proposed blocks in an epoch
-    uint32 public numProposedBlocks;
     // slither-disable-next-line constable-states
+    uint32 public numProposedBlocks;
     /// @notice block index that is to be confirmed if not disputed
+    // slither-disable-next-line constable-states
     int8 public blockIndexToBeConfirmed; // Index in sortedProposedBlockIds
     /// @notice mapping of  epoch -> blocks
     mapping(uint32 => Structs.Block) public blocks;
