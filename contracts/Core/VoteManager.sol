@@ -22,7 +22,21 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     IBlockManager public blockManager;
     ICollectionManager public collectionManager;
 
+    /**
+     * @dev Emitted when a staker commits
+     * @param epoch epoch when the commitment was sent
+     * @param stakerId id of the staker that committed
+     * @param commitment the staker's commitment
+     * @param timestamp time when the commitment was set for the staker
+     */
     event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
+    /**
+     * @dev Emitted when a staker reveals
+     * @param epoch epoch when the staker revealed
+     * @param stakerId id of the staker that reveals
+     * @param values of the collections assigned to the staker
+     * @param timestamp time when the staker revealed
+     */
     event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, uint256 timestamp);
 
     /**

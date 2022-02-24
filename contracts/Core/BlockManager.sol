@@ -24,8 +24,24 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
 
+    /**
+     * @dev Emitted when a block is confirmed
+     * @param epoch epoch when the block was confirmed
+     * @param stakerId id of the staker that confirmed the block
+     * @param medians of the confirmed block
+     * @param timestamp time when the block was confirmed
+     */
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
+    /**
+     * @dev Emitted when a block is proposed
+     * @param epoch epoch when the block was proposed
+     * @param stakerId id of the staker that proposed the block
+     * @param medians of the proposed block
+     * @param iteration staker's iteration
+     * @param biggestStakerId id of the staker that has the highest stake amongst the stakers that revealed
+     * @param timestamp time when the block was proposed
+     */
     event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
 
     /**
