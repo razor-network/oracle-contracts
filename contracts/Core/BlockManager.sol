@@ -146,12 +146,16 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // @dev : dispute to check if ids passed are correct or not, 
+    // @dev : dispute to check if ids passed are correct or not,
     // ids should be active ones, which were revealed this epoch
     // id as input
     // if totalInfluncedRevealed == 0, then id shouldnt be present
     // !=0, id should be present
-    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex, uint16 id) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function disputeForProposedCollectionIds(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint16 id
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
@@ -159,26 +163,30 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16 medianIndex = collectionManager.getIdToIndexRegistryValue(id);
         uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
 
-        Structs.Block memory _block =  proposedBlocks[epoch][blockId];
-        
+        Structs.Block memory _block = proposedBlocks[epoch][blockId];
+
         // shouldnt be present
-        if(totalInfluenceRevealed == 0)
-        {   
+        if (totalInfluenceRevealed == 0) {
             bool toDispute = false;
-            for(uint i = 0 ; i < _block.ids.length ; i++)
-               if(_block.ids[i]== id) { toDispute = true; break; }
-            
+            for (uint256 i = 0; i < _block.ids.length; i++)
+                if (_block.ids[i] == id) {
+                    toDispute = true;
+                    break;
+                }
+
             require(toDispute, "Dispute: ID not present only");
         }
         // should be present
-        else
-        {   
+        else {
             bool toDispute = true;
-            for(uint i = 0 ; i < _block.ids.length ; i++)
-                if(_block.ids[i] == id) {toDispute = false; break;}
+            for (uint256 i = 0; i < _block.ids.length; i++)
+                if (_block.ids[i] == id) {
+                    toDispute = false;
+                    break;
+                }
             require(toDispute, "Dispute: ID present only");
         }
-        
+
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -195,19 +203,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
         // get position in block for that medianIndex
-        uint16 id =  collectionManager.getIndexToIdRegistryValue(medianIndex);
+        uint16 id = collectionManager.getIndexToIdRegistryValue(medianIndex);
 
-        Structs.Block memory _block =  proposedBlocks[epoch][blockId];
+        Structs.Block memory _block = proposedBlocks[epoch][blockId];
 
         uint32 proposedValue;
-        for(uint i = 0 ; i < _block.ids.length ; i++)
-            if(_block.ids[i]==id) { 
-                proposedValue = proposedBlocks[epoch][blockId].medians[i]; break; }
+        for (uint256 i = 0; i < _block.ids.length; i++)
+            if (_block.ids[i] == id) {
+                proposedValue = proposedBlocks[epoch][blockId].medians[i];
+                break;
+            }
 
-        require(
-            proposedValue!= disputes[epoch][msg.sender].median,
-            "Block proposed with same medians"
-        );
+        require(proposedValue != disputes[epoch][msg.sender].median, "Block proposed with same medians");
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -228,17 +235,17 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
-     function getLatestResults(uint16 id) external view override returns(uint32) {
-         return latestResults[id];
-     }
+    function getLatestResults(uint16 id) external view override returns (uint32) {
+        return latestResults[id];
+    }
+
     function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
 
-        Structs.Block memory _block =  blocks[epoch];
-        for(uint i = 0 ; i < _block.ids.length ; i++)
-        {
+        Structs.Block memory _block = blocks[epoch];
+        for (uint256 i = 0; i < _block.ids.length; i++) {
             latestResults[_block.ids[i]] = _block.medians[i];
         }
 

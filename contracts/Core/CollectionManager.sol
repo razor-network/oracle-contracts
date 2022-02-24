@@ -306,6 +306,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function getIndexToIdRegistryValue(uint16 index) external view override returns (uint16) {
         return indexToIdRegistry[index];
     }
+
     /**
      * @return array of active collections
      */

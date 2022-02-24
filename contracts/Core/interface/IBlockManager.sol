@@ -10,5 +10,5 @@ interface IBlockManager {
 
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
 
-    function getLatestResults(uint16) external view returns(uint32);
+    function getLatestResults(uint16) external view returns (uint32);
 }
