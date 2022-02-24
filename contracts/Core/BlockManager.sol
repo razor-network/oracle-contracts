@@ -208,7 +208,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
 
-        uint32 proposedValue;
+        uint32 proposedValue = 0;
         for (uint256 i = 0; i < _block.ids.length; i++)
             if (_block.ids[i] == id) {
                 proposedValue = proposedBlocks[epoch][blockId].medians[i];
