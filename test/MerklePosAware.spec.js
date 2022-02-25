@@ -15,6 +15,7 @@ describe('Unit tests', function () {
     it('Tree from 1 nodes to 11 nodes', async function () {
       const maxNodes = 11;
       const votes = [];
+      const randomHash = '0x26700e13983fefbd9cf16da2ed70fa5c679beb55062a4803121a869731e308d2';
       for (let i = 1; i <= maxNodes; i++) {
         votes.push(i * 100);
       }
@@ -34,6 +35,7 @@ describe('Unit tests', function () {
           medianIndex.push(j);
         }
         // console.log('asdasd', proofs, tree[0][0], leaves, medianIndex, depth);
+        expect(await Merkle.verifyMultiple(proofs, randomHash, leaves, medianIndex, depth, i)).to.be.false;
         expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, medianIndex, depth, i)).to.be.true;
       }
     });
