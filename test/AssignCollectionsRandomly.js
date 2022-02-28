@@ -210,6 +210,9 @@ describe('AssignCollectionsRandomly', function () {
       await blockManager.giveSorted(epoch, 6, [700]);
       await assertRevert(blockManager.finalizeDispute(epoch, 0), 'Invalid dispute');
 
+      const numActiveCollections = await collectionManager.getNumActiveCollections();
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, numActiveCollections),
+        'Invalid MedianIndex value');
       // disputeForNonAssignedCollection
       await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
@@ -268,6 +271,8 @@ describe('AssignCollectionsRandomly', function () {
       const epoch = await getEpoch();
 
       await blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6);
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6),
+        'Block already has been disputed');
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
 
@@ -287,6 +292,8 @@ describe('AssignCollectionsRandomly', function () {
       const epoch = await getEpoch();
 
       blockManager.disputeForProposedCollectionIds(epoch, 0);
+      const tx = blockManager.disputeForProposedCollectionIds(epoch, 0);
+      await assertRevert(tx, 'Block already has been disputed');
 
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);

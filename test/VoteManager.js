@@ -925,8 +925,8 @@ describe('VoteManager', function () {
             }
           }
         }
-        penalty = penalty > expectedAgeAfter2 ? expectedAgeAfter2 : penalty;
         expectedAgeAfter2 = toBigNumber(expectedAgeAfter2).sub(penalty);
+        expectedAgeAfter2 = expectedAgeAfter2 < 0 ? 0 : expectedAgeAfter2;
         const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
         assertBNEqual(expectedAgeAfter2, ageAfter2, 'Incorrect Penalties given');
       });

@@ -294,6 +294,9 @@ describe('BlockManager', function () {
         stakeManager,
         collectionManager,
         epoch);
+      const numActiveCollections = await collectionManager.getNumActiveCollections();
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, numActiveCollections, sortedValues);
+      await assertRevert(tx, 'Invalid MedianIndex value');
       await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
       const dispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(dispute.medianIndex, validMedianIndexToBeDisputed, 'collectionId should match');
@@ -632,6 +635,8 @@ describe('BlockManager', function () {
 
       // Dispute in batches
       await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, values1);
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, [0]);
+      await assertRevert(tx, 'sortedValue <= LVV ');
       await blockManager.connect(signers[19]).giveSorted(epoch, validMedianIndexToBeDisputed, values2);
       const dispute = await blockManager.disputes(epoch, signers[19].address);
       assertBNEqual(dispute.medianIndex, validMedianIndexToBeDisputed, 'medianIndex should match');
@@ -1220,11 +1225,27 @@ describe('BlockManager', function () {
       const base = 14;
       const maxAltBlocks = Number(await blockManager.maxAltBlocks());
 
-      for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
-        await razor.transfer(signers[base + i].address, tokenAmount('420000'));
-        await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
-        await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
-      }
+      // for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
+      //   await razor.transfer(signers[base + i].address, tokenAmount('420000'));
+      //   await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
+      //   await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
+      // }
+      //
+      await razor.transfer(signers[16].address, tokenAmount('420000'));
+      await razor.connect(signers[16]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[16]).stake(epoch, tokenAmount('320000'));
+
+      await razor.transfer(signers[17].address, tokenAmount('420000'));
+      await razor.connect(signers[17]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[17]).stake(epoch, tokenAmount('220000'));
+
+      await razor.transfer(signers[18].address, tokenAmount('420000'));
+      await razor.connect(signers[18]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[18]).stake(epoch, tokenAmount('120000'));
+
+      await razor.transfer(signers[19].address, tokenAmount('420000'));
+      await razor.connect(signers[19]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('100000'));
 
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const secret = [];
@@ -1244,47 +1265,69 @@ describe('BlockManager', function () {
       for (let i = 0; i < maxAltBlocks + 1; i++) {
         await reveal(signers[base + i], 0, voteManager, stakeManager);
       }
-
+      const stake = [];
+      for (let i = 14; i < maxAltBlocks + 15; i++) {
+        const stakerIdAcc = await stakeManager.stakerIds(signers[i].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc);
+        stake.push({ id: i, stake: Number(staker.stake) });
+      }
+      stake.sort((a, b) => a.stake - b.stake);
+      // const mapSort2 = new Map([...stake.entries()].sort((a, b) => a[1] - b[1]));
+      // console.log(mapSort2);
       await mineToNextState(); // propose state
 
       const medians = await calculateMedians(collectionManager);
 
-      const proposedBlocksIterations = {};
-      let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
-      let staker = await stakeManager.getStaker(stakerIdAcc);
+      const proposeData = [];
+      // let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
+      // let staker = await stakeManager.getStaker(stakerIdAcc);
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      proposedBlocksIterations[base] = iteration;
-      await blockManager.connect(signers[base]).propose(epoch,
-        [0, 0, 0],
-        medians,
-        iteration,
-        biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
+      // let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      // console.log(iteration, 'iteration');
+      // console.log(Number(biggestStake));
+      // // const iteration = [2,1,3,4,5,6];
+      // proposedBlocksIterations[base] = iteration[0];
+      // await blockManager.connect(signers[base]).propose(epoch,
+      //   [0, 0, 0],
+      //   medians,
+      //   iteration,
+      //   biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
 
-      for (let i = 1; i < maxAltBlocks + 1; i++) {
-        stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
-        staker = await stakeManager.getStaker(stakerIdAcc);
-        iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-        proposedBlocksIterations[base + i] = iteration;
-        await blockManager.connect(signers[base + i]).propose(epoch,
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        const stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+        proposeData.push({ id: (base + i), iteration });
+        // await blockManager.connect(signers[base + i]).propose(epoch,
+        //   [0, 0, 0],
+        //   medians,
+        //   iteration,
+        //   biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
+      }
+      proposeData.sort((a, b) => a.iteration - b.iteration);
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await blockManager.connect(signers[(proposeData[i]).id]).propose(epoch,
           [0, 0, 0],
           medians,
-          iteration,
+          (proposeData[i]).iteration,
           biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
       }
       assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await blockManager.maxAltBlocks());
       await reset();
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
-      let id = base;
-      let lowest = proposedBlocksIterations[base];
-      for (let i = 15; i < 20; i++) {
-        if (proposedBlocksIterations[i] < lowest) {
-          id = i;
-          lowest = proposedBlocksIterations[i];
-        }
-      }
-      await blockManager.connect(signers[id]).claimBlockReward();
+      // let id = base;
+      // let lowest = proposedBlocksIterations[base];
+      // for (let i = 15; i < 20; i++) {
+      //   if (proposedBlocksIterations[i] < lowest) {
+      //     id = i;
+      //     lowest = proposedBlocksIterations[i];
+      //   }
+      // }
+      await collectionManager.setCollectionStatus(false, 9);
+      await collectionManager.setCollectionStatus(true, 9);
+      // This above activation and deactivation of assets is done only to increase coverage
+      await blockManager.connect(signers[base]).claimBlockReward();
     });
 
     it('BlockToBeConfirmed should always have lowest iteration and should be valid', async function () {
@@ -1558,6 +1601,37 @@ describe('BlockManager', function () {
       await blockManager.connect(signers[12]).claimBlockReward();
       staker = await stakeManager.getStaker(stakerIdAcc12);
       assertBNEqual(staker.stake, stake);
+    });
+    it('should not be able to dipute asset with zero medians', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      const secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ececececebbb';
+      await commit(signers[19], 0, voteManager, collectionManager, secret);
+      await mineToNextState(); // reveal
+      await reveal(signers[19], 0, voteManager, stakeManager);
+      await mineToNextState(); // propose
+      const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const stakerIdAcc = await stakeManager.stakerIds(signers[19].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      await blockManager.connect(signers[19]).propose(epoch,
+        [1, 2, 3],
+        medians,
+        iteration,
+        biggestStakerId);
+      const data = await getData(signers[19]);
+      const arr = (data.seqAllotedCollections);
+      const validMedianIndexToBeDisputed = toBigNumber(arr[0]);
+      await mineToNextState(); // Dispute
+      const res = await calculateDisputesData(validMedianIndexToBeDisputed,
+        voteManager,
+        stakeManager,
+        collectionManager,
+        epoch);
+      await blockManager.giveSorted(epoch, validMedianIndexToBeDisputed, res.sortedValues);
+      await blockManager.finalizeDispute(epoch, 0);
+      await mineToNextState(); // confirm
     });
   });
 });
