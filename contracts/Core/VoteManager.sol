@@ -105,7 +105,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @dev stakers would need to submit their votes in accordance of how they were assigned to the staker.
      * for example, if they are assigned the following ids: [2,5,4], they would to send their votes in the following order only
      * The votes of other ids dont matter but they should not be passed in the values.
-     * So staker would have to pass the proof path of the assigned values of the merkle tree, root of the merkle tree and 
+     * So staker would have to pass the proof path of the assigned values of the merkle tree, root of the merkle tree and
      * the values being revealed into a struct in the Structs.MerkleTree format.
      * @param epoch epoch when the revealed their votes
      * @param tree the merkle tree struct of the staker
