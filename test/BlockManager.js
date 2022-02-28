@@ -1224,13 +1224,6 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
       const base = 14;
       const maxAltBlocks = Number(await blockManager.maxAltBlocks());
-
-      // for (let i = 2; i < maxAltBlocks + 1; i++) { // i=2 since [base+1] has already staked
-      //   await razor.transfer(signers[base + i].address, tokenAmount('420000'));
-      //   await razor.connect(signers[base + i]).approve(stakeManager.address, tokenAmount('420000'));
-      //   await stakeManager.connect(signers[base + i]).stake(epoch, tokenAmount('420000'));
-      // }
-      //
       await razor.transfer(signers[16].address, tokenAmount('420000'));
       await razor.connect(signers[16]).approve(stakeManager.address, tokenAmount('420000'));
       await stakeManager.connect(signers[16]).stake(epoch, tokenAmount('320000'));
@@ -1265,44 +1258,19 @@ describe('BlockManager', function () {
       for (let i = 0; i < maxAltBlocks + 1; i++) {
         await reveal(signers[base + i], 0, voteManager, stakeManager);
       }
-      const stake = [];
-      for (let i = 14; i < maxAltBlocks + 15; i++) {
-        const stakerIdAcc = await stakeManager.stakerIds(signers[i].address);
-        const staker = await stakeManager.getStaker(stakerIdAcc);
-        stake.push({ id: i, stake: Number(staker.stake) });
-      }
-      stake.sort((a, b) => a.stake - b.stake);
-      // const mapSort2 = new Map([...stake.entries()].sort((a, b) => a[1] - b[1]));
-      // console.log(mapSort2);
+
       await mineToNextState(); // propose state
 
       const medians = await calculateMedians(collectionManager);
 
       const proposeData = [];
-      // let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
-      // let staker = await stakeManager.getStaker(stakerIdAcc);
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      // let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      // console.log(iteration, 'iteration');
-      // console.log(Number(biggestStake));
-      // // const iteration = [2,1,3,4,5,6];
-      // proposedBlocksIterations[base] = iteration[0];
-      // await blockManager.connect(signers[base]).propose(epoch,
-      //   [0, 0, 0],
-      //   medians,
-      //   iteration,
-      //   biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
 
       for (let i = 0; i < maxAltBlocks + 1; i++) {
         const stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
         const staker = await stakeManager.getStaker(stakerIdAcc);
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         proposeData.push({ id: (base + i), iteration });
-        // await blockManager.connect(signers[base + i]).propose(epoch,
-        //   [0, 0, 0],
-        //   medians,
-        //   iteration,
-        //   biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
       }
       proposeData.sort((a, b) => a.iteration - b.iteration);
       for (let i = 0; i < maxAltBlocks + 1; i++) {
@@ -1316,18 +1284,82 @@ describe('BlockManager', function () {
       await reset();
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
-      // let id = base;
-      // let lowest = proposedBlocksIterations[base];
-      // for (let i = 15; i < 20; i++) {
-      //   if (proposedBlocksIterations[i] < lowest) {
-      //     id = i;
-      //     lowest = proposedBlocksIterations[i];
-      //   }
-      // }
       await collectionManager.setCollectionStatus(false, 9);
       await collectionManager.setCollectionStatus(true, 9);
       // This above activation and deactivation of assets is done only to increase coverage
-      await blockManager.connect(signers[base]).claimBlockReward();
+      await blockManager.connect(signers[(proposeData[0]).id]).claimBlockReward();
+    });
+
+    it('should be able to pop the block if all subsequent blocks have better iteration respectively', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      const base = 14;
+      const maxAltBlocks = Number(await blockManager.maxAltBlocks());
+
+      await razor.transfer(signers[16].address, tokenAmount('420000'));
+      await razor.connect(signers[16]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[16]).stake(epoch, tokenAmount('320000'));
+
+      await razor.transfer(signers[17].address, tokenAmount('420000'));
+      await razor.connect(signers[17]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[17]).stake(epoch, tokenAmount('220000'));
+
+      await razor.transfer(signers[18].address, tokenAmount('420000'));
+      await razor.connect(signers[18]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[18]).stake(epoch, tokenAmount('120000'));
+
+      await razor.transfer(signers[19].address, tokenAmount('420000'));
+      await razor.connect(signers[19]).approve(stakeManager.address, tokenAmount('420000'));
+      await stakeManager.connect(signers[19]).stake(epoch, tokenAmount('100000'));
+
+      // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
+      const secret = [];
+      secret.push('0x727d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec');
+      secret.push('0x727d5c9e6d18ed1ebcebcebcebcebc8a0e9418555555c0823ea4ecececececec');
+      secret.push('0x727d5c9e6d18ed15ce7ac8dececece8abcbcbcbcbcbcbcb23ea4ecececececec');
+      secret.push('0x727d5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ecececececec');
+      secret.push('0x727d5c9e6d18ed15ce7ac8decbebc56bc7dec8b5555c0823ea4ececececececb');
+      secret.push('0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c08bceedbcede56d8bc9');
+
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i]);
+      }
+
+      await mineToNextState(); // reveal
+
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await reveal(signers[base + i], 0, voteManager, stakeManager);
+      }
+      await mineToNextState(); // propose state
+
+      const medians = await calculateMedians(collectionManager);
+
+      const proposeData = [];
+      // let stakerIdAcc = await stakeManager.stakerIds(signers[base].address);
+      // let staker = await stakeManager.getStaker(stakerIdAcc);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        const stakerIdAcc = await stakeManager.stakerIds(signers[base + i].address);
+        const staker = await stakeManager.getStaker(stakerIdAcc);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+        proposeData.push({ id: (base + i), iteration });
+      }
+      proposeData.sort((a, b) => b.iteration - a.iteration);
+      for (let i = 0; i < maxAltBlocks + 1; i++) {
+        await blockManager.connect(signers[(proposeData[i]).id]).propose(epoch,
+          [0, 0, 0],
+          medians,
+          (proposeData[i]).iteration,
+          biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
+      }
+      assertBNEqual(await blockManager.getNumProposedBlocks(epoch), await blockManager.maxAltBlocks());
+      await reset();
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await collectionManager.setCollectionStatus(false, 9);
+      await collectionManager.setCollectionStatus(true, 9);
+      // This above activation and deactivation of assets is done only to increase coverage
+      await blockManager.connect(signers[(proposeData[proposeData.length - 1]).id]).claimBlockReward();
     });
 
     it('BlockToBeConfirmed should always have lowest iteration and should be valid', async function () {
