@@ -80,7 +80,7 @@
     "eslint-plugin-import": "^2.24.2",
     "ethers": "^5.4.6",
     "get-json": "^1.0.1",
-    "hardhat": "2.6.3",
+    "hardhat": "^2.6.3",
     "hardhat-gas-reporter": "1.0.4",
     "husky": "^7.0.4",
     "pinst": "^3.0.0",
