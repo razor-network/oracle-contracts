@@ -58,16 +58,21 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     /**
-     * @notice stakers query the jobs in each collection, aggregate and instead of revealing them instantly,
+     * @notice stakers query the jobs in collection, aggregate and instead of revealing them instantly,
      * they need to submit a hash of their results which becomes their commitment and send it to the protocol
-     * @dev after query and aggregation is done, the staker would have to create a merkle tree of their votes.
-     * the commitment sent by the staker is hash of root of the merkle tree and seed, which
+     * @dev After query and aggregation is done, the staker would have to construct a merkle tree of their votes.
+     *
+     * The commitment sent by the staker is hash of root of the merkle tree and seed, which
      * is the hash of the salt and the staker's secret.
-     * collection allocation of each staker is done using seed and the staker would know in commit itself their allocations
-     * but wouldn't know other staker's allocation unless they have their seed.
+     *
+     * Collection allocation of each staker is done using seed and the staker would know in commit itself their allocations
+     * but wouldn't know other staker's allocation unless they have their seed. Hence, it is advisable to fetch results for
+     * only those collections that they have been assigned and set rest to 0 and construct a merkle tree accordingly
+     *
      * Before the staker's commitment is registered, the staker confirms the block of the previous epoch incase the initial
      * proposer had not confirmed the block. The staker then gets the block reward if confirmed by the staker and is then
      * given out penalties based on their votes in the previous epoch or incase of inactivity.
+     *
      * @param epoch epoch when the commitment was sent
      * @param commitment the commitment
      */
@@ -97,6 +102,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     /**
      * @notice staker reveal the votes that they had committed to the protocol in the commit state.
      * Stakers would only reveal the collections they have been allocated, the rest of their votes wont matter
+     * @dev stakers would need to submit their votes in accordance of how they were assigned to the staker.
+     * for example, if they are assigned the following ids: [2,5,4], they would to send their votes in the following order only
+     * The votes of other ids dont matter but they should not be passed in the values.
+     * So staker would have to pass the proof path of the assigned values of the merkle tree, root of the merkle tree and 
+     * the values being revealed into a struct in the Structs.MerkleTree format.
      * @param epoch epoch when the revealed their votes
      * @param tree the merkle tree struct of the staker
      * @param secret staker's secret using which seed would be calculated and thereby checking for collection allocation
