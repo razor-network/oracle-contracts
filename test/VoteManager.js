@@ -141,7 +141,7 @@ describe('VoteManager', function () {
       it('should be able to commit', async function () {
         const epoch = await getEpoch();
         let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
         const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
@@ -156,7 +156,7 @@ describe('VoteManager', function () {
 
         // // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc';
-        await commit(signers[4], 4, voteManager, collectionManager, secret);
+        await commit(signers[4], 4, voteManager, collectionManager, secret, blockManager);
 
         const age3 = 10000;
         const age4 = await stakeManager.getAge(stakerIdAcc4);
@@ -164,7 +164,7 @@ describe('VoteManager', function () {
 
         // // const votes3 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9dcc';
-        await commit(signers[2], 4, voteManager, collectionManager, secret);
+        await commit(signers[2], 4, voteManager, collectionManager, secret, blockManager);
         const age5 = 10000;
         const age6 = await stakeManager.getAge(stakerIdAcc2);
         assertBNEqual(age5, age6, 'age3, age4 not equal');
@@ -173,7 +173,7 @@ describe('VoteManager', function () {
       it('should not be able to commit if already commited in a particular epoch', async function () {
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        const tx = commit(signers[3], 0, voteManager, collectionManager, secret);
+        const tx = commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
         await assertRevert(tx, 'already commited');
       });
 
@@ -186,7 +186,7 @@ describe('VoteManager', function () {
       it('should not be able to commit if staker does not exists', async function () {
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8ddd';
-        const tx = commit(signers[7], 0, voteManager, collectionManager, secret);
+        const tx = commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
         await assertRevert(tx, 'Staker does not exist');
       });
 
@@ -251,7 +251,7 @@ describe('VoteManager', function () {
           ],
           root: root3,
         };
-        // await commit(signers[1], 0, voteManager, collectionManager, secret);
+        // await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
         const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret);
         await assertRevert(tx, '0 vote for assigned coll');
       });
@@ -297,7 +297,7 @@ describe('VoteManager', function () {
           ],
           root: root3,
         };
-        // await commit(signers[1], 0, voteManager, collectionManager, secret);
+        // await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
         const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret);
         await assertRevert(tx, 'Revealed asset not alloted');
       });
@@ -344,14 +344,14 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
 
         let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         // Signer 4 is voting incoherently
         secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9e02481415c0823ea49d847ecb9ddd';
-        await commit(signers[4], 20, voteManager, collectionManager, secret);
+        await commit(signers[4], 20, voteManager, collectionManager, secret, blockManager);
 
         secret = '0x727d5c9e6d18ed15ce7ac8d3ece6ec8a0e9e02481415c0823ea49d747ecb9ddd';
-        await commit(signers[2], 0, voteManager, collectionManager, secret);
+        await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
         const commitment4 = await voteManager.getCommitment(stakerIdAcc3);
         const commitment = await getCommitment(signers[3]);
@@ -411,9 +411,9 @@ describe('VoteManager', function () {
         epoch = await getEpoch();
 
         const secret = '0x727d5c9e6d18ed15ce7ac8d3c8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[4], 0, voteManager, collectionManager, secret);
-        await commit(signers[2], 0, voteManager, collectionManager, secret);
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+        await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         let expectedAgeAfter4 = toBigNumber(ageBeforeStaker4).add(10000);
 
@@ -595,7 +595,7 @@ describe('VoteManager', function () {
         staker = await stakeManager.getStaker(stakerId);
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[7], 0, voteManager, collectionManager, secret);
+        await commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
         const commitment2 = await voteManager.getCommitment(stakerId);
         const commitment = await getCommitment(signers[7]);
         assert(commitment2.commitmentHash.toString() !== commitment.toString(), 'commitment was successful');
@@ -612,7 +612,7 @@ describe('VoteManager', function () {
       it('should not be able to commit other than in commit state', async function () {
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        const tx = commit(signers[7], 0, voteManager, collectionManager, secret);
+        const tx = commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
         await assertRevert(tx, 'incorrect state');
       });
 
@@ -622,7 +622,7 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[7]).stake(epoch, tokenAmount('20000'));
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[7], 0, voteManager, collectionManager, secret);
+        await commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
         const tx = reveal(signers[7], 0, voteManager, stakeManager, collectionManager);
         await assertRevert(tx, 'incorrect state');
       });
@@ -679,7 +679,7 @@ describe('VoteManager', function () {
         const staker = await stakeManager.getStaker(stakerId);
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d18ed15ce7ac7e3c8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[7], 0, voteManager, collectionManager, secret);
+        await commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
 
         await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
         // setting stake below minstake
@@ -701,7 +701,7 @@ describe('VoteManager', function () {
 
         // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d81ed15ce7ac7e3c8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[6], 0, voteManager, collectionManager, secret);
+        await commit(signers[6], 0, voteManager, collectionManager, secret, blockManager);
         const root = await getRoot(signers[6]);
         const stakerIdAcc6 = await stakeManager.stakerIds(signers[6].address);
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -722,7 +722,7 @@ describe('VoteManager', function () {
 
         // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x727d5c9e6d81ed15ce7ac73ec8e6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-        await commit(signers[5], 0, voteManager, collectionManager, secret);
+        await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
         const root = await getRoot(signers[5]);
 
         const stakerIdAcc5 = await stakeManager.stakerIds(signers[5].address);
@@ -816,7 +816,7 @@ describe('VoteManager', function () {
         // commit state
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x277d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         await mineToNextState();
@@ -839,7 +839,7 @@ describe('VoteManager', function () {
         // commit state
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
         const secret = '0x277d5c9e6d18ed45ce7ac8d3cce6eca80e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNLessThan(stakeAfter, stakeBefore, 'stake should reduce');
       });
@@ -847,7 +847,7 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
         const secret = '0x277d5c9e6d18ed45ce7ac8d3dde6eca80e9c02481415c0823ea49d847ccb9ddd';
-        const tx = commit(signers[4], 0, voteManager, collectionManager, secret);
+        const tx = commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
         await assertRevert(tx, 'staker is slashed');
         await mineToNextState(); // reveal
         const tx1 = reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
@@ -870,10 +870,10 @@ describe('VoteManager', function () {
         await stakeManager.connect(signers[15]).stake(epoch, tokenAmount('20000'));
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800];
         let secret = '0x277d5c9e6d18ed45ce7ac843dde6eca80e9c02481415c0823ea49d847ccb9ddd';
-        await commit(signers[3], 0, voteManager, collectionManager, secret);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         // // const votes2 = [100, 206, 300, 400, 500, 600, 700, 800];
-        await commit(signers[15], -99, voteManager, collectionManager, secret);
+        await commit(signers[15], -99, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState();
 
@@ -899,7 +899,7 @@ describe('VoteManager', function () {
         await mineToNextState(); // commit
         epoch = await getEpoch();
         secret = '0x277d5c9e6d18ed45ce7ac843dde6ece80e9c024814e5c0823ea49d847ccb9ddd';
-        await commit(signers[15], 0, voteManager, collectionManager, secret);
+        await commit(signers[15], 0, voteManager, collectionManager, secret, blockManager);
         let penalty = toBigNumber(0);
         let toAdd = toBigNumber(0);
         let prod = toBigNumber(0);

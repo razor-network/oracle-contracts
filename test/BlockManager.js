@@ -148,7 +148,7 @@ describe('BlockManager', function () {
       await stakeManager.connect(signers[1]).stake(epoch, tokenAmount('420000'));
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-      await commit(signers[1], 0, voteManager, collectionManager, secret);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
       await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
@@ -214,17 +214,17 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       let secret = '0x727d5c9e6d18ed15ce7ac34dcce6ec8a0e9c02481415c0823ea49d847ccb9ded';
-      await commit(signers[1], 0, voteManager, collectionManager, secret);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9dcd';
-      await commit(signers[2], 0, voteManager, collectionManager, secret);
+      await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc';
-      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
       await reveal(signers[1], 0, voteManager, stakeManager);
@@ -391,12 +391,12 @@ describe('BlockManager', function () {
       // const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
       let secret = '0x727d5c9e6d18ed15ce7ac34dcce6ec8a0e9c02481415c0823ea748d94ccb9ded';
-      await commit(signers[2], 0, voteManager, collectionManager, secret);
+      await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [1010, 2010, 3010, 4010, 5010, 6010, 7010, 8010, 9010];
 
       secret = '0x727d5c9e6d18ed15ce7ac34dcce6ec8a0e9c02481415c0823ea49d89dedccb47';
-      await commit(signers[4], 10, voteManager, collectionManager, secret);
+      await commit(signers[4], 10, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
 
@@ -504,7 +504,7 @@ describe('BlockManager', function () {
       const secret = '0x727d5c9e6d18ed15ce7acd83cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
       const { stake } = staker;
 
-      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       assertBNEqual((await blockManager.getBlock(epoch - 1)).proposerId, toBigNumber('0'));
       assertBNEqual(((await blockManager.getBlock(epoch - 1)).medians).length, toBigNumber('0'));
@@ -525,7 +525,7 @@ describe('BlockManager', function () {
       // const votes = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000];
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a9e0c02481415c0823ea49d847ecb9ddd';
-      await commit(signers[5], 0, voteManager, collectionManager, secret);
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
 
@@ -582,12 +582,12 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       let secret = '0x727d5c9e6d18ed15ce7ac8d3ccccccca0e9c02481415c0823ea49d847ecb9ddd';
-      await commit(signers[6], 0, voteManager, collectionManager, secret);
+      await commit(signers[6], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       secret = '0x727d5c9e6d18ed15ce7ac8d3ccccccca0e9c02481415c0823ea49d847ecb9ddd'; // intentionally passing same secret
-      await commit(signers[7], 20, voteManager, collectionManager, secret);
+      await commit(signers[7], 20, voteManager, collectionManager, secret, blockManager);
 
       // Reveal
       await mineToNextState();
@@ -649,7 +649,7 @@ describe('BlockManager', function () {
       await mineToNextEpoch();
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const secret = '0x727d5c8e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ded';
-      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await reveal(signers[3], 0, voteManager, stakeManager);
       await mineToNextState();
@@ -660,7 +660,7 @@ describe('BlockManager', function () {
     it('staker should not be able to propose when not not revealed', async function () {
       await mineToNextEpoch();
       const secret = '0x727d5c8e6d18ed15ce7ac8d3cce6ec8a0e9c02481514c0823ea49d847ccb9eee';
-      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await mineToNextState();
       const tx = propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
@@ -680,7 +680,7 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const secret = '0x727d5c8e6d18ed15ce7ac8d36eccec8a0e9c02481514c0823ea49d847ccb9eee';
-      await commit(signers[3], 0, voteManager, collectionManager, secret);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState();
@@ -698,7 +698,7 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       const epoch = await getEpoch();
       const secret = '0x555d7c8e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ded';
-      await commit(signers[7], 0, voteManager, collectionManager, secret);
+      await commit(signers[7], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();// reveal
       await reveal(signers[7], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState();// propose
@@ -750,8 +750,8 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       const secret = '0x5d727c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-      await commit(signers[8], 0, voteManager, collectionManager, secret);
-      // await commit(signers[9], 10, voteManager, collectionManager, secret);
+      await commit(signers[8], 0, voteManager, collectionManager, secret, blockManager);
+      // await commit(signers[9], 10, voteManager, collectionManager, secret, blockManager);
 
       // Reveal
       await mineToNextState();
@@ -800,12 +800,12 @@ describe('BlockManager', function () {
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ddd9bce';
-      await commit(signers[10], 0, voteManager, collectionManager, secret);
+      await commit(signers[10], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
       secret = '0x727d581d6e9ced15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ecb9ddd';
-      await commit(signers[11], 0, voteManager, collectionManager, secret);
+      await commit(signers[11], 0, voteManager, collectionManager, secret, blockManager);
 
       // Reveal
       await mineToNextState();
@@ -877,27 +877,27 @@ describe('BlockManager', function () {
 
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       let secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9418420c15c0823ea49d847ccb9ddd';
-      await commit(signers[10], 0, voteManager, collectionManager, secret);
+      await commit(signers[10], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e51de91d6ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-      await commit(signers[11], 0, voteManager, collectionManager, secret);
+      await commit(signers[11], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e6d1851de81d6c8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-      await commit(signers[12], 0, voteManager, collectionManager, secret);
+      await commit(signers[12], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes4 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e6d1851de81d6c8d3cce6ec8a0e9c02481415c0823ea49d847ccbeee9';
-      await commit(signers[13], 0, voteManager, collectionManager, secret);
+      await commit(signers[13], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes5 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e6d1851de81d6c8d3cce6ec8a0e9c02481415c0823ea49d847ccb9eee';
-      await commit(signers[14], 0, voteManager, collectionManager, secret);
+      await commit(signers[14], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes6 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e6d1851de81d6c8d3cce6ec8a0e9c02481415c0823ea49d847ccbbbb9';
-      await commit(signers[15], 0, voteManager, collectionManager, secret);
+      await commit(signers[15], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
 
@@ -1018,22 +1018,22 @@ describe('BlockManager', function () {
 
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       let secret = '0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c0823ea49d847ccb9ddd';
-      await commit(signers[9], 0, voteManager, collectionManager, secret);
+      await commit(signers[9], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9418555555c0823ea49d847ccb9ddd';
-      await commit(signers[10], 0, voteManager, collectionManager, secret);
+      await commit(signers[10], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e51de91d6ce7ac8d3cce6ec8a0e0e0e081415c0823ea49d847ccb9ddd';
-      await commit(signers[11], 0, voteManager, collectionManager, secret);
+      await commit(signers[11], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e6d1851de81d6c8d3cce6ec8a0e9c0eeeeeeee0823ea49d847ccb9ddd';
-      await commit(signers[12], 0, voteManager, collectionManager, secret);
+      await commit(signers[12], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e6d1851de81d6c889104eecba0e9c02481415c0823ea49d847ccbeee9';
-      await commit(signers[13], 0, voteManager, collectionManager, secret);
+      await commit(signers[13], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e6d1851de81d6c889104eecba0e9c02481415c0823ea49d847cbcbcbc';
-      await commit(signers[14], 0, voteManager, collectionManager, secret);
+      await commit(signers[14], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
 
@@ -1116,14 +1116,14 @@ describe('BlockManager', function () {
 
       // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       let secret = '0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c0823ea4ecececececec';
-      await commit(signers[10], 0, voteManager, collectionManager, secret);
+      await commit(signers[10], 0, voteManager, collectionManager, secret, blockManager);
 
       secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9418555555c65656565ee47ccb9ddd';
-      await commit(signers[9], 0, voteManager, collectionManager, secret);
+      await commit(signers[9], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
       secret = '0x727d5c9e51de91d6ceecbecbecb4ec8a0e0e0e081415c0823ea49d847ccb9ddd';
-      await commit(signers[8], 0, voteManager, collectionManager, secret);
+      await commit(signers[8], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState();
 
@@ -1250,7 +1250,7 @@ describe('BlockManager', function () {
       secret.push('0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c08bceedbcede56d8bc9');
 
       for (let i = 0; i < maxAltBlocks + 1; i++) {
-        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i]);
+        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i], blockManager);
       }
 
       await mineToNextState(); // reveal
@@ -1322,7 +1322,7 @@ describe('BlockManager', function () {
       secret.push('0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c08bceedbcede56d8bc9');
 
       for (let i = 0; i < maxAltBlocks + 1; i++) {
-        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i]);
+        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i], blockManager);
       }
 
       await mineToNextState(); // reveal
@@ -1381,7 +1381,7 @@ describe('BlockManager', function () {
       secret.push('0x277d5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ecececececec');
 
       for (let i = 0; i < 4; i++) {
-        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i]);
+        await commit(signers[base + i], 0, voteManager, collectionManager, secret[i], blockManager);
       }
 
       await mineToNextState(); // reveal
@@ -1634,36 +1634,21 @@ describe('BlockManager', function () {
       staker = await stakeManager.getStaker(stakerIdAcc12);
       assertBNEqual(staker.stake, stake);
     });
-    it('should not be able to dipute asset with zero medians', async function () {
-      await mineToNextEpoch();
-      const epoch = await getEpoch();
-      const secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbcbcbcbcbcbc55555c0823ea4ececececebbb';
-      await commit(signers[19], 0, voteManager, collectionManager, secret);
+    it('should be able to confirm block in next epoch if no block is confirmed in current epoch', async function () {
+      await mineToNextState(); // commit
+      let secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbcbcbeecbcbc55555c0823ea4ececececebbb';
+      await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
       await reveal(signers[19], 0, voteManager, stakeManager);
       await mineToNextState(); // propose
-      const medians = [0, 0, 0, 0, 0, 0, 0, 0, 0];
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const stakerIdAcc = await stakeManager.stakerIds(signers[19].address);
-      const staker = await stakeManager.getStaker(stakerIdAcc);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      await blockManager.connect(signers[19]).propose(epoch,
-        [1, 2, 3],
-        medians,
-        iteration,
-        biggestStakerId);
-      const data = await getData(signers[19]);
-      const arr = (data.seqAllotedCollections);
-      const validMedianIndexToBeDisputed = toBigNumber(arr[0]);
-      await mineToNextState(); // Dispute
-      const res = await calculateDisputesData(validMedianIndexToBeDisputed,
-        voteManager,
-        stakeManager,
-        collectionManager,
-        epoch);
-      await blockManager.giveSorted(epoch, validMedianIndexToBeDisputed, res.sortedValues);
-      await blockManager.finalizeDispute(epoch, 0);
-      await mineToNextState(); // confirm
+      await propose(signers[19], stakeManager, blockManager, voteManager, collectionManager);
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState(); // commit
+      const epoch = await getEpoch();
+      secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbceebcbcbcbc55555c0823ea4ececececebbb';
+      await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
+      expect(await blockManager.isBlockConfirmed(epoch - 1)).to.be.true;
     });
   });
 });
