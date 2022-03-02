@@ -384,54 +384,6 @@ reward given to staker whose block is confirmed
 |---|---|---|
 | _0 | uint256 | undefined
 
-### c_0x0db7ce4e
-
-```solidity
-function c_0x0db7ce4e(bytes32 c__0x0db7ce4e) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0x0db7ce4e | bytes32 | undefined
-
-### c_0x1ca861c7
-
-```solidity
-function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0x1ca861c7 | bytes32 | undefined
-
-### c_0xda642316
-
-```solidity
-function c_0xda642316(bytes32 c__0xda642316) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0xda642316 | bytes32 | undefined
-
 ### getRoleAdmin
 
 ```solidity

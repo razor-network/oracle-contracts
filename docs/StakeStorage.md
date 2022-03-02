@@ -51,22 +51,6 @@ mapping of bounty id -&gt; bounty lock info
 | bountyHunter | address | undefined
 | amount | uint256 | undefined
 
-### c_0xfbe7d835
-
-```solidity
-function c_0xfbe7d835(bytes32 c__0xfbe7d835) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0xfbe7d835 | bytes32 | undefined
-
 ### locks
 
 ```solidity

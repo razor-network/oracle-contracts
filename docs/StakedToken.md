@@ -101,22 +101,6 @@ function burn(address account, uint256 amount) external nonpayable returns (bool
 |---|---|---|
 | _0 | bool | undefined
 
-### c_0xdb7c4422
-
-```solidity
-function c_0xdb7c4422(bytes32 c__0xdb7c4422) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0xdb7c4422 | bytes32 | undefined
-
 ### decimals
 
 ```solidity

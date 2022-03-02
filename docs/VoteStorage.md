@@ -10,22 +10,6 @@
 
 ## Methods
 
-### c_0x0f59226c
-
-```solidity
-function c_0x0f59226c(bytes32 c__0x0f59226c) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0x0f59226c | bytes32 | undefined
-
 ### commitments
 
 ```solidity

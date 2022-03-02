@@ -10,22 +10,6 @@
 
 ## Methods
 
-### c_0x6f247f91
-
-```solidity
-function c_0x6f247f91(bytes32 c__0x6f247f91) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0x6f247f91 | bytes32 | undefined
-
 ### nonce
 
 ```solidity

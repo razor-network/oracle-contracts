@@ -10,22 +10,6 @@
 
 ## Methods
 
-### c_0xac01f64e
-
-```solidity
-function c_0xac01f64e(bytes32 c__0xac01f64e) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0xac01f64e | bytes32 | undefined
-
 ### createStakedToken
 
 ```solidity

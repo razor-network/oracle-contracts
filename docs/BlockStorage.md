@@ -52,22 +52,6 @@ mapping of  epoch -&gt; blocks
 | iteration | uint256 | undefined
 | biggestStake | uint256 | undefined
 
-### c_0x96252a55
-
-```solidity
-function c_0x96252a55(bytes32 c__0x96252a55) external pure
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| c__0x96252a55 | bytes32 | undefined
-
 ### disputes
 
 ```solidity
