@@ -414,7 +414,7 @@ mapping of bounty id -&gt; bounty lock info
 function delegate(uint32 stakerId, uint256 amount) external nonpayable
 ```
 
-Delegation
+delegators can delegate their funds to staker if they do not have the adequate resources to start a node
 
 *the delegator receives the sRZR for the stakerID to which he/she delegates. The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation*
 

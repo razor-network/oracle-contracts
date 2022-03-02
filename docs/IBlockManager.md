@@ -16,7 +16,7 @@
 function confirmPreviousEpochBlock(uint32 stakerId) external nonpayable
 ```
 
-
+if the proposed staker, whose block is valid and has the lowest iteration, does not call claimBlockReward() then in commit state, the staker who commits first will confirm this block and will receive the block reward inturn
 
 
 
@@ -24,7 +24,7 @@ function confirmPreviousEpochBlock(uint32 stakerId) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| stakerId | uint32 | undefined
+| stakerId | uint32 | id of the staker that is confirming the block
 
 ### getBlock
 
@@ -32,7 +32,7 @@ function confirmPreviousEpochBlock(uint32 stakerId) external nonpayable
 function getBlock(uint32 epoch) external view returns (struct Structs.Block _block)
 ```
 
-
+return the struct of the confirmed block
 
 
 
@@ -40,13 +40,13 @@ function getBlock(uint32 epoch) external view returns (struct Structs.Block _blo
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
+| epoch | uint32 | in which this block was confirmed
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _block | Structs.Block | undefined
+| _block | Structs.Block | : struct of the confirmed block
 
 ### isBlockConfirmed
 
@@ -54,7 +54,7 @@ function getBlock(uint32 epoch) external view returns (struct Structs.Block _blo
 function isBlockConfirmed(uint32 epoch) external view returns (bool)
 ```
 
-
+this is to check whether a block was confirmed in a particular epoch or not
 
 
 
@@ -62,13 +62,13 @@ function isBlockConfirmed(uint32 epoch) external view returns (bool)
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
+| epoch | uint32 | for which this check is being done
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bool | undefined
+| _0 | bool | true or false. true if a block has been confirmed, else false
 
 
 

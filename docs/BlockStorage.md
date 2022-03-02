@@ -16,7 +16,7 @@
 function blockIndexToBeConfirmed() external view returns (int8)
 ```
 
-
+block index that is to be confirmed if not disputed
 
 
 
@@ -33,7 +33,7 @@ function blockIndexToBeConfirmed() external view returns (int8)
 function blocks(uint32) external view returns (bool valid, uint32 proposerId, uint256 iteration, uint256 biggestStake)
 ```
 
-
+mapping of  epoch -&gt; blocks
 
 
 
@@ -58,7 +58,7 @@ function blocks(uint32) external view returns (bool valid, uint32 proposerId, ui
 function disputes(uint32, address) external view returns (uint16 medianIndex, uint32 median, uint32 lastVisitedValue, uint256 accWeight)
 ```
 
-
+mapping of epoch -&gt; address -&gt; dispute
 
 
 
@@ -84,7 +84,7 @@ function disputes(uint32, address) external view returns (uint16 medianIndex, ui
 function epochLastProposed(uint32) external view returns (uint32)
 ```
 
-
+mapping of stakerId-&gt;epoch
 
 
 
@@ -106,7 +106,7 @@ function epochLastProposed(uint32) external view returns (uint32)
 function numProposedBlocks() external view returns (uint32)
 ```
 
-
+total number of proposed blocks in an epoch
 
 
 
@@ -123,7 +123,7 @@ function numProposedBlocks() external view returns (uint32)
 function proposedBlocks(uint32, uint32) external view returns (bool valid, uint32 proposerId, uint256 iteration, uint256 biggestStake)
 ```
 
-
+mapping of epoch -&gt; blockId -&gt; block
 
 
 
@@ -149,7 +149,7 @@ function proposedBlocks(uint32, uint32) external view returns (bool valid, uint3
 function sortedProposedBlockIds(uint32, uint256) external view returns (uint32)
 ```
 
-
+mapping of epoch-&gt;blockId
 
 
 
