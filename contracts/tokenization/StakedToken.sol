@@ -10,9 +10,11 @@ contract StakedToken is ERC20, IStakedToken {
     uint32 public stakerID;
     IStakeManager public stakeManager;
 
-    // Mapping to store the amount of RZR delegated or staked by user
-    // hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorDeposited/balOfsRZR()) * sRZRamount)
-    // razorDeposited/balOfsRZR() indicates, for 1 sRZR, how much you had put in
+    /**
+     * @notice Mapping to store the amount of RZR delegated or staked by user
+     * hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorDeposited/balOfsRZR()) * sRZRamount)
+     * razorDeposited/balOfsRZR() indicates, for 1 sRZR, how much you had put in
+     */
 
     mapping(address => uint256) public razorDeposited;
 
@@ -21,6 +23,11 @@ contract StakedToken is ERC20, IStakedToken {
         _;
     }
 
+    /**
+     * @dev unique ERC20 sToken contract is deployed for every new staker that stakes into the protocol
+     * @param stakeManagerAddress address of the stake manager contract
+     * @param _stakerID the id of staker for whom the sToken is being deployed
+     */
     constructor(address stakeManagerAddress, uint32 _stakerID) ERC20("sRZR", "sRZR") {
         require(stakeManagerAddress != address(0), "zero Address Check");
         _owner = stakeManagerAddress;
@@ -28,6 +35,7 @@ contract StakedToken is ERC20, IStakedToken {
         stakerID = _stakerID;
     }
 
+    /// @inheritdoc IStakedToken
     function mint(
         address account,
         uint256 amount,
@@ -38,18 +46,25 @@ contract StakedToken is ERC20, IStakedToken {
         return true;
     }
 
+    /// @inheritdoc IStakedToken
     function burn(address account, uint256 amount) external override onlyOwner returns (bool) {
         _burn(account, amount);
         return true;
     }
 
-    /// @notice Used in withdraw
-    // At any time via calling this one can find out how much RZR was deposited for this much sRZR
+    /// @inheritdoc IStakedToken
     function getRZRDeposited(address user, uint256 sAmount) public view override returns (uint256) {
         require(balanceOf(user) >= sAmount, "Amount Exceeds Balance");
         return ((sAmount * razorDeposited[user]) / balanceOf(user));
     }
 
+    /**
+     * @dev an internal function that handles the amount os razor deposited based on sRZR token transfer.
+     * If sRZR is transferred from to another account, razor deposited should also be transferred
+     * @param from address from where sRZR is being transferred from
+     * @param to address where sRZR is being transferred to
+     * @param amount amount sRZR being transferred
+     */
     function _beforeTokenTransfer(
         address from,
         address to,

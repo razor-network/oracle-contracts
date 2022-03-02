@@ -13,6 +13,10 @@ import "./StateManager.sol";
 import "../lib/Random.sol";
 import "../Initializable.sol";
 
+/** @title BlockManager
+ * @notice BlockManager manages the proposal, confirmation and dispute of blocks
+ */
+
 contract BlockManager is Initializable, BlockStorage, StateManager, BlockManagerParams, IBlockManager {
     IStakeManager public stakeManager;
     IRewardManager public rewardManager;
@@ -20,10 +24,33 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
 
+    /**
+     * @dev Emitted when a block is confirmed
+     * @param epoch epoch when the block was confirmed
+     * @param stakerId id of the staker that confirmed the block
+     * @param medians of the confirmed block
+     * @param timestamp time when the block was confirmed
+     */
     event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
 
+    /**
+     * @dev Emitted when a block is proposed
+     * @param epoch epoch when the block was proposed
+     * @param stakerId id of the staker that proposed the block
+     * @param medians of the proposed block
+     * @param iteration staker's iteration
+     * @param biggestStakerId id of the staker that has the highest stake amongst the stakers that revealed
+     * @param timestamp time when the block was proposed
+     */
     event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
 
+    /**
+     * @param stakeManagerAddress The address of the StakeManager contract
+     * @param rewardManagerAddress The address of the RewardManager contract
+     * @param voteManagerAddress The address of the VoteManager contract
+     * @param collectionManagerAddress The address of the CollectionManager contract
+     * @param randomNoManagerAddress The address of the RandomNoManager contract
+     */
     function initialize(
         address stakeManagerAddress,
         address rewardManagerAddress,
@@ -38,21 +65,24 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
-    // elected proposer proposes block.
-    //we use a probabilistic method to elect stakers weighted by stake
-    // protocol works like this.
-    //select a staker pseudorandomly (not weighted by anything)
-    // that staker then tosses a biased coin.
-    //bias = hisStake/biggestStake. if its heads, he can propose block
-    // end of iteration. try next iteration
-    // note that only one staker or no stakers selected in each iteration.
-    // stakers elected in higher iterations can also propose hoping that
-    // stakers with lower iteration do not propose for some reason
-
-    /// @dev The IDs being passed here, are only used for disputeForNonAssignedCollection
-    /// for delegator, we have seprate registry
-    /// If user passes invalid ids, disputeForProposedCollectionIds can happen
-
+    /**
+     * @notice elected proposer proposes block.
+     * we use a probabilistic method to elect stakers weighted by stake
+     * protocol works like this.
+     * to find the iteration of a staker, a bias coin is tossed such that
+     * bias = hisStake/biggestStake revealed. if its heads, he can propose block
+     * end of iteration. try next iteration
+     * stakers elected in higher iterations can also propose hoping that
+     * stakers with lower iteration do not propose for some reason
+     * @dev The IDs being passed here, are only used for disputeForNonAssignedCollection
+     * for delegator, we have seprate registry
+     * If user passes invalid ids, disputeForProposedCollectionIds can happen
+     * @param epoch in which the block was proposed
+     * @param ids ids of the proposed block
+     * @param medians medians of the proposed block
+     * @param iteration number of times a biased coin was thrown to get a head
+     * @param biggestStakerId id of the staker that has the biggest stake amongst the stakers that have revealed
+     */
     function propose(
         uint32 epoch,
         uint16[] memory ids,
@@ -81,7 +111,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId, block.timestamp);
     }
 
-    //anyone can give sorted votes in batches in dispute state
+    /**
+     * @notice if someone feels that median result of a collection in a block is not in accordance to the protocol,
+     * giveSorted() needs to be called to setup the dispute where in, the correct median will be calculated based on the votes
+     * reported by stakers
+     * @param epoch in which the dispute was setup and raised
+     * @param medianIndex index of the collection that is to be disputed
+     * @param sortedValues values reported by staker for a collection in ascending order
+     */
     function giveSorted(
         uint32 epoch,
         uint16 medianIndex,
@@ -114,12 +151,19 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         disputes[epoch][msg.sender].accWeight = accWeight;
     }
 
-    // //if any mistake made during giveSorted, resetDispute and start again
+    /**
+     * @notice if any mistake made during giveSorted, resetDispute will reset their dispute calculations
+     * and they can start again
+     * @param epoch in which the dispute was setup and raised
+     */
     function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
-    //O(1)
+    /**
+     * @notice claimBlockReward() is to be called by the selected staker whose proposed block has the lowest iteration
+     * and is valid. This will confirm the block and rewards the selected staker with the block reward
+     */
     function claimBlockReward() external initialized checkState(State.Confirm) {
         uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
@@ -138,6 +182,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
     }
 
+    /// @inheritdoc IBlockManager
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
         uint32 epoch = _getEpoch();
 
@@ -152,6 +197,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
     }
 
+    /**
+     * @notice a dispute can be raised on the block if the block proposed has the incorrect biggest Stake.
+     * If the dispute is passed and executed, the stake of the staker who proposed such a block will be slashed.
+     * The address that raised the dispute will receive a bounty on the staker's stake depending on SlashNums
+     * @param epoch in which this dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param correctBiggestStakerId the correct biggest staker id
+     */
     function disputeBiggestStakeProposed(
         uint32 epoch,
         uint8 blockIndex,
@@ -234,7 +287,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // Complexity O(1)
+    /**
+     * @notice dispute on median result of a collection in a particular block is finalized after giveSorted was
+     * called by the address who setup the dispute. If the dispute is passed and executed, the stake of the staker who
+     * proposed such a block will be slashed. The address that raised the dispute will receive a bounty on the
+     * staker's stake depending on SlashNums
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     */
     function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
@@ -253,23 +313,43 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
+    /// @inheritdoc IBlockManager
     function getBlock(uint32 epoch) external view override returns (Structs.Block memory _block) {
         return (blocks[epoch]);
     }
 
+    /**
+     * @notice return the struct of the proposed block
+     * @param epoch in which this block was proposed
+     * @param proposedBlock id of the proposed block
+     * @return _block : struct of the proposed block
+     */
     function getProposedBlock(uint32 epoch, uint32 proposedBlock) external view returns (Structs.Block memory _block) {
         _block = proposedBlocks[epoch][proposedBlock];
         return (_block);
     }
 
+    /**
+     * @notice returns number of the block proposed in a particular epoch
+     * @param epoch in which blocks were proposed
+     * @return number of the block proposed
+     */
     function getNumProposedBlocks(uint32 epoch) external view returns (uint8) {
         return (uint8(sortedProposedBlockIds[epoch].length));
     }
 
+    /// @inheritdoc IBlockManager
     function isBlockConfirmed(uint32 epoch) external view override returns (bool) {
         return (blocks[epoch].proposerId != 0);
     }
 
+    /**
+     * @notice an internal function in which the block is confirmed.
+     * @dev The staker who confirms the block receives the block reward, creates the salt for the next epoch and stores
+     * it in the voteManager and provides this salt as secret to the random Manager to generate random number
+     * @param epoch in which the block is being confirmed
+     * @param stakerId id of the staker that is confirming the block
+     */
     function _confirmBlock(uint32 epoch, uint32 stakerId) internal {
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
@@ -282,6 +362,15 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         randomNoProvider.provideSecret(epoch, salt);
     }
 
+    /**
+     * @dev inserts the block in the approporiate place based the iteration of each block proposed. the block
+     * with the lowest iteration is given a higher priority to a lower value
+     * @param epoch in which the block was proposed
+     * @param blockId id of the proposed block
+     * @param iteration number of tosses of a biased coin required for a head
+     * @param biggestStake biggest Stake that was revealed
+     * @return isAdded : whether the block was added to the array
+     */
     function _insertAppropriately(
         uint32 epoch,
         uint32 blockId,
@@ -335,6 +424,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
     }
 
+    /**
+     * @dev internal function executes dispute if a dispute has been passed
+     * @param epoch in which the dispute was raised and passed
+     * @param blockIndex index of the block that is disputed
+     * @param blockId id of the block being disputed
+     */
     function _executeDispute(
         uint32 epoch,
         uint8 blockIndex,
@@ -362,6 +457,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         stakeManager.slash(epoch, proposerId, msg.sender);
     }
 
+    /**
+     * @dev an internal function that checks whether the iteration value sent by the staker is correct or no
+     * @param iteration number of tosses of a biased coin required for a head
+     * @param biggestStakerId id of the Staker that has the biggest stake amongst the stakers that have revealed
+     * @param stakerId id of the staker
+     * @param epoch in which the block was proposed
+     */
     function _isElectedProposer(
         uint256 iteration,
         uint32 biggestStakerId,
