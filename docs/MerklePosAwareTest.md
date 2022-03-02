@@ -10,6 +10,22 @@
 
 ## Methods
 
+### c_0x57f26edb
+
+```solidity
+function c_0x57f26edb(bytes32 c__0x57f26edb) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x57f26edb | bytes32 | undefined
+
 ### verifyMultiple
 
 ```solidity

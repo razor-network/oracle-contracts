@@ -367,6 +367,54 @@ function VOTE_MODIFIER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### c_0x1ca861c7
+
+```solidity
+function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x1ca861c7 | bytes32 | undefined
+
+### c_0x53a32e41
+
+```solidity
+function c_0x53a32e41(bytes32 c__0x53a32e41) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x53a32e41 | bytes32 | undefined
+
+### c_0xda642316
+
+```solidity
+function c_0xda642316(bytes32 c__0xda642316) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xda642316 | bytes32 | undefined
+
 ### getRoleAdmin
 
 ```solidity

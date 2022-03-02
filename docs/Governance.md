@@ -401,6 +401,70 @@ function blockManagerParams() external view returns (contract IBlockManagerParam
 |---|---|---|
 | _0 | contract IBlockManagerParams | undefined
 
+### c_0x16a85ce8
+
+```solidity
+function c_0x16a85ce8(bytes32 c__0x16a85ce8) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x16a85ce8 | bytes32 | undefined
+
+### c_0x1ca861c7
+
+```solidity
+function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x1ca861c7 | bytes32 | undefined
+
+### c_0xda642316
+
+```solidity
+function c_0xda642316(bytes32 c__0xda642316) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xda642316 | bytes32 | undefined
+
+### c_0xe05ec3dd
+
+```solidity
+function c_0xe05ec3dd(bytes32 c__0xe05ec3dd) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xe05ec3dd | bytes32 | undefined
+
 ### collectionManagerParams
 
 ```solidity

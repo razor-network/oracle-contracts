@@ -10,10 +10,10 @@
 
 ## Methods
 
-### createStakedToken
+### c_0xac01f64e
 
 ```solidity
-function createStakedToken(address stakeManagerAddress, uint32 stakerID) external nonpayable returns (address)
+function c_0xac01f64e(bytes32 c__0xac01f64e) external pure
 ```
 
 
@@ -24,7 +24,23 @@ function createStakedToken(address stakeManagerAddress, uint32 stakerID) externa
 
 | Name | Type | Description |
 |---|---|---|
-| stakeManagerAddress | address | undefined
+| c__0xac01f64e | bytes32 | undefined
+
+### createStakedToken
+
+```solidity
+function createStakedToken(address stakeManagerAddress, uint32 stakerID) external nonpayable returns (address)
+```
+
+
+
+*a factory contract where the sRZR for a new staker is being deployed*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| stakeManagerAddress | address | address of the stake Manager contract
 | stakerID | uint32 | undefined
 
 #### Returns

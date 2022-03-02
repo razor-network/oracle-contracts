@@ -408,13 +408,141 @@ mapping of bounty id -&gt; bounty lock info
 | bountyHunter | address | undefined
 | amount | uint256 | undefined
 
+### c_0x0e305da1
+
+```solidity
+function c_0x0e305da1(bytes32 c__0x0e305da1) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x0e305da1 | bytes32 | undefined
+
+### c_0x16a85ce8
+
+```solidity
+function c_0x16a85ce8(bytes32 c__0x16a85ce8) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x16a85ce8 | bytes32 | undefined
+
+### c_0x1ca861c7
+
+```solidity
+function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x1ca861c7 | bytes32 | undefined
+
+### c_0x50202a29
+
+```solidity
+function c_0x50202a29(bytes32 c__0x50202a29) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x50202a29 | bytes32 | undefined
+
+### c_0x53a32e41
+
+```solidity
+function c_0x53a32e41(bytes32 c__0x53a32e41) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x53a32e41 | bytes32 | undefined
+
+### c_0xda642316
+
+```solidity
+function c_0xda642316(bytes32 c__0xda642316) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xda642316 | bytes32 | undefined
+
+### c_0xf01f6496
+
+```solidity
+function c_0xf01f6496(bytes32 c__0xf01f6496) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xf01f6496 | bytes32 | undefined
+
+### c_0xfbe7d835
+
+```solidity
+function c_0xfbe7d835(bytes32 c__0xfbe7d835) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xfbe7d835 | bytes32 | undefined
+
 ### delegate
 
 ```solidity
 function delegate(uint32 stakerId, uint256 amount) external nonpayable
 ```
 
-Delegation
+delegators can delegate their funds to staker if they do not have the adequate resources to start a node
 
 *the delegator receives the sRZR for the stakerID to which he/she delegates. The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation*
 

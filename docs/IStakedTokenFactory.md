@@ -18,14 +18,14 @@ function createStakedToken(address stakeManagerAddress, uint32 stakedID) externa
 
 
 
-
+*a factory contract where the sRZR for a new staker is being deployed*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| stakeManagerAddress | address | undefined
-| stakedID | uint32 | undefined
+| stakeManagerAddress | address | address of the stake Manager contract
+| stakedID | uint32 | id of the staker whom the sRZR is being deployed
 
 #### Returns
 

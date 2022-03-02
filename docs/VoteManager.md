@@ -2,9 +2,9 @@
 
 
 
+> VoteManager
 
-
-
+VoteManager manages the commitments of votes of the stakers
 
 
 
@@ -384,6 +384,118 @@ function blockManager() external view returns (contract IBlockManager)
 |---|---|---|
 | _0 | contract IBlockManager | undefined
 
+### c_0x0f59226c
+
+```solidity
+function c_0x0f59226c(bytes32 c__0x0f59226c) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x0f59226c | bytes32 | undefined
+
+### c_0x16a85ce8
+
+```solidity
+function c_0x16a85ce8(bytes32 c__0x16a85ce8) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x16a85ce8 | bytes32 | undefined
+
+### c_0x1ca861c7
+
+```solidity
+function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x1ca861c7 | bytes32 | undefined
+
+### c_0xda642316
+
+```solidity
+function c_0xda642316(bytes32 c__0xda642316) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xda642316 | bytes32 | undefined
+
+### c_0xe4a27785
+
+```solidity
+function c_0xe4a27785(bytes32 c__0xe4a27785) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xe4a27785 | bytes32 | undefined
+
+### c_0xe8bfd130
+
+```solidity
+function c_0xe8bfd130(bytes32 c__0xe8bfd130) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xe8bfd130 | bytes32 | undefined
+
+### c_0xf01f6496
+
+```solidity
+function c_0xf01f6496(bytes32 c__0xf01f6496) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xf01f6496 | bytes32 | undefined
+
 ### collectionManager
 
 ```solidity
@@ -407,16 +519,16 @@ function collectionManager() external view returns (contract ICollectionManager)
 function commit(uint32 epoch, bytes32 commitment) external nonpayable
 ```
 
+stakers query the jobs in collection, aggregate and instead of revealing them instantly, they need to submit a hash of their results which becomes their commitment and send it to the protocol
 
-
-
+*After query and aggregation is done, the staker would have to construct a merkle tree of their votes. The commitment sent by the staker is hash of root of the merkle tree and seed, which is the hash of the salt and the staker&#39;s secret. Collection allocation of each staker is done using seed and the staker would know in commit itself their allocations but wouldn&#39;t know other staker&#39;s allocation unless they have their seed. Hence, it is advisable to fetch results for only those collections that they have been assigned and set rest to 0 and construct a merkle tree accordingly Before the staker&#39;s commitment is registered, the staker confirms the block of the previous epoch incase the initial proposer had not confirmed the block. The staker then gets the block reward if confirmed by the staker and is then given out penalties based on their votes in the previous epoch or incase of inactivity.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| commitment | bytes32 | undefined
+| epoch | uint32 | epoch when the commitment was sent
+| commitment | bytes32 | the commitment
 
 ### commitments
 
@@ -424,7 +536,7 @@ function commit(uint32 epoch, bytes32 commitment) external nonpayable
 function commitments(uint32) external view returns (uint32 epoch, bytes32 commitmentHash)
 ```
 
-
+mapping of stakerid -&gt; commitment
 
 
 
@@ -447,7 +559,7 @@ function commitments(uint32) external view returns (uint32 epoch, bytes32 commit
 function depth() external view returns (uint256)
 ```
 
-
+depth of a valid merkle tree
 
 
 
@@ -464,7 +576,7 @@ function depth() external view returns (uint256)
 function epochLastRevealed(uint32) external view returns (uint32)
 ```
 
-
+mapping of stakerid=&gt; epochLastRevealed
 
 
 
@@ -508,7 +620,7 @@ function getCommitment(uint32 stakerId) external view returns (struct Structs.Co
 function getEpochLastCommitted(uint32 stakerId) external view returns (uint32)
 ```
 
-
+returns the epoch a staker last committed their votes
 
 
 
@@ -516,13 +628,13 @@ function getEpochLastCommitted(uint32 stakerId) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| stakerId | uint32 | undefined
+| stakerId | uint32 | id of the staker
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint32 | epoch last committed
 
 ### getEpochLastRevealed
 
@@ -530,7 +642,7 @@ function getEpochLastCommitted(uint32 stakerId) external view returns (uint32)
 function getEpochLastRevealed(uint32 stakerId) external view returns (uint32)
 ```
 
-
+returns the epoch a staker last revealed their votes
 
 
 
@@ -538,13 +650,13 @@ function getEpochLastRevealed(uint32 stakerId) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| stakerId | uint32 | undefined
+| stakerId | uint32 | id of the staker
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint32 | epoch last revealed
 
 ### getInfluenceSnapshot
 
@@ -552,7 +664,7 @@ function getEpochLastRevealed(uint32 stakerId) external view returns (uint32)
 function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256)
 ```
 
-
+returns snapshot of influence of the staker when they revealed
 
 
 
@@ -560,14 +672,14 @@ function getInfluenceSnapshot(uint32 epoch, uint32 stakerId) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| stakerId | uint32 | undefined
+| epoch | uint32 | when the snapshot was taken
+| stakerId | uint32 | id of the staker
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | influence of the staker
 
 ### getRoleAdmin
 
@@ -606,7 +718,7 @@ function getSalt() external view returns (bytes32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined
+| _0 | bytes32 | the salt
 
 ### getStakeSnapshot
 
@@ -614,7 +726,7 @@ function getSalt() external view returns (bytes32)
 function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256)
 ```
 
-
+returns snapshot of stake of the staker when they revealed
 
 
 
@@ -622,14 +734,14 @@ function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view returns (
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| stakerId | uint32 | undefined
+| epoch | uint32 | when the snapshot was taken
+| stakerId | uint32 | id of the staker
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | stake of the staker
 
 ### getTotalInfluenceRevealed
 
@@ -637,7 +749,7 @@ function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view returns (
 function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external view returns (uint256)
 ```
 
-
+returns the total influence revealed of the collection
 
 
 
@@ -645,14 +757,14 @@ function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external vi
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| medianIndex | uint16 | undefined
+| epoch | uint32 | when asset was being revealed
+| medianIndex | uint16 | index of the collection
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | total influence revealed of the collection
 
 ### getVoteValue
 
@@ -660,7 +772,7 @@ function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external vi
 function getVoteValue(uint32 epoch, uint32 stakerId, uint16 medianIndex) external view returns (uint32)
 ```
 
-
+returns vote value of a collection reported by a particular staker
 
 
 
@@ -668,15 +780,15 @@ function getVoteValue(uint32 epoch, uint32 stakerId, uint16 medianIndex) externa
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| stakerId | uint32 | undefined
-| medianIndex | uint16 | undefined
+| epoch | uint32 | in which the staker reveal this value
+| stakerId | uint32 | id of the staker
+| medianIndex | uint16 | index of the collection
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint32 | undefined
+| _0 | uint32 | vote value
 
 ### getVoteWeight
 
@@ -684,7 +796,7 @@ function getVoteValue(uint32 epoch, uint32 stakerId, uint16 medianIndex) externa
 function getVoteWeight(uint32 epoch, uint16 medianIndex, uint32 voteValue) external view returns (uint256)
 ```
 
-
+returns vote weight of the value of the collection reported
 
 
 
@@ -692,15 +804,15 @@ function getVoteWeight(uint32 epoch, uint16 medianIndex, uint32 voteValue) exter
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| medianIndex | uint16 | undefined
-| voteValue | uint32 | undefined
+| epoch | uint32 | in which the staker reveal this value
+| medianIndex | uint16 | index of the collection
+| voteValue | uint32 | one of the values of the collection being reported
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined
+| _0 | uint256 | vote weight of the vote
 
 ### grantRole
 
@@ -748,7 +860,7 @@ function hasRole(bytes32 role, address account) external view returns (bool)
 function influenceSnapshot(uint32, uint32) external view returns (uint256)
 ```
 
-
+mapping of epoch-&gt; stakerid-&gt;influence
 
 
 
@@ -779,10 +891,10 @@ function initialize(address stakeManagerAddress, address rewardManagerAddress, a
 
 | Name | Type | Description |
 |---|---|---|
-| stakeManagerAddress | address | undefined
-| rewardManagerAddress | address | undefined
-| blockManagerAddress | address | undefined
-| collectionManagerAddress | address | undefined
+| stakeManagerAddress | address | The address of the StakeManager contract
+| rewardManagerAddress | address | The address of the RewardManager contract
+| blockManagerAddress | address | The address of the BlockManager contract
+| collectionManagerAddress | address | The address of the CollectionManager contract
 
 ### minStake
 
@@ -824,17 +936,17 @@ function renounceRole(bytes32 role, address account) external nonpayable
 function reveal(uint32 epoch, Structs.MerkleTree tree, bytes32 secret) external nonpayable
 ```
 
+staker reveal the votes that they had committed to the protocol in the commit state. Stakers would only reveal the collections they have been allocated, the rest of their votes wont matter
 
-
-
+*stakers would need to submit their votes in accordance of how they were assigned to the staker. for example, if they are assigned the following ids: [2,5,4], they would to send their votes in the following order only The votes of other ids dont matter but they should not be passed in the values. So staker would have to pass the proof path of the assigned values of the merkle tree, root of the merkle tree and the values being revealed into a struct in the Structs.MerkleTree format.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| tree | Structs.MerkleTree | undefined
-| secret | bytes32 | undefined
+| epoch | uint32 | epoch when the revealed their votes
+| tree | Structs.MerkleTree | the merkle tree struct of the staker
+| secret | bytes32 | staker&#39;s secret using which seed would be calculated and thereby checking for collection allocation
 
 ### revokeRole
 
@@ -876,7 +988,7 @@ function rewardManager() external view returns (contract IRewardManager)
 function salt() external view returns (bytes32)
 ```
 
-
+hash of last epoch and its block medians
 
 
 
@@ -925,18 +1037,18 @@ changing maximum number of collections that can be assigned to the staker
 function snitch(uint32 epoch, bytes32 root, bytes32 secret, address stakerAddress) external nonpayable
 ```
 
+incase the staker&#39;s secret and root of the merkle tree is leaked before the staker reveals, a bounty hunter can snitch on the staker and reveal the root and secret to the protocol
 
-
-
+*when the staker is correctly snitched, their stake is slashed and the bounty hunter receives a part of their stake based on the Slash Nums parameters. A staker can be snitched only in the commit state*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| epoch | uint32 | undefined
-| root | bytes32 | undefined
-| secret | bytes32 | undefined
-| stakerAddress | address | undefined
+| epoch | uint32 | epoch when the bounty hunter snitched.
+| root | bytes32 | of the staker&#39;s merkle tree
+| secret | bytes32 | secret of the staker being snitched
+| stakerAddress | address | the address of the staker
 
 ### stakeManager
 
@@ -961,7 +1073,7 @@ function stakeManager() external view returns (contract IStakeManager)
 function stakeSnapshot(uint32, uint32) external view returns (uint256)
 ```
 
-
+mapping of epoch-&gt; stakerid-&gt;stake
 
 
 
@@ -984,7 +1096,7 @@ function stakeSnapshot(uint32, uint32) external view returns (uint256)
 function storeDepth(uint256 _depth) external nonpayable
 ```
 
-
+stores the depth of a valid merkle tree. Depth of the merkle tree sent by the stakers should match with this for a valid commit/reveal
 
 
 
@@ -992,7 +1104,7 @@ function storeDepth(uint256 _depth) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _depth | uint256 | undefined
+| _depth | uint256 | depth of the merkle tree
 
 ### storeSalt
 
@@ -1000,7 +1112,7 @@ function storeDepth(uint256 _depth) external nonpayable
 function storeSalt(bytes32 _salt) external nonpayable
 ```
 
-
+stores the salt calculated in block manager
 
 
 
@@ -1008,7 +1120,7 @@ function storeSalt(bytes32 _salt) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _salt | bytes32 | undefined
+| _salt | bytes32 | the hash of the last epoch and medians of the block
 
 ### supportsInterface
 
@@ -1055,7 +1167,7 @@ maximum number of collections that can be assigned to the staker
 function totalInfluenceRevealed(uint32, uint16) external view returns (uint256)
 ```
 
-
+mapping of epoch -&gt; assetid -&gt; weight
 
 
 
@@ -1078,7 +1190,7 @@ function totalInfluenceRevealed(uint32, uint16) external view returns (uint256)
 function voteWeights(uint32, uint16, uint32) external view returns (uint256)
 ```
 
-
+mapping of epoch -&gt; assetid -&gt; voteValue -&gt; weight
 
 
 
@@ -1102,7 +1214,7 @@ function voteWeights(uint32, uint16, uint32) external view returns (uint256)
 function votes(uint32, uint32, uint16) external view returns (uint32)
 ```
 
-
+mapping of epoch -&gt; stakerid -&gt; assetid -&gt; vote
 
 
 
@@ -1132,16 +1244,16 @@ event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 times
 
 
 
-
+*Emitted when a staker commits*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| epoch  | uint32 | undefined |
-| stakerId  | uint32 | undefined |
-| commitment  | bytes32 | undefined |
-| timestamp  | uint256 | undefined |
+| epoch  | uint32 | epoch when the commitment was sent |
+| stakerId  | uint32 | id of the staker that committed |
+| commitment  | bytes32 | the staker&#39;s commitment |
+| timestamp  | uint256 | time when the commitment was set for the staker |
 
 ### Revealed
 
@@ -1151,16 +1263,16 @@ event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, ui
 
 
 
-
+*Emitted when a staker reveals*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| epoch  | uint32 | undefined |
-| stakerId  | uint32 | undefined |
-| values  | Structs.AssignedAsset[] | undefined |
-| timestamp  | uint256 | undefined |
+| epoch  | uint32 | epoch when the staker revealed |
+| stakerId  | uint32 | id of the staker that reveals |
+| values  | Structs.AssignedAsset[] | of the collections assigned to the staker |
+| timestamp  | uint256 | time when the staker revealed |
 
 ### RoleAdminChanged
 

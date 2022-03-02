@@ -78,6 +78,22 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined
 
+### c_0x7c321bfa
+
+```solidity
+function c_0x7c321bfa(bytes32 c__0x7c321bfa) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x7c321bfa | bytes32 | undefined
+
 ### decimals
 
 ```solidity

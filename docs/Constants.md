@@ -350,6 +350,22 @@ function VOTE_MODIFIER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined
 
+### c_0x1ca861c7
+
+```solidity
+function c_0x1ca861c7(bytes32 c__0x1ca861c7) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0x1ca861c7 | bytes32 | undefined
+
 
 
 

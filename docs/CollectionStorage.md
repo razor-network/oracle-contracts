@@ -10,6 +10,22 @@
 
 ## Methods
 
+### c_0xe087b75c
+
+```solidity
+function c_0xe087b75c(bytes32 c__0xe087b75c) external pure
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| c__0xe087b75c | bytes32 | undefined
+
 ### collections
 
 ```solidity
