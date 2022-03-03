@@ -25,5 +25,9 @@ interface IBlockManager {
      */
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
 
-    function getLatestResults(uint16) external view returns (uint32);
+    /**
+     * @notice Allows to get latest result of collection from id, used by delegator
+     * @param id Collection ID
+     */
+    function getLatestResults(uint16 id) external view returns (uint32);
 }

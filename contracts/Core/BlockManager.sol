@@ -65,7 +65,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
     }
 
-
     /**
      * @notice elected proposer proposes block.
      * we use a probabilistic method to elect stakers weighted by stake
@@ -215,7 +214,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // @dev : dispute to proove that the id in proposed block, shouldnt be there
+    /**
+     * @notice Dispute to prove that id should be absent, when its present in a proposed block.
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     * @param collectionIndexInBlock position of collection id to be disputed inside ids proposed by block
+     */
     function disputeCollectionIdShouldBeAbsent(
         uint32 epoch,
         uint8 blockIndex,
@@ -236,6 +241,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
+    /**
+     * @notice Dispute to prove that id should be present, when its not in a proposed block.
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     */
     function disputeCollectionIdShouldBePresent(
         uint32 epoch,
         uint8 blockIndex,
@@ -283,7 +294,16 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // @dev : dispute to prove the ids passed or not sorted in ascend order, or there is duplication
+    /**
+     * @notice Dispute to prove the ids passed or not sorted in ascend order, or there is duplication
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param index0 lower
+     * @param index1 upper
+     *  Valid Block :
+     *  If index0 < index1 &&
+     *  value0 < value1
+     */
     function disputeOnOrderOfIds(
         uint32 epoch,
         uint8 blockIndex,
@@ -292,22 +312,19 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        // Valid Block
-        // i0 < i1
-        // v0 < v1
         require(index0 < index1, "index1 not greater than index0 0");
         require(proposedBlocks[epoch][blockId].ids[index0] >= proposedBlocks[epoch][blockId].ids[index1], "ID at i0 not gt than of i1");
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-
-     /**
+    /**
      * @notice dispute on median result of a collection in a particular block is finalized after giveSorted was
      * called by the address who setup the dispute. If the dispute is passed and executed, the stake of the staker who
      * proposed such a block will be slashed. The address that raised the dispute will receive a bounty on the
      * staker's stake depending on SlashNums
      * @param epoch in which the dispute was setup
      * @param blockIndex index of the block that is to be disputed
+     * @param collectionIndexInBlock position of collection id to be disputed inside ids proposed by block
      */
     function finalizeDispute(
         uint32 epoch,
@@ -366,6 +383,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
+    /// @inheritdoc IBlockManager
     function getLatestResults(uint16 id) external view override returns (uint32) {
         return latestResults[id];
     }

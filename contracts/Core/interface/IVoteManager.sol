@@ -59,7 +59,6 @@ interface IVoteManager {
      */
     function getStakeSnapshot(uint32 epoch, uint32 stakerId) external view returns (uint256);
 
-
     /**
      * @notice returns the total influence revealed of the collection
      * @param epoch when asset was being revealed
