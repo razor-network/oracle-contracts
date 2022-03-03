@@ -3,11 +3,11 @@ pragma solidity ^0.8.0;
 
 interface ICollectionManager {
     /**
-     * @notice updates the idToIndex and indexToId resgistries.
+     * @notice updates the delayedIndexToId resgistries.
      * @dev It is called by the blockManager when a block is confirmed. It is only called if there was a change in the
      * status of collections in the network
      */
-    function updateRegistry() external;
+    function updateDelayedRegistry() external;
 
     /**
      * @param id the id of the collection
@@ -50,6 +50,12 @@ interface ICollectionManager {
     function getIndexToIdRegistryValue(uint16 index) external view returns (uint16);
 
     /**
+     * @param id the id of the collection
+     * @return the index of the collection from delayedIdToIndexRegistry
+     */
+    function getDelayedIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+
+    /**
      * @param _name the name of the collection in bytes32
      * @return collection ID
      */
@@ -70,4 +76,9 @@ interface ICollectionManager {
      * @return power of the resultant collection
      */
     function getResultFromID(uint16 _id) external view returns (uint32, int8);
+
+    /**
+     * @return epoch in which the registry needs to be updated
+     */
+    function getUpdateRegistryEpoch() external view returns (uint32);
 }

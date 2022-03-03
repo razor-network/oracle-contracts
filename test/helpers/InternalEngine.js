@@ -131,7 +131,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
     root: store[signer.address].tree[0][0],
   };
   treeData[signer.address] = treeRevealData;
-  // console.log('reveal', treeRevealData.values);
+  // console.log('reveal', signer.address, treeRevealData.values);
   await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
   // console.log(treeRevealData);
   const helper = {};
@@ -172,11 +172,10 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
 
 // Steps
 // Index reveal events of stakers
-// Find medain on basis of revealed value and influence
-// For non revealed active collection of this epoch, use previous epoch vote value.
+// Find median on basis of revealed value and influence
 // Find iteration using salt as seed
 
-const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
+const proposeWithDeviation = async (signer, deviation, stakeManager, blockManager, voteManager, collectionManager) => {
   const stakerID = await stakeManager.getStakerId(signer.address);
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
@@ -194,7 +193,7 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
       for (let i = 0; i < res[j].length; i++) {
         accWeight = accWeight.add(voteWeights[res[j][i]]);
         if (accWeight.gt((influenceSum[j].div(2)))) {
-          mediansValues.push(res[j][i]);
+          mediansValues.push(res[j][i] + deviation);
           break;
         }
       }
@@ -206,6 +205,10 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
     mediansValues,
     iteration,
     biggestStakerId);
+};
+
+const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
+  await proposeWithDeviation(signer, 0, stakeManager, blockManager, voteManager, collectionManager);
 };
 
 const calculateMedians = async (collectionManager) => {
@@ -288,6 +291,7 @@ module.exports = {
   commit,
   reveal,
   propose,
+  proposeWithDeviation,
   reset,
   getAnyAssignedIndex,
   getRoot,

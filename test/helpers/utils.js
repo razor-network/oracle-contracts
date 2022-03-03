@@ -227,6 +227,19 @@ const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, vo
     biggestStakerId);
 };
 
+const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager, collectionManager) => {
+  const { ids } = await blockManager.getProposedBlock(epoch, blockId);
+  // console.log(ids);
+  const dispute = await blockManager.disputes(epoch, signer.address);
+  const { activeCollectionIndex } = dispute;
+  const idToBeDisputed = await collectionManager.getIndexToIdRegistryValue(activeCollectionIndex);
+  // console.log(idToBeDisputed);
+  let collectionIndexInBlock = 0;
+  for (let i = 0; i < ids.length; i++) {
+    if (ids[i] === idToBeDisputed) { collectionIndexInBlock = i; break; }
+  }
+  return collectionIndexInBlock;
+};
 const getData = async (signer) => (store[signer.address]);
 
 module.exports = {
@@ -248,4 +261,5 @@ module.exports = {
   adhocReveal,
   adhocPropose,
   getData,
+  getCollectionIdPositionInBlock,
 };

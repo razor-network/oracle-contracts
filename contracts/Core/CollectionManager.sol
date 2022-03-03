@@ -153,6 +153,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
+
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch) {
+            _updateDelayedRegistry();
+        }
+
         if (!collections[id].active) {
             numActiveCollections = numActiveCollections + 1;
         } else {
@@ -160,7 +166,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
 
         collections[id].active = assetStatus;
+        updateRegistryEpoch = epoch + 1;
         _updateRegistry();
+
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
     }
@@ -184,12 +192,22 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
+        uint32 epoch = _getEpoch();
+
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch) {
+            _updateDelayedRegistry();
+        }
+
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
+
+        updateRegistryEpoch = epoch + 1;
         _updateRegistry();
+
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
@@ -223,8 +241,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
-        _updateRegistry();
+    function updateDelayedRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
+        _updateDelayedRegistry();
     }
 
     /**
@@ -257,8 +275,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /// @inheritdoc ICollectionManager
     function getCollectionStatus(uint16 id) external view override returns (bool) {
-        require(id <= numCollections, "ID does not exist");
-
         return collections[id].active;
     }
 
@@ -297,9 +313,18 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
+    function getUpdateRegistryEpoch() external view override returns (uint32) {
+        return updateRegistryEpoch;
+    }
+
+    /// @inheritdoc ICollectionManager
     function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
-        require(collections[id].active, "Query for Inactive Collection");
         return idToIndexRegistry[id];
+    }
+
+    /// @inheritdoc ICollectionManager
+    function getDelayedIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
+        return delayedIdToIndexRegistry[id];
     }
 
     /// @inheritdoc ICollectionManager
@@ -339,6 +364,18 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
                 j = j + 1;
             } else {
                 idToIndexRegistry[i] = 0;
+            }
+        }
+    }
+
+    function _updateDelayedRegistry() internal {
+        uint16 j = 0;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                delayedIdToIndexRegistry[i] = j;
+                j = j + 1;
+            } else {
+                delayedIdToIndexRegistry[i] = 0;
             }
         }
     }

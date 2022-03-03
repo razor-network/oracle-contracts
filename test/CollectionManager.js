@@ -88,6 +88,7 @@ describe('CollectionManager', function () {
       await mineToNextState();// propose
       await mineToNextState();// dispute
       await mineToNextState();// confirm
+      const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const collectionName2 = 'Test Collection2';
       await collectionManager.createCollection(tolerance, power, 1, [1, 2], collectionName);
@@ -105,6 +106,7 @@ describe('CollectionManager', function () {
       assertBNEqual((await collectionManager.getNumCollections()), toBigNumber('2'));
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
       assertBNEqual(await collectionManager.getCollectionPower(1), toBigNumber('3'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
     it('should be able to add a job to a collection', async function () {
@@ -166,12 +168,6 @@ describe('CollectionManager', function () {
       await assertRevert(tx, 'ID cannot be 0');
     });
 
-    it('should not be able to get the active status of any asset which is not a collection', async function () {
-      const numCollections = await collectionManager.getNumCollections();
-      const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
-      await assertRevert(tx2, 'ID does not exist');
-    });
-
     it('should not be able to get the power of any collection which does not exists', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx = collectionManager.getCollectionPower(numCollections + 1);
@@ -193,6 +189,7 @@ describe('CollectionManager', function () {
       const collectionIsActive = await collectionManager.getCollectionStatus(3);
       assert(collectionIsActive === false);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch(); // commit
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
@@ -208,12 +205,15 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to reactivate collection', async function () {
+      const epoch = await getEpoch();
       await collectionManager.setCollectionStatus(true, 3);
       const collection = await collectionManager.getCollection(3);
       assert(collection.active === true);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('3'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await collectionManager.setCollectionStatus(false, 3);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
+      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
       await mineToNextState(); // propose

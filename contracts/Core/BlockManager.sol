@@ -124,6 +124,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             require(proposerId == stakerId, "Block Proposer mismatches");
             _confirmBlock(epoch, proposerId);
         }
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch) {
+            collectionManager.updateDelayedRegistry();
+        }
     }
 
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
@@ -131,6 +136,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
             _confirmBlock(epoch - 1, stakerId);
+        }
+        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
+        // slither-disable-next-line incorrect-equality
+        if (updateRegistryEpoch <= epoch - 1) {
+            collectionManager.updateDelayedRegistry();
         }
     }
 
@@ -146,52 +156,97 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // @dev : dispute to check if ids passed are correct or not,
-    // ids should be active ones, which were revealed this epoch
-    // id as input
-    // if totalInfluncedRevealed == 0, then id shouldnt be present
-    // !=0, id should be present
-    function disputeForProposedCollectionIds(
+    // @dev : dispute to proove that the id in proposed block, shouldnt be there
+    function disputeCollectionIdShouldBeAbsent(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint16 id,
+        uint256 collectionIndexInBlock
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        // Step 1 : If its active collection, total influence revealed should be zero
+        if (collectionManager.getCollectionStatus(id)) {
+            uint16 activeCollectionIndex = collectionManager.getIdToIndexRegistryValue(id);
+            uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, activeCollectionIndex);
+            require(totalInfluenceRevealed == 0, "Dispute: ID should be present");
+        }
+        // Step 2: Prove that given id is indeed present in block
+        require(proposedBlocks[epoch][blockId].ids[collectionIndexInBlock] == id, "Dispute: ID absent only");
+
+        _executeDispute(epoch, blockIndex, blockId);
+    }
+
+    function disputeCollectionIdShouldBePresent(
         uint32 epoch,
         uint8 blockIndex,
         uint16 id
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
-
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
 
         uint16 activeCollectionIndex = collectionManager.getIdToIndexRegistryValue(id);
         uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, activeCollectionIndex);
 
+        require(totalInfluenceRevealed != 0, "Dispute: ID should be absent");
+
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
 
-        // shouldnt be present
-        if (totalInfluenceRevealed == 0) {
-            bool toDispute = false;
-            for (uint256 i = 0; i < _block.ids.length; i++)
-                if (_block.ids[i] == id) {
-                    toDispute = true;
-                    break;
-                }
+        // normal search
+        // for (uint256 i = 0; i < _block.ids.length; i++)
+        //         if (_block.ids[i] == id) {
+        //             toDispute = false;
+        //             break;
+        //         }
 
-            require(toDispute, "Dispute: ID not present only");
-        }
-        // should be present
-        else {
-            bool toDispute = true;
-            for (uint256 i = 0; i < _block.ids.length; i++)
-                if (_block.ids[i] == id) {
-                    toDispute = false;
-                    break;
-                }
-            require(toDispute, "Dispute: ID present only");
-        }
+        // binary search
+        // impl taken and modified from
+        // https://github.com/compound-finance/compound-protocol/blob/4a8648ec0364d24c4ecfc7d6cae254f55030d65f/contracts/Governance/Comp.sol#L207
+        uint256 lower = 0;
+        uint256 upper = _block.ids.length - 1;
+        bool toDispute = true;
 
+        while (upper > lower) {
+            uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            uint16 _id = _block.ids[center];
+            if (_id == id) {
+                toDispute = false;
+                break;
+            } else if (_id < id) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        if (_block.ids[lower] == id) toDispute = false;
+
+        require(toDispute, "Dispute: ID present only");
+        _executeDispute(epoch, blockIndex, blockId);
+    }
+
+    // @dev : dispute to prove the ids passed or not sorted in ascend order, or there is duplication
+    function disputeOnOrderOfIds(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint256 index0,
+        uint256 index1
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        // Valid Block
+        // i0 < i1
+        // v0 < v1
+        require(index0 < index1, "index1 not greater than index0 0");
+        require(proposedBlocks[epoch][blockId].ids[index0] >= proposedBlocks[epoch][blockId].ids[index1], "ID at i0 not gt than of i1");
         _executeDispute(epoch, blockIndex, blockId);
     }
 
     // Complexity O(1)
-    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function finalizeDispute(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint256 collectionIndexInBlock
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
             disputes[epoch][msg.sender].accWeight ==
                 voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].activeCollectionIndex),
@@ -207,13 +262,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16 id = collectionManager.getIndexToIdRegistryValue(activeCollectionIndex);
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
-
-        uint32 proposedValue = 0;
-        for (uint256 i = 0; i < _block.ids.length; i++)
-            if (_block.ids[i] == id) {
-                proposedValue = proposedBlocks[epoch][blockId].medians[i];
-                break;
-            }
+        require(_block.ids[collectionIndexInBlock] == id, "Wrong Coll Index passed");
+        uint32 proposedValue = proposedBlocks[epoch][blockId].medians[collectionIndexInBlock];
 
         require(proposedValue != disputes[epoch][msg.sender].median, "Block proposed with same medians");
         _executeDispute(epoch, blockIndex, blockId);
