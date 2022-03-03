@@ -40,9 +40,9 @@ interface IStakeManagerParams {
      * @notice changing percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
      * @dev can be called only by the the address that has the governance role
-     * @param _extendLockPenalty updated value to be set for extendLockPenalty
+     * @param _resetUnstakePenalty updated value to be set for resetUnstakePenalty
      */
-    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external;
+    function setResetUnstakeLockPenalty(uint8 _resetUnstakePenalty) external;
 
     /**
      * @notice changing minimum amount that to be staked for participation

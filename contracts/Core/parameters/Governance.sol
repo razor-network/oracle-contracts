@@ -120,9 +120,9 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _extendLockPenalty updated value to be set for extendLockPenalty
      */
-    function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
+    function setResetUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", _extendLockPenalty, block.timestamp);
-        stakeManagerParams.setExtendUnstakeLockPenalty(_extendLockPenalty);
+        stakeManagerParams.setResetUnstakeLockPenalty(_extendLockPenalty);
     }
 
     /**

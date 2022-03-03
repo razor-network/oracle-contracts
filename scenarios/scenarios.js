@@ -652,17 +652,17 @@ describe('Scenarios', async () => {
 
     staker = await stakeManager.getStaker(1);
     let lock = await stakeManager.locks(signers[1].address, staker.tokenAddress, 0);
-    const extendUnstakeLockPenalty = await stakeManager.extendUnstakeLockPenalty();
+    const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
     let lockedAmount = lock.amount;
-    const penalty = ((lockedAmount).mul(extendUnstakeLockPenalty)).div(100);
+    const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(100);
     lockedAmount = lockedAmount.sub(penalty);
     staker = await stakeManager.getStaker(1);
-    await stakeManager.connect(signers[1]).extendUnstakeLock(staker.id);
+    await stakeManager.connect(signers[1]).resetUnstakeLock(staker.id);
     staker = await stakeManager.getStaker(1);
     lock = await stakeManager.locks(signers[1].address, staker.tokenAddress, 0);
     epoch = await getEpoch();
     assertBNEqual((lock.amount), (lockedAmount), 'Stake is not equal to calculated stake');
-    assertBNEqual(epoch, lock.unlockAfter, 'lock.withdrawAfter assigned incorrectly');
+    assertBNEqual(epoch + UNSTAKE_LOCK_PERIOD, lock.unlockAfter, 'lock.withdrawAfter assigned incorrectly');
   });
   it('Staker unstakes and in withdraw lock period, there is a change in governance parameter and withdraw lock period is reduced', async function () {
     const secret = '0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec';
