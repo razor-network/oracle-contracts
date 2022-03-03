@@ -50,6 +50,7 @@
   "homepage": "https://github.com/razor-network/contracts#readme",
   "dependencies": {
     "@openzeppelin/contracts": "4.5.0",
+    "@primitivefi/hardhat-dodoc": "^0.1.3",
     "@semantic-release/changelog": "^6.0.1",
     "@semantic-release/git": "^10.0.1",
     "circleci-pr-commenter": "^0.1.2",
@@ -79,7 +80,7 @@
     "eslint-plugin-import": "^2.24.2",
     "ethers": "^5.4.6",
     "get-json": "^1.0.1",
-    "hardhat": "2.6.3",
+    "hardhat": "2.6.4",
     "hardhat-gas-reporter": "1.0.4",
     "husky": "^7.0.4",
     "pinst": "^3.0.0",

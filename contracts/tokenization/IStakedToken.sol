@@ -36,5 +36,7 @@ interface IStakedToken is IERC20 {
      */
     function burn(address account, uint256 amount) external returns (bool);
 
+    /// @notice Used in withdraw
+    // At any time via calling this one can find out how much RZR was deposited for this much sRZR
     function getRZRDeposited(address delegator, uint256 sAmount) external view returns (uint256);
 }
