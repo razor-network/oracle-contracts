@@ -1146,7 +1146,7 @@ event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 times
 ### Revealed
 
 ```solidity
-event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, uint256 timestamp)
+event Revealed(uint32 epoch, uint32 stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp)
 ```
 
 
@@ -1159,6 +1159,7 @@ event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, ui
 |---|---|---|
 | epoch  | uint32 | epoch when the staker revealed |
 | stakerId  | uint32 | id of the staker that reveals |
+| influence  | uint256 | influence of the staker |
 | values  | Structs.AssignedAsset[] | of the collections assigned to the staker |
 | timestamp  | uint256 | time when the staker revealed |
 

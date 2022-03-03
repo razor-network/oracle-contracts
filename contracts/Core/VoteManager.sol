@@ -34,10 +34,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @dev Emitted when a staker reveals
      * @param epoch epoch when the staker revealed
      * @param stakerId id of the staker that reveals
+     * @param influence influence of the staker
      * @param values of the collections assigned to the staker
      * @param timestamp time when the staker revealed
      */
-    event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -171,7 +172,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
         epochLastRevealed[stakerId] = epoch;
 
-        emit Revealed(epoch, stakerId, tree.values, block.timestamp);
+        emit Revealed(epoch, stakerId, influence, tree.values, block.timestamp);
     }
 
     //bounty hunter revealing secret in commit state
