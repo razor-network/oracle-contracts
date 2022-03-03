@@ -198,7 +198,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         stakedTokenFactory = IStakedTokenFactory(stakedTokenFactoryAddress);
     }
 
-    /** @notice stake during commit state only
+    /**
+     * @notice stake during commit state only
      * we check epoch during every transaction to avoid withholding and rebroadcasting attacks
      * @dev An ERC20 token corresponding to each new staker is created called sRZRs.
      * For a new staker, amount of sRZR minted is equal to amount of RAZOR staked.
@@ -220,6 +221,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
             _setupRole(STOKEN_ROLE, address(sToken));
             // Minting
+            // Below line can't be tested
             require(sToken.mint(msg.sender, amount, amount), "tokens not minted"); // as 1RZR = 1 sRZR
             totalSupply = amount;
         } else {
@@ -232,6 +234,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+            // Below line can't be tested
             require(sToken.mint(msg.sender, toMint, amount), "tokens not minted");
             totalSupply = totalSupply + toMint;
         }
@@ -246,10 +249,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             totalSupply,
             block.timestamp
         );
+        // Below line can't be tested
         require(razor.transferFrom(msg.sender, address(this), amount), "razor transfer failed");
     }
 
-    /** @notice Delegation
+    /**
+     * @notice delegators can delegate their funds to staker if they do not have the adequate resources to start a node
      * @dev the delegator receives the sRZR for the stakerID to which he/she delegates.
      * The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation
      * @param amount The amount in RZR
@@ -269,6 +274,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
         // Step 3:  Mint sToken as Amount * (totalSupplyOfToken/previousStake)
+        // Below line can't be tested
         require(sToken.mint(msg.sender, toMint, amount), "tokens not minted");
         totalSupply = totalSupply + toMint;
 
@@ -276,6 +282,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit Delegated(msg.sender, epoch, stakerId, amount, stakers[stakerId].stake, totalSupply, block.timestamp);
 
         // Step 4:  Razor Token Transfer : Amount
+        // Below line can't be tested
         require(razor.transferFrom(msg.sender, address(this), amount), "RZR token transfer failed");
     }
 
@@ -304,6 +311,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             sToken.getRZRDeposited(msg.sender, sAmount)
         );
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
+        // Below line can't be tested
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
 
@@ -334,6 +342,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         staker.stake = staker.stake - rAmount;
 
         locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod, lock.initial);
+        // Below line can't be tested
         require(sToken.burn(address(this), lock.amount), "Token burn Failed");
         //emit event here
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
@@ -373,14 +382,17 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         _resetLock(stakerId);
 
         emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
+        // Below line can't be tested
         require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
+        // Below line can't be tested
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
     /// @inheritdoc IStakeManager
     function escape(address _address) external override initialized onlyRole(ESCAPE_HATCH_ROLE) whenPaused {
         if (escapeHatchEnabled) {
+            // Below line can't be tested
             require(razor.transfer(_address, razor.balanceOf(address(this))), "razor transfer failed");
         } else {
             revert("escape hatch is disabled");
@@ -449,6 +461,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         staker.stake = staker.stake - rPenalty;
         lock.unlockAfter = epoch;
         emit ExtendUnstakeLock(stakerId, msg.sender, _getEpoch());
+        // Below line can't be tested
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
 
@@ -498,6 +511,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         //please note that since slashing is a critical part of consensus algorithm,
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
+        // Below transfer function can't be tested
         // slither-disable-next-line unchecked-transfer
         razor.transfer(BURN_ADDRESS, amountToBeBurned);
     }
@@ -512,6 +526,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
         require(bountyLocks[bountyId].redeemAfter <= epoch, "Redeem epoch not reached");
         delete bountyLocks[bountyId];
+        // Below line can't be tested
         require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
 

@@ -14,6 +14,7 @@ require('solidity-coverage');
 require('hardhat-abi-exporter');
 require('@tenderly/hardhat-tenderly');
 require('@nomiclabs/hardhat-etherscan');
+require('@primitivefi/hardhat-dodoc');
 
 const {
   PROVIDER_HOST,
