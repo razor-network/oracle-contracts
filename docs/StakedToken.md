@@ -195,7 +195,7 @@ function mint(address account, uint256 amount, uint256 _razorDeposited) external
 
 
 
-
+*Creates `amount` tokens and assigns them to `account`, increasing the total supply. Emits a {Transfer} event with `from` set to the zero address. Requirements: - `account` cannot be the zero address.*
 
 #### Parameters
 
@@ -234,7 +234,7 @@ function name() external view returns (string)
 function razorDeposited(address) external view returns (uint256)
 ```
 
-
+Mapping to store the amount of RZR delegated or staked by user hence at any time we can calculate gain = (current Rel * sRZRamount) -  ((razorDeposited/balOfsRZR()) * sRZRamount) razorDeposited/balOfsRZR() indicates, for 1 sRZR, how much you had put in
 
 
 

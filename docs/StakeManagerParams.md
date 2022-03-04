@@ -429,23 +429,6 @@ a boolean, if true, the default admin role can remove all the funds incase of em
 |---|---|---|
 | _0 | bool | undefined
 
-### extendUnstakeLockPenalty
-
-```solidity
-function extendUnstakeLockPenalty() external view returns (uint8)
-```
-
-percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
-
 ### getRoleAdmin
 
 ```solidity
@@ -593,6 +576,23 @@ function renounceRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
+### resetUnstakeLockPenalty
+
+```solidity
+function resetUnstakeLockPenalty() external view returns (uint8)
+```
+
+percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint8 | undefined
+
 ### revokeRole
 
 ```solidity
@@ -641,22 +641,6 @@ changing the number of epochs for which a staker cant change commission once set
 | Name | Type | Description |
 |---|---|---|
 | _epochLimitForUpdateCommission | uint16 | updated value to be set for epochLimitForUpdateCommission
-
-### setExtendUnstakeLockPenalty
-
-```solidity
-function setExtendUnstakeLockPenalty(uint8 _extendUnstakeLockPenalty) external nonpayable
-```
-
-changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
-
-*can be called only by the the address that has the governance role*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _extendUnstakeLockPenalty | uint8 | undefined
 
 ### setGracePeriod
 
@@ -721,6 +705,22 @@ changing minimum amount that to be staked for participation
 | Name | Type | Description |
 |---|---|---|
 | _minStake | uint256 | updated value to be set for minStake
+
+### setResetUnstakeLockPenalty
+
+```solidity
+function setResetUnstakeLockPenalty(uint8 _resetUnstakeLockPenalty) external nonpayable
+```
+
+changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
+
+*can be called only by the the address that has the governance role*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _resetUnstakeLockPenalty | uint8 | undefined
 
 ### setSlashParams
 

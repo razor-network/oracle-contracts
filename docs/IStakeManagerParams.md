@@ -53,22 +53,6 @@ changing the number of epochs for which a staker cant change commission once set
 |---|---|---|
 | _epochLimitForUpdateCommission | uint16 | updated value to be set for epochLimitForUpdateCommission
 
-### setExtendUnstakeLockPenalty
-
-```solidity
-function setExtendUnstakeLockPenalty(uint8 _extendLockPenalty) external nonpayable
-```
-
-changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
-
-*can be called only by the the address that has the governance role*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _extendLockPenalty | uint8 | updated value to be set for extendLockPenalty
-
 ### setGracePeriod
 
 ```solidity
@@ -132,6 +116,22 @@ changing minimum amount that to be staked for participation
 | Name | Type | Description |
 |---|---|---|
 | _minStake | uint256 | updated value to be set for minStake
+
+### setResetUnstakeLockPenalty
+
+```solidity
+function setResetUnstakeLockPenalty(uint8 _resetUnstakePenalty) external nonpayable
+```
+
+changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
+
+*can be called only by the the address that has the governance role*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _resetUnstakePenalty | uint8 | updated value to be set for resetUnstakePenalty
 
 ### setSlashParams
 

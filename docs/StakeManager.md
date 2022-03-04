@@ -414,7 +414,7 @@ mapping of bounty id -&gt; bounty lock info
 function delegate(uint32 stakerId, uint256 amount) external nonpayable
 ```
 
-Delegation
+delegators can delegate their funds to staker if they do not have the adequate resources to start a node
 
 *the delegator receives the sRZR for the stakerID to which he/she delegates. The amount of sRZR minted depends on depends on sRZR:(RAZOR staked) valuation at the time of delegation*
 
@@ -502,39 +502,6 @@ a boolean, if true, the default admin role can remove all the funds incase of em
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined
-
-### extendUnstakeLock
-
-```solidity
-function extendUnstakeLock(uint32 stakerId) external nonpayable
-```
-
-Used by anyone whose lock expired or who lost funds, and want to request initiateWithdraw Here we have added penalty to avoid repeating front-run unstake/witndraw attack
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| stakerId | uint32 | undefined
-
-### extendUnstakeLockPenalty
-
-```solidity
-function extendUnstakeLockPenalty() external view returns (uint8)
-```
-
-percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined
 
 ### getAge
 
@@ -1010,6 +977,39 @@ function renounceRole(bytes32 role, address account) external nonpayable
 | role | bytes32 | undefined
 | account | address | undefined
 
+### resetUnstakeLock
+
+```solidity
+function resetUnstakeLock(uint32 stakerId) external nonpayable
+```
+
+Used by anyone whose has not initiated withdraw within the WithdrawInitiationPeriod or someone who just wants to extend unstake lock. Here we have added penalty to avoid repeating front-running
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| stakerId | uint32 | undefined
+
+### resetUnstakeLockPenalty
+
+```solidity
+function resetUnstakeLockPenalty() external view returns (uint8)
+```
+
+percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint8 | undefined
+
 ### revokeRole
 
 ```solidity
@@ -1092,22 +1092,6 @@ changing the number of epochs for which a staker cant change commission once set
 |---|---|---|
 | _epochLimitForUpdateCommission | uint16 | updated value to be set for epochLimitForUpdateCommission
 
-### setExtendUnstakeLockPenalty
-
-```solidity
-function setExtendUnstakeLockPenalty(uint8 _extendUnstakeLockPenalty) external nonpayable
-```
-
-changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
-
-*can be called only by the the address that has the governance role*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _extendUnstakeLockPenalty | uint8 | undefined
-
 ### setGracePeriod
 
 ```solidity
@@ -1171,6 +1155,22 @@ changing minimum amount that to be staked for participation
 | Name | Type | Description |
 |---|---|---|
 | _minStake | uint256 | updated value to be set for minStake
+
+### setResetUnstakeLockPenalty
+
+```solidity
+function setResetUnstakeLockPenalty(uint8 _resetUnstakeLockPenalty) external nonpayable
+```
+
+changing percentage stake penalty from the locked amount for extending unstake lock incase withdrawInitiationPeriod was missed
+
+*can be called only by the the address that has the governance role*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _resetUnstakeLockPenalty | uint8 | undefined
 
 ### setSlashParams
 
@@ -1492,7 +1492,7 @@ function unpause() external nonpayable
 function unstake(uint32 stakerId, uint256 sAmount) external nonpayable
 ```
 
-staker/delegator must call unstake() to lock their sRZRs and should wait for params.withdraw_after period after which he/she can call initiateWithdraw() in withdrawInitiationPeriod. If this period pass, lock expires and she will have to extendUnstakeLock() to able to initiateWithdraw again
+staker/delegator must call unstake() to lock their sRZRs and should wait for params.withdraw_after period after which he/she can call initiateWithdraw() in withdrawInitiationPeriod. If this period pass, lock expires and she will have to resetUnstakeLock() to able to initiateWithdraw again
 
 
 
@@ -1668,24 +1668,6 @@ event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32
 | staker  | address | address of the staker/delegator |
 | stakerId `indexed` | uint32 | the stakerId for which extension took place |
 
-### ExtendUnstakeLock
-
-```solidity
-event ExtendUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch)
-```
-
-
-
-*Emitted when the staker/delegator extends unstake lock*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| stakerId `indexed` | uint32 | the stakerId for which extension took place |
-| staker  | address | address of the staker/delegator |
-| epoch  | uint32 | in which the extension took place |
-
 ### Paused
 
 ```solidity
@@ -1719,6 +1701,24 @@ event ResetLock(uint32 indexed stakerId, address staker, uint32 epoch)
 | stakerId `indexed` | uint32 | the stakerId for which the reset took place |
 | staker  | address | address of the staker/delegator |
 | epoch  | uint32 | in which the reset took place |
+
+### ResetUnstakeLock
+
+```solidity
+event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch)
+```
+
+
+
+*Emitted when the staker/delegator extends unstake lock*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| stakerId `indexed` | uint32 | the stakerId for which extension took place |
+| staker  | address | address of the staker/delegator |
+| epoch  | uint32 | in which the extension took place |
 
 ### RoleAdminChanged
 
