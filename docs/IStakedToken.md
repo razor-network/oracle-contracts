@@ -107,7 +107,7 @@ function burn(address account, uint256 amount) external nonpayable returns (bool
 function getRZRDeposited(address delegator, uint256 sAmount) external view returns (uint256)
 ```
 
-
+Used in withdraw
 
 
 

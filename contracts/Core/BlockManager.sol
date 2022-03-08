@@ -301,7 +301,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
         // Would revert if no block is proposed, or the asset specifed was not revealed
-        require(disputes[epoch][msg.sender].median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
