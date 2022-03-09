@@ -51,10 +51,10 @@ return the struct of the confirmed block
 ### getLatestResults
 
 ```solidity
-function getLatestResults(uint16) external view returns (uint32)
+function getLatestResults(uint16 id) external view returns (uint32)
 ```
 
-
+Allows to get latest result of collection from id, used by delegator
 
 
 
@@ -62,7 +62,7 @@ function getLatestResults(uint16) external view returns (uint32)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint16 | undefined
+| id | uint16 | Collection ID
 
 #### Returns
 

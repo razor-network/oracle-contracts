@@ -20,10 +20,8 @@ describe('Unit tests', function () {
         votes.push(i * 100);
       }
       for (let i = 1; i <= maxNodes; i++) {
-        // console.log(i);
         const votesThisItr = votes.slice(0, i);
         const tree = await createMerkle(votesThisItr);
-        // console.log(tree);
         const proofs = [];
         const activeCollectionIndex = [];
         const leaves = [];

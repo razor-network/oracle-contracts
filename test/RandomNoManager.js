@@ -10,6 +10,7 @@ const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   COLLECTION_MODIFIER_ROLE,
+  SECRETS_MODIFIER_ROLE,
 } = require('./helpers/constants');
 const {
   getEpoch,
@@ -105,7 +106,7 @@ describe('RandomNoManager', function () {
       assertBNEqual(await randomNoManager.requests(reqid2), epoch);
 
       // Commit
-      await commit(signers[5], 0, voteManager, collectionManager, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[5], 0, voteManager, collectionManager, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
       await mineToNextState();
 
       // Reveal
@@ -170,6 +171,15 @@ describe('RandomNoManager', function () {
       // Get Random no : Generic From Last Epoch
       const randomNo4 = await randomNoManager.getGenericRandomNumberOfLastEpoch();
       assertBNEqual(randomNo4, toBigNumber(locallyCalculatedRandomNo3));
+    });
+    it('should not be able to provide secret if secret is already set for particular epoch', async function () {
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      await randomNoManager.grantRole(SECRETS_MODIFIER_ROLE, signers[0].address);
+      const randomSecret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await randomNoManager.connect(signers[0]).provideSecret(epoch, randomSecret);
+      const tx = randomNoManager.connect(signers[0]).provideSecret(epoch, randomSecret);
+      await assertRevert(tx, 'Secret already set');
     });
   });
 });

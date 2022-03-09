@@ -55,11 +55,34 @@ const voteWeights = {};
 /// but in a isCollectionAlloted, input array
 /// you have to pass [2,1,1], here seq and repetation should be maintained
 
-const commit = async (signer, deviation, voteManager, collectionManager, secret) => {
+const commit = async (signer, deviation, voteManager, collectionManager, secret, blockManager) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
-  const salt = await voteManager.getSalt();
+  const epoch = await getEpoch();
+  const numProposedBlocks = await blockManager.getNumProposedBlocks(epoch - 1);
   const toAssign = await voteManager.toAssign();
-  // const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+  const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+  let salt;
+  // if =>  If no blocks were proposed last Epoch then fetch the stored salt as new salt
+  // won't be calculated in this case as confirmBlock won't be called both in prev epoch and in this epoch's commit
+
+  // else if => // If blocks were proposed last Epoch and all the blocks got disputed then fetch the stored salt as new salt
+  // won't be calculated in this case as confirmBlock won't be called both in prev epoch and in this epoch's commit
+
+  // else =>   // If blocks are proposed last epoch and any one or more blocks are valid then calculate the new salt
+
+  if (numProposedBlocks === 0) {
+    salt = await voteManager.getSalt();
+  } else if (numProposedBlocks > 0 && blockIndexToBeConfirmed < 0) {
+    salt = await voteManager.getSalt();
+  } else {
+    const blockId = await blockManager.sortedProposedBlockIds(epoch - 1, 0);
+    const block = await blockManager.getProposedBlock(epoch - 1, blockId);
+    const mediansLastEpoch = block.medians;
+    salt = utils.solidityKeccak256(
+      ['uint32', 'uint32[]'],
+      [epoch - 1, mediansLastEpoch]
+    );
+  }
   const seed1 = utils.solidityKeccak256(
     ['bytes32', 'bytes32'],
     [salt, secret]

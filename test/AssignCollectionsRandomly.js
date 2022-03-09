@@ -102,7 +102,7 @@ describe('AssignCollectionsRandomly', function () {
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
       await reset();
-      await commit(signers[1], 0, voteManager, collectionManager, secret);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
       await reveal(signers[1], 0, voteManager, stakeManager);
@@ -152,9 +152,9 @@ describe('AssignCollectionsRandomly', function () {
 
     it('Staker Proposes Everything correctly, none of dispute should go through', async () => {
       // await mineToNextEpoch();
-      await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
       await mineToNextState();
 
       await reveal(signers[1], 0, voteManager, stakeManager);
