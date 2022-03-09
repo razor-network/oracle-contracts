@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 interface ICollectionManager {
     /**
-     * @notice updates the delayedIndexToId resgistries.
+     * @notice updates the collectionIdToLeafIdRegistryOfLastEpoch resgistries.
      * @dev It is called by the blockManager when a block is confirmed. It is only called if there was a change in the
      * status of collections in the network
      */
@@ -32,28 +32,28 @@ interface ICollectionManager {
     function getNumCollections() external view returns (uint16);
 
     /**
-     * @param i the index of the collection
+     * @param i the leafId of the collection
      * @return tolerance of the collection
      */
     function getCollectionTolerance(uint16 i) external view returns (uint32);
 
     /**
      * @param id the id of the collection
-     * @return the index of the collection from idToIndexRegistry
+     * @return the leafId of the collection from collectionIdToLeafIdRegistry
      */
-    function getIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+    function getLeafIdOfCollection(uint16 id) external view returns (uint16);
 
     /**
-     * @param index, the index of the collection
+     * @param leafId, the leafId of the collection
      * @return the id of the collection
      */
-    function getIndexToIdRegistryValue(uint16 index) external view returns (uint16);
+    function getCollectionIdFromLeafId(uint16 leafId) external view returns (uint16);
 
     /**
      * @param id the id of the collection
-     * @return the index of the collection from delayedIdToIndexRegistry
+     * @return the leafId of the collection from collectionIdToLeafIdRegistryOfLastEpoch
      */
-    function getDelayedIdToIndexRegistryValue(uint16 id) external view returns (uint16);
+    function getLeafIdOfCollectionForLastEpoch(uint16 id) external view returns (uint16);
 
     /**
      * @param _name the name of the collection in bytes32

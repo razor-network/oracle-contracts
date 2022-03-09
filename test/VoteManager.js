@@ -197,8 +197,8 @@ describe('VoteManager', function () {
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
         const treeRevealData = {
           values: [
-            { activeCollectionIndex: 1, value: 120 },
-            { activeCollectionIndex: 3, value: 420 },
+            { leafId: 1, value: 120 },
+            { leafId: 3, value: 420 },
           ],
           proofs: [
             [
@@ -229,12 +229,12 @@ describe('VoteManager', function () {
         for (let j = 0; j < seqAllotedCollections.length; j++) {
           if (j === 0) {
             values3.push({
-              activeCollectionIndex: Number(seqAllotedCollections[j]),
+              leafId: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 0,
             });
           } else {
             values3.push({
-              activeCollectionIndex: Number(seqAllotedCollections[j]),
+              leafId: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           }
@@ -275,12 +275,12 @@ describe('VoteManager', function () {
         for (let j = 0; j < seqAllotedCollections.length; j++) {
           if (j === 0) {
             values3.push({
-              activeCollectionIndex: Number(nonAssignedCollection),
+              leafId: Number(nonAssignedCollection),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           } else {
             values3.push({
-              activeCollectionIndex: Number(seqAllotedCollections[j]),
+              leafId: Number(seqAllotedCollections[j]),
               value: (Number(seqAllotedCollections[j]) + 1) * 100,
             });
           }
@@ -308,9 +308,9 @@ describe('VoteManager', function () {
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // Correct Reveal
         await reveal(signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
-        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex), voteValueForThatActiveCollectionIndex,
+        const anyLeafId = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatLeafId = (anyLeafId.add(1)).mul(100);
+        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyLeafId), voteValueForThatLeafId,
           'Votes are not matching');
 
         await reveal(signers[4], 4, voteManager, stakeManager);
@@ -366,9 +366,9 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex)), voteValueForThatActiveCollectionIndex,
+        const anyLeafId = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatLeafId = (anyLeafId.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyLeafId)), voteValueForThatLeafId,
           'Votes are not matching');
 
         await reveal(signers[4], 20, voteManager, stakeManager);
@@ -409,7 +409,7 @@ describe('VoteManager', function () {
 
         const idsProposedOfLastEpoch = (await blockManager.getBlock(epoch - 1)).ids;
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
-          const index = await collectionManager.getIdToIndexRegistryValue(idsProposedOfLastEpoch[i]);
+          const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
           const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, index);
           const tolerance = await collectionManager.getCollectionTolerance(index);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
@@ -528,9 +528,9 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
 
         await reveal(signers[3], 0, voteManager, stakeManager);
-        const anyActiveCollectionIndex = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatActiveCollectionIndex = (anyActiveCollectionIndex.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyActiveCollectionIndex)), voteValueForThatActiveCollectionIndex,
+        const anyLeafId = await getAnyAssignedIndex(signers[3]);
+        const voteValueForThatLeafId = (anyLeafId.add(1)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyLeafId)), voteValueForThatLeafId,
           'Votes not matching');
 
         // const ageAfter = (await stakeManager.stakers(stakerIdAcc3)).age;
@@ -896,7 +896,7 @@ describe('VoteManager', function () {
         expectedAgeAfterOf15 = expectedAgeAfterOf15 > 1000000 ? 1000000 : expectedAgeAfterOf15;
 
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
-          const index = await collectionManager.getIdToIndexRegistryValue(idsProposedOfLastEpoch[i]);
+          const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
           const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc15, index);
           const tolerance = await collectionManager.getCollectionTolerance(index);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));

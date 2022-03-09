@@ -14,15 +14,15 @@ contract CollectionStorage {
     mapping(uint16 => Structs.Collection) public collections;
 
     // For next epoch : Penalties
-    /// @notice delayed mappping collectionid -> activeCollectionsIndex
-    mapping(uint16 => uint16) public delayedIdToIndexRegistry;
+    /// @notice delayed mappping collectionid -> leafId
+    mapping(uint16 => uint16) public collectionIdToLeafIdRegistryOfLastEpoch;
 
     /// For this epoch : Disputes
-    /// @notice mapping for collectionid -> activeCollectionsIndex
-    mapping(uint16 => uint16) public idToIndexRegistry;
+    /// @notice mapping for collectionid -> leafId
+    mapping(uint16 => uint16) public collectionIdToLeafIdRegistry;
 
-    /// @notice mapping for activeCollectionsIndex -> collectionid
-    mapping(uint16 => uint16) public indexToIdRegistry;
+    /// @notice mapping for leafId -> collectionid
+    mapping(uint16 => uint16) public leafIdToCollectionIdRegistry;
 
     /// @notice mapping for name of collection in bytes32 -> collectionid
     mapping(bytes32 => uint16) public ids;

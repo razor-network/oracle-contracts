@@ -7,25 +7,25 @@ contract MerklePosAwareTest {
         bytes32[][] memory proofs,
         bytes32 root,
         bytes32[] memory leaves,
-        uint16[] memory activeCollectionIndex,
+        uint16[] memory leafId,
         uint256 depth,
         uint16 maxAssets
     ) external pure returns (bool) {
-        return MerklePosAware.verifyMultiple(proofs, root, leaves, activeCollectionIndex, depth, maxAssets);
+        return MerklePosAware.verifyMultiple(proofs, root, leaves, leafId, depth, maxAssets);
     }
 
     // function verify(
     //     bytes32[] memory proof,
     //     bytes32 root,
     //     bytes32 leaf,
-    //     uint16 activeCollectionIndex,
+    //     uint16 leafId,
     //     uint256 depth,
     //     uint16 maxAssets
     // ) external pure returns (bool) {
-    //     return MerklePosAware.verify(proof, root, leaf, activeCollectionIndex, depth, maxAssets);
+    //     return MerklePosAware.verify(proof, root, leaf, leafId, depth, maxAssets);
     // }
 
-    // function getSequence(uint256 activeCollectionIndex, uint256 depth) external pure returns (string memory) {
-    //     return string(MerklePosAware.getSequence(activeCollectionIndex, depth));
+    // function getSequence(uint256 leafId, uint256 depth) external pure returns (string memory) {
+    //     return string(MerklePosAware.getSequence(leafId, depth));
     // }
 }

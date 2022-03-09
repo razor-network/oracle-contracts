@@ -23,18 +23,18 @@ describe('Unit tests', function () {
         const votesThisItr = votes.slice(0, i);
         const tree = await createMerkle(votesThisItr);
         const proofs = [];
-        const activeCollectionIndex = [];
+        const leafId = [];
         const leaves = [];
         const depth = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
         for (let j = 0; j < i; j++) {
           const tree = await createMerkle(votesThisItr);
           proofs.push(await getProofPath(tree, j));
           leaves.push(ethers.utils.solidityKeccak256(['uint256'], [votes[j]]));
-          activeCollectionIndex.push(j);
+          leafId.push(j);
         }
         // console.log('asdasd', proofs, tree[0][0], leaves, medianIndex, depth);
-        expect(await Merkle.verifyMultiple(proofs, randomHash, leaves, activeCollectionIndex, depth, i)).to.be.false;
-        expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, activeCollectionIndex, depth, i)).to.be.true;
+        expect(await Merkle.verifyMultiple(proofs, randomHash, leaves, leafId, depth, i)).to.be.false;
+        expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, leafId, depth, i)).to.be.true;
       }
     });
   });

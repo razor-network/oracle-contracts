@@ -113,10 +113,11 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         if (idsRevealedLastEpoch.length == 0) return;
         uint64 penalty = 0;
         for (uint16 i = 0; i < idsRevealedLastEpoch.length; i++) {
+            // get leaf id from collection id, as voting happens w.r.t leaf ids
             // slither-disable-next-line calls-loop
-            uint16 activeCollectionIndex = collectionManager.getDelayedIdToIndexRegistryValue(idsRevealedLastEpoch[i]);
+            uint16 leafId = collectionManager.getLeafIdOfCollectionForLastEpoch(idsRevealedLastEpoch[i]);
             // slither-disable-next-line calls-loop
-            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, activeCollectionIndex);
+            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, leafId);
             if (
                 voteValueLastEpoch != 0
             ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero

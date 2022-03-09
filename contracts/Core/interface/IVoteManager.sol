@@ -21,25 +21,25 @@ interface IVoteManager {
      * @notice returns vote value of a collection reported by a particular staker
      * @param epoch in which the staker reveal this value
      * @param stakerId id of the staker
-     * @param activeCollectionIndex index of the collection
+     * @param leafId seq position of collection in merkle tree
      * @return vote value
      */
     function getVoteValue(
         uint32 epoch,
         uint32 stakerId,
-        uint16 activeCollectionIndex
+        uint16 leafId
     ) external view returns (uint32);
 
     /**
      * @notice returns vote weight of the value of the collection reported
      * @param epoch in which the staker reveal this value
-     * @param activeCollectionIndex index of the collection
+     * @param leafId seq position of collection in merkle tree
      * @param voteValue one of the values of the collection being reported
      * @return vote weight of the vote
      */
     function getVoteWeight(
         uint32 epoch,
-        uint16 activeCollectionIndex,
+        uint16 leafId,
         uint32 voteValue
     ) external view returns (uint256);
 
@@ -62,10 +62,10 @@ interface IVoteManager {
     /**
      * @notice returns the total influence revealed of the collection
      * @param epoch when asset was being revealed
-     * @param activeCollectionIndex index of the collection
+     * @param leafId seq position of collection in merkle tree
      * @return total influence revealed of the collection
      */
-    function getTotalInfluenceRevealed(uint32 epoch, uint16 activeCollectionIndex) external view returns (uint256);
+    function getTotalInfluenceRevealed(uint32 epoch, uint16 leafId) external view returns (uint256);
 
     /**
      * @notice returns the epoch a staker last revealed their votes

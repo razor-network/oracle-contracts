@@ -201,7 +201,6 @@ describe('CollectionManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      // assertBNEqual(await collectionManager.getCollectionIndex(7), toBigNumber('0'), 'Incorrect index assignment');
     });
 
     it('should be able to reactivate collection', async function () {

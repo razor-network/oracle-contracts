@@ -280,7 +280,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /// @inheritdoc ICollectionManager
     function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[indexToIdRegistry[i]].tolerance;
+        return collections[leafIdToCollectionIdRegistry[i]].tolerance;
     }
 
     /// @inheritdoc ICollectionManager
@@ -318,18 +318,18 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
-        return idToIndexRegistry[id];
+    function getLeafIdOfCollection(uint16 id) external view override returns (uint16) {
+        return collectionIdToLeafIdRegistry[id];
     }
 
     /// @inheritdoc ICollectionManager
-    function getDelayedIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
-        return delayedIdToIndexRegistry[id];
+    function getLeafIdOfCollectionForLastEpoch(uint16 id) external view override returns (uint16) {
+        return collectionIdToLeafIdRegistryOfLastEpoch[id];
     }
 
     /// @inheritdoc ICollectionManager
-    function getIndexToIdRegistryValue(uint16 index) external view override returns (uint16) {
-        return indexToIdRegistry[index];
+    function getCollectionIdFromLeafId(uint16 leafId) external view override returns (uint16) {
+        return leafIdToCollectionIdRegistry[leafId];
     }
 
     /**
@@ -353,17 +353,17 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /**
-     * @dev updates the idToIndexRegistry and indexToIdRegistry everytime a collection has been activated/deactivated/created
+     * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
      */
     function _updateRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
-                idToIndexRegistry[i] = j;
-                indexToIdRegistry[j] = i;
+                collectionIdToLeafIdRegistry[i] = j;
+                leafIdToCollectionIdRegistry[j] = i;
                 j = j + 1;
             } else {
-                idToIndexRegistry[i] = 0;
+                collectionIdToLeafIdRegistry[i] = 0;
             }
         }
     }
@@ -372,10 +372,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
-                delayedIdToIndexRegistry[i] = j;
+                collectionIdToLeafIdRegistryOfLastEpoch[i] = j;
                 j = j + 1;
             } else {
-                delayedIdToIndexRegistry[i] = 0;
+                collectionIdToLeafIdRegistryOfLastEpoch[i] = 0;
             }
         }
     }

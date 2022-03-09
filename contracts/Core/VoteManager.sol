@@ -137,11 +137,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         influenceSnapshot[epoch][stakerId] = influence;
 
         for (uint16 i = 0; i < tree.values.length; i++) {
-            require(_isAssetAllotedToStaker(seed, i, tree.values[i].activeCollectionIndex), "Revealed asset not alloted");
+            require(_isAssetAllotedToStaker(seed, i, tree.values[i].leafId), "Revealed asset not alloted");
             // If Job Not Revealed before, like its not in same reveal batch of this
             // As it would be redundant to check
             // please note due to this job result cant be zero
-            if (votes[epoch][stakerId][tree.values[i].activeCollectionIndex] == 0) {
+            if (votes[epoch][stakerId][tree.values[i].leafId] == 0) {
                 // Check if asset value is zero
                 // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
                 require(tree.values[i].value != 0, "0 vote for assigned coll");
@@ -152,7 +152,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                         tree.proofs[i],
                         tree.root,
                         keccak256(abi.encode(tree.values[i].value)),
-                        tree.values[i].activeCollectionIndex,
+                        tree.values[i].leafId,
                         depth,
                         collectionManager.getNumActiveCollections()
                     ),
@@ -160,13 +160,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                 );
                 // TODO : Possible opt
                 /// Can we remove epochs ? would save lot of gas
-                votes[epoch][stakerId][tree.values[i].activeCollectionIndex] = tree.values[i].value;
-                voteWeights[epoch][tree.values[i].activeCollectionIndex][tree.values[i].value] =
-                    voteWeights[epoch][tree.values[i].activeCollectionIndex][tree.values[i].value] +
+                votes[epoch][stakerId][tree.values[i].leafId] = tree.values[i].value;
+                voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] =
+                    voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] +
                     influence;
-                totalInfluenceRevealed[epoch][tree.values[i].activeCollectionIndex] =
-                    totalInfluenceRevealed[epoch][tree.values[i].activeCollectionIndex] +
-                    influence;
+                totalInfluenceRevealed[epoch][tree.values[i].leafId] = totalInfluenceRevealed[epoch][tree.values[i].leafId] + influence;
             }
         }
 
@@ -225,20 +223,20 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function getVoteValue(
         uint32 epoch,
         uint32 stakerId,
-        uint16 activeCollectionIndex
+        uint16 leafId
     ) external view override returns (uint32) {
         //epoch -> stakerid -> asserId
-        return votes[epoch][stakerId][activeCollectionIndex];
+        return votes[epoch][stakerId][leafId];
     }
 
     /// @inheritdoc IVoteManager
     function getVoteWeight(
         uint32 epoch,
-        uint16 activeCollectionIndex,
+        uint16 leafId,
         uint32 voteValue
     ) external view override returns (uint256) {
-        //epoch -> activeCollectionIndex -> voteValue -> weight
-        return (voteWeights[epoch][activeCollectionIndex][voteValue]);
+        //epoch -> leafId -> voteValue -> weight
+        return (voteWeights[epoch][leafId][voteValue]);
     }
 
     /// @inheritdoc IVoteManager
@@ -254,8 +252,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     /// @inheritdoc IVoteManager
-    function getTotalInfluenceRevealed(uint32 epoch, uint16 activeCollectionIndex) external view override returns (uint256) {
-        return (totalInfluenceRevealed[epoch][activeCollectionIndex]);
+    function getTotalInfluenceRevealed(uint32 epoch, uint16 leafId) external view override returns (uint256) {
+        return (totalInfluenceRevealed[epoch][leafId]);
     }
 
     /// @inheritdoc IVoteManager
@@ -277,16 +275,16 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @dev an internal function used to check whether the particular collection was allocated to the staker
      * @param seed hash of salt and staker's secret
      * @param iterationOfLoop positioning of the collection allocation sequence
-     * @param activeCollectionIndex index of the collection that is being checked for allotment
+     * @param leafId leafId of the collection that is being checked for allotment
      */
     function _isAssetAllotedToStaker(
         bytes32 seed,
         uint16 iterationOfLoop,
-        uint16 activeCollectionIndex
+        uint16 leafId
     ) internal view initialized returns (bool) {
         // max= numAssets, prng_seed = seed+ iteration of for loop
         uint16 max = collectionManager.getNumActiveCollections();
-        if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == activeCollectionIndex) return true;
+        if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == leafId) return true;
         return false;
     }
 

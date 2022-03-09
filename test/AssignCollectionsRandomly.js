@@ -118,15 +118,15 @@ describe('AssignCollectionsRandomly', function () {
       // Dispute will happen on values now, and not stakers
       // as a staker, you have to pass sorted values
       const data = await getData(signers[1]);
-      const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
+      const validLeafIdToBeDisputed = (data.seqAllotedCollections)[0];
       const {
         sortedValues,
-      } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
+      } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
         collectionManager,
         epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
+      await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[19], blockManager, collectionManager);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
@@ -178,15 +178,15 @@ describe('AssignCollectionsRandomly', function () {
       // Give Sorted and FinaliseDispute on revealed asset.
       const epoch = await getEpoch();
       const data = await getData(signers[1]);
-      const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
+      const validLeafIdToBeDisputed = (data.seqAllotedCollections)[0];
       const {
         sortedValues,
-      } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
+      } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
         collectionManager,
         epoch);
-      await blockManager.connect(signers[19]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
+      await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       let collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[19], blockManager, collectionManager);
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
@@ -251,7 +251,7 @@ describe('AssignCollectionsRandomly', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-      blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 3);
+      await blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 3);
 
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
@@ -268,7 +268,7 @@ describe('AssignCollectionsRandomly', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-      blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 2, 1);
+      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 2, 1);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
       expect(blockIndexToBeConfirmed).to.eq(-1);
@@ -284,7 +284,7 @@ describe('AssignCollectionsRandomly', function () {
       await mineToNextState();
       const epoch = await getEpoch();
 
-      blockManager.disputeOnOrderOfIds(epoch, 0, 1, 2);
+      await blockManager.disputeOnOrderOfIds(epoch, 0, 1, 2);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
       expect(blockIndexToBeConfirmed).to.eq(-1);
