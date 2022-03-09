@@ -973,9 +973,9 @@ describe('Scenarios', async () => {
 
   it('Passing locally calculated median for proposing and disputing by a staker, dispute should work fine', async function () {
     await governance.connect(signers[0]).setToAssign(7);
-    await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-    await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-    await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+    await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
     await mineToNextState();
 
     await reveal(signers[1], 0, voteManager, stakeManager);
