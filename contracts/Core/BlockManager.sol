@@ -95,6 +95,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
+        // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(medians.length == collectionManager.getNumActiveCollections(), "invalid block proposed");
@@ -301,7 +302,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
         // Would revert if no block is proposed, or the asset specifed was not revealed
-        require(disputes[epoch][msg.sender].median > 0, "median can not be zero");
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
@@ -483,6 +483,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         uint256 stake = voteManager.getStakeSnapshot(epoch, stakerId);
+        // Below line can't be tested since it can't be assured if it returns true or false
         if (rand2 * (biggestStake) > stake * (2**32)) return (false);
         return true;
     }
