@@ -20,10 +20,8 @@ describe('Unit tests', function () {
         votes.push(i * 100);
       }
       for (let i = 1; i <= maxNodes; i++) {
-        // console.log(i);
         const votesThisItr = votes.slice(0, i);
         const tree = await createMerkle(votesThisItr);
-        // console.log(tree);
         const proofs = [];
         const medianIndex = [];
         const leaves = [];
@@ -34,7 +32,6 @@ describe('Unit tests', function () {
           leaves.push(ethers.utils.solidityKeccak256(['uint256'], [votes[j]]));
           medianIndex.push(j);
         }
-        // console.log('asdasd', proofs, tree[0][0], leaves, medianIndex, depth);
         expect(await Merkle.verifyMultiple(proofs, randomHash, leaves, medianIndex, depth, i)).to.be.false;
         expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, medianIndex, depth, i)).to.be.true;
       }

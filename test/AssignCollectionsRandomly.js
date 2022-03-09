@@ -101,7 +101,7 @@ describe('AssignCollectionsRandomly', function () {
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
       await reset();
-      await commit(signers[1], 0, voteManager, collectionManager, secret);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
       await reveal(signers[1], 0, voteManager, stakeManager);
@@ -161,9 +161,9 @@ describe('AssignCollectionsRandomly', function () {
 
     it('Staker Proposes Everything correctly, none of dispute should go through', async () => {
       // await mineToNextEpoch();
-      await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
-      await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd');
+      await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
       await mineToNextState();
 
       await reveal(signers[1], 0, voteManager, stakeManager);
@@ -210,6 +210,9 @@ describe('AssignCollectionsRandomly', function () {
       await blockManager.giveSorted(epoch, 6, [700]);
       await assertRevert(blockManager.finalizeDispute(epoch, 0), 'Invalid dispute');
 
+      const numActiveCollections = await collectionManager.getNumActiveCollections();
+      await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, numActiveCollections),
+        'Invalid MedianIndex value');
       // disputeForNonAssignedCollection
       await assertRevert(blockManager.connect(signers[10]).disputeForNonAssignedCollection(epoch, 0, 1),
         'Collec is revealed this epoch');
@@ -268,6 +271,8 @@ describe('AssignCollectionsRandomly', function () {
       const epoch = await getEpoch();
 
       await blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6);
+      await assertRevert(blockManager.connect(signers[19]).disputeForNonAssignedCollection(epoch, 0, 6),
+        'Block already has been disputed');
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
 
@@ -287,6 +292,8 @@ describe('AssignCollectionsRandomly', function () {
       const epoch = await getEpoch();
 
       blockManager.disputeForProposedCollectionIds(epoch, 0);
+      const tx = blockManager.disputeForProposedCollectionIds(epoch, 0);
+      await assertRevert(tx, 'Block already has been disputed');
 
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
