@@ -1905,7 +1905,7 @@ describe('StakeManager', function () {
         await mineToNextEpoch();
       }
 
-      await commit(signers[17], 0, voteManager, collectionManager, secret);
+      await commit(signers[17], 0, voteManager, collectionManager, secret, blockManager);
 
       staker = await stakeManager.getStaker(stakerId);
       prevStake = staker.stake;
