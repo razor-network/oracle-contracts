@@ -97,4 +97,7 @@ module.exports = {
   mocha: {
     timeout: 50000,
   },
+  dodoc: {
+    runOnCompile: false,
+  },
 };
