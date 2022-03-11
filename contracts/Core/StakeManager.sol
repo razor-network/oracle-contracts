@@ -321,7 +321,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId The Id of staker associated with sRZR which user want to initiateWithdraw
      */
     function initiateWithdraw(uint32 stakerId) external initialized whenNotPaused {
-        State currentState = _getState();
+        State currentState = _getState(buffer);
         require(currentState != State.Propose, "Unstake: NA Propose");
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 

@@ -18,7 +18,7 @@ const {
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  getEpoch, tokenAmount, toBigNumber,
+  getEpoch, tokenAmount, toBigNumber, getState
 } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
@@ -255,6 +255,7 @@ describe('Access Control Test', async () => {
     const assetCreatorHash = COLLECTION_MODIFIER_ROLE;
     await collectionManager.grantRole(assetCreatorHash, signers[0].address);
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
+    await mineToNextEpoch();
     await mineToNextState();
     await collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2');
     await collectionManager.revokeRole(assetCreatorHash, signers[0].address);
@@ -283,6 +284,7 @@ describe('Access Control Test', async () => {
     await collectionManager.grantRole(assetCreatorHash, signers[0].address);
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     const collectionName = 'Test Collection2';
+    await mineToNextEpoch();
     await mineToNextState();
     await mineToNextState();
     await mineToNextState();
@@ -348,9 +350,11 @@ describe('Access Control Test', async () => {
 
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/2', 'selector/2', 'test2');
-    await mineToNextState();// propose
-    await mineToNextState();// dispute
-    await mineToNextState();// confirm
+    await mineToNextEpoch();
+    await mineToNextState();
+    await mineToNextState();
+    await mineToNextState();
+    await mineToNextState();
     await collectionManager.createCollection(500, 1, 1, [1, 2], 'test');
 
     await collectionManager.updateCollection(1, 500, 2, -2, [1, 2]);

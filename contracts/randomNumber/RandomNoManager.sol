@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+import "../Core/parameters/child/RandomNoManagerParams.sol";
 import "../Core/parameters/ACL.sol";
 import "./IRandomNoClient.sol";
 import "./IRandomNoProvider.sol";
@@ -13,7 +14,7 @@ import "./RandomNoStorage.sol";
  *  @notice : Allows clients to register for random no, and pull it once available
  */
 
-contract RandomNoManager is Initializable, StateManager, RandomNoStorage, ACL, IRandomNoClient, IRandomNoProvider {
+contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
     event RandomNumberAvailable(uint32 epoch);
 
     /**
@@ -26,7 +27,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, ACL, I
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
         uint32 epoch = _getEpoch();
-        State state = _getState();
+        State state = _getState(buffer);
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
         // slither-disable-next-line incorrect-equality

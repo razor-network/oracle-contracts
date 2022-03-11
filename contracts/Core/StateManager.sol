@@ -20,38 +20,43 @@ contract StateManager is Constants {
     /**
      * @notice a check to ensure the function was called in the state specified
      */
-    modifier checkState(State state) {
+    modifier checkState(State state, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(), "incorrect state");
+        require(state == _getState(buffer), "incorrect state");
         _;
     }
 
     /**
      * @notice a check to ensure the function was not called in the state specified
      */
-    modifier notState(State state) {
+    modifier notState(State state, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
-        require(state != _getState(), "incorrect state");
+        require(state != _getState(buffer), "incorrect state");
         _;
     }
 
     /** @notice a check to ensure the epoch value sent in the function is of the currect epoch
      * and was called in the state specified
      */
-    modifier checkEpochAndState(State state, uint32 epoch) {
+    modifier checkEpochAndState(State state, uint32 epoch, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
         require(epoch == _getEpoch(), "incorrect epoch");
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(), "incorrect state");
+        require(state == _getState(buffer), "incorrect state");
         _;
     }
 
     function _getEpoch() internal view returns (uint32) {
-        return (uint32(block.number) / (EPOCH_LENGTH));
+        return (uint32(block.timestamp) / (EPOCH_LENGTH));
     }
 
-    function _getState() internal view returns (State) {
-        uint8 state = uint8(((block.number) / (EPOCH_LENGTH / NUM_STATES)) % (NUM_STATES));
+    function _getState(uint8 buffer) internal view returns (State) {
+        uint8 lowerLimit = buffer;
+        uint8 upperLimit = uint8(EPOCH_LENGTH/NUM_STATES) - buffer;
+        if(block.timestamp % (EPOCH_LENGTH/NUM_STATES) > upperLimit || block.timestamp % ( EPOCH_LENGTH/NUM_STATES) < lowerLimit){
+            return State.Buffer;
+        }
+        uint8 state = uint8(((block.timestamp) / (EPOCH_LENGTH / NUM_STATES)) % (NUM_STATES));
         return State(state);
     }
 }

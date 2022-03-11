@@ -252,4 +252,16 @@ contract Governance is Initializable, ACL, Constants {
         emit ParameterChanged(msg.sender, "toAssign", _toAssign, block.timestamp);
         voteManagerParams.setToAssign(_toAssign);
     }
+
+    /**
+     * @notice chnaging the buffer length of all the contracts
+     * @dev can be called only by the the address that has the governance role
+     * @param _bufferLength updated value to be set for buffer
+     */
+     function setBufferLength(uint8 _bufferLength) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_bufferLength", _bufferLength, block.timestamp);
+        blockManagerParams.setBufferLength(_bufferLength);
+        voteManagerParams.setBufferLength(_bufferLength);
+        collectionManagerParams.setBufferLength(_bufferLength);
+    }
 }

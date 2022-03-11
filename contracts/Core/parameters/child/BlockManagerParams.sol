@@ -7,6 +7,7 @@ import "../../storage/Constants.sol";
 abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
     /// @notice maximum number of best proposed blocks to be considered for dispute
     uint8 public maxAltBlocks = 5;
+    uint8 public buffer = 5;
     /// @notice reward given to staker whose block is confirmed
     uint256 public blockReward = 100 * (10**18);
     /// @notice minimum amount of stake required to participate
@@ -16,6 +17,11 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
     function setMaxAltBlocks(uint8 _maxAltBlocks) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         maxAltBlocks = _maxAltBlocks;
+    }
+
+    function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE){
+        // slither-disable-next-line events-maths
+        buffer = _bufferLength;
     }
 
     /// @inheritdoc IBlockManagerParams

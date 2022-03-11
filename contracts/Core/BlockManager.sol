@@ -89,7 +89,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
-    ) external initialized checkEpochAndState(State.Propose, epoch) {
+    ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
@@ -123,7 +123,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint16 medianIndex,
         uint32[] memory sortedValues
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch,buffer) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, medianIndex) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
@@ -156,7 +156,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * and they can start again
      * @param epoch in which the dispute was setup and raised
      */
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
@@ -164,7 +164,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @notice claimBlockReward() is to be called by the selected staker whose proposed block has the lowest iteration
      * and is valid. This will confirm the block and rewards the selected staker with the block reward
      */
-    function claimBlockReward() external initialized checkState(State.Confirm) {
+    function claimBlockReward() external initialized checkState(State.Confirm, buffer) {
         uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
@@ -209,7 +209,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestStakerId
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
@@ -233,7 +233,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 medianIndex
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
         require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
 
@@ -275,7 +275,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     // so as its dependant on user input, it can exploited
     // to solve so, will need to have follwoing dispute
 
-    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
 
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
@@ -295,7 +295,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param epoch in which the dispute was setup
      * @param blockIndex index of the block that is to be disputed
      */
-    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
             "TIR is wrong"
