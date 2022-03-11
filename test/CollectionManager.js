@@ -168,12 +168,6 @@ describe('CollectionManager', function () {
       await assertRevert(tx, 'ID cannot be 0');
     });
 
-    it('should not be able to get the active status of any asset which is not a collection', async function () {
-      const numCollections = await collectionManager.getNumCollections();
-      const tx2 = collectionManager.getCollectionStatus(numCollections + 1);
-      await assertRevert(tx2, 'ID does not exist');
-    });
-
     it('should not be able to get the power of any collection which does not exists', async function () {
       const numCollections = await collectionManager.getNumCollections();
       const tx = collectionManager.getCollectionPower(numCollections + 1);
@@ -207,7 +201,6 @@ describe('CollectionManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      // assertBNEqual(await collectionManager.getCollectionIndex(7), toBigNumber('0'), 'Incorrect index assignment');
     });
 
     it('should be able to reactivate collection', async function () {

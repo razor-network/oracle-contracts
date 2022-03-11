@@ -13,10 +13,17 @@ contract CollectionStorage {
     /// @notice mapping for CollectionID -> Collection Info
     mapping(uint16 => Structs.Collection) public collections;
 
-    /// @notice mapping for collectionid -> index in block medians
-    mapping(uint16 => uint16) public idToIndexRegistry;
-    /// @notice mapping for index in block medians -> collectionid
-    mapping(uint16 => uint16) public indexToIdRegistry;
+    // For next epoch : Penalties
+    /// @notice delayed mappping collectionid -> leafId
+    mapping(uint16 => uint16) public collectionIdToLeafIdRegistryOfLastEpoch;
+
+    /// For this epoch : Disputes
+    /// @notice mapping for collectionid -> leafId
+    mapping(uint16 => uint16) public collectionIdToLeafIdRegistry;
+
+    /// @notice mapping for leafId -> collectionid
+    mapping(uint16 => uint16) public leafIdToCollectionIdRegistry;
+
     /// @notice mapping for name of collection in bytes32 -> collectionid
     mapping(bytes32 => uint16) public ids;
 

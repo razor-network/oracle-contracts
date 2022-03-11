@@ -98,7 +98,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
-        require(medians.length == collectionManager.getNumActiveCollections(), "invalid block proposed");
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
@@ -116,23 +115,23 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * giveSorted() needs to be called to setup the dispute where in, the correct median will be calculated based on the votes
      * reported by stakers
      * @param epoch in which the dispute was setup and raised
-     * @param medianIndex index of the collection that is to be disputed
+     * @param leafId index of the collection that is to be disputed
      * @param sortedValues values reported by staker for a collection in ascending order
      */
     function giveSorted(
         uint32 epoch,
-        uint16 medianIndex,
+        uint16 leafId,
         uint32[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
-        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, medianIndex) / 2;
+        require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
+        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
         if (disputes[epoch][msg.sender].accWeight == 0) {
-            disputes[epoch][msg.sender].medianIndex = medianIndex;
+            disputes[epoch][msg.sender].leafId = leafId;
         } else {
-            require(disputes[epoch][msg.sender].medianIndex == medianIndex, "MedianIndex not matching");
+            require(disputes[epoch][msg.sender].leafId == leafId, "leafId mismatch");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedValues.length; i++) {
@@ -141,7 +140,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
-            uint256 weight = voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+            uint256 weight = voteManager.getVoteWeight(epoch, leafId, sortedValues[i]);
             accWeight = accWeight + weight; // total influence revealed for this collection
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sortedValues[i];
@@ -178,7 +177,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
-            collectionManager.updateRegistry();
+            collectionManager.updateDelayedRegistry();
         }
     }
 
@@ -189,11 +188,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
             _confirmBlock(epoch - 1, stakerId);
         }
-
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch - 1) {
-            collectionManager.updateRegistry();
+            collectionManager.updateDelayedRegistry();
         }
     }
 
@@ -217,73 +215,107 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // Epoch X
-    // 0,1,2,3
-    // 1,2,3,4
-    // Deactivate 3
-
-    // Epoch X+1
-    // 0,1,2
-    // 1,2,4
-
-    // Only 1,2 revealed by stakers, in this epoch,
-    // so for 4 value should be used from previous
-    // Follwoing function allows dispute for so
-    function disputeForNonAssignedCollection(
+    /**
+     * @notice Dispute to prove that id should be absent, when its present in a proposed block.
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
+     */
+    function disputeCollectionIdShouldBeAbsent(
         uint32 epoch,
         uint8 blockIndex,
-        uint16 medianIndex
+        uint16 id,
+        uint256 postionOfCollectionInBlock
     ) external initialized checkEpochAndState(State.Dispute, epoch) {
-        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
-
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
-
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        // Step 1 : If its active collection, total influence revealed should be zero
+        if (collectionManager.getCollectionStatus(id)) {
+            // Get leafId from collectionId, as voting is done w.r.t leafIds
+            uint16 leafId = collectionManager.getLeafIdOfCollection(id);
+            uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, leafId);
+            require(totalInfluenceRevealed == 0, "Dispute: ID should be present");
+        }
+        // Step 2: Prove that given id is indeed present in block
+        require(proposedBlocks[epoch][blockId].ids[postionOfCollectionInBlock] == id, "Dispute: ID absent only");
 
-        uint16 currentId = proposedBlocks[epoch][blockId].ids[medianIndex];
-        uint16 oldIndex = collectionManager.getIdToIndexRegistryValue(currentId);
-        require(
-            proposedBlocks[epoch][blockId].medians[medianIndex] != blocks[epoch - 1].medians[oldIndex],
-            "Block proposed with corr medians"
-        );
         _executeDispute(epoch, blockIndex, blockId);
     }
 
-    // Epoch X
-    // 0,1,2,3
-    // 1,2,3,4
-    // Deactivate 3
-
-    // Epoch X+1
-    // 0,1,2
-    // 1,2,4
-
-    // Propose
-    // [1,2,4]
-    // [100,200,400]
-    // In Dispute I pass 2nd Index
-
-    // Here thing is there is nothing stopping me from passing any deactivated asset also in place of 4
-    // 1,2,3
-    // 100,200,300
-    // This will pass in disputeForNonAssignedCollection(), as indeed value is 300 for id 3 in last epoch
-    // Or even repeating same thing
-    // For ex. consider case when there are lot of assets
-    // 1,2,4,4,4,4,4
-    // 100,200,400,400,400.....
-    // so as its dependant on user input, it can exploited
-    // to solve so, will need to have follwoing dispute
-
-    function disputeForProposedCollectionIds(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+    /**
+     * @notice Dispute to prove that id should be present, when its not in a proposed block.
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     */
+    function disputeCollectionIdShouldBePresent(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint16 id
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
-
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        // Get leafId from collectionId, as voting is done w.r.t leafIds
+        uint16 leafId = collectionManager.getLeafIdOfCollection(id);
+        uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, leafId);
 
-        bytes32 proposedHash = keccak256(abi.encodePacked(proposedBlocks[epoch][blockId].ids));
-        bytes32 actualHash = collectionManager.getActiveCollectionsHash();
+        require(totalInfluenceRevealed != 0, "Dispute: ID should be absent");
 
-        require(proposedHash != actualHash, "Block proposed with corr ids");
+        Structs.Block memory _block = proposedBlocks[epoch][blockId];
+
+        // normal search
+        // for (uint256 i = 0; i < _block.ids.length; i++)
+        //         if (_block.ids[i] == id) {
+        //             toDispute = false;
+        //             break;
+        //         }
+
+        // binary search
+        // impl taken and modified from
+        // https://github.com/compound-finance/compound-protocol/blob/4a8648ec0364d24c4ecfc7d6cae254f55030d65f/contracts/Governance/Comp.sol#L207
+        uint256 lower = 0;
+        uint256 upper = _block.ids.length - 1;
+        bool toDispute = true;
+
+        while (upper > lower) {
+            uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+            uint16 _id = _block.ids[center];
+            if (_id == id) {
+                toDispute = false;
+                break;
+            } else if (_id < id) {
+                lower = center;
+            } else {
+                upper = center - 1;
+            }
+        }
+        if (_block.ids[lower] == id) toDispute = false;
+
+        require(toDispute, "Dispute: ID present only");
+        _executeDispute(epoch, blockIndex, blockId);
+    }
+
+    /**
+     * @notice Dispute to prove the ids passed or not sorted in ascend order, or there is duplication
+     * @param epoch in which the dispute was setup
+     * @param blockIndex index of the block that is to be disputed
+     * @param index0 lower
+     * @param index1 upper
+     *  Valid Block :
+     *  If index0 < index1 &&
+     *  value0 < value1
+     */
+    function disputeOnOrderOfIds(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint256 index0,
+        uint256 index1
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+        uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
+        require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
+        require(index0 < index1, "index1 not greater than index0 0");
+        require(proposedBlocks[epoch][blockId].ids[index0] >= proposedBlocks[epoch][blockId].ids[index1], "ID at i0 not gt than of i1");
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -294,21 +326,30 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * staker's stake depending on SlashNums
      * @param epoch in which the dispute was setup
      * @param blockIndex index of the block that is to be disputed
+     * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
      */
-    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function finalizeDispute(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint256 postionOfCollectionInBlock
+    ) external initialized checkEpochAndState(State.Dispute, epoch) {
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].medianIndex),
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].leafId),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
         // Would revert if no block is proposed, or the asset specifed was not revealed
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint16 medianIndex = disputes[epoch][msg.sender].medianIndex;
-        require(
-            proposedBlocks[epoch][blockId].medians[medianIndex] != disputes[epoch][msg.sender].median,
-            "Block proposed with same medians"
-        );
+        uint16 leafId = disputes[epoch][msg.sender].leafId;
+        // Get collection id from leafId, as propose happens w.r.t to ids
+        uint16 id = collectionManager.getCollectionIdFromLeafId(leafId);
+
+        Structs.Block memory _block = proposedBlocks[epoch][blockId];
+        require(_block.ids[postionOfCollectionInBlock] == id, "Wrong Coll Index passed");
+        uint32 proposedValue = proposedBlocks[epoch][blockId].medians[postionOfCollectionInBlock];
+
+        require(proposedValue != disputes[epoch][msg.sender].median, "Block proposed with same medians");
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -342,6 +383,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
+    /// @inheritdoc IBlockManager
+    function getLatestResults(uint16 id) external view override returns (uint32) {
+        return latestResults[id];
+    }
+
     /**
      * @notice an internal function in which the block is confirmed.
      * @dev The staker who confirms the block receives the block reward, creates the salt for the next epoch and stores
@@ -353,6 +399,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 blockId = sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)];
         blocks[epoch] = proposedBlocks[epoch][blockId];
         bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
+
+        Structs.Block memory _block = blocks[epoch];
+        for (uint256 i = 0; i < _block.ids.length; i++) {
+            latestResults[_block.ids[i]] = _block.medians[i];
+        }
 
         emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
 

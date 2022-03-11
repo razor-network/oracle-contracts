@@ -153,9 +153,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
+
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
-            _updateRegistry();
+            _updateDelayedRegistry();
         }
 
         if (!collections[id].active) {
@@ -166,6 +167,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
+        _updateRegistry();
+
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
         voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
     }
@@ -193,7 +196,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         // slither-disable-next-line incorrect-equality
         if (updateRegistryEpoch <= epoch) {
-            _updateRegistry();
+            _updateDelayedRegistry();
         }
 
         numCollections = numCollections + 1;
@@ -201,7 +204,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
 
         numActiveCollections = numActiveCollections + 1;
+
         updateRegistryEpoch = epoch + 1;
+        _updateRegistry();
+
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
@@ -235,8 +241,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function updateRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
-        _updateRegistry();
+    function updateDelayedRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
+        _updateDelayedRegistry();
     }
 
     /**
@@ -269,14 +275,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /// @inheritdoc ICollectionManager
     function getCollectionStatus(uint16 id) external view override returns (bool) {
-        require(id <= numCollections, "ID does not exist");
-
         return collections[id].active;
     }
 
     /// @inheritdoc ICollectionManager
     function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[indexToIdRegistry[i]].tolerance;
+        return collections[leafIdToCollectionIdRegistry[i]].tolerance;
     }
 
     /// @inheritdoc ICollectionManager
@@ -314,19 +318,24 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getIdToIndexRegistryValue(uint16 id) external view override returns (uint16) {
-        return idToIndexRegistry[id];
+    function getLeafIdOfCollection(uint16 id) external view override returns (uint16) {
+        return collectionIdToLeafIdRegistry[id];
     }
 
     /// @inheritdoc ICollectionManager
-    function getActiveCollectionsHash() external view override returns (bytes32 hash) {
-        hash = keccak256(abi.encodePacked(getActiveCollections()));
+    function getLeafIdOfCollectionForLastEpoch(uint16 id) external view override returns (uint16) {
+        return collectionIdToLeafIdRegistryOfLastEpoch[id];
+    }
+
+    /// @inheritdoc ICollectionManager
+    function getCollectionIdFromLeafId(uint16 leafId) external view override returns (uint16) {
+        return leafIdToCollectionIdRegistry[leafId];
     }
 
     /**
      * @return array of active collections
      */
-    function getActiveCollections() public view returns (uint16[] memory) {
+    function getActiveCollections() external view returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -340,25 +349,33 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
-        uint16 index = idToIndexRegistry[_id];
-        uint32 epoch = _getEpoch();
-        uint32[] memory medians = blockManager.getBlock(epoch - 1).medians;
-        int8 power = collections[_id].power;
-        return (medians[index], power);
+        return (blockManager.getLatestResults(_id), collections[_id].power);
     }
 
     /**
-     * @dev updates the idToIndexRegistry and indexToIdRegistry everytime a collection has been activated/deactivated/created
+     * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
      */
     function _updateRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
-                idToIndexRegistry[i] = j;
-                indexToIdRegistry[j] = i;
+                collectionIdToLeafIdRegistry[i] = j;
+                leafIdToCollectionIdRegistry[j] = i;
                 j = j + 1;
             } else {
-                idToIndexRegistry[i] = 0;
+                collectionIdToLeafIdRegistry[i] = 0;
+            }
+        }
+    }
+
+    function _updateDelayedRegistry() internal {
+        uint16 j = 0;
+        for (uint16 i = 1; i <= numCollections; i++) {
+            if (collections[i].active) {
+                collectionIdToLeafIdRegistryOfLastEpoch[i] = j;
+                j = j + 1;
+            } else {
+                collectionIdToLeafIdRegistryOfLastEpoch[i] = 0;
             }
         }
     }
