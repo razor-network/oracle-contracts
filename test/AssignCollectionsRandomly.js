@@ -75,7 +75,7 @@ describe('AssignCollectionsRandomly', function () {
         await collectionManager.createJob(weight, power, selectorType, name, selector, url);
         i++;
       }
-      while (Number(await getState() !== 4)) { await mineToNextState();}
+      while (Number(await getState() !== 4)) { await mineToNextState(); }
 
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c0');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');

@@ -18,7 +18,7 @@ const {
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
-  getEpoch, tokenAmount, toBigNumber, getState
+  getEpoch, tokenAmount, toBigNumber,
 } = require('./helpers/utils');
 
 describe('Access Control Test', async () => {
