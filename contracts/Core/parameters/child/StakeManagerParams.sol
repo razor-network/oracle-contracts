@@ -16,7 +16,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     /// @notice a boolean, if true, the default admin role can remove all the funds incase of emergency
     bool public escapeHatchEnabled = true;
 
-    uint8 buffer = 5;
+    uint8 public buffer = 5;
     /// @notice the number of epochs for which the sRZRs are locked for calling unstake()
     uint8 public unstakeLockPeriod = 1;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
