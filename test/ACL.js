@@ -392,6 +392,12 @@ describe('Access Control Test', async () => {
     assert(await governance.setBlockReward(5500), 'Admin not able to update BlockReward');
   });
 
+  it('Only Governer should able to update Buffer', async () => {
+    await assertRevert(governance.connect(signers[1]).setBlockReward(5500), expectedRevertMessage);
+    await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+    assert(await governance.setBufferLength(5), 'Admin not able to update BufferLength');
+  });
+
   it('Default Admin should able to change, New admin should able to grant/revoke', async () => {
     // Old admin should be able to grant admin role to another account
     await stakeManager.grantRole(DEFAULT_ADMIN_ROLE_HASH, signers[1].address);

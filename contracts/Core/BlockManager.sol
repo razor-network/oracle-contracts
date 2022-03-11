@@ -122,15 +122,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint16 leafId,
         uint32[] memory sortedValues
-<<<<<<< HEAD
-    ) external initialized checkEpochAndState(State.Dispute, epoch,buffer) {
-        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, medianIndex) / 2;
-=======
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
->>>>>>> 2c1462220fcb1d9cbf9143da6e82f4ef4d242b27
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
@@ -231,17 +225,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function disputeCollectionIdShouldBeAbsent(
         uint32 epoch,
         uint8 blockIndex,
-<<<<<<< HEAD
-        uint16 medianIndex
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
-        require(medianIndex <= (collectionManager.getNumActiveCollections() - 1), "Invalid MedianIndex value");
-        require(voteManager.getTotalInfluenceRevealed(epoch, medianIndex) == 0, "Collec is revealed this epoch");
-
-=======
         uint16 id,
         uint256 postionOfCollectionInBlock
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
->>>>>>> 2c1462220fcb1d9cbf9143da6e82f4ef4d242b27
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Step 1 : If its active collection, total influence revealed should be zero
@@ -267,7 +253,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 id
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Get leafId from collectionId, as voting is done w.r.t leafIds
@@ -325,7 +311,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint256 index0,
         uint256 index1
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(index0 < index1, "index1 not greater than index0 0");
@@ -342,15 +328,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param blockIndex index of the block that is to be disputed
      * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
      */
-<<<<<<< HEAD
-    function finalizeDispute(uint32 epoch, uint8 blockIndex) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
-=======
     function finalizeDispute(
         uint32 epoch,
         uint8 blockIndex,
         uint256 postionOfCollectionInBlock
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
->>>>>>> 2c1462220fcb1d9cbf9143da6e82f4ef4d242b27
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].leafId),
             "TIR is wrong"

@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "../../Initializable.sol";
 import "./interfaces/IBlockManagerParams.sol";
 import "./interfaces/IRewardManagerParams.sol";
+import "./interfaces/IRandomNoManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
@@ -21,6 +22,7 @@ contract Governance is Initializable, ACL, Constants {
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
     IStakeManager public stakeManager;
+    IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
 
@@ -45,7 +47,8 @@ contract Governance is Initializable, ACL, Constants {
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
-        address collectionManagerAddress
+        address collectionManagerAddress,
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         blockManagerParams = IBlockManagerParams(blockManagerAddress);
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
@@ -53,6 +56,7 @@ contract Governance is Initializable, ACL, Constants {
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
         stakeManager = IStakeManager(stakeManagerAddress);
+        randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
 
     /**
@@ -263,5 +267,6 @@ contract Governance is Initializable, ACL, Constants {
         blockManagerParams.setBufferLength(_bufferLength);
         voteManagerParams.setBufferLength(_bufferLength);
         collectionManagerParams.setBufferLength(_bufferLength);
+        randomNoManagerParams.setBufferLength(_bufferLength);
     }
 }
