@@ -19,7 +19,7 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
         maxAltBlocks = _maxAltBlocks;
     }
 
-    function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE){
+    function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         buffer = _bufferLength;
     }

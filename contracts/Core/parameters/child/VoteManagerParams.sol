@@ -5,7 +5,6 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
-
     uint8 public buffer = 5;
     /// @notice maximum number of collections that can be assigned to the staker
     uint16 public toAssign = 3;
@@ -23,6 +22,7 @@ abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
         // slither-disable-next-line events-maths
         toAssign = _toAssign;
     }
+
     function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only

@@ -38,7 +38,11 @@ contract StateManager is Constants {
     /** @notice a check to ensure the epoch value sent in the function is of the currect epoch
      * and was called in the state specified
      */
-    modifier checkEpochAndState(State state, uint32 epoch, uint8 buffer) {
+    modifier checkEpochAndState(
+        State state,
+        uint32 epoch,
+        uint8 buffer
+    ) {
         // slither-disable-next-line incorrect-equality
         require(epoch == _getEpoch(), "incorrect epoch");
         // slither-disable-next-line incorrect-equality
@@ -52,8 +56,8 @@ contract StateManager is Constants {
 
     function _getState(uint8 buffer) internal view returns (State) {
         uint8 lowerLimit = buffer;
-        uint8 upperLimit = uint8(EPOCH_LENGTH/NUM_STATES) - buffer;
-        if(block.timestamp % (EPOCH_LENGTH/NUM_STATES) > upperLimit || block.timestamp % ( EPOCH_LENGTH/NUM_STATES) < lowerLimit){
+        uint8 upperLimit = uint8(EPOCH_LENGTH / NUM_STATES) - buffer;
+        if (block.timestamp % (EPOCH_LENGTH / NUM_STATES) > upperLimit || block.timestamp % (EPOCH_LENGTH / NUM_STATES) < lowerLimit) {
             return State.Buffer;
         }
         uint8 state = uint8(((block.timestamp) / (EPOCH_LENGTH / NUM_STATES)) % (NUM_STATES));

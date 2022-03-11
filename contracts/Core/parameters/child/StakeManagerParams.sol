@@ -125,6 +125,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         // slither-disable-next-line events-maths
         escapeHatchEnabled = false;
     }
+
     function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only

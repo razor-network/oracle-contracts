@@ -5,7 +5,6 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
-
     uint8 public buffer = 5;
     /// @notice maximum percentage deviation allowed from medians for all collections
     // slither-disable-next-line too-many-digits
