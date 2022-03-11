@@ -10,11 +10,11 @@ const { createMerkle, getProofPath } = require('./MerklePosAware');
 const store = {};
 const leavesOfTree = {};
 
-const calculateDisputesData = async (medianIndex, voteManager, stakeManager, collectionManager, epoch) => {
+const calculateDisputesData = async (leafId, voteManager, stakeManager, collectionManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   // const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
-  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, medianIndex);
+  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, leafId);
   const medianWeight = totalInfluenceRevealed.div(2);
   let median = toBigNumber('0');
 
@@ -26,10 +26,10 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
   const checkVotes = {};
   let weight;
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
-    vote = await voteManager.getVoteValue(epoch, i, medianIndex);
+    vote = await voteManager.getVoteValue(epoch, i, leafId);
     // if (vote[0] === epoch) {
     //   sortedStakers.push(i);
-    //   votes.push(vote[1][medianIndex]);
+    //   votes.push(vote[1][leafId]);
     if ((!(checkVotes[vote])) && (vote !== 0)) {
       sortedValues.push(vote);
     }
@@ -38,7 +38,7 @@ const calculateDisputesData = async (medianIndex, voteManager, stakeManager, col
   // median = accProd.div(totalInfluenceRevealed);
   sortedValues.sort();
   for (let i = 0; i < sortedValues.length; i++) {
-    weight = await voteManager.getVoteWeight(epoch, medianIndex, sortedValues[i]);
+    weight = await voteManager.getVoteWeight(epoch, leafId, sortedValues[i]);
     accWeight = accWeight.add(weight);
     if (Number(median) === 0 && accWeight.gt(medianWeight)) {
       median = sortedValues[i];
@@ -207,7 +207,7 @@ const adhocReveal = async (signer, deviation, voteManager) => {
   const sac = store[signer.address].seqAllotedCollections;
   for (let j = 0; j < sac.length; j++) {
     values.push({
-      medianIndex: sac[j],
+      leafId: sac[j],
       value: ((leavesOfTree[signer.address])[(sac)[j]]), // [300,400,200,100]
     });
     proofs.push(await getProofPath(store[signer.address].tree, Number(store[signer.address].seqAllotedCollections[j])));
@@ -232,6 +232,19 @@ const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, vo
     biggestStakerId);
 };
 
+const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager, collectionManager) => {
+  const { ids } = await blockManager.getProposedBlock(epoch, blockId);
+  // console.log(ids);
+  const dispute = await blockManager.disputes(epoch, signer.address);
+  const { leafId } = dispute;
+  const idToBeDisputed = await collectionManager.getCollectionIdFromLeafId(leafId);
+  // console.log(idToBeDisputed);
+  let collectionIndexInBlock = 0;
+  for (let i = 0; i < ids.length; i++) {
+    if (ids[i] === idToBeDisputed) { collectionIndexInBlock = i; break; }
+  }
+  return collectionIndexInBlock;
+};
 const getData = async (signer) => (store[signer.address]);
 
 module.exports = {
@@ -253,4 +266,5 @@ module.exports = {
   adhocReveal,
   adhocPropose,
   getData,
+  getCollectionIdPositionInBlock,
 };

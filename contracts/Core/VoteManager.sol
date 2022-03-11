@@ -34,10 +34,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @dev Emitted when a staker reveals
      * @param epoch epoch when the staker revealed
      * @param stakerId id of the staker that reveals
+     * @param influence influence of the staker
      * @param values of the collections assigned to the staker
      * @param timestamp time when the staker revealed
      */
-    event Revealed(uint32 epoch, uint32 stakerId, Structs.AssignedAsset[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -136,11 +137,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         influenceSnapshot[epoch][stakerId] = influence;
 
         for (uint16 i = 0; i < tree.values.length; i++) {
-            require(_isAssetAllotedToStaker(seed, i, tree.values[i].medianIndex), "Revealed asset not alloted");
+            require(_isAssetAllotedToStaker(seed, i, tree.values[i].leafId), "Revealed asset not alloted");
             // If Job Not Revealed before, like its not in same reveal batch of this
             // As it would be redundant to check
             // please note due to this job result cant be zero
-            if (votes[epoch][stakerId][tree.values[i].medianIndex] == 0) {
+            if (votes[epoch][stakerId][tree.values[i].leafId] == 0) {
                 // Check if asset value is zero
                 // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
                 require(tree.values[i].value != 0, "0 vote for assigned coll");
@@ -151,7 +152,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                         tree.proofs[i],
                         tree.root,
                         keccak256(abi.encode(tree.values[i].value)),
-                        tree.values[i].medianIndex,
+                        tree.values[i].leafId,
                         depth,
                         collectionManager.getNumActiveCollections()
                     ),
@@ -159,19 +160,17 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                 );
                 // TODO : Possible opt
                 /// Can we remove epochs ? would save lot of gas
-                votes[epoch][stakerId][tree.values[i].medianIndex] = tree.values[i].value;
-                voteWeights[epoch][tree.values[i].medianIndex][tree.values[i].value] =
-                    voteWeights[epoch][tree.values[i].medianIndex][tree.values[i].value] +
+                votes[epoch][stakerId][tree.values[i].leafId] = tree.values[i].value;
+                voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] =
+                    voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] +
                     influence;
-                totalInfluenceRevealed[epoch][tree.values[i].medianIndex] =
-                    totalInfluenceRevealed[epoch][tree.values[i].medianIndex] +
-                    influence;
+                totalInfluenceRevealed[epoch][tree.values[i].leafId] = totalInfluenceRevealed[epoch][tree.values[i].leafId] + influence;
             }
         }
 
         epochLastRevealed[stakerId] = epoch;
 
-        emit Revealed(epoch, stakerId, tree.values, block.timestamp);
+        emit Revealed(epoch, stakerId, influence, tree.values, block.timestamp);
     }
 
     //bounty hunter revealing secret in commit state
@@ -224,20 +223,20 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function getVoteValue(
         uint32 epoch,
         uint32 stakerId,
-        uint16 medianIndex
+        uint16 leafId
     ) external view override returns (uint32) {
         //epoch -> stakerid -> asserId
-        return votes[epoch][stakerId][medianIndex];
+        return votes[epoch][stakerId][leafId];
     }
 
     /// @inheritdoc IVoteManager
     function getVoteWeight(
         uint32 epoch,
-        uint16 medianIndex,
+        uint16 leafId,
         uint32 voteValue
     ) external view override returns (uint256) {
-        //epoch -> medianIndex -> voteValue -> weight
-        return (voteWeights[epoch][medianIndex][voteValue]);
+        //epoch -> leafId -> voteValue -> weight
+        return (voteWeights[epoch][leafId][voteValue]);
     }
 
     /// @inheritdoc IVoteManager
@@ -253,9 +252,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     /// @inheritdoc IVoteManager
-    function getTotalInfluenceRevealed(uint32 epoch, uint16 medianIndex) external view override returns (uint256) {
-        // epoch -> asseted
-        return (totalInfluenceRevealed[epoch][medianIndex]);
+    function getTotalInfluenceRevealed(uint32 epoch, uint16 leafId) external view override returns (uint256) {
+        return (totalInfluenceRevealed[epoch][leafId]);
     }
 
     /// @inheritdoc IVoteManager
@@ -277,16 +275,16 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @dev an internal function used to check whether the particular collection was allocated to the staker
      * @param seed hash of salt and staker's secret
      * @param iterationOfLoop positioning of the collection allocation sequence
-     * @param medianIndex index of the collection that is being checked for allotment
+     * @param leafId leafId of the collection that is being checked for allotment
      */
     function _isAssetAllotedToStaker(
         bytes32 seed,
         uint16 iterationOfLoop,
-        uint16 medianIndex
+        uint16 leafId
     ) internal view initialized returns (bool) {
         // max= numAssets, prng_seed = seed+ iteration of for loop
         uint16 max = collectionManager.getNumActiveCollections();
-        if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == medianIndex) return true;
+        if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == leafId) return true;
         return false;
     }
 

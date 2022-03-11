@@ -83,7 +83,7 @@ describe('Delegator', function () {
       const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
-      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
+      assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to get the correct number of active assets from delegator', async function () {
@@ -112,7 +112,7 @@ describe('Delegator', function () {
 
       await blockManager.connect(signers[5]).claimBlockReward();
 
-      assertBNEqual(await collectionManager.idToIndexRegistry(1), toBigNumber('0'));
+      assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to fetch the result of the desired id', async function () {
@@ -135,11 +135,13 @@ describe('Delegator', function () {
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();
-
+      // confirm
       for (let i = 2; i <= 9; i++) {
         await collectionManager.createCollection(500, 2, 1, [1, 2], `Test Collection${String(i)}`);
-        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
+        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(i - 1));
+        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistryOfLastEpoch(i), toBigNumber(0));
       }
+
       await mineToNextState();
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
@@ -155,22 +157,21 @@ describe('Delegator', function () {
       await mineToNextState();
       await blockManager.connect(signers[5]).claimBlockReward();
       for (let i = 1; i <= 9; i++) {
-        assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(i - 1));
+        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistryOfLastEpoch(i), toBigNumber(i - 1));
       }
     });
 
     it('getResult should give the right value after deactivation of assets', async function () {
-      let epoch = await getEpoch();
       await collectionManager.setCollectionStatus(false, 2);
       await collectionManager.setCollectionStatus(false, 3);
       await collectionManager.setCollectionStatus(false, 4);
+      const epoch = await getEpoch();
       assert(await collectionManager.getCollectionStatus(2) === false);
       assert(await collectionManager.getCollectionStatus(3) === false);
       assert(await collectionManager.getCollectionStatus(4) === false);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('6'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
-      epoch = await getEpoch();
 
       // const votes = [100, 500, 600, 700, 800, 900];
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
@@ -190,10 +191,10 @@ describe('Delegator', function () {
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
-          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(j));
+          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(j));
           j++;
         } else {
-          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
+          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber('0'));
         }
       }
       await mineToNextEpoch();
@@ -209,7 +210,7 @@ describe('Delegator', function () {
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();
-      let epoch = await getEpoch();
+      const epoch = await getEpoch();
       await collectionManager.setCollectionStatus(true, 2);
       await collectionManager.setCollectionStatus(true, 3);
       await collectionManager.setCollectionStatus(true, 4);
@@ -221,7 +222,6 @@ describe('Delegator', function () {
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('7'));
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
-      epoch = await getEpoch();
 
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
@@ -240,10 +240,10 @@ describe('Delegator', function () {
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
         if (collection.active === true) {
-          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber(j));
+          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(j));
           j++;
         } else {
-          assertBNEqual(await collectionManager.idToIndexRegistry(i), toBigNumber('0'));
+          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber('0'));
         }
       }
       await mineToNextEpoch();
