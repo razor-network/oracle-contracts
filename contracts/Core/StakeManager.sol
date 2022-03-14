@@ -207,6 +207,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param epoch The Epoch value for which staker is requesting to stake
      * @param amount The amount in RZR
      */
+     // slither-disable-next-line timestamp
     function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         uint256 totalSupply = 0;

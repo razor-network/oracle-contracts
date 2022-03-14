@@ -150,6 +150,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function setCollectionStatus(bool assetStatus, uint16 id)
         external
         onlyRole(COLLECTION_MODIFIER_ROLE)
+        // slither-disable-next-line timestamp
         checkState(State.Confirm, buffer)
     {
         require(id != 0, "ID cannot be 0");
