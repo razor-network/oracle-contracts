@@ -12,7 +12,7 @@ contract StateManager is Constants {
      * @notice a check to ensure the epoch value sent in the function is of the currect epoch
      */
     modifier checkEpoch(uint32 epoch) {
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         require(epoch == _getEpoch(), "incorrect epoch");
         _;
     }
@@ -21,7 +21,7 @@ contract StateManager is Constants {
      * @notice a check to ensure the function was called in the state specified
      */
     modifier checkState(State state, uint8 buffer) {
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         require(state == _getState(buffer), "incorrect state");
         _;
     }
@@ -30,7 +30,7 @@ contract StateManager is Constants {
      * @notice a check to ensure the function was not called in the state specified
      */
     modifier notState(State state, uint8 buffer) {
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         require(state != _getState(buffer), "incorrect state");
         _;
     }
@@ -43,9 +43,9 @@ contract StateManager is Constants {
         uint32 epoch,
         uint8 buffer
     ) {
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         require(epoch == _getEpoch(), "incorrect epoch");
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         require(state == _getState(buffer), "incorrect state");
         _;
     }
