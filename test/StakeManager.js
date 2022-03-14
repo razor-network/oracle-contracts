@@ -19,6 +19,8 @@ const {
   assertRevert,
   mineToNextEpoch,
   mineToNextState,
+  takeSnapshot,
+  restoreSnapshot,
 } = require('./helpers/testHelpers');
 const {
   commit, reveal, propose, reset,
@@ -34,35 +36,36 @@ const { setupContracts } = require('./helpers/testSetup');
 const { BigNumber } = ethers;
 
 describe('StakeManager', function () {
+  let signers;
+  let snapShotId;
+  let razor;
+  let blockManager;
+  let governance;
+  let stakeManager;
+  let rewardManager;
+  let voteManager;
+  let initializeContracts;
+  let stakedToken;
+  let stakedTokenFactory;
+  let collectionManager;
+
+  before(async () => {
+    ({
+      razor,
+      blockManager,
+      collectionManager,
+      stakeManager,
+      rewardManager,
+      governance,
+      voteManager,
+      initializeContracts,
+      stakedToken,
+      stakedTokenFactory,
+    } = await setupContracts());
+    signers = await ethers.getSigners();
+  });
+
   describe('RAZOR', async function () {
-    let signers;
-    let razor;
-    let blockManager;
-    let governance;
-    let stakeManager;
-    let rewardManager;
-    let voteManager;
-    let initializeContracts;
-    let stakedToken;
-    let stakedTokenFactory;
-    let collectionManager;
-
-    before(async () => {
-      ({
-        razor,
-        blockManager,
-        collectionManager,
-        stakeManager,
-        rewardManager,
-        governance,
-        voteManager,
-        initializeContracts,
-        stakedToken,
-        stakedTokenFactory,
-      } = await setupContracts());
-      signers = await ethers.getSigners();
-    });
-
     it('admin role should be granted', async () => {
       const isAdminRoleGranted = await stakeManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
       assert(isAdminRoleGranted === true, 'Admin role was not Granted');
@@ -92,7 +95,6 @@ describe('StakeManager', function () {
 
     it('should be able to initialize', async function () {
       await Promise.all(await initializeContracts());
-
       await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
       const url = 'http://testurl.com';
       const selector = 'selector';
@@ -136,6 +138,8 @@ describe('StakeManager', function () {
       await razor.transfer(signers[17].address, stake1);
       await razor.transfer(signers[18].address, stake1);
       await razor.transfer(signers[19].address, stake1);
+
+      snapShotId = await takeSnapshot();
     });
 
     it('should not allow non admin to pause', async function () {
@@ -2027,6 +2031,61 @@ describe('StakeManager', function () {
       assertBNEqual(prevTotalSupply.sub(penalty), await sToken.totalSupply(), 'sToken not burnt');
       assertBNEqual(lockedAmount, await sToken.balanceOf(stakeManager.address), 'sToken not burnt');
       assertBNEqual(epoch + 10, lock.unlockAfter, 'unlockAfter not changed');
+    });
+  });
+  describe('Stake Manager: part 2', async function () {
+    it('Mal staker should not be able to drain funds when resetting lock after he has initiated withdraw', async function () {
+      await restoreSnapshot(snapShotId);
+      const epoch = await getEpoch();
+      const stake1 = tokenAmount('420000');
+
+      await razor.connect(signers[1]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[1]).stake(epoch, stake1);
+      await stakeManager.connect(signers[1]).updateCommission(6);
+      await stakeManager.connect(signers[1]).setDelegationAcceptance('true');
+
+      await mineToNextEpoch();
+      const secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02581415c0823ea49d847ccb9cdd';
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+
+      await mineToNextEpoch();
+
+      const delegatedStake = tokenAmount('100000');
+      const staker = await stakeManager.getStaker(1);
+      await razor.connect(signers[2]).approve(stakeManager.address, delegatedStake);
+      await stakeManager.connect(signers[2]).delegate(staker.id, delegatedStake);
+      await razor.connect(signers[3]).approve(stakeManager.address, delegatedStake);
+      await stakeManager.connect(signers[3]).delegate(staker.id, delegatedStake);
+
+      await mineToNextEpoch();
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      // staker unstake
+      await sToken.connect(signers[1]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[1]).unstake(1, stake1);
+      // delegator unstake
+      await sToken.connect(signers[2]).approve(stakeManager.address, delegatedStake);
+      await stakeManager.connect(signers[2]).unstake(1, delegatedStake);
+      await sToken.connect(signers[3]).approve(stakeManager.address, delegatedStake);
+      await stakeManager.connect(signers[3]).unstake(1, delegatedStake);
+
+      assertBNEqual(await sToken.balanceOf(staker._address), toBigNumber('0'), 'whole amount not unstaked');
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), stake1.add(delegatedStake.mul(2)), 'sToken not transferred to stakeManager');
+
+      for (let i = 0; i <= UNSTAKE_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+
+      await stakeManager.connect(signers[1]).initiateWithdraw(1);
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), (delegatedStake.mul(2)), 'sToken not burnt');
+
+      for (let i = 0; i <= 10; i++) {
+        const tx = stakeManager.connect(signers[1]).resetUnstakeLock(1);
+        await assertRevert(tx, 'Withdraw Lock exists');
+      }
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), (delegatedStake.mul(2)), 'sToken being burnt incorrectly');
     });
   });
 });

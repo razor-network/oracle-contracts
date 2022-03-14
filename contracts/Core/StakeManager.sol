@@ -446,6 +446,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // Lock should be expired if you want to extend
         uint32 epoch = _getEpoch();
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
+        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw Lock exists");
 
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
