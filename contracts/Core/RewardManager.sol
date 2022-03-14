@@ -107,19 +107,21 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
 
+        uint16[] memory idsRevealedLastEpoch = _block.ids;
         uint32[] memory mediansLastEpoch = _block.medians;
 
-        if (mediansLastEpoch.length == 0) return;
+        if (idsRevealedLastEpoch.length == 0) return;
         uint64 penalty = 0;
-        for (uint16 i = 0; i < mediansLastEpoch.length; i++) {
+        for (uint16 i = 0; i < idsRevealedLastEpoch.length; i++) {
+            // get leaf id from collection id, as voting happens w.r.t leaf ids
             // slither-disable-next-line calls-loop
-            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, i);
-
+            uint16 leafId = collectionManager.getLeafIdOfCollectionForLastEpoch(idsRevealedLastEpoch[i]);
+            // slither-disable-next-line calls-loop
+            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, leafId);
             if (
                 voteValueLastEpoch != 0
             ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
             {
-                // uint32 voteWeightLastEpoch = voteManager.getVoteWeight(thisStaker.id, i);
                 uint32 medianLastEpoch = mediansLastEpoch[i];
                 if (medianLastEpoch == 0) continue;
                 uint64 prod = age * voteValueLastEpoch;
@@ -136,7 +138,6 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
                 }
             }
         }
-
         age = penalty > age ? 0 : age - uint32(penalty);
 
         stakeManager.setStakerAge(epoch, thisStaker.id, uint32(age), AgeChanged.VotingRewardOrPenalty);

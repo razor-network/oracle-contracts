@@ -28,7 +28,9 @@ const {
   getBiggestStakeAndId,
   getIteration,
   toBigNumber,
+  getCollectionIdPositionInBlock,
 } = require('../test/helpers/utils');
+const { proposeWithDeviation, commit, reveal } = require('../test/helpers/InternalEngine');
 
 describe('Scenarios', async () => {
   let signers;
@@ -971,107 +973,40 @@ describe('Scenarios', async () => {
 
   it('Passing locally calculated median for proposing and disputing by a staker, dispute should work fine', async function () {
     await governance.connect(signers[0]).setToAssign(7);
+    await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    await mineToNextState();
+
+    await reveal(signers[1], 0, voteManager, stakeManager);
+    await reveal(signers[2], 0, voteManager, stakeManager);
+    await reveal(signers[3], 0, voteManager, stakeManager);
+    await mineToNextState();
+
+    await proposeWithDeviation(signers[2], 10, stakeManager, blockManager, voteManager, collectionManager);
+    await mineToNextState();
+    // Give Sorted and FinaliseDispute on revealed asset.
     let epoch = await getEpoch();
-    const secret = [];
-    secret.push('0x747d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec');
-    secret.push('0x737d5c9e6d18ed1ebcebcebcebcebc8a0e9418555555c0823ea4ecececececec');
-    secret.push('0x757d5c9e6d18ed15ce7ac8dececece8abcbcbcbcbcbcbcb23ea4ecececececec');
-    // commit
-    for (let j = 1; j <= 3; j++) {
-      await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
-    }
-    await mineToNextState();
-    // reveal
-    for (let j = 1; j <= 3; j++) {
-      await adhocReveal(signers[j], 0, voteManager);
-    }
-    await mineToNextState();// propose
-    // calculating median
-    const mediansArray = [];
-    for (let i = 1; i <= 3; i++) {
-      const helper = [];
-      const data = await getData(signers[i]);
-      let { seqAllotedCollections } = data;
-      const numActiveCollections = await collectionManager.getNumActiveCollections();
-      for (let k = 0; k < numActiveCollections; k++) helper[k] = 0;
-      for (let i = 0; i < 7; i++) {
-        const medianIndex = seqAllotedCollections[i];
-        const median = await calculateDisputesData(medianIndex,
-          voteManager,
-          stakeManager,
-          collectionManager,
-          epoch);
-        helper[medianIndex] = median.median;
-      }
-      mediansArray.push(helper);
-      seqAllotedCollections = [];
-    }
-    const numActiveCollections = await collectionManager.getNumActiveCollections();
-    const wrongMedians = [];
-    for (let i = 0; i < mediansArray.length; i++) {
-      const helper = [];
-      for (let j = 0; j < numActiveCollections; j++) {
-        helper[j] = toBigNumber(mediansArray[i][j]).add(toBigNumber('70'));
-      }
-      wrongMedians.push(helper);
-    }
-    const ids = await collectionManager.getActiveCollections();
-
-    for (let j = 1; j <= 3; j++) {
-      const stakerId = await stakeManager.stakerIds(signers[j].address);
-      const staker = await stakeManager.getStaker(stakerId);
-
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (j === 2) {
-        await blockManager.connect(signers[j]).propose(epoch,
-          ids,
-          wrongMedians[j - 1],
-          iteration,
-          biggestStakerId);
-      } else {
-        await blockManager.connect(signers[j]).propose(epoch,
-          ids,
-          mediansArray[j - 1],
-          iteration,
-          biggestStakerId);
-      }
-    }
-    await mineToNextState();
-    epoch = await getEpoch();
-    const data = await getData(signers[2]);
-    const validMedianIndexToBeDisputed = (data.seqAllotedCollections)[0];
+    const data = await getData(signers[1]);
+    const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
     const {
-      totalInfluenceRevealed, sortedValues,
-    } = await calculateDisputesData(validMedianIndexToBeDisputed,
+      sortedValues,
+    } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
       voteManager,
       stakeManager,
       collectionManager,
       epoch);
-    await blockManager.connect(signers[4]).giveSorted(epoch, validMedianIndexToBeDisputed, sortedValues);
-    const dispute = await blockManager.disputes(epoch, signers[4].address);
-    assertBNEqual(dispute.medianIndex, validMedianIndexToBeDisputed, 'collectionId should match');
-    assertBNEqual(dispute.accWeight, totalInfluenceRevealed, 'totalInfluenceRevealed should match');
-    assertBNEqual(dispute.lastVisitedValue, sortedValues[sortedValues.length - 1], 'lastVisitedValue should match');
+    await blockManager.connect(signers[4]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
 
     epoch = await getEpoch();
     const stakerIdAccount = await stakeManager.stakerIds(signers[2].address);
     const stakeBeforeAcc2 = (await stakeManager.getStaker(stakerIdAccount)).stake;
     const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
-    let blockId;
-    let block;
-    let blockIndex;
-    for (let i = 0; i < (await blockManager.getNumProposedBlocks(epoch)); i++) {
-      blockId = await blockManager.sortedProposedBlockIds(epoch, i);
-      block = await blockManager.proposedBlocks(epoch, blockId);
-      if (toBigNumber(block.proposerId).eq(2)) {
-        blockIndex = i;
-        break;
-      }
-    }
+    const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
+      signers[4], blockManager, collectionManager);
+    await blockManager.connect(signers[4]).finalizeDispute(epoch, 0, collectionIndexInBlock);
 
-    await blockManager.connect(signers[4]).finalizeDispute(epoch, blockIndex);
     const slashNums = await stakeManager.slashNums();
     const bountySlashNum = slashNums[0];
     const burnSlashNum = slashNums[1];
@@ -1080,7 +1015,6 @@ describe('Scenarios', async () => {
     const bounty = stakeBeforeAcc2.mul(bountySlashNum).div(BASE_DENOMINATOR);
     const amountTobeKept = stakeBeforeAcc2.mul(keepSlashNum).div(BASE_DENOMINATOR);
     const slashPenaltyAmount = amountToBeBurned.add(bounty).add(amountTobeKept);
-
     assertBNEqual((await stakeManager.getStaker(stakerIdAccount)).stake, stakeBeforeAcc2.sub(slashPenaltyAmount), 'staker did not get slashed');
 
     // Bounty should be locked

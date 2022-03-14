@@ -10,12 +10,12 @@ library MerklePosAware {
         bytes32[][] memory proofs,
         bytes32 root,
         bytes32[] memory leaves,
-        uint16[] memory medianIndex,
+        uint16[] memory leafId,
         uint256 depth,
         uint16 maxAssets
     ) internal pure returns (bool) {
         for (uint256 i = 0; i < proofs.length; i++) {
-            if (!verify(proofs[i], root, leaves[i], medianIndex[i], depth, maxAssets)) return false;
+            if (!verify(proofs[i], root, leaves[i], leafId[i], depth, maxAssets)) return false;
         }
         return true;
     }
@@ -30,15 +30,15 @@ library MerklePosAware {
         bytes32[] memory proof,
         bytes32 root,
         bytes32 leaf,
-        uint16 medianIndex,
+        uint16 leafId,
         uint256 depth,
         uint16 maxAssets
     ) internal pure returns (bool) {
         bytes32 computedHash = leaf;
-        bytes memory seq = bytes(getSequence(medianIndex, depth));
+        bytes memory seq = bytes(getSequence(leafId, depth));
 
         uint256 lastNode = maxAssets;
-        uint256 myNode = medianIndex + 1;
+        uint256 myNode = leafId + 1;
         uint256 j = depth;
         uint256 i = 0;
         while (j > 0) {
@@ -64,11 +64,11 @@ library MerklePosAware {
         return computedHash == root;
     }
 
-    function getSequence(uint256 medianIndex, uint256 depth) internal pure returns (bytes memory) {
+    function getSequence(uint256 leafId, uint256 depth) internal pure returns (bytes memory) {
         bytes memory output = new bytes(depth);
         for (uint8 i = 0; i < depth; i++) {
-            output[depth - 1 - i] = (medianIndex % 2 == 1) ? bytes1("1") : bytes1("0");
-            medianIndex /= 2;
+            output[depth - 1 - i] = (leafId % 2 == 1) ? bytes1("1") : bytes1("0");
+            leafId /= 2;
         }
         return output;
     }
