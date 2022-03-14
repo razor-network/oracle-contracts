@@ -198,7 +198,7 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
 
       // Give Sorted and FinaliseDispute on non-revealed asset
-      await blockManager.giveSorted(epoch, 2, [300]);
+      await blockManager.giveSorted(epoch, 5, [600]);
       collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[0], blockManager, collectionManager);
       await assertRevert(blockManager.finalizeDispute(epoch, 0, collectionIndexInBlock), 'Invalid dispute');
@@ -206,19 +206,19 @@ describe('AssignCollectionsRandomly', function () {
       // disputeForProposedCollectionIds
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 1), 'Dispute: ID present only');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 2), 'Dispute: ID present only');
-      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 6), 'Dispute: ID present only');
+      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 6), 'Dispute: ID should be absent');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 7), 'Dispute: ID present only');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 3), 'Dispute: ID should be absent');
-      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 4), 'Dispute: ID should be absent');
-      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 5), 'Dispute: ID should be absent');
+      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 4), 'Dispute: ID present only');
+      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 5), 'Dispute: ID present only');
 
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0), 'Dispute: ID should be present');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 2, 0), 'Dispute: ID should be present');
-      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 6, 0), 'Dispute: ID should be present');
+      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 6, 0), 'Dispute: ID absent only');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 7, 0), 'Dispute: ID should be present');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 3, 0), 'Dispute: ID absent only');
-      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 4, 0), 'Dispute: ID absent only');
-      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 5, 0), 'Dispute: ID absent only');
+      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 4, 0), 'Dispute: ID should be present');
+      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 5, 0), 'Dispute: ID should be present');
       // the id itself doesnt exist
       await assertRevert(blockManager.disputeOnOrderOfIds(epoch, 0, 1, 0), 'index1 not greater than index0 0');
       await assertRevert(blockManager.disputeOnOrderOfIds(epoch, 0, 0, 1), 'ID at i0 not gt than of i1');
