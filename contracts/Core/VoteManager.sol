@@ -135,9 +135,9 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
 
         uint256 influence = stakeManager.getInfluence(stakerId);
         influenceSnapshot[epoch][stakerId] = influence;
-
+        uint16 max = collectionManager.getNumActiveCollections();
         for (uint16 i = 0; i < tree.values.length; i++) {
-            require(_isAssetAllotedToStaker(seed, i, tree.values[i].leafId), "Revealed asset not alloted");
+            require(_isAssetAllotedToStaker(seed, i, max, tree.values[i].leafId), "Revealed asset not alloted");
             // If Job Not Revealed before, like its not in same reveal batch of this
             // As it would be redundant to check
             // please note due to this job result cant be zero
@@ -280,10 +280,10 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function _isAssetAllotedToStaker(
         bytes32 seed,
         uint16 iterationOfLoop,
+        uint16 max,
         uint16 leafId
     ) internal view initialized returns (bool) {
         // max= numAssets, prng_seed = seed+ iteration of for loop
-        uint16 max = collectionManager.getNumActiveCollections();
         if (_prng(keccak256(abi.encode(seed, iterationOfLoop)), max) == leafId) return true;
         return false;
     }
