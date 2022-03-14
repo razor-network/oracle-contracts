@@ -51,7 +51,7 @@ contract StateManager is Constants {
     }
 
     function _getEpoch() internal view returns (uint32) {
-        // slither-disable-next-line timestamp,weak-prng
+        // slither-disable-next-line timestamp
         return (uint32(block.timestamp) / (EPOCH_LENGTH));
     }
 
