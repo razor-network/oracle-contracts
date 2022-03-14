@@ -89,8 +89,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Propose, epoch, buffer)
+    {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
@@ -123,8 +127,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint16 leafId,
         uint32[] memory sortedValues
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
@@ -165,7 +173,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @notice claimBlockReward() is to be called by the selected staker whose proposed block has the lowest iteration
      * and is valid. This will confirm the block and rewards the selected staker with the block reward
      */
-     // slither-disable-next-line timestamp
+    // slither-disable-next-line timestamp
     function claimBlockReward() external initialized checkState(State.Confirm, buffer) {
         uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
@@ -210,8 +218,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestStakerId
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
@@ -231,8 +243,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint16 id,
         uint256 postionOfCollectionInBlock
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Step 1 : If its active collection, total influence revealed should be zero
@@ -258,8 +274,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 id
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Get leafId from collectionId, as voting is done w.r.t leafIds
@@ -317,8 +337,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint256 index0,
         uint256 index1
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(index0 < index1, "index1 not greater than index0 0");
@@ -339,8 +363,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint256 postionOfCollectionInBlock
+    )
+        external
         // slither-disable-next-line timestamp
-    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
+        initialized
+        checkEpochAndState(State.Dispute, epoch, buffer)
+    {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].leafId),
             "TIR is wrong"
