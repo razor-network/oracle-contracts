@@ -28,21 +28,31 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @dev Emitted when a block is confirmed
      * @param epoch epoch when the block was confirmed
      * @param stakerId id of the staker that confirmed the block
+     * @param ids of the proposed block
      * @param medians of the confirmed block
      * @param timestamp time when the block was confirmed
      */
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint32[] medians, uint256 timestamp);
 
     /**
      * @dev Emitted when a block is proposed
      * @param epoch epoch when the block was proposed
      * @param stakerId id of the staker that proposed the block
+     * @param ids of the proposed block
      * @param medians of the proposed block
      * @param iteration staker's iteration
      * @param biggestStakerId id of the staker that has the highest stake amongst the stakers that revealed
      * @param timestamp time when the block was proposed
      */
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
+    event Proposed(
+        uint32 epoch,
+        uint32 stakerId,
+        uint16[] ids,
+        uint32[] medians,
+        uint256 iteration,
+        uint32 biggestStakerId,
+        uint256 timestamp
+    );
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -107,7 +117,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId, block.timestamp);
+        emit Proposed(epoch, proposerId, ids, medians, iteration, biggestStakerId, block.timestamp);
     }
 
     /**
@@ -405,7 +415,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             latestResults[_block.ids[i]] = _block.medians[i];
         }
 
-        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
 
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
