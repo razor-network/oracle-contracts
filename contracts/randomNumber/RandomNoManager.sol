@@ -30,7 +30,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
         State state = _getState(buffer);
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (state == State.Commit) {
             requests[requestId] = epoch;
         } else {

@@ -158,7 +158,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         uint32 epoch = _getEpoch();
 
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (updateRegistryEpoch <= epoch) {
             _updateDelayedRegistry();
         }
@@ -198,7 +198,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         uint32 epoch = _getEpoch();
 
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (updateRegistryEpoch <= epoch) {
             _updateDelayedRegistry();
         }

@@ -167,6 +167,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
+        // slither-disable-next-line timestamp
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
@@ -175,7 +176,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (updateRegistryEpoch <= epoch) {
             collectionManager.updateDelayedRegistry();
         }
@@ -189,7 +190,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (updateRegistryEpoch <= epoch - 1) {
             collectionManager.updateDelayedRegistry();
         }
