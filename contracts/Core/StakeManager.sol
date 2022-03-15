@@ -299,8 +299,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakerId != 0, "staker.id = 0");
         // slither-disable-next-line timestamp
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
-        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
         // slither-disable-next-line timestamp
+        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
         uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
