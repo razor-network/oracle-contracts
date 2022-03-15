@@ -190,7 +190,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality, timestamp
+        // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch - 1) {
             collectionManager.updateDelayedRegistry();
         }
