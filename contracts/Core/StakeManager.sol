@@ -325,7 +325,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         State currentState = _getState(buffer);
         // slither-disable-next-line timestamp
         require(currentState != State.Propose, "Unstake: NA Propose");
-        // slither-disable-next-line timestamp
+        stamp
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 
         require(stakerId != 0, "staker doesnt exist");
@@ -453,6 +453,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function resetUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
         uint32 epoch = _getEpoch();
+        // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw Lock exists");
 
