@@ -83,7 +83,9 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
 
 const getEpoch = async () => {
   const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  return blockNumber.div(EPOCH_LENGTH).toNumber();
+  const getCurrentBlock = await web3.eth.getBlock(blockNumber.toNumber());
+  const timestamp = toBigNumber(getCurrentBlock.timestamp);
+  return timestamp.div(EPOCH_LENGTH).toNumber();
 };
 
 const getVote = async (medians) => {
@@ -158,8 +160,18 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
 
 const getState = async () => {
   const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  const state = blockNumber.div(EPOCH_LENGTH.div(NUM_STATES));
-  return state.mod(NUM_STATES).toNumber();
+  const getCurrentBlock = await web3.eth.getBlock(blockNumber.toNumber());
+  const timestamp = toBigNumber(getCurrentBlock.timestamp);
+  const state = timestamp.div(EPOCH_LENGTH.div(NUM_STATES));
+  const lowerLimit = 5;
+  const upperLimit = EPOCH_LENGTH.div(NUM_STATES) - 5;
+  if (timestamp % (EPOCH_LENGTH.div(NUM_STATES)) > upperLimit || timestamp % (EPOCH_LENGTH.div(NUM_STATES)) < lowerLimit) {
+    return -1;
+  } else {
+    return state.mod(NUM_STATES).toNumber();
+  }
+
+  // change based on timestamp
 };
 
 const adhocCommit = async (medians, signer, deviation, voteManager, collectionManager, secret) => {

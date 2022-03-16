@@ -148,7 +148,16 @@ const getCollections = async () => {
 
 const currentState = async (numStates, stateLength) => {
   const blockNumber = await ethers.provider.getBlockNumber();
-  return Number(((BigNumber.from(blockNumber)).div(stateLength)).mod(numStates));
+  const getCurrentBlock = await ethers.provider.getBlock(Number(blockNumber));
+  const timestamp = BigNumber.from(getCurrentBlock.timestamp);
+  const state = timestamp.div(stateLength);
+  const lowerLimit = 5;
+  const upperLimit = stateLength - 5;
+  if (timestamp % (stateLength) > upperLimit || timestamp % (stateLength) < lowerLimit) {
+    return -1;
+  } else {
+    return Number(state.mod(numStates));
+  }
 };
 
 function sleep(ms) {

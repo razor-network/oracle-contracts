@@ -109,7 +109,7 @@ module.exports = async () => {
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
-    voteManagerAddress, collectionManagerAddress));
+    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
 
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));

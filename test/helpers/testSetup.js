@@ -60,7 +60,7 @@ const setupContracts = async () => {
     collectionManager.initialize(voteManager.address, blockManager.address),
     randomNoManager.initialize(blockManager.address),
     governance.initialize(blockManager.address, rewardManager.address, stakeManager.address,
-      voteManager.address, collectionManager.address),
+      voteManager.address, collectionManager.address, randomNoManager.address),
 
     collectionManager.grantRole(COLLECTION_CONFIRMER_ROLE, blockManager.address),
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),

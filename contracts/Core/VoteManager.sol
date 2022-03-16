@@ -77,7 +77,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param epoch epoch when the commitment was sent
      * @param commitment the commitment
      */
-    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch) {
+    function commit(uint32 epoch, bytes32 commitment) external initialized checkEpochAndState(State.Commit, epoch, buffer) {
         require(commitment != 0x0, "Invalid commitment");
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(!stakeManager.getStaker(stakerId).isSlashed, "VM : staker is slashed");
@@ -116,7 +116,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint32 epoch,
         Structs.MerkleTree memory tree,
         bytes32 secret
-    ) external initialized checkEpochAndState(State.Reveal, epoch) {
+    ) external initialized checkEpochAndState(State.Reveal, epoch, buffer) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
@@ -189,7 +189,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         bytes32 root,
         bytes32 secret,
         address stakerAddress
-    ) external initialized checkEpochAndState(State.Commit, epoch) {
+    ) external initialized checkEpochAndState(State.Commit, epoch, buffer) {
         require(msg.sender != stakerAddress, "cant snitch on yourself");
         uint32 thisStakerId = stakeManager.getStakerId(stakerAddress);
         require(thisStakerId > 0, "Staker does not exist");
