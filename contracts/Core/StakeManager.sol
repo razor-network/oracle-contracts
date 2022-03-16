@@ -297,7 +297,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function unstake(uint32 stakerId, uint256 sAmount) external initialized whenNotPaused {
         require(sAmount > 0, "Non-Positive Amount");
         require(stakerId != 0, "staker.id = 0");
-        // slither-disable-next-line timestamp
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
@@ -334,7 +333,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
-        // slither-disable-next-line timestamp
         require(lock.unlockAfter != 0, "Did not unstake");
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
