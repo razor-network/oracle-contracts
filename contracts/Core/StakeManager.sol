@@ -166,7 +166,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the extension took place
      */
-    event ExtendUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
     /**
      * @dev Emitted when the staker changes commission
@@ -290,7 +290,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /** @notice staker/delegator must call unstake() to lock their sRZRs
      * and should wait for params.withdraw_after period
      * after which he/she can call initiateWithdraw() in withdrawInitiationPeriod.
-     * If this period pass, lock expires and she will have to extendUnstakeLock() to able to initiateWithdraw again
+     * If this period pass, lock expires and she will have to resetUnstakeLock() to able to initiateWithdraw again
      * @param stakerId The Id of staker associated with sRZR which user want to unstake
      * @param sAmount The Amount in sRZR
      */
@@ -447,32 +447,30 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit CommissionChanged(stakerId, commission);
     }
 
-    /** @notice Used by anyone whose lock expired or who lost funds, and want to request initiateWithdraw
-     * Here we have added penalty to avoid repeating front-run unstake/witndraw attack
+    /**
+     * @notice Used by anyone whose has not initiated withdraw within the WithdrawInitiationPeriod
+     * or someone who just wants to extend unstake lock.
+     * Here we have added penalty to avoid repeating front-running
      */
-    function extendUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
+    function resetUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
         uint32 epoch = _getEpoch();
         // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
-        // slither-disable-next-line timestamp
-        require(
-            locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].unlockAfter + withdrawInitiationPeriod < epoch,
-            "Initiation Period Not yet passed"
-        );
+        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw Lock exists");
 
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         //Giving out the extendLock penalty
-        uint256 penalty = (lock.amount * extendUnstakeLockPenalty) / 100;
+        uint256 penalty = (lock.amount * resetUnstakeLockPenalty) / 100;
         uint256 rPenalty = _convertSRZRToRZR(penalty, staker.stake, sToken.totalSupply());
 
         lock.amount = lock.amount - penalty;
         staker.stake = staker.stake - rPenalty;
-        lock.unlockAfter = epoch;
-        emit ExtendUnstakeLock(stakerId, msg.sender, _getEpoch());
+        lock.unlockAfter = epoch + unstakeLockPeriod;
+        emit ResetUnstakeLock(stakerId, msg.sender, _getEpoch());
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
@@ -528,7 +526,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         razor.transfer(BURN_ADDRESS, amountToBeBurned);
     }
 
-    /** @notice Allows bountyHunter to redeem their bounty once its locking period is over
+    /**
+     * @notice Allows bountyHunter to redeem their bounty once its locking period is over
      * @param bountyId The ID of the bounty
      */
     function redeemBounty(uint32 bountyId) external {
