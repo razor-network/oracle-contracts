@@ -2,10 +2,8 @@ const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const {
   BLOCK_CONFIRMER_ROLE,
-  STAKER_ACTIVITY_UPDATER_ROLE,
   STAKE_MODIFIER_ROLE,
   REWARD_MODIFIER_ROLE,
-  COLLECTION_CONFIRMER_ROLE,
   REGISTRY_MODIFIER_ROLE,
   GOVERNANCE_ROLE,
   PAUSE_ROLE,
@@ -62,13 +60,11 @@ const setupContracts = async () => {
     governance.initialize(blockManager.address, rewardManager.address, stakeManager.address,
       voteManager.address, collectionManager.address, randomNoManager.address),
 
-    collectionManager.grantRole(COLLECTION_CONFIRMER_ROLE, blockManager.address),
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
     stakeManager.grantRole(PAUSE_ROLE, signers[0].address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, stakeManager.address),
-    stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, voteManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManager.address),
     stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManager.address),
