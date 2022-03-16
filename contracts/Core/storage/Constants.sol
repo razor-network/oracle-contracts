@@ -7,7 +7,8 @@ contract Constants {
         Reveal,
         Propose,
         Dispute,
-        Confirm
+        Confirm,
+        Buffer
     }
 
     enum StakeChanged {
@@ -24,7 +25,7 @@ contract Constants {
 
     uint8 public constant NUM_STATES = 5;
 
-    uint16 public constant EPOCH_LENGTH = 300;
+    uint16 public constant EPOCH_LENGTH = 1800;
 
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     // slither-disable-next-line too-many-digits

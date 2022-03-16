@@ -76,7 +76,11 @@ describe('Scenarios', async () => {
       i++;
     }
 
-    while (Number(await getState()) !== 4) { await mineToNextState(); }
+    while (Number(await getState()) !== 4) {
+      if (Number(await getState()) !== -1) {
+        await mineToNextState();
+      }
+    }
 
     let Cname;
     for (let i = 1; i <= 8; i++) {

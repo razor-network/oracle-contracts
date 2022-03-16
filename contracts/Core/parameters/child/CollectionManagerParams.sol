@@ -5,6 +5,7 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 
 abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
+    uint8 public buffer = 5;
     /// @notice maximum percentage deviation allowed from medians for all collections
     // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
@@ -16,5 +17,13 @@ abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Cons
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         maxTolerance = _maxTolerance;
+    }
+
+    function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-reason: Disabled across all params childs
+        // as they are being called by governance contract only
+        // and their before setting, we are emitting event
+        // slither-disable-next-line events-maths
+        buffer = _bufferLength;
     }
 }

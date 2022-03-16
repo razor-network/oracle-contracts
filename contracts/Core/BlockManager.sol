@@ -28,21 +28,31 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @dev Emitted when a block is confirmed
      * @param epoch epoch when the block was confirmed
      * @param stakerId id of the staker that confirmed the block
+     * @param ids of the proposed block
      * @param medians of the confirmed block
      * @param timestamp time when the block was confirmed
      */
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint32[] medians, uint256 timestamp);
 
     /**
      * @dev Emitted when a block is proposed
      * @param epoch epoch when the block was proposed
      * @param stakerId id of the staker that proposed the block
+     * @param ids of the proposed block
      * @param medians of the proposed block
      * @param iteration staker's iteration
      * @param biggestStakerId id of the staker that has the highest stake amongst the stakers that revealed
      * @param timestamp time when the block was proposed
      */
-    event Proposed(uint32 epoch, uint32 stakerId, uint32[] medians, uint256 iteration, uint32 biggestStakerId, uint256 timestamp);
+    event Proposed(
+        uint32 epoch,
+        uint32 stakerId,
+        uint16[] ids,
+        uint32[] medians,
+        uint256 iteration,
+        uint32 biggestStakerId,
+        uint256 timestamp
+    );
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -89,7 +99,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
-    ) external initialized checkEpochAndState(State.Propose, epoch) {
+    ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
         require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
         require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
@@ -107,7 +117,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, medians, iteration, biggestStakerId, block.timestamp);
+        emit Proposed(epoch, proposerId, ids, medians, iteration, biggestStakerId, block.timestamp);
     }
 
     /**
@@ -122,7 +132,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint16 leafId,
         uint32[] memory sortedValues
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
@@ -155,7 +165,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * and they can start again
      * @param epoch in which the dispute was setup and raised
      */
-    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch) {
+    function resetDispute(uint32 epoch) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         disputes[epoch][msg.sender] = Structs.Dispute(0, 0, 0, 0);
     }
 
@@ -163,10 +173,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @notice claimBlockReward() is to be called by the selected staker whose proposed block has the lowest iteration
      * and is valid. This will confirm the block and rewards the selected staker with the block reward
      */
-    function claimBlockReward() external initialized checkState(State.Confirm) {
+    function claimBlockReward() external initialized checkState(State.Confirm, buffer) {
         uint32 epoch = _getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
+        // slither-disable-next-line timestamp
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
 
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
@@ -175,7 +186,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality, timestamp
         if (updateRegistryEpoch <= epoch) {
             collectionManager.updateDelayedRegistry();
         }
@@ -189,7 +200,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality
+        // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch - 1) {
             collectionManager.updateDelayedRegistry();
         }
@@ -207,7 +218,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint32 correctBiggestStakerId
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
@@ -227,7 +238,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint16 id,
         uint256 postionOfCollectionInBlock
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Step 1 : If its active collection, total influence revealed should be zero
@@ -253,7 +264,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint16 id
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Get leafId from collectionId, as voting is done w.r.t leafIds
@@ -311,7 +322,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint8 blockIndex,
         uint256 index0,
         uint256 index1
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(index0 < index1, "index1 not greater than index0 0");
@@ -332,7 +343,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch,
         uint8 blockIndex,
         uint256 postionOfCollectionInBlock
-    ) external initialized checkEpochAndState(State.Dispute, epoch) {
+    ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(
             disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].leafId),
             "TIR is wrong"
@@ -405,7 +416,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             latestResults[_block.ids[i]] = _block.medians[i];
         }
 
-        emit BlockConfirmed(epoch, proposedBlocks[epoch][blockId].proposerId, proposedBlocks[epoch][blockId].medians, block.timestamp);
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
 
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
