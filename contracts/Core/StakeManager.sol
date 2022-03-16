@@ -325,7 +325,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         State currentState = _getState(buffer);
         // slither-disable-next-line timestamp
         require(currentState != State.Propose, "Unstake: NA Propose");
-        stamp
+        // slither-disable-next-line timestamp
         require(currentState != State.Dispute, "Unstake: NA Dispute");
 
         require(stakerId != 0, "staker doesnt exist");
