@@ -2,8 +2,6 @@ const { assert, expect } = require('chai');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   BLOCK_CONFIRMER_ROLE,
-  COLLECTION_CONFIRMER_ROLE,
-  STAKER_ACTIVITY_UPDATER_ROLE,
   STAKE_MODIFIER_ROLE,
   REWARD_MODIFIER_ROLE,
   COLLECTION_MODIFIER_ROLE,
@@ -61,16 +59,8 @@ describe('Access Control Test', async () => {
     const epoch = getEpoch();
     await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
 
-    // Checking if AssetConfirmer can access it
-    await blockManager.grantRole(COLLECTION_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
-
     // Checking if StakeModifier can access it
     await blockManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await blockManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(blockManager.confirmPreviousEpochBlock(epoch), expectedRevertMessage);
   });
 
@@ -89,16 +79,8 @@ describe('Access Control Test', async () => {
     // Checking if Anyone can access it
     await assertRevert(stakeManager.slash(1, 1, signers[2].address), expectedRevertMessage);
 
-    // Checking if AssetConfirmer can access it
-    await rewardManager.grantRole(COLLECTION_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.slash(1, 1, signers[2].address), expectedRevertMessage);
-
     // Checking if BlockConfirmer can access it
     await rewardManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.slash(1, 1, signers[2].address), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await rewardManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(stakeManager.slash(1, 1, signers[2].address), expectedRevertMessage);
   });
 
@@ -113,16 +95,8 @@ describe('Access Control Test', async () => {
     // Checking if Anyone can access it
     await assertRevert(rewardManager.giveBlockReward(1, 1), expectedRevertMessage);
 
-    // Checking if AssetConfirmer can access it
-    await rewardManager.grantRole(await COLLECTION_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(rewardManager.giveBlockReward(1, 1), expectedRevertMessage);
-
     // Checking if BlockConfirmer can access it
     await rewardManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(rewardManager.giveBlockReward(1, 1), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await rewardManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(rewardManager.giveBlockReward(1, 1), expectedRevertMessage);
   });
 
@@ -161,16 +135,8 @@ describe('Access Control Test', async () => {
     // Checking if Anyone can access it
     await assertRevert(rewardManager.givePenalties(1, 1), expectedRevertMessage);
 
-    // Checking if AssetConfirmer can access it
-    await rewardManager.grantRole(await COLLECTION_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(rewardManager.givePenalties(1, 1), expectedRevertMessage);
-
     // Checking if BlockConfirmer can access it
     await rewardManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(rewardManager.givePenalties(1, 1), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await rewardManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(rewardManager.givePenalties(1, 1), expectedRevertMessage);
   });
 
@@ -185,16 +151,8 @@ describe('Access Control Test', async () => {
     // Checking if Anyone can access it
     await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
-    // Checking if AssetConfirmer can access it
-    await stakeManager.grantRole(await COLLECTION_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
-
     // Checking if BlockConfirmer can access it
     await stakeManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(stakeManager.setStakerStake(1, 1, 1, 10, 10), expectedRevertMessage);
 
     // Checking if RewardModifier can access it
@@ -220,10 +178,6 @@ describe('Access Control Test', async () => {
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
     await assertRevert(collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await collectionManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1'), expectedRevertMessage);
   });
 
   it('createJob() should be accessable by only AssetCreator', async () => {
@@ -244,10 +198,6 @@ describe('Access Control Test', async () => {
 
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await collectionManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
   });
 
@@ -272,10 +222,6 @@ describe('Access Control Test', async () => {
 
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.setCollectionStatus(true, 1), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await collectionManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(collectionManager.setCollectionStatus(true, 1), expectedRevertMessage);
   });
 
@@ -306,10 +252,6 @@ describe('Access Control Test', async () => {
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
     await assertRevert(collectionManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await collectionManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.createCollection(500, 1, 1, [1, 2], 'test'), expectedRevertMessage);
   });
 
   it('createCollection() should be accessable by only AssetCreator', async () => {
@@ -337,10 +279,6 @@ describe('Access Control Test', async () => {
 
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
-
-    // Checking if StakerActivityUpdater can access it
-    await collectionManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
     await assertRevert(collectionManager.updateCollection(3, 500, 2, -2, [1, 2]), expectedRevertMessage);
   });
 
@@ -404,12 +342,6 @@ describe('Access Control Test', async () => {
 
     // New admin should be able to revoke admin access from old admin
     await stakeManager.connect(signers[1]).revokeRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
-
-    // Old admin should not able to assign roles anymore
-    await assertRevert(stakeManager.grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address), expectedRevertMessage);
-
-    // New admin should be able to assign roles
-    await stakeManager.connect(signers[1]).grantRole(STAKER_ACTIVITY_UPDATER_ROLE, signers[0].address);
   });
   it('Only Admin should be able to call updateAddress in Delegator', async () => {
     assert(await delegator.connect(signers[0]).updateAddress(signers[2].address));
