@@ -33,9 +33,6 @@ contract Constants {
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 public constant BLOCK_CONFIRMER_ROLE = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
 
-    // keccak256("STAKER_ACTIVITY_UPDATER_ROLE")
-    bytes32 public constant STAKER_ACTIVITY_UPDATER_ROLE = 0x4cd3070aaa07d03ab33731cbabd0cb27eb9e074a9430ad006c96941d71b77ece;
-
     // keccak256("STAKE_MODIFIER_ROLE")
     bytes32 public constant STAKE_MODIFIER_ROLE = 0xdbaaaff2c3744aa215ebd99971829e1c1b728703a0bf252f96685d29011fc804;
 
