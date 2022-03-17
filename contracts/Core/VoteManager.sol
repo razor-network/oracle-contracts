@@ -116,7 +116,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint32 epoch,
         Structs.MerkleTree memory tree,
         bytes32 secret
-    ) external initialized checkEpochAndState(State.Reveal, epoch, buffer,epochLength) {
+    ) external initialized checkEpochAndState(State.Reveal, epoch, buffer, epochLength) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");

@@ -41,5 +41,4 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
         // slither-disable-next-line events-maths
         epochLength = _epochLength;
     }
-    
 }

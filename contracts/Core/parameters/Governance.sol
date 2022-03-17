@@ -270,9 +270,8 @@ contract Governance is Initializable, ACL, Constants {
         randomNoManagerParams.setBufferLength(_bufferLength);
     }
 
-
     /**
-     * @notice changing epoch length 
+     * @notice changing epoch length
      * @dev can be called only by the the address that has the governance role
      * @param _epochLength updated value to be set for epoch
      */
@@ -284,5 +283,4 @@ contract Governance is Initializable, ACL, Constants {
         randomNoManagerParams.setEpochLength(_epochLength);
         stakeManagerParams.setEpochLength(_epochLength);
     }
-
 }

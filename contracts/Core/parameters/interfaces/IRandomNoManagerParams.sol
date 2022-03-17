@@ -10,7 +10,7 @@ interface IRandomNoManagerParams {
     function setBufferLength(uint8 _bufferLength) external;
 
     /**
-     * @notice changing epoch length 
+     * @notice changing epoch length
      * @dev can be called only by the the address that has the governance role
      * @param _epochLength updated value to be set for epoch
      */

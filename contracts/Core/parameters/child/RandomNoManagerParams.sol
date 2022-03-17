@@ -7,6 +7,7 @@ import "../../storage/Constants.sol";
 abstract contract RandomNoManagerParams is ACL, IRandomNoManagerParams, Constants {
     uint8 public buffer = 5;
     uint16 public epochLength = 1800;
+
     function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only

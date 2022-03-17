@@ -11,7 +11,7 @@ abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
     /// @notice minimum amount of stake required to participate
     uint256 public minStake = 20000 * (10**18);
     uint16 public epochLength = 1800;
-    
+
     /// @inheritdoc IVoteManagerParams
     function setMinStake(uint256 _minStake) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths

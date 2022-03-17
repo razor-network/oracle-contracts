@@ -10,7 +10,7 @@ abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Cons
     // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
     uint16 public epochLength = 1800;
-    
+
     /// @inheritdoc ICollectionManagerParams
     function setMaxTolerance(uint32 _maxTolerance) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs

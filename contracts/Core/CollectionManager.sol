@@ -33,11 +33,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param epoch in which the job was updated
      * @param timestamp time at which the job was updated
      */
-    event JobUpdated(
-        Structs.Job job,
-        uint32 epoch,
-        uint256 timestamp
-    );
+    event JobUpdated(Structs.Job job, uint32 epoch, uint256 timestamp);
 
     /**
      * @dev Emiited when there is a change in status of an existing collection
@@ -106,9 +102,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @notice Updates a Job in the network.
      * @param job struct of the job to be updated
      */
-    function updateJob(
-         Structs.Job memory job
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer, epochLength) {
+    function updateJob(Structs.Job memory job) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer, epochLength) {
         require(job.id != 0, "ID cannot be 0");
         require(jobs[job.id].id == job.id, "Job ID not present");
         require(job.weight <= 100, "Weight beyond max");

@@ -47,7 +47,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     /// @notice minimum amount of stake required to become a staker
     uint256 public minSafeRazor = 10000 * (10**18);
     uint16 public epochLength = 1800;
-    
+
     /// @inheritdoc IStakeManagerParams
     function setSlashParams(
         uint32 _bounty,

@@ -20,7 +20,11 @@ contract StateManager is Constants {
     /**
      * @notice a check to ensure the function was called in the state specified
      */
-    modifier checkState(State state, uint8 buffer, uint16 epochLength) {
+    modifier checkState(
+        State state,
+        uint8 buffer,
+        uint16 epochLength
+    ) {
         // slither-disable-next-line incorrect-equality
         require(state == _getState(buffer, epochLength), "incorrect state");
         _;
@@ -29,7 +33,11 @@ contract StateManager is Constants {
     /**
      * @notice a check to ensure the function was not called in the state specified
      */
-    modifier notState(State state, uint8 buffer, uint16 epochLength) {
+    modifier notState(
+        State state,
+        uint8 buffer,
+        uint16 epochLength
+    ) {
         // slither-disable-next-line incorrect-equality
         require(state != _getState(buffer, epochLength), "incorrect state");
         _;
