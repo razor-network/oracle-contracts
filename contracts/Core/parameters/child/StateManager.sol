@@ -1,19 +1,26 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./storage/Constants.sol";
+import "../../storage/Constants.sol";
 
 /** @title StateManager
  * @notice StateManager manages the state of the network
  */
 
-contract StateManager is Constants {
+abstract contract StateManager is Constants {
+
+    // @notice epoch = offset + (currentTimeStamp - timeStampOfCurrentEpochLengthUpdate)/ epochLength
+    uint32 public timeStampOfCurrentEpochLengthUpdate = 0 ;
+    uint32 public offset = 0;
+    uint16 public epochLength = 1800;
+    uint8 public buffer = 5;
+
     /**
      * @notice a check to ensure the epoch value sent in the function is of the currect epoch
      */
-    modifier checkEpoch(uint32 epoch, uint16 epochLength) {
+    modifier checkEpoch(uint32 epoch) {
         // slither-disable-next-line incorrect-equality
-        require(epoch == _getEpoch(epochLength), "incorrect epoch");
+        require(epoch == _getEpoch(), "incorrect epoch");
         _;
     }
 
@@ -21,12 +28,10 @@ contract StateManager is Constants {
      * @notice a check to ensure the function was called in the state specified
      */
     modifier checkState(
-        State state,
-        uint8 buffer,
-        uint16 epochLength
+        State state
     ) {
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(buffer, epochLength), "incorrect state");
+        require(state == _getState(), "incorrect state");
         _;
     }
 
@@ -34,12 +39,10 @@ contract StateManager is Constants {
      * @notice a check to ensure the function was not called in the state specified
      */
     modifier notState(
-        State state,
-        uint8 buffer,
-        uint16 epochLength
+        State state
     ) {
         // slither-disable-next-line incorrect-equality
-        require(state != _getState(buffer, epochLength), "incorrect state");
+        require(state != _getState(), "incorrect state");
         _;
     }
 
@@ -48,22 +51,20 @@ contract StateManager is Constants {
      */
     modifier checkEpochAndState(
         State state,
-        uint32 epoch,
-        uint8 buffer,
-        uint16 epochLength
+        uint32 epoch
     ) {
         // slither-disable-next-line incorrect-equality
-        require(epoch == _getEpoch(epochLength), "incorrect epoch");
+        require(epoch == _getEpoch(), "incorrect epoch");
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(buffer, epochLength), "incorrect state");
+        require(state == _getState(), "incorrect state");
         _;
     }
 
-    function _getEpoch(uint16 epochLength) internal view returns (uint32) {
-        return (uint32(block.timestamp) / (epochLength));
+    function _getEpoch() internal view returns (uint32) { 
+        return offset + uint32(block.timestamp - timeStampOfCurrentEpochLengthUpdate)/ epochLength;
     }
 
-    function _getState(uint8 buffer, uint16 epochLength) internal view returns (State) {
+    function _getState() internal view returns (State) {
         uint8 lowerLimit = buffer;
 
         uint8 upperLimit = uint8(epochLength / NUM_STATES) - buffer;

@@ -6,7 +6,6 @@ import "./IRandomNoClient.sol";
 import "./IRandomNoProvider.sol";
 import "../Initializable.sol";
 import "../lib/Random.sol";
-import "../Core/StateManager.sol";
 import "./RandomNoStorage.sol";
 
 /**
@@ -14,7 +13,7 @@ import "./RandomNoStorage.sol";
  *  @notice : Allows clients to register for random no, and pull it once available
  */
 
-contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
+contract RandomNoManager is Initializable, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
     event RandomNumberAvailable(uint32 epoch);
 
     /**
@@ -26,8 +25,8 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epoch = _getEpoch(epochLength);
-        State state = _getState(buffer, epochLength);
+        uint32 epoch = _getEpoch();
+        State state = _getState();
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
         // slither-disable-next-line incorrect-equality,timestamp
@@ -56,7 +55,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = _getEpoch(epochLength);
+        uint32 epoch = _getEpoch();
         return _generateRandomNumber(epoch - 1, 0);
     }
 

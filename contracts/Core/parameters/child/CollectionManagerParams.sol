@@ -2,14 +2,12 @@
 pragma solidity ^0.8.0;
 import "../interfaces/ICollectionManagerParams.sol";
 import "../ACL.sol";
-import "../../storage/Constants.sol";
+import "./StateManager.sol";
 
-abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Constants {
-    uint8 public buffer = 5;
+abstract contract CollectionManagerParams is ACL, StateManager, ICollectionManagerParams {
     /// @notice maximum percentage deviation allowed from medians for all collections
     // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
-    uint16 public epochLength = 1800;
 
     /// @inheritdoc ICollectionManagerParams
     function setMaxTolerance(uint32 _maxTolerance) external override onlyRole(GOVERNANCE_ROLE) {
@@ -31,5 +29,7 @@ abstract contract CollectionManagerParams is ACL, ICollectionManagerParams, Cons
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         epochLength = _epochLength;
+        timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
+        offset = _getEpoch();
     }
 }

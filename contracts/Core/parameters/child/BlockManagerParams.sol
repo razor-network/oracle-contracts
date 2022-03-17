@@ -2,17 +2,14 @@
 pragma solidity ^0.8.0;
 import "../interfaces/IBlockManagerParams.sol";
 import "../ACL.sol";
-import "../../storage/Constants.sol";
-
-abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
+import "./StateManager.sol";
+abstract contract BlockManagerParams is ACL, StateManager, IBlockManagerParams {
     /// @notice maximum number of best proposed blocks to be considered for dispute
     uint8 public maxAltBlocks = 5;
-    uint8 public buffer = 5;
     /// @notice reward given to staker whose block is confirmed
     uint256 public blockReward = 100 * (10**18);
     /// @notice minimum amount of stake required to participate
     uint256 public minStake = 20000 * (10**18);
-    uint16 public epochLength = 1800;
 
     /// @inheritdoc IBlockManagerParams
     function setMaxAltBlocks(uint8 _maxAltBlocks) external override onlyRole(GOVERNANCE_ROLE) {
@@ -40,5 +37,7 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         epochLength = _epochLength;
+        timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
+        offset = _getEpoch();
     }
 }
