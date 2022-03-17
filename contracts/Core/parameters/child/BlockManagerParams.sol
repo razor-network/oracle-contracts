@@ -12,6 +12,7 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
     uint256 public blockReward = 100 * (10**18);
     /// @notice minimum amount of stake required to participate
     uint256 public minStake = 20000 * (10**18);
+    uint16 public epochLength = 1800;
 
     /// @inheritdoc IBlockManagerParams
     function setMaxAltBlocks(uint8 _maxAltBlocks) external override onlyRole(GOVERNANCE_ROLE) {
@@ -35,4 +36,10 @@ abstract contract BlockManagerParams is ACL, IBlockManagerParams, Constants {
         // slither-disable-next-line events-maths
         minStake = _minStake;
     }
+
+    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        epochLength = _epochLength;
+    }
+    
 }

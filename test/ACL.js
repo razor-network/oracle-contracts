@@ -189,27 +189,46 @@ describe('Access Control Test', async () => {
   });
 
   it('updateJob() should not be accessable by anyone besides AssetCreator', async () => {
+    const updatedJob = {
+      id: 1,
+      selectorType: 0,
+      weight: 25,
+      power: 0,
+      name: 'hello',
+      selector: 'selector/2',
+      url: 'http://testurl.com/2',
+    };
     // Checking if Anyone can access it
-    await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
+    await assertRevert(collectionManager.updateJob(updatedJob), expectedRevertMessage);
 
     // Checking if BlockConfirmer can access it
     await collectionManager.grantRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
+    await assertRevert(collectionManager.updateJob(updatedJob), expectedRevertMessage);
 
     // Checking if StakeModifier can access it
     await collectionManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
-    await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
+    await assertRevert(collectionManager.updateJob(updatedJob), expectedRevertMessage);
   });
 
   it('updateJob() should be accessable by only AssetCreator', async () => {
+    const updatedJob = {
+      id: 1,
+      selectorType: 0,
+      weight: 25,
+      power: 0,
+      name: 'hello',
+      selector: 'selector/2',
+      url: 'http://testurl.com/2',
+    };
+
     const assetCreatorHash = COLLECTION_MODIFIER_ROLE;
     await collectionManager.grantRole(assetCreatorHash, signers[0].address);
     await collectionManager.createJob(25, 0, 0, 'http://testurl.com/1', 'selector/1', 'test1');
     await mineToNextEpoch();
     await mineToNextState();
-    await collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2');
+    await collectionManager.updateJob(updatedJob);
     await collectionManager.revokeRole(assetCreatorHash, signers[0].address);
-    await assertRevert(collectionManager.updateJob(1, 25, 2, 0, 'http://testurl.com/2', 'selector/2'), expectedRevertMessage);
+    await assertRevert(collectionManager.updateJob(updatedJob), expectedRevertMessage);
   });
 
   it('setCollectionStatus() should not be accessable by anyone besides AssetCreator', async () => {

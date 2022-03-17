@@ -46,7 +46,8 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint256 public minStake = 20000 * (10**18);
     /// @notice minimum amount of stake required to become a staker
     uint256 public minSafeRazor = 10000 * (10**18);
-
+    uint16 public epochLength = 1800;
+    
     /// @inheritdoc IStakeManagerParams
     function setSlashParams(
         uint32 _bounty,
@@ -132,5 +133,10 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         buffer = _bufferLength;
+    }
+
+    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        epochLength = _epochLength;
     }
 }

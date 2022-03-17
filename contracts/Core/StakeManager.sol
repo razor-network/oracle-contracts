@@ -207,7 +207,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param epoch The Epoch value for which staker is requesting to stake
      * @param amount The amount in RZR
      */
-    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch) whenNotPaused {
+    function stake(uint32 epoch, uint256 amount) external initialized checkEpoch(epoch, epochLength) whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         uint256 totalSupply = 0;
 
@@ -261,7 +261,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId The Id of staker whom you want to delegate
      */
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         // slither-disable-next-line timestamp
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
@@ -300,7 +300,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
@@ -322,7 +322,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId The Id of staker associated with sRZR which user want to initiateWithdraw
      */
     function initiateWithdraw(uint32 stakerId) external initialized whenNotPaused {
-        State currentState = _getState(buffer);
+        State currentState = _getState(buffer, epochLength);
         // slither-disable-next-line timestamp
         require(currentState != State.Propose, "Unstake: NA Propose");
         // slither-disable-next-line timestamp
@@ -330,7 +330,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(stakerId != 0, "staker doesnt exist");
         // slither-disable-next-line timestamp
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
         require(lock.unlockAfter != 0, "Did not unstake");
@@ -362,7 +362,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
         // slither-disable-next-line timestamp
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         require(stakerId != 0, "staker doesnt exist");
 
         Structs.Staker storage staker = stakers[stakerId];
@@ -434,7 +434,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             // slither-disable-next-line timestamp
             require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
@@ -452,7 +452,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     function resetUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw Lock exists");
@@ -468,7 +468,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         lock.amount = lock.amount - penalty;
         staker.stake = staker.stake - rPenalty;
         lock.unlockAfter = epoch + unstakeLockPeriod;
-        emit ResetUnstakeLock(stakerId, msg.sender, _getEpoch());
+        emit ResetUnstakeLock(stakerId, msg.sender, _getEpoch(epochLength));
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
@@ -529,7 +529,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param bountyId The ID of the bounty
      */
     function redeemBounty(uint32 bountyId) external {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = _getEpoch(epochLength);
         uint256 bounty = bountyLocks[bountyId].amount;
 
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
@@ -672,6 +672,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
-        emit ResetLock(stakerId, msg.sender, _getEpoch());
+        emit ResetLock(stakerId, msg.sender, _getEpoch(epochLength));
     }
 }

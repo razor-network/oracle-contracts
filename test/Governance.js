@@ -41,6 +41,7 @@ describe('Governance contract Test', async () => {
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
   const toAssign = toBigNumber('3');
+  const epochLength = toBigNumber('1800');
 
   before(async () => {
     ({
@@ -111,6 +112,9 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setToAssign(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setEpochLength('1');
     await assertRevert(tx, expectedRevertMessage);
   });
 
@@ -185,6 +189,16 @@ describe('Governance contract Test', async () => {
     const epochLimitForUpdateCommission = await stakeManager.epochLimitForUpdateCommission();
     assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
 
+    await governance.setEpochLength(toBigNumber('26'));
+    let _epochLength = await stakeManager.epochLength();
+    assertBNEqual(_epochLength, toBigNumber('26'));
+    _epochLength = await blockManager.epochLength();
+    assertBNEqual(_epochLength, toBigNumber('26'));
+    _epochLength = await voteManager.epochLength();
+    assertBNEqual(_epochLength, toBigNumber('26'));
+    _epochLength = await collectionManager.epochLength();
+    assertBNEqual(_epochLength, toBigNumber('26'));
+
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
 
@@ -255,5 +269,8 @@ describe('Governance contract Test', async () => {
 
     const toAssignValue = await voteManager.toAssign();
     assertBNEqual(toAssign, toAssignValue);
+
+    const epochLengthValue = await voteManager.epochLength();
+    assertBNEqual(epochLength, epochLengthValue);
   });
 });
