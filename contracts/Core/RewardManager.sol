@@ -56,10 +56,10 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint256 totalSupply = sToken.totalSupply();
         uint256 stakerSRZR = sToken.balanceOf(staker._address);
         uint256 delegatorShare = blockReward - ((blockReward * stakerSRZR) / totalSupply);
-        uint8 commissionApplicable = staker.commissionPercent < maxCommissionPercent ? staker.commissionPercent : maxCommissionPercent;
+        uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
         uint256 commission = (delegatorShare * commissionApplicable) / 100;
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + (blockReward - commission));
-        stakeManager.setStakerCommission(epoch, stakerId, CommissionChanged.CommissionAdded, staker.commission, commission);
+        stakeManager.setStakerStakerReward(epoch, stakerId, StakerRewardChanged.StakerRewardAdded, staker.commission, commission);
     }
 
     /// @inheritdoc IRewardManager

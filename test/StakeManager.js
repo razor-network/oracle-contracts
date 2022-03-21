@@ -562,7 +562,7 @@ describe('StakeManager', function () {
       assertBNNotEqual(staker.stake, newStake, 'Stake should have decreased due to inactivity penalty');
     });
 
-    it('Staker should not be able to unstake,withdraw,setDelegationAcceptance,updateCommissionPercent if the staker has not staked yet',
+    it('Staker should not be able to unstake,withdraw,setDelegationAcceptance,updateCommission if the staker has not staked yet',
       async function () {
         const amount = tokenAmount('100000');
 
@@ -574,7 +574,7 @@ describe('StakeManager', function () {
         await assertRevert(tx2, 'staker doesnt exist');
         const tx3 = stakeManager.connect(signers[7]).setDelegationAcceptance('true');
         await assertRevert(tx3, 'staker id = 0');
-        const tx4 = stakeManager.connect(signers[7]).updateCommissionPercent(7);
+        const tx4 = stakeManager.connect(signers[7]).updateCommission(7);
         await assertRevert(tx4, 'staker id = 0');
         const tx5 = stakeManager.connect(signers[7]).unlockWithdraw(stakerId);
         await assertRevert(tx5, 'staker doesnt exist');
@@ -598,46 +598,46 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Delegetion not accpected');
     });
 
-    it('Staker should not be able to updateCommissionPercent if it exceeds maximum limit', async function () {
-      const commRate = await stakeManager.maxCommissionPercent();
-      const tx = stakeManager.connect(signers[4]).updateCommissionPercent(commRate + 1);
-      await assertRevert(tx, 'Commission % exceeds maxlimit');
+    it('Staker should not be able to updateCommission if it exceeds maximum limit', async function () {
+      const commRate = await stakeManager.maxCommission();
+      const tx = stakeManager.connect(signers[4]).updateCommission(commRate + 1);
+      await assertRevert(tx, 'Commission exceeds maxlimit');
     });
 
     it('stakeManager setter functions should revert as expected', async function () {
       await stakeManager.grantRole(GOVERNANCE_ROLE, signers[1].address);
       let tx = stakeManager.connect(signers[1]).setMinSafeRazor(tokenAmount('200000'));
       await assertRevert(tx, 'minSafeRazor beyond minStake');
-      tx = stakeManager.connect(signers[1]).setMaxCommissionPercent(101);
-      await assertRevert(tx, 'Invalid Max Commission % Update');
+      tx = stakeManager.connect(signers[1]).setMaxCommission(101);
+      await assertRevert(tx, 'Invalid Max Commission Update');
       tx = stakeManager.connect(signers[1]).setSlashParams(toBigNumber('500000'), toBigNumber('9500000'), toBigNumber('500000'));
       await assertRevert(tx, 'params sum exceeds denominator');
     });
 
-    it('Staker should not be able to updateCommissionPercent if it exceeds the change limit which is delta commissionPercent', async function () {
-      const deltaCommissionPercent = 3;
-      await stakeManager.connect(signers[1]).updateCommissionPercent(4);
+    it('Staker should not be able to updateCommission if it exceeds the change limit which is delta commission', async function () {
+      const deltaCommission = 3;
+      await stakeManager.connect(signers[1]).updateCommission(4);
       await governance.grantRole(GOVERNER_ROLE, signers[0].address);
-      await governance.connect(signers[0]).setEpochLimitForUpdateCommissionPercent(5);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(5);
       for (let i = 0; i < 5; i++) await mineToNextEpoch();
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const staker = await stakeManager.getStaker(stakerId);
-      const currentCommissionPercent = staker.commissionPercent;
-      const commission = currentCommissionPercent + deltaCommissionPercent;
-      const tx = stakeManager.connect(signers[1]).updateCommissionPercent(commission + 1);
-      await assertRevert(tx, 'Invalid Commission % Update');
+      const currentCommission = staker.commission;
+      const commission = currentCommission + deltaCommission;
+      const tx = stakeManager.connect(signers[1]).updateCommission(commission + 1);
+      await assertRevert(tx, 'Invalid Commission Update');
     });
 
     it('Staker should be able to update commission', async function () {
       let staker = await stakeManager.getStaker(4);
       const commRate = 6;
-      await stakeManager.connect(signers[4]).updateCommissionPercent(commRate);
+      await stakeManager.connect(signers[4]).updateCommission(commRate);
       staker = await stakeManager.getStaker(4);
-      assertBNEqual(staker.commissionPercent, commRate, 'CommissionPercent rate is not equal to requested set rate ');
+      assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
     });
 
     it('Staker should not be able to update commission before reaching epoch limit', async function () {
-      const tx = stakeManager.connect(signers[4]).updateCommissionPercent(5);
+      const tx = stakeManager.connect(signers[4]).updateCommission(5);
       await assertRevert(tx, 'Invalid Epoch For Updation');
     });
 
@@ -1165,7 +1165,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[9].address, amount);
       await razor.connect(signers[9]).approve(stakeManager.address, amount);
       await stakeManager.connect(signers[9]).stake(epoch, amount);
-      await stakeManager.connect(signers[9]).updateCommissionPercent(4);
+      await stakeManager.connect(signers[9]).updateCommission(4);
       await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
       const stakerId = await stakeManager.stakerIds(signers[9].address);
 
@@ -1344,36 +1344,36 @@ describe('StakeManager', function () {
 
     it('staker should be able to decrease the commission by any amount not less than zero after epoch limit', async function () {
       let staker = await stakeManager.getStaker(4);
-      await governance.connect(signers[0]).setEpochLimitForUpdateCommissionPercent(5);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(5);
       for (let i = 0; i < 5; i++) {
         await mineToNextEpoch();
       }
-      const earlierCommissionPercent = 6; // Current CommissionPercent : 6% for staker 4
-      const updatedCommissionPercent = earlierCommissionPercent - 1; // 5%
-      await stakeManager.connect(signers[4]).updateCommissionPercent(updatedCommissionPercent);
+      const earlierCommission = 6; // Current Commission : 6% for staker 4
+      const updatedCommission = earlierCommission - 1; // 5%
+      await stakeManager.connect(signers[4]).updateCommission(updatedCommission);
       staker = await stakeManager.getStaker(4);
-      assertBNEqual(staker.commissionPercent, updatedCommissionPercent, 'CommissionPercent Should Decrease');
+      assertBNEqual(staker.commission, updatedCommission, 'Commission Should Decrease');
     });
     it('staker should be able to increase the commission by only alloted commission increase percentage after epoch limit', async function () {
       let staker = await stakeManager.getStaker(4);
-      await governance.connect(signers[0]).setEpochLimitForUpdateCommissionPercent(10);
+      await governance.connect(signers[0]).setEpochLimitForUpdateCommission(10);
       for (let i = 0; i < 10; i++) {
         await mineToNextEpoch();
       }
-      const earlierCommissionPercent = staker.commissionPercent; // Current CommissionPercent : 5% for staker 4
-      const updatedCommissionPercent = (earlierCommissionPercent + 2); // 7%
-      await stakeManager.connect(signers[4]).updateCommissionPercent(updatedCommissionPercent);
+      const earlierCommission = staker.commission; // Current Commission : 5% for staker 4
+      const updatedCommission = (earlierCommission + 2); // 7%
+      await stakeManager.connect(signers[4]).updateCommission(updatedCommission);
       staker = await stakeManager.getStaker(4);
-      assertBNEqual(staker.commissionPercent, updatedCommissionPercent, 'CommissionPercent Should Increase');
+      assertBNEqual(staker.commission, updatedCommission, 'Commission Should Increase');
     });
 
     it('Once the commision is set it can also be decreased to zero after the epoch limit', async function () {
       for (let i = 0; i < 10; i++) {
         await mineToNextEpoch();
       }
-      await stakeManager.connect(signers[4]).updateCommissionPercent(0);
+      await stakeManager.connect(signers[4]).updateCommission(0);
       const staker = await stakeManager.getStaker(4);
-      assertBNEqual(staker.commissionPercent, toBigNumber('0'));
+      assertBNEqual(staker.commission, toBigNumber('0'));
     });
 
     it('Unstake should be blocked in Propose and Dispute', async function () {
@@ -1490,7 +1490,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[8]).approve(stakeManager.address, stakeOfStaker);
       await stakeManager.connect(signers[8]).stake(epoch, stakeOfStaker);
-      await stakeManager.connect(signers[8]).updateCommissionPercent('2');
+      await stakeManager.connect(signers[8]).updateCommission('2');
       await stakeManager.connect(signers[8]).setDelegationAcceptance(true);
       const stakerId = await stakeManager.stakerIds(signers[8].address);
       let staker = await stakeManager.stakers(stakerId);
@@ -1553,7 +1553,7 @@ describe('StakeManager', function () {
       await razor.transfer(signers[11].address, stake);
       await razor.connect(signers[11]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[11]).stake(epoch, stake);
-      await stakeManager.connect(signers[11]).updateCommissionPercent(5);
+      await stakeManager.connect(signers[11]).updateCommission(5);
       await stakeManager.connect(signers[11]).setDelegationAcceptance(true);
       const stakerId = await stakeManager.stakerIds(signers[11].address);
       let staker = await stakeManager.stakers(stakerId);
@@ -1634,7 +1634,7 @@ describe('StakeManager', function () {
       await razor.connect(signers[17]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[17]).stake(epoch, stake);
       const stakerId = await stakeManager.getStakerId(signers[17].address);
-      await stakeManager.connect(signers[17]).updateCommissionPercent(10);
+      await stakeManager.connect(signers[17]).updateCommission(10);
       await stakeManager.connect(signers[17]).setDelegationAcceptance('true');
       let staker = await stakeManager.getStaker(stakerId);
       const secret = '0x427d5c9e0d18ed89ce7aa8e3cce6ec8a0e9c02481415c0823ea49d847ccb9eed';
@@ -1934,7 +1934,7 @@ describe('StakeManager', function () {
 
       await razor.connect(signers[1]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[1]).stake(epoch, stake1);
-      await stakeManager.connect(signers[1]).updateCommissionPercent(6);
+      await stakeManager.connect(signers[1]).updateCommission(6);
       await stakeManager.connect(signers[1]).setDelegationAcceptance('true');
 
       await mineToNextEpoch();
@@ -1980,7 +1980,7 @@ describe('StakeManager', function () {
       }
       assertBNEqual(await sToken.balanceOf(stakeManager.address), (delegatedStake.mul(2)), 'sToken being burnt incorrectly');
     });
-    it('commission should not be added if the staker does not accept delegation', async function () {
+    it('stakerReward should not be added if the staker does not accept delegation', async function () {
       const epoch = await getEpoch();
       const stake1 = tokenAmount('420000');
 
@@ -2005,12 +2005,12 @@ describe('StakeManager', function () {
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       const staker = await stakeManager.getStaker(stakerId);
 
-      await assertBNEqual(staker.commission, toBigNumber('0'), 'commission should not be given');
+      await assertBNEqual(staker.stakerReward, toBigNumber('0'), 'stakerReward should not be given');
       await assertBNEqual(staker.stake, stake1.add(await rewardManager.blockReward()), 'full block reward given');
     });
-    it('commission should be added if the staker accepts delegation', async function () {
+    it('stakerReward should be added if the staker accepts delegation', async function () {
       const stakerId = await stakeManager.stakerIds(signers[4].address);
-      await stakeManager.connect(signers[4]).updateCommissionPercent(6);
+      await stakeManager.connect(signers[4]).updateCommission(6);
       await stakeManager.connect(signers[4]).setDelegationAcceptance('true');
       const blockReward = await rewardManager.blockReward();
 
@@ -2032,7 +2032,7 @@ describe('StakeManager', function () {
       await blockManager.connect(signers[4]).claimBlockReward();
 
       staker = await stakeManager.getStaker(stakerId);
-      await assertBNEqual(staker.commission, toBigNumber('0'), 'commission should not be given as staker has no delegators');
+      await assertBNEqual(staker.stakerReward, toBigNumber('0'), 'stakerReward should not be given as staker has no delegators');
       await assertBNEqual(staker.stake, prevStake.add(blockReward), 'full block reward given for now');
 
       const delegatedStake = tokenAmount('100000');
@@ -2062,28 +2062,28 @@ describe('StakeManager', function () {
       const stakerSRZR = await sToken.balanceOf(signers[4].address);
       const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
       const delegatorShare = blockReward.sub(stakerShare);
-      const commission = delegatorShare.mul(toBigNumber(staker.commissionPercent)).div(toBigNumber('100'));
-      assertBNEqual(staker.commission, commission, 'Incorrect Commission Calculation');
-      assertBNEqual(prevStake.add(blockReward.sub(commission)), staker.stake, 'Incorrect RAZOR rewarded');
+      const stakerReward = delegatorShare.mul(toBigNumber(staker.commission)).div(toBigNumber('100'));
+      assertBNEqual(staker.stakerReward, stakerReward, 'Incorrect Commission Calculation');
+      assertBNEqual(prevStake.add(blockReward.sub(stakerReward)), staker.stake, 'Incorrect RAZOR rewarded');
     });
-    it('staker should not claim commission if commission is 0', async function () {
-      const tx = stakeManager.connect(signers[1]).claimCommission();
-      await assertRevert(tx, 'no commission to transfer');
+    it('staker should not claim stakerReward if stakerReward is 0', async function () {
+      const tx = stakeManager.connect(signers[1]).claimStakerReward();
+      await assertRevert(tx, 'no stakerReward to transfer');
     });
-    it('only staker can claim commission', async function () {
-      const tx = stakeManager.connect(signers[5]).claimCommission();
+    it('only staker can claim stakerReward', async function () {
+      const tx = stakeManager.connect(signers[5]).claimStakerReward();
       await assertRevert(tx, 'staker doesnt exist');
 
       const prevBalance = await razor.balanceOf(signers[4].address);
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       let staker = await stakeManager.getStaker(stakerId);
 
-      await stakeManager.connect(signers[4]).claimCommission();
+      await stakeManager.connect(signers[4]).claimStakerReward();
 
       const newBalance = await razor.balanceOf(signers[4].address);
-      assertBNEqual(prevBalance.add(staker.commission), newBalance, 'Incorrect amount of commission claimed');
+      assertBNEqual(prevBalance.add(staker.stakerReward), newBalance, 'Incorrect amount of stakerReward claimed');
       staker = await stakeManager.getStaker(stakerId);
-      assertBNEqual(staker.commission, toBigNumber('0'), 'Commission needs to reset');
+      assertBNEqual(staker.stakerReward, toBigNumber('0'), 'stakerReward needs to reset');
     });
   });
 });

@@ -500,10 +500,10 @@ describe('Scenarios', async () => {
 
     // delegator delegates it's stake to staker
     const commRate = 6;
-    await stakeManager.connect(signers[7]).updateCommissionPercent(commRate);
+    await stakeManager.connect(signers[7]).updateCommission(commRate);
     let stakerId = await stakeManager.stakerIds(signers[7].address);
     let staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.commissionPercent, commRate, 'CommissionPercent rate is not equal to requested set rate ');
+    assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
 
     await stakeManager.connect(signers[7]).setDelegationAcceptance('true');
     stakerId = await stakeManager.stakerIds(signers[7].address);
@@ -1102,10 +1102,10 @@ describe('Scenarios', async () => {
     assertBNEqual(stakeAfter, stakeBefore.add(blockReward), 'Staker not rewarded');
     // delegator delegates it's stake to staker
     const commRate = 6;
-    await stakeManager.connect(signers[3]).updateCommissionPercent(commRate);
+    await stakeManager.connect(signers[3]).updateCommission(commRate);
     let stakerId = await stakeManager.stakerIds(signers[3].address);
     let staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.commissionPercent, commRate, 'CommissionPercent rate is not equal to requested set rate ');
+    assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
 
     await stakeManager.connect(signers[3]).setDelegationAcceptance('true');
     stakerId = await stakeManager.stakerIds(signers[3].address);
@@ -1172,10 +1172,10 @@ describe('Scenarios', async () => {
       const stakerSRZR = await sToken.balanceOf(staker._address);
       const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
       const delegatorShare = blockReward.sub(stakerShare);
-      const commission = delegatorShare.mul(toBigNumber(staker.commissionPercent)).div(toBigNumber('100'));
+      const stakerReward = delegatorShare.mul(toBigNumber(staker.commission)).div(toBigNumber('100'));
 
       const stakeAfter = await stakeManager.getStake(sortedProposedBlock.proposerId);
-      assertBNEqual(stakeAfter, stakeBefore.add(blockReward.sub(commission)), 'Staker not rewarded');
+      assertBNEqual(stakeAfter, stakeBefore.add(blockReward.sub(stakerReward)), 'Staker not rewarded');
       await mineToNextEpoch();
     }
     // Delagator unstakes

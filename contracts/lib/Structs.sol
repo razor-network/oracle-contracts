@@ -10,17 +10,17 @@ library Structs {
         // Slot 1
         bool acceptDelegation;
         bool isSlashed;
-        uint8 commissionPercent;
+        uint8 commission;
         uint32 id;
         uint32 age;
         address _address;
         // Slot 2
         address tokenAddress;
         uint32 epochFirstStakedOrLastPenalized;
-        uint32 epochCommissionPercentLastUpdated;
+        uint32 epochCommissionLastUpdated;
         // Slot 3
         uint256 stake;
-        uint256 commission;
+        uint256 stakerReward;
     }
 
     struct Lock {

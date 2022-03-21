@@ -20,7 +20,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
     /// @notice maximum commission stakers can charge from delegators on their profits
-    uint8 public maxCommissionPercent = 20;
+    uint8 public maxCommission = 20;
 
     /// @inheritdoc IRewardManagerParams
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
@@ -56,9 +56,9 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     }
 
     /// @inheritdoc IRewardManagerParams
-    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_maxCommissionPercent <= 100, "Invalid Max Commission % Update");
+    function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
+        require(_maxCommission <= 100, "Invalid Max Commission Update");
         // slither-disable-next-line events-maths
-        maxCommissionPercent = _maxCommissionPercent;
+        maxCommission = _maxCommission;
     }
 }

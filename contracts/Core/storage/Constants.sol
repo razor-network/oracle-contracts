@@ -17,9 +17,9 @@ contract Constants {
         Slashed
     }
 
-    enum CommissionChanged {
-        CommissionAdded,
-        CommissionClaimed
+    enum StakerRewardChanged {
+        StakerRewardAdded,
+        StakerRewardClaimed
     }
 
     enum AgeChanged {

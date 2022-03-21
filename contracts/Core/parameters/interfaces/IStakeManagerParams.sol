@@ -68,23 +68,23 @@ interface IStakeManagerParams {
     /**
      * @notice changing maximum commission stakers can charge from delegators on their profits
      * @dev can be called only by the the address that has the governance role
-     * @param _maxCommissionPercent updated value to be set for maxCommissionPercent
+     * @param _maxCommission updated value to be set for maxCommission
      */
-    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external;
+    function setMaxCommission(uint8 _maxCommission) external;
 
     /**
      * @notice changing maximum commission change a staker can do
      * @dev can be called only by the the address that has the governance role
-     * @param _deltaCommissionPercent updated value to be set for deltaCommissionPercent
+     * @param _deltaCommission updated value to be set for deltaCommission
      */
-    function setDeltaCommissionPercent(uint8 _deltaCommissionPercent) external;
+    function setDeltaCommission(uint8 _deltaCommission) external;
 
     /**
      * @notice changing the number of epochs for which a staker cant change commission once set/change
      * @dev can be called only by the the address that has the governance role
-     * @param _epochLimitForUpdateCommissionPercent updated value to be set for epochLimitForUpdateCommissionPercent
+     * @param _epochLimitForUpdateCommission updated value to be set for epochLimitForUpdateCommission
      */
-    function setEpochLimitForUpdateCommissionPercent(uint16 _epochLimitForUpdateCommissionPercent) external;
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external;
 
     /**
      * @notice sets escape hatch to false permanently

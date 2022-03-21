@@ -197,13 +197,13 @@ contract Governance is Initializable, ACL, Constants {
     /**
      * @notice changing maximum commission stakers can charge from delegators on their profits
      * @dev can be called only by the the address that has the governance role
-     * @param _maxCommissionPercent updated value to be set for maxCommissionPercent
+     * @param _maxCommission updated value to be set for maxCommission
      */
-    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external initialized onlyRole(GOVERNER_ROLE) {
-        require(_maxCommissionPercent <= 100, "Invalid Max Commission % Update");
-        emit ParameterChanged(msg.sender, "maxCommissionPercent", _maxCommissionPercent, block.timestamp);
-        stakeManagerParams.setMaxCommissionPercent(_maxCommissionPercent);
-        rewardManagerParams.setMaxCommissionPercent(_maxCommissionPercent);
+    function setMaxCommission(uint8 _maxCommission) external initialized onlyRole(GOVERNER_ROLE) {
+        require(_maxCommission <= 100, "Invalid Max Commission Update");
+        emit ParameterChanged(msg.sender, "maxCommission", _maxCommission, block.timestamp);
+        stakeManagerParams.setMaxCommission(_maxCommission);
+        rewardManagerParams.setMaxCommission(_maxCommission);
     }
 
     /**
@@ -218,21 +218,21 @@ contract Governance is Initializable, ACL, Constants {
     /**
      * @notice changing maximum commission change a staker can do
      * @dev can be called only by the the address that has the governance role
-     * @param _deltaCommissionPercent updated value to be set for deltaCommissionPercent
+     * @param _deltaCommission updated value to be set for deltaCommission
      */
-    function setDeltaCommissionPercent(uint8 _deltaCommissionPercent) external onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "deltaCommissionPercent", _deltaCommissionPercent, block.timestamp);
-        stakeManagerParams.setDeltaCommissionPercent(_deltaCommissionPercent);
+    function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
+        stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
 
     /**
      * @notice changing the number of epochs for which a staker cant change commission once set/change
      * @dev can be called only by the the address that has the governance role
-     * @param _epochLimitForUpdateCommissionPercent updated value to be set for epochLimitForUpdateCommissionPercent
+     * @param _epochLimitForUpdateCommission updated value to be set for epochLimitForUpdateCommission
      */
-    function setEpochLimitForUpdateCommissionPercent(uint16 _epochLimitForUpdateCommissionPercent) external onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "epochLimitForUpdateCommissionPercent", _epochLimitForUpdateCommissionPercent, block.timestamp);
-        stakeManagerParams.setEpochLimitForUpdateCommissionPercent(_epochLimitForUpdateCommissionPercent);
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
+        stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
 
     /**

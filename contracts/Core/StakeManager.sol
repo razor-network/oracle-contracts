@@ -53,20 +53,20 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     );
 
     /**
-     * @dev Emitted when commission has been changed for the staker.
-     * @param epoch in which commission was changed
-     * @param stakerId id of the staker whose commission was changed
+     * @dev Emitted when stakerReward has been changed for the staker.
+     * @param epoch in which stakerReward was changed
+     * @param stakerId id of the staker whose stakerReward was changed
      * @param reason reason why the the change in stake took place
-     * @param prevCommission commission before the change took place
-     * @param newCommission updated commission
+     * @param prevStakerReward stakerReward before the change took place
+     * @param newStakerReward updated stakerReward
      * @param timestamp time at which the change took place
      */
-    event CommissionChange(
+    event StakerRewardChange(
         uint32 epoch,
         uint32 indexed stakerId,
-        Constants.CommissionChanged reason,
-        uint256 prevCommission,
-        uint256 newCommission,
+        Constants.StakerRewardChanged reason,
+        uint256 prevStakerReward,
+        uint256 newStakerReward,
         uint256 timestamp
     );
 
@@ -187,11 +187,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
     /**
-     * @dev Emitted when the staker changes commissionPercent
-     * @param stakerId the staker that changes commissionPercent
-     * @param commissionPercent updated commissionPercent
+     * @dev Emitted when the staker changes commission
+     * @param stakerId the staker that changes commission
+     * @param commission updated commission
      */
-    event CommissionPercentChanged(uint32 indexed stakerId, uint8 commissionPercent);
+    event CommissionChanged(uint32 indexed stakerId, uint8 commission);
 
     /**
      * @dev Emitted when the staker is slashed
@@ -391,14 +391,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
-    function claimCommission() external initialized whenNotPaused {
+    function claimStakerReward() external initialized whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker doesnt exist");
-        require(stakers[stakerId].commission != 0, "no commission to transfer");
+        require(stakers[stakerId].stakerReward != 0, "no stakerReward to transfer");
         uint32 epoch = _getEpoch();
-        uint256 commissionToBeClaimed = stakers[stakerId].commission;
-        _setStakerCommission(epoch, stakerId, CommissionChanged.CommissionClaimed, stakers[stakerId].commission, 0);
-        require(razor.transfer(msg.sender, commissionToBeClaimed), "couldnt transfer");
+        uint256 stakerRewardToBeClaimed = stakers[stakerId].stakerReward;
+        _setStakerStakerReward(epoch, stakerId, StakerRewardChanged.StakerRewardClaimed, stakers[stakerId].stakerReward, 0);
+        require(razor.transfer(msg.sender, stakerRewardToBeClaimed), "couldnt transfer");
     }
 
     /// @inheritdoc IStakeManager
@@ -427,7 +427,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function setDelegationAcceptance(bool status) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        require(stakers[stakerId].commissionPercent != 0, "comission not set");
+        require(stakers[stakerId].commission != 0, "comission not set");
         stakers[stakerId].acceptDelegation = status;
         emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
@@ -435,22 +435,19 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /**
      * @notice Used by staker to update commision for delegation
      */
-    function updateCommissionPercent(uint8 commissionPercent) external {
-        require(commissionPercent <= maxCommissionPercent, "Commission % exceeds maxlimit");
+    function updateCommission(uint8 commission) external {
+        require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         uint32 epoch = _getEpoch();
-        if (stakers[stakerId].epochCommissionPercentLastUpdated != 0) {
+        if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             // slither-disable-next-line timestamp
-            require(
-                (stakers[stakerId].epochCommissionPercentLastUpdated + epochLimitForUpdateCommissionPercent) <= epoch,
-                "Invalid Epoch For Updation"
-            );
-            require(commissionPercent <= (stakers[stakerId].commissionPercent + deltaCommissionPercent), "Invalid Commission % Update");
+            require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
+            require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
         }
-        stakers[stakerId].epochCommissionPercentLastUpdated = epoch;
-        stakers[stakerId].commissionPercent = commissionPercent;
-        emit CommissionPercentChanged(stakerId, commissionPercent);
+        stakers[stakerId].epochCommissionLastUpdated = epoch;
+        stakers[stakerId].commission = commission;
+        emit CommissionChanged(stakerId, commission);
     }
 
     /**
@@ -492,14 +489,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
-    function setStakerCommission(
+    function setStakerStakerReward(
         uint32 _epoch,
         uint32 _id,
-        Constants.CommissionChanged reason,
-        uint256 prevCommission,
-        uint256 _commission
+        Constants.StakerRewardChanged reason,
+        uint256 prevStakerReward,
+        uint256 _stakerReward
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerCommission(_epoch, _id, reason, prevCommission, _commission);
+        _setStakerStakerReward(_epoch, _id, reason, prevStakerReward, _stakerReward);
     }
 
     /// @inheritdoc IStakeManager
@@ -632,15 +629,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit StakeChange(_epoch, _id, reason, _prevStake, _stake, block.timestamp);
     }
 
-    function _setStakerCommission(
+    function _setStakerStakerReward(
         uint32 _epoch,
         uint32 _id,
-        Constants.CommissionChanged reason,
-        uint256 prevCommission,
-        uint256 _commission
+        Constants.StakerRewardChanged reason,
+        uint256 prevStakerReward,
+        uint256 _stakerReward
     ) internal {
-        stakers[_id].commission = _commission;
-        emit CommissionChange(_epoch, _id, reason, prevCommission, _commission, block.timestamp);
+        stakers[_id].stakerReward = _stakerReward;
+        emit StakerRewardChange(_epoch, _id, reason, prevStakerReward, _stakerReward, block.timestamp);
     }
 
     /**
