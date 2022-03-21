@@ -14,8 +14,12 @@ contract Constants {
     enum StakeChanged {
         BlockReward,
         InactivityPenalty,
-        RandaoPenalty,
         Slashed
+    }
+
+    enum CommissionChanged {
+        CommissionAdded,
+        CommissionClaimed
     }
 
     enum AgeChanged {

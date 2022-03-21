@@ -36,4 +36,11 @@ interface IRewardManagerParams {
      * @param _maxTolerance updated value for maxTolerance
      */
     function setMaxTolerance(uint32 _maxTolerance) external;
+
+    /**
+     * @notice changing maximum commission stakers can charge from delegators on their profits
+     * @dev can be called only by the the address that has the governance role
+     * @param _maxCommissionPercent updated value to be set for maxCommissionPercent
+     */
+    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external;
 }

@@ -53,6 +53,24 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     );
 
     /**
+     * @dev Emitted when commission has been changed for the staker.
+     * @param epoch in which commission was changed
+     * @param stakerId id of the staker whose commission was changed
+     * @param reason reason why the the change in stake took place
+     * @param prevCommission commission before the change took place
+     * @param newCommission updated commission
+     * @param timestamp time at which the change took place
+     */
+    event CommissionChange(
+        uint32 epoch,
+        uint32 indexed stakerId,
+        Constants.CommissionChanged reason,
+        uint256 prevCommission,
+        uint256 newCommission,
+        uint256 timestamp
+    );
+
+    /**
      * @dev Emitted when there has been change in the age of the staker.
      * @param epoch in which change of age took place
      * @param stakerId id of the staker whose age was changed
@@ -169,11 +187,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
 
     /**
-     * @dev Emitted when the staker changes commission
-     * @param stakerId the staker that changes commission
-     * @param commission updated commission
+     * @dev Emitted when the staker changes commissionPercent
+     * @param stakerId the staker that changes commissionPercent
+     * @param commissionPercent updated commissionPercent
      */
-    event CommissionChanged(uint32 indexed stakerId, uint8 commission);
+    event CommissionPercentChanged(uint32 indexed stakerId, uint8 commissionPercent);
 
     /**
      * @dev Emitted when the staker is slashed
@@ -218,7 +236,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             stakerIds[msg.sender] = stakerId;
             // slither-disable-next-line reentrancy-benign
             IStakedToken sToken = IStakedToken(stakedTokenFactory.createStakedToken(address(this), numStakers));
-            stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount);
+            stakers[numStakers] = Structs.Staker(false, false, 0, numStakers, 10000, msg.sender, address(sToken), epoch, 0, amount, 0);
             _setupRole(STOKEN_ROLE, address(sToken));
             // Minting
             // Ignoring below line for testing as this is standard erc20 function
@@ -306,11 +324,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
 
-        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(
-            sAmount,
-            epoch + unstakeLockPeriod,
-            sToken.getRZRDeposited(msg.sender, sAmount)
-        );
+        locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, epoch + unstakeLockPeriod);
         emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
@@ -346,7 +360,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
         staker.stake = staker.stake - rAmount;
 
-        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod, lock.initial);
+        locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod);
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.burn(address(this), lock.amount), "Token burn Failed");
         //emit event here
@@ -354,10 +368,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /** @notice staker/delegator can claim their locked RAZORS.
-     * if a staker is calling then no commission is calculated and can claim their funds
-     * if a delegator is calling then commission is calculated on the RAZOR amount being withdrawn
-     * and deducted from withdraw balance. the new balance is sent to the delegator and staker
-     * receives the commission
      * @param stakerId The Id of staker associated with sRZR which user want to unlockWithdraw
      */
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
@@ -371,29 +381,24 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
 
-        // Transfer commission in case of delegators
-        // Check commission rate >0
-        uint256 commission = 0;
-        if (stakerIds[msg.sender] != stakerId && staker.commission > 0) {
-            // Calculate Gain
-            uint256 initial = lock.initial;
-            if (lock.amount > initial) {
-                uint256 gain = lock.amount - initial;
-                uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
-                commission = (gain * commissionApplicable) / 100;
-            }
-        }
-
-        uint256 withdrawAmount = lock.amount - commission;
+        uint256 withdrawAmount = lock.amount;
         // Reset lock
         _resetLock(stakerId);
 
         emit Withdrew(msg.sender, epoch, stakerId, withdrawAmount, staker.stake, block.timestamp);
-        // Ignoring below line for testing as this is standard erc20 function
-        require(razor.transfer(staker._address, commission), "couldnt transfer");
         //Transfer Razor Back
         // Ignoring below line for testing as this is standard erc20 function
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
+    }
+
+    function claimCommission() external initialized whenNotPaused {
+        uint32 stakerId = stakerIds[msg.sender];
+        require(stakerId != 0, "staker doesnt exist");
+        require(stakers[stakerId].commission != 0, "no commission to transfer");
+        uint32 epoch = _getEpoch();
+        uint256 commissionToBeClaimed = stakers[stakerId].commission;
+        _setStakerCommission(epoch, stakerId, CommissionChanged.CommissionClaimed, stakers[stakerId].commission, 0);
+        require(razor.transfer(msg.sender, commissionToBeClaimed), "couldnt transfer");
     }
 
     /// @inheritdoc IStakeManager
@@ -422,7 +427,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function setDelegationAcceptance(bool status) external {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        require(stakers[stakerId].commission != 0, "comission not set");
+        require(stakers[stakerId].commissionPercent != 0, "comission not set");
         stakers[stakerId].acceptDelegation = status;
         emit DelegationAcceptanceChanged(status, msg.sender, stakerId);
     }
@@ -430,19 +435,22 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /**
      * @notice Used by staker to update commision for delegation
      */
-    function updateCommission(uint8 commission) external {
-        require(commission <= maxCommission, "Commission exceeds maxlimit");
+    function updateCommissionPercent(uint8 commissionPercent) external {
+        require(commissionPercent <= maxCommissionPercent, "Commission % exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         uint32 epoch = _getEpoch();
-        if (stakers[stakerId].epochCommissionLastUpdated != 0) {
+        if (stakers[stakerId].epochCommissionPercentLastUpdated != 0) {
             // slither-disable-next-line timestamp
-            require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
-            require(commission <= (stakers[stakerId].commission + deltaCommission), "Invalid Commission Update");
+            require(
+                (stakers[stakerId].epochCommissionPercentLastUpdated + epochLimitForUpdateCommissionPercent) <= epoch,
+                "Invalid Epoch For Updation"
+            );
+            require(commissionPercent <= (stakers[stakerId].commissionPercent + deltaCommissionPercent), "Invalid Commission % Update");
         }
-        stakers[stakerId].epochCommissionLastUpdated = epoch;
-        stakers[stakerId].commission = commission;
-        emit CommissionChanged(stakerId, commission);
+        stakers[stakerId].epochCommissionPercentLastUpdated = epoch;
+        stakers[stakerId].commissionPercent = commissionPercent;
+        emit CommissionPercentChanged(stakerId, commissionPercent);
     }
 
     /**
@@ -482,6 +490,16 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint256 _stake
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
+    }
+
+    function setStakerCommission(
+        uint32 _epoch,
+        uint32 _id,
+        Constants.CommissionChanged reason,
+        uint256 prevCommission,
+        uint256 _commission
+    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+        _setStakerCommission(_epoch, _id, reason, prevCommission, _commission);
     }
 
     /// @inheritdoc IStakeManager
@@ -614,6 +632,17 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit StakeChange(_epoch, _id, reason, _prevStake, _stake, block.timestamp);
     }
 
+    function _setStakerCommission(
+        uint32 _epoch,
+        uint32 _id,
+        Constants.CommissionChanged reason,
+        uint256 prevCommission,
+        uint256 _commission
+    ) internal {
+        stakers[_id].commission = _commission;
+        emit CommissionChange(_epoch, _id, reason, prevCommission, _commission, block.timestamp);
+    }
+
     /**
      * @return isStakerActive : Activity < Grace
      */
@@ -670,8 +699,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId of the staker
      */
     function _resetLock(uint32 stakerId) private {
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
-        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0, initial: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0});
+        locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0});
         emit ResetLock(stakerId, msg.sender, _getEpoch());
     }
 }

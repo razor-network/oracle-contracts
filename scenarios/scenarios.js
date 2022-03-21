@@ -500,10 +500,10 @@ describe('Scenarios', async () => {
 
     // delegator delegates it's stake to staker
     const commRate = 6;
-    await stakeManager.connect(signers[7]).updateCommission(commRate);
+    await stakeManager.connect(signers[7]).updateCommissionPercent(commRate);
     let stakerId = await stakeManager.stakerIds(signers[7].address);
     let staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
+    assertBNEqual(staker.commissionPercent, commRate, 'CommissionPercent rate is not equal to requested set rate ');
 
     await stakeManager.connect(signers[7]).setDelegationAcceptance('true');
     stakerId = await stakeManager.stakerIds(signers[7].address);
@@ -1102,10 +1102,10 @@ describe('Scenarios', async () => {
     assertBNEqual(stakeAfter, stakeBefore.add(blockReward), 'Staker not rewarded');
     // delegator delegates it's stake to staker
     const commRate = 6;
-    await stakeManager.connect(signers[3]).updateCommission(commRate);
+    await stakeManager.connect(signers[3]).updateCommissionPercent(commRate);
     let stakerId = await stakeManager.stakerIds(signers[3].address);
     let staker = await stakeManager.getStaker(stakerId);
-    assertBNEqual(staker.commission, commRate, 'Commission rate is not equal to requested set rate ');
+    assertBNEqual(staker.commissionPercent, commRate, 'CommissionPercent rate is not equal to requested set rate ');
 
     await stakeManager.connect(signers[3]).setDelegationAcceptance('true');
     stakerId = await stakeManager.stakerIds(signers[3].address);
@@ -1210,7 +1210,7 @@ describe('Scenarios', async () => {
 
     let withdawAmount = lock.amount;
     const gain = (withdawAmount.sub(initial)); // commission in accordance to gain
-    const commission = ((gain).mul(staker.commission)).div(100);
+    const commission = ((gain).mul(staker.commissionPercent)).div(100);
     if (commission > 0) {
       withdawAmount = withdawAmount.sub(commission);
     }
@@ -1219,7 +1219,7 @@ describe('Scenarios', async () => {
     const DelegatorBalance = await razor.balanceOf(signers[5].address);
 
     assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
-    assertBNLessThan(withdawAmount, lock.amount, 'Commission Should be paid'); // gain > 0;
+    assertBNLessThan(withdawAmount, lock.amount, 'CommissionPercent Should be paid'); // gain > 0;
     assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should get commision'); // gain > 0
 
     const rAmountUnchanged = amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR

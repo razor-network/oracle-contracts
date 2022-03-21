@@ -37,9 +37,9 @@ describe('Governance contract Test', async () => {
   const resetUnstakeLockPenalty = toBigNumber('1');
   const maxAge = toBigNumber('1000000');
   const maxTolerance = toBigNumber('1000000');
-  const maxCommission = toBigNumber('20');
-  const deltaCommission = toBigNumber('3');
-  const epochLimitForUpdateCommission = toBigNumber('100');
+  const maxCommissionPercent = toBigNumber('20');
+  const deltaCommissionPercent = toBigNumber('3');
+  const epochLimitForUpdateCommissionPercent = toBigNumber('100');
   const toAssign = toBigNumber('3');
 
   before(async () => {
@@ -101,13 +101,13 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setMaxTolerance(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setMaxCommission(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setMaxCommissionPercent(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setDeltaCommission(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setDeltaCommissionPercent(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setEpochLimitForUpdateCommission(toBigNumber('1'));
+    tx = governance.connect(signers[0]).setEpochLimitForUpdateCommissionPercent(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setToAssign(toBigNumber('1'));
@@ -167,9 +167,9 @@ describe('Governance contract Test', async () => {
     const maxAge = await rewardManager.maxAge();
     assertBNEqual(maxAge, toBigNumber('18'));
 
-    await governance.setMaxCommission(toBigNumber('19'));
-    const maxCommission = await stakeManager.maxCommission();
-    assertBNEqual(maxCommission, toBigNumber('19'));
+    await governance.setMaxCommissionPercent(toBigNumber('19'));
+    const maxCommissionPercent = await stakeManager.maxCommissionPercent();
+    assertBNEqual(maxCommissionPercent, toBigNumber('19'));
 
     await governance.setSlashParams(toBigNumber('22'), toBigNumber('23'), toBigNumber('24'));
     const slashNums = await stakeManager.slashNums();
@@ -177,16 +177,16 @@ describe('Governance contract Test', async () => {
     assertBNEqual(slashNums.burn, toBigNumber('23'));
     assertBNEqual(slashNums.keep, toBigNumber('24'));
 
-    await governance.setDeltaCommission(toBigNumber('25'));
-    const deltaCommission = await stakeManager.deltaCommission();
-    assertBNEqual(deltaCommission, toBigNumber('25'));
+    await governance.setDeltaCommissionPercent(toBigNumber('25'));
+    const deltaCommissionPercent = await stakeManager.deltaCommissionPercent();
+    assertBNEqual(deltaCommissionPercent, toBigNumber('25'));
 
-    await governance.setEpochLimitForUpdateCommission(toBigNumber('26'));
-    const epochLimitForUpdateCommission = await stakeManager.epochLimitForUpdateCommission();
-    assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
+    await governance.setEpochLimitForUpdateCommissionPercent(toBigNumber('26'));
+    const epochLimitForUpdateCommissionPercent = await stakeManager.epochLimitForUpdateCommissionPercent();
+    assertBNEqual(epochLimitForUpdateCommissionPercent, toBigNumber('26'));
 
-    let tx = governance.setMaxCommission(toBigNumber('101'));
-    await assertRevert(tx, 'Invalid Max Commission Update');
+    let tx = governance.setMaxCommissionPercent(toBigNumber('101'));
+    await assertRevert(tx, 'Invalid Max Commission % Update');
 
     tx = governance.setMaxAge(toBigNumber('1010001'));
     await assertRevert(tx, 'Invalid Max Age Update');
@@ -241,14 +241,14 @@ describe('Governance contract Test', async () => {
     const maxToleranceValue = await rewardManager.maxTolerance();
     assertBNEqual(maxTolerance, maxToleranceValue);
 
-    const maxCommissionValue = await stakeManager.maxCommission();
-    assertBNEqual(maxCommission, maxCommissionValue);
+    const maxCommissionPercentValue = await stakeManager.maxCommissionPercent();
+    assertBNEqual(maxCommissionPercent, maxCommissionPercentValue);
 
-    const deltaCommissionValue = await stakeManager.deltaCommission();
-    assertBNEqual(deltaCommission, deltaCommissionValue);
+    const deltaCommissionPercentValue = await stakeManager.deltaCommissionPercent();
+    assertBNEqual(deltaCommissionPercent, deltaCommissionPercentValue);
 
-    const epochLimitForUpdateCommissionValue = await stakeManager.epochLimitForUpdateCommission();
-    assertBNEqual(epochLimitForUpdateCommission, epochLimitForUpdateCommissionValue);
+    const epochLimitForUpdateCommissionPercentValue = await stakeManager.epochLimitForUpdateCommissionPercent();
+    assertBNEqual(epochLimitForUpdateCommissionPercent, epochLimitForUpdateCommissionPercentValue);
 
     const gracePeriodValue = await rewardManager.gracePeriod();
     assertBNEqual(gracePeriod, gracePeriodValue);

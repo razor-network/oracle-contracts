@@ -19,6 +19,8 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice maximum percentage deviation allowed from medians for all collections
     // slither-disable-next-line too-many-digits
     uint32 public maxTolerance = 1000000;
+    /// @notice maximum commission stakers can charge from delegators on their profits
+    uint8 public maxCommissionPercent = 20;
 
     /// @inheritdoc IRewardManagerParams
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
@@ -51,5 +53,12 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         maxTolerance = _maxTolerance;
+    }
+
+    /// @inheritdoc IRewardManagerParams
+    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external override onlyRole(GOVERNANCE_ROLE) {
+        require(_maxCommissionPercent <= 100, "Invalid Max Commission % Update");
+        // slither-disable-next-line events-maths
+        maxCommissionPercent = _maxCommissionPercent;
     }
 }

@@ -29,16 +29,16 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
      */
     uint8 public resetUnstakeLockPenalty = 1;
     /// @notice maximum commission stakers can charge from delegators on their profits
-    uint8 public maxCommission = 20;
+    uint8 public maxCommissionPercent = 20;
     /// @notice maximum commission change a staker can do
-    uint8 public deltaCommission = 3;
+    uint8 public deltaCommissionPercent = 3;
     /**
      * @notice the number of epochs for which the staker wont be given inactivity penalties.
      * Stakers inactive for more than grace period will be penalized
      */
     uint16 public gracePeriod = 8;
     /// @notice the number of epochs for which a staker cant change commission once set/change
-    uint16 public epochLimitForUpdateCommission = 100;
+    uint16 public epochLimitForUpdateCommissionPercent = 100;
     /// @notice slashing params being used if staker is slashed. Slash Penalty = bounty + burned + kept == 100%
     // slither-disable-next-line too-many-digits
     SlashNums public slashNums = SlashNums(500000, 9500000, 0);
@@ -59,15 +59,19 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setDeltaCommission(uint8 _deltaCommission) external override onlyRole(GOVERNANCE_ROLE) {
+    function setDeltaCommissionPercent(uint8 _deltaCommissionPercent) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        deltaCommission = _deltaCommission;
+        deltaCommissionPercent = _deltaCommissionPercent;
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external override onlyRole(GOVERNANCE_ROLE) {
+    function setEpochLimitForUpdateCommissionPercent(uint16 _epochLimitForUpdateCommissionPercent)
+        external
+        override
+        onlyRole(GOVERNANCE_ROLE)
+    {
         // slither-disable-next-line events-maths
-        epochLimitForUpdateCommission = _epochLimitForUpdateCommission;
+        epochLimitForUpdateCommissionPercent = _epochLimitForUpdateCommissionPercent;
     }
 
     /// @inheritdoc IStakeManagerParams
@@ -114,10 +118,10 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_maxCommission <= 100, "Invalid Max Commission Update");
+    function setMaxCommissionPercent(uint8 _maxCommissionPercent) external override onlyRole(GOVERNANCE_ROLE) {
+        require(_maxCommissionPercent <= 100, "Invalid Max Commission % Update");
         // slither-disable-next-line events-maths
-        maxCommission = _maxCommission;
+        maxCommissionPercent = _maxCommissionPercent;
     }
 
     /// @inheritdoc IStakeManagerParams

@@ -10,22 +10,22 @@ library Structs {
         // Slot 1
         bool acceptDelegation;
         bool isSlashed;
-        uint8 commission;
+        uint8 commissionPercent;
         uint32 id;
         uint32 age;
         address _address;
         // Slot 2
         address tokenAddress;
         uint32 epochFirstStakedOrLastPenalized;
-        uint32 epochCommissionLastUpdated;
+        uint32 epochCommissionPercentLastUpdated;
         // Slot 3
         uint256 stake;
+        uint256 commission;
     }
 
     struct Lock {
         uint256 amount; //amount in sRZR/RZR
         uint256 unlockAfter; // Can be made uint32 later if packing is possible
-        uint256 initial; // for unstake lock
     }
 
     struct BountyLock {

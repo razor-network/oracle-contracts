@@ -44,6 +44,14 @@ interface IStakeManager {
         Constants.AgeChanged reason
     ) external;
 
+    function setStakerCommission(
+        uint32 _epoch,
+        uint32 _id,
+        Constants.CommissionChanged reason,
+        uint256 prevCommission,
+        uint256 _commission
+    ) external;
+
     /** @notice External function for setting epochLastPenalized of the staker
      * Used by RewardManager
      * @param _id of the staker
