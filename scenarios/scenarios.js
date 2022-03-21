@@ -1166,10 +1166,10 @@ describe('Scenarios', async () => {
         }
       }
 
-      staker = await stakeManager.getStaker(stakerId);
+      staker = await stakeManager.getStaker(sortedProposedBlock.proposerId);
       const sToken = await stakedToken.attach(staker.tokenAddress);
       const totalSupply = await sToken.totalSupply();
-      const stakerSRZR = await sToken.balanceOf(signers[4].address);
+      const stakerSRZR = await sToken.balanceOf(staker._address);
       const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
       const delegatorShare = blockReward.sub(stakerShare);
       const commission = delegatorShare.mul(toBigNumber(staker.commissionPercent)).div(toBigNumber('100'));
