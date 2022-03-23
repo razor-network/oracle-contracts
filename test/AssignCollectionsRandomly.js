@@ -79,7 +79,10 @@ describe('AssignCollectionsRandomly', function () {
         i++;
       }
       while (Number(await getState()) !== 4) {
-        if (Number(await getState()) !== -1) {
+        if(await getState()=== -1){
+          await mineBlock();
+        }
+        else{
           await mineToNextState();
         }
       }
