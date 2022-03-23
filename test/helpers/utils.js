@@ -166,7 +166,7 @@ const getState = async () => {
   const lowerLimit = 5;
   const upperLimit = EPOCH_LENGTH.div(NUM_STATES) - 5;
   if (timestamp % (EPOCH_LENGTH.div(NUM_STATES)) > upperLimit || timestamp % (EPOCH_LENGTH.div(NUM_STATES)) < lowerLimit) {
-    return -1
+    return -1;
   } else {
     return state.mod(NUM_STATES).toNumber();
   }
