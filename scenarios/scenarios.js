@@ -73,14 +73,12 @@ describe('Scenarios', async () => {
     let i = 0;
     while (i < 9) {
       name = `test${i}`;
-      console.log('job created')
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       i++;
     }
-    console.log("before while", Number(await getState()))
+
     while (Number(await getState()) !== 4) {
       if(await getState()=== -1){
-        console.log("after if", Number(await getState()))
         await mineBlock();
       }
       else{
