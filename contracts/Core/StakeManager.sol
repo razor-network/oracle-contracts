@@ -367,7 +367,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
 
-    /** 
+    /**
      * @notice staker/delegator can claim their locked RAZORS.
      * @param stakerId The Id of staker associated with sRZR which user want to unlockWithdraw
      */

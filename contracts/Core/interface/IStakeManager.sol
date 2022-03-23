@@ -5,7 +5,7 @@ import "../../lib/Structs.sol";
 import "../storage/Constants.sol";
 
 interface IStakeManager {
-    /** 
+    /**
      * @notice External function for setting stake of the staker
      * Used by RewardManager
      * @param _epoch The epoch in which stake changes
@@ -22,7 +22,7 @@ interface IStakeManager {
         uint256 _stake
     ) external;
 
-    /** 
+    /**
      * @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
      * to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
      * transfer to bounty hunter half the "slashPenaltyAmount" of the staker
@@ -35,7 +35,7 @@ interface IStakeManager {
         address bountyHunter
     ) external;
 
-    /** 
+    /**
      * @notice External function for setting staker age of the staker
      * Used by RewardManager
      * @param _epoch The epoch in which age changes
@@ -50,7 +50,7 @@ interface IStakeManager {
         Constants.AgeChanged reason
     ) external;
 
-    /** 
+    /**
      * @notice External function for setting stakerReward of the staker
      * Used by RewardManager
      * @param _epoch The epoch in which stakerReward changes
@@ -67,7 +67,7 @@ interface IStakeManager {
         uint256 _stakerReward
     ) external;
 
-    /** 
+    /**
      * @notice External function for setting epochLastPenalized of the staker
      * Used by RewardManager
      * @param _id of the staker
@@ -79,7 +79,7 @@ interface IStakeManager {
      */
     function escape(address _address) external;
 
-    /** 
+    /**
      * @notice event being thrown after every successful sRZR transfer taking place
      * @param from sender
      * @param to recepient
@@ -93,13 +93,13 @@ interface IStakeManager {
         uint32 stakerId
     ) external;
 
-    /** 
+    /**
      * @param _address Address of the staker
      * @return The staker ID
      */
     function getStakerId(address _address) external view returns (uint32);
 
-    /** 
+    /**
      * @param _id The staker ID
      * @return staker The Struct of staker information
      */
