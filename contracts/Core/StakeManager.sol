@@ -367,7 +367,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit WithdrawInitiated(msg.sender, epoch, stakerId, rAmount, staker.stake, sToken.totalSupply(), block.timestamp);
     }
 
-    /** @notice staker/delegator can claim their locked RAZORS.
+    /** 
+     * @notice staker/delegator can claim their locked RAZORS.
      * @param stakerId The Id of staker associated with sRZR which user want to unlockWithdraw
      */
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
@@ -391,6 +392,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
+    /**
+     * @notice staker can claim the rewards earned from delegator's pool share as commission.
+     */
     function claimStakerReward() external initialized whenNotPaused {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker doesnt exist");
@@ -489,6 +493,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
+    /// @inheritdoc IStakeManager
     function setStakerStakerReward(
         uint32 _epoch,
         uint32 _id,

@@ -16,7 +16,8 @@ interface IRewardManager {
     /**
      * @notice The function gives block reward for one valid proposer in the
      * previous epoch by increasing stake of staker
-     * called from confirmBlock function of BlockManager contract
+     * called from confirmBlock function of BlockManager contract. Commission
+     * from the delegator's pool is given out to the staker from the block reward
      * @param stakerId The ID of the staker
      */
     function giveBlockReward(uint32 epoch, uint32 stakerId) external;
