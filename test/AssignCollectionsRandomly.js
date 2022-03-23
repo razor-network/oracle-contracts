@@ -1,6 +1,7 @@
 /* eslint-disable prefer-destructuring */
 const { expect } = require('chai');
 const { network } = require('hardhat');
+const { mineBlock } = require('./helpers/testHelpers');
 const {
   assertBNEqual,
   mineToNextEpoch,
@@ -79,7 +80,9 @@ describe('AssignCollectionsRandomly', function () {
         i++;
       }
       while (Number(await getState()) !== 4) {
-        if (Number(await getState()) !== -1) {
+        if (Number(await getState()) === -1) {
+          await mineBlock();
+        } else {
           await mineToNextState();
         }
       }

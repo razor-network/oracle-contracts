@@ -166,6 +166,7 @@ module.exports = {
   assertBNNotEqual,
   waitNBlocks,
   mineAdvance,
+  mineBlock,
   mineToNextEpoch,
   mineToNextState,
   takeSnapshot,
