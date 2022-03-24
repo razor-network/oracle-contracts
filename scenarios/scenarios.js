@@ -1,6 +1,7 @@
 const {
   getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
+const { mineBlock } = require('../test/helpers/testHelpers');
 const {
   COLLECTION_MODIFIER_ROLE,
   GRACE_PERIOD,
@@ -77,7 +78,9 @@ describe('Scenarios', async () => {
     }
 
     while (Number(await getState()) !== 4) {
-      if (Number(await getState()) !== -1) {
+      if (Number(await getState()) === -1) {
+        await mineBlock();
+      } else {
         await mineToNextState();
       }
     }
