@@ -286,7 +286,7 @@ describe('AssignCollectionsRandomly', function () {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
 
-      await adhocPropose(signers[1], [1, 4, 3, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[1], [1, 4, 3, 5, 6, 7], [100, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
       const epoch = await getEpoch();
 

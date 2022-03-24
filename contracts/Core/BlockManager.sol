@@ -108,6 +108,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
+        require(ids.length == medians.length, "Invalid block proposed");
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
@@ -151,7 +152,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
             uint256 weight = voteManager.getVoteWeight(epoch, leafId, sortedValues[i]);
-            accWeight = accWeight + weight; // total influence revealed for this collection
+            accWeight = accWeight + weight;
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sortedValues[i];
             }
