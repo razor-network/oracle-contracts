@@ -1168,14 +1168,22 @@ describe('Scenarios', async () => {
           break;
         }
       }
+
+      staker = await stakeManager.getStaker(sortedProposedBlock.proposerId);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const totalSupply = await sToken.totalSupply();
+      const stakerSRZR = await sToken.balanceOf(staker._address);
+      const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
+      const delegatorShare = blockReward.sub(stakerShare);
+      const stakerReward = delegatorShare.mul(toBigNumber(staker.commission)).div(toBigNumber('100'));
+
       const stakeAfter = await stakeManager.getStake(sortedProposedBlock.proposerId);
-      assertBNEqual(stakeAfter, stakeBefore.add(blockReward), 'Staker not rewarded');
+      assertBNEqual(stakeAfter, stakeBefore.add(blockReward.sub(stakerReward)), 'Staker not rewarded');
       await mineToNextEpoch();
     }
     // Delagator unstakes
     epoch = await getEpoch();
     staker = await stakeManager.getStaker(stakerId);
-    const stakerPrevBalance = await razor.balanceOf(staker._address);
     const prevStake = (staker.stake);
     sToken = await stakedToken.attach(staker.tokenAddress);
     const amount = await sToken.balanceOf(signers[5].address);
@@ -1192,7 +1200,6 @@ describe('Scenarios', async () => {
     totalSupply = await sToken.totalSupply();
     const rAmount = (amount.mul(staker.stake)).div(totalSupply);
     epoch = await getEpoch();
-    const { initial } = lock;
     await stakeManager.connect(signers[5]).initiateWithdraw(staker.id);
     lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 1);
     const newStake = prevStake.sub(rAmount);
@@ -1211,19 +1218,10 @@ describe('Scenarios', async () => {
     const prevBalance = await razor.balanceOf(signers[5].address);
     await (stakeManager.connect(signers[5]).unlockWithdraw(staker.id));
 
-    let withdawAmount = lock.amount;
-    const gain = (withdawAmount.sub(initial)); // commission in accordance to gain
-    const commission = ((gain).mul(staker.commission)).div(100);
-    if (commission > 0) {
-      withdawAmount = withdawAmount.sub(commission);
-    }
-
-    const newBalance = prevBalance.add(withdawAmount);
+    const newBalance = prevBalance.add(lock.amount);
     const DelegatorBalance = await razor.balanceOf(signers[5].address);
 
     assertBNEqual((DelegatorBalance), (newBalance), 'Delagators balance does not match the calculated balance');
-    assertBNLessThan(withdawAmount, lock.amount, 'Commission Should be paid'); // gain > 0;
-    assertBNEqual(await razor.balanceOf(staker._address), stakerPrevBalance.add(commission), 'Stakers should get commision'); // gain > 0
 
     const rAmountUnchanged = amount; // Amount to be tranferred to delegator if 1RZR = 1sRZR
 
