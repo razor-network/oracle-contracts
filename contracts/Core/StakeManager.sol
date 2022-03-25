@@ -520,8 +520,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         //the following transfers are not `reuquire`d. even if the transfers fail, the slashing
         //tx should complete.
         // Ignoring below line for testing as this is standard erc20 function
-        // slither-disable-next-line unchecked-transfer
-        razor.transfer(BURN_ADDRESS, amountToBeBurned);
+        require(razor.transfer(BURN_ADDRESS, amountToBeBurned), "couldn't burn");
     }
 
     /**
