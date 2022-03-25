@@ -175,8 +175,9 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
         }
       }
       if (!flag) res[leafId].push(voteValue);
-      if (voteWeights[voteValue] === undefined) voteWeights[voteValue] = toBigNumber(0);
-      voteWeights[voteValue] = voteWeights[voteValue].add(influence);
+      if (voteWeights[leafId] === undefined) voteWeights[leafId] = {};
+      if (voteWeights[leafId][voteValue] === undefined) voteWeights[leafId][voteValue] = toBigNumber(0);
+      voteWeights[leafId][voteValue] = voteWeights[leafId][voteValue].add(influence);
       helper[leafId] = true;
     }
   }
@@ -214,7 +215,7 @@ const proposeWithDeviation = async (signer, deviation, stakeManager, blockManage
       let accWeight = toBigNumber(0);
       res[j].sort();
       for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
         if (accWeight.gt((influenceSum[j].div(2)))) {
           mediansValues.push(res[j][i] + deviation);
           break;
@@ -245,7 +246,7 @@ const calculateMedians = async (collectionManager) => {
       let accWeight = toBigNumber(0);
       res[j].sort();
       for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
         if (accWeight.gt((influenceSum[j].div(2)))) {
           mediansValues.push(res[j][i]);
           break;
@@ -267,7 +268,7 @@ const calculateInvalidMedians = async (collectionManager, deviation) => {
       let accWeight = toBigNumber(0);
       res[j].sort();
       for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[res[j][i]]);
+        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
         if (accWeight.gt((influenceSum[j].div(2)))) {
           if (validLeafIdToBeDisputed === 0) {
             validLeafIdToBeDisputed = j;
@@ -298,6 +299,17 @@ const getAnyAssignedIndex = async (signer) => {
   return index;
 };
 
+const getIdsRevealed = async (collectionManager) => {
+  const idsRevealedThisEpoch = [];
+  const activeCollectionIds = await collectionManager.getActiveCollections();
+  for (let j = 0; j < activeCollectionIds.length; j++) {
+    if (Number(influenceSum[j]) !== 0) {
+      idsRevealedThisEpoch.push(activeCollectionIds[j]);
+    }
+  }
+  return idsRevealedThisEpoch;
+};
+
 const getRoot = async (signer) => (root[signer.address]);
 
 const getCommitment = async (signer) => (commitments[signer.address]);
@@ -323,6 +335,7 @@ module.exports = {
   getVoteValues,
   getTreeRevealData,
   getValuesArrayRevealed,
+  getIdsRevealed,
   calculateMedians,
   calculateInvalidMedians,
 };
