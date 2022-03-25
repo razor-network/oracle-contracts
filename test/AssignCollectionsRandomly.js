@@ -266,6 +266,23 @@ describe('AssignCollectionsRandomly', function () {
       assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
     });
 
+    it('Staker Proposes with no ids', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      // missing 3
+      await adhocPropose(signers[1], [], [100, 400, 600], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+      const epoch = await getEpoch();
+
+      await blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 2);
+
+      const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
+      const block = await blockManager.getProposedBlock(epoch, 0);
+      expect(blockIndexToBeConfirmed).to.eq(-1);
+      expect(block.valid).to.eq(false);
+      assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
+    });
+
     it('Staker Proposes with additional id', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
