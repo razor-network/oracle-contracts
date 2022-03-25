@@ -203,6 +203,7 @@ contract Governance is Initializable, ACL, Constants {
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         emit ParameterChanged(msg.sender, "maxCommission", _maxCommission, block.timestamp);
         stakeManagerParams.setMaxCommission(_maxCommission);
+        rewardManagerParams.setMaxCommission(_maxCommission);
     }
 
     /**

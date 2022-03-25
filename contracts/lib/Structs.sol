@@ -20,12 +20,12 @@ library Structs {
         uint32 epochCommissionLastUpdated;
         // Slot 3
         uint256 stake;
+        uint256 stakerReward;
     }
 
     struct Lock {
         uint256 amount; //amount in sRZR/RZR
         uint256 unlockAfter; // Can be made uint32 later if packing is possible
-        uint256 initial; // for unstake lock
     }
 
     struct BountyLock {
