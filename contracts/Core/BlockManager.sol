@@ -274,34 +274,36 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(totalInfluenceRevealed != 0, "Dispute: ID should be absent");
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
-
-        // normal search
-        // for (uint256 i = 0; i < _block.ids.length; i++)
-        //         if (_block.ids[i] == id) {
-        //             toDispute = false;
-        //             break;
-        //         }
-
-        // binary search
-        // impl taken and modified from
-        // https://github.com/compound-finance/compound-protocol/blob/4a8648ec0364d24c4ecfc7d6cae254f55030d65f/contracts/Governance/Comp.sol#L207
-        uint256 lower = 0;
-        uint256 upper = _block.ids.length - 1;
         bool toDispute = true;
 
-        while (upper > lower) {
-            uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
-            uint16 _id = _block.ids[center];
-            if (_id == id) {
-                toDispute = false;
-                break;
-            } else if (_id < id) {
-                lower = center;
-            } else {
-                upper = center - 1;
+        if (_block.ids.length != 0) {
+            // normal search
+            // for (uint256 i = 0; i < _block.ids.length; i++)
+            //         if (_block.ids[i] == id) {
+            //             toDispute = false;
+            //             break;
+            //         }
+
+            // binary search
+            // impl taken and modified from
+            // https://github.com/compound-finance/compound-protocol/blob/4a8648ec0364d24c4ecfc7d6cae254f55030d65f/contracts/Governance/Comp.sol#L207
+            uint256 lower = 0;
+            uint256 upper = _block.ids.length - 1;
+
+            while (upper > lower) {
+                uint256 center = upper - (upper - lower) / 2; // ceil, avoiding overflow
+                uint16 _id = _block.ids[center];
+                if (_id == id) {
+                    toDispute = false;
+                    break;
+                } else if (_id < id) {
+                    lower = center;
+                } else {
+                    upper = center - 1;
+                }
             }
+            if (_block.ids[lower] == id) toDispute = false;
         }
-        if (_block.ids[lower] == id) toDispute = false;
 
         require(toDispute, "Dispute: ID present only");
         _executeDispute(epoch, blockIndex, blockId);
