@@ -57,7 +57,7 @@ contract StateManager is Constants {
     function _getState(uint8 buffer) internal view returns (State) {
         uint8 lowerLimit = buffer;
 
-        uint8 upperLimit = uint8(EPOCH_LENGTH / NUM_STATES) - buffer;
+        uint16 upperLimit = EPOCH_LENGTH / NUM_STATES - buffer;
         // slither-disable-next-line timestamp,weak-prng
         if (block.timestamp % (EPOCH_LENGTH / NUM_STATES) > upperLimit || block.timestamp % (EPOCH_LENGTH / NUM_STATES) < lowerLimit) {
             return State.Buffer;
