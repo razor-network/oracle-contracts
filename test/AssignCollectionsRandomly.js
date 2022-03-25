@@ -269,8 +269,13 @@ describe('AssignCollectionsRandomly', function () {
     it('Staker Proposes with no ids', async () => {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
-      // missing 3
-      await adhocPropose(signers[1], [], [100, 400, 600], stakeManager, blockManager, voteManager);
+      await assertRevert(adhocPropose(signers[1], [], [100, 400, 600], stakeManager, blockManager, voteManager), 'Invalid block proposed');
+    });
+
+    it('Staker Proposes with no ids and no medians', async () => {
+      await restoreSnapshot(snapshotId);
+      snapshotId = await takeSnapshot();
+      await adhocPropose(signers[1], [], [], stakeManager, blockManager, voteManager);
       await mineToNextState();
       const epoch = await getEpoch();
 
