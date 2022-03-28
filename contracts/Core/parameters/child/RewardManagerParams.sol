@@ -17,8 +17,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice reward given to staker whose block is confirmed
     uint256 public blockReward = 100 * (10**18);
     /// @notice maximum percentage deviation allowed from medians for all collections
-    // slither-disable-next-line too-many-digits
-    uint32 public maxTolerance = 1000000;
+    uint32 public maxTolerance = 1_000_000;
     /// @notice maximum commission stakers can charge from delegators on their profits
     uint8 public maxCommission = 20;
 

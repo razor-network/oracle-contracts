@@ -195,7 +195,7 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, 'Slash nums addtion exceeds 10mil');
 
     tx = governance.setMaxTolerance(toBigNumber('11000000'));
-    await assertRevert(tx, 'maxTolerance exceeds 10000000');
+    await assertRevert(tx, 'maxTolerance exceeds 10_000_000');
 
     await governance.connect(signers[0]).setToAssign(toBigNumber('10'));
     const toAssign = await voteManager.toAssign();
