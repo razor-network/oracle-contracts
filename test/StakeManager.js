@@ -2088,5 +2088,54 @@ describe('StakeManager', function () {
       staker = await stakeManager.getStaker(stakerId);
       assertBNEqual(staker.stakerReward, toBigNumber('0'), 'stakerReward needs to reset');
     });
+    it('should be able to set blockReward to zero', async function () {
+      await mineToNextEpoch();
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.connect(signers[0]).setBlockReward(0);
+      const blockReward = await blockManager.blockReward();
+      assertBNEqual(blockReward, toBigNumber('0'));
+      const secret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
+      await mineToNextState();
+      await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
+      await mineToNextState();
+      await mineToNextState();
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      let staker = await stakeManager.stakers(stakerId);
+      const stakeBefore = staker.stake;
+      await blockManager.connect(signers[4]).claimBlockReward();
+      staker = await stakeManager.stakers(stakerId);
+      const stakeAfter = staker.stake;
+      assertBNEqual(stakeBefore, stakeAfter, 'stake should not increase');
+    });
+    it('should be able to set inactivityPenalty to zero', async function () {
+      await mineToNextEpoch();
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.connect(signers[0]).setPenaltyNotRevealNum(0);
+      const penaltyNotRevealNum = await rewardManager.penaltyNotRevealNum();
+      assertBNEqual(penaltyNotRevealNum, toBigNumber('0'));
+      let secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
+      await mineToNextState();
+      await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
+      await mineToNextState();
+      await mineToNextState();
+      const epochsJumped = GRACE_PERIOD + 3;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      let staker = await stakeManager.stakers(stakerId);
+      const stakeBefore = staker.stake;
+      secret = '0x727d5c9e6d18ed45ce7ac8d3ceb6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      staker = await stakeManager.stakers(stakerId);
+      const stakeAfter = staker.stake;
+      assertBNEqual(stakeBefore, stakeAfter, 'stake should not decrease');
+    });
   });
 });
