@@ -2039,32 +2039,35 @@ describe('StakeManager', function () {
       await razor.connect(signers[5]).approve(stakeManager.address, delegatedStake);
       await stakeManager.connect(signers[5]).delegate(staker.id, delegatedStake);
 
-      await mineToNextEpoch();
-      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      for (let i = 0; i < 5; i++) {
+        await mineToNextEpoch();
+        await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
 
-      await mineToNextState(); // reveal
-      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
+        await mineToNextState(); // reveal
+        await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
 
-      await mineToNextState(); // propose
-      await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
+        await mineToNextState(); // propose
+        await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
 
-      await mineToNextState(); // dispute
-      await mineToNextState(); // confirm
+        await mineToNextState(); // dispute
+        await mineToNextState(); // confirm
 
-      staker = await stakeManager.getStaker(stakerId);
-      prevStake = staker.stake;
+        staker = await stakeManager.getStaker(stakerId);
+        prevStake = staker.stake;
+        const prevStakeReward = staker.stakerReward;
 
-      await blockManager.connect(signers[4]).claimBlockReward();
+        await blockManager.connect(signers[4]).claimBlockReward();
 
-      staker = await stakeManager.getStaker(stakerId);
-      const sToken = await stakedToken.attach(staker.tokenAddress);
-      const totalSupply = await sToken.totalSupply();
-      const stakerSRZR = await sToken.balanceOf(signers[4].address);
-      const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
-      const delegatorShare = blockReward.sub(stakerShare);
-      const stakerReward = delegatorShare.mul(toBigNumber(staker.commission)).div(toBigNumber('100'));
-      assertBNEqual(staker.stakerReward, stakerReward, 'Incorrect Commission Calculation');
-      assertBNEqual(prevStake.add(blockReward.sub(stakerReward)), staker.stake, 'Incorrect RAZOR rewarded');
+        staker = await stakeManager.getStaker(stakerId);
+        const sToken = await stakedToken.attach(staker.tokenAddress);
+        const totalSupply = await sToken.totalSupply();
+        const stakerSRZR = await sToken.balanceOf(signers[4].address);
+        const stakerShare = blockReward.mul(stakerSRZR).div(totalSupply);
+        const delegatorShare = blockReward.sub(stakerShare);
+        const stakerReward = delegatorShare.mul(toBigNumber(staker.commission)).div(toBigNumber('100'));
+        assertBNEqual(staker.stakerReward, prevStakeReward.add(stakerReward), 'Incorrect Commission Calculation');
+        assertBNEqual(prevStake.add(blockReward.sub(stakerReward)), staker.stake, 'Incorrect RAZOR rewarded');
+      }
     });
     it('staker should not claim stakerReward if stakerReward is 0', async function () {
       const tx = stakeManager.connect(signers[1]).claimStakerReward();
