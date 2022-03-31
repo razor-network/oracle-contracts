@@ -95,6 +95,9 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setBlockReward(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setMaxAge(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -184,6 +187,10 @@ describe('Governance contract Test', async () => {
     await governance.setEpochLimitForUpdateCommission(toBigNumber('26'));
     const epochLimitForUpdateCommission = await stakeManager.epochLimitForUpdateCommission();
     assertBNEqual(epochLimitForUpdateCommission, toBigNumber('26'));
+
+    await governance.setBlockReward(toBigNumber('27'));
+    const blockReward = await blockManager.blockReward();
+    assertBNEqual(blockReward, toBigNumber('27'));
 
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
