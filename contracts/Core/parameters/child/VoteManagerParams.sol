@@ -5,7 +5,7 @@ import "../ACL.sol";
 import "../../storage/Constants.sol";
 import "./StateManager.sol";
 
-abstract contract VoteManagerParams is ACL, StateManager, IVoteManagerParams {   
+abstract contract VoteManagerParams is ACL, StateManager, IVoteManagerParams {
     /// @notice maximum number of collections that can be assigned to the staker
     uint16 public toAssign = 3;
     /// @notice minimum amount of stake required to participate
@@ -33,8 +33,8 @@ abstract contract VoteManagerParams is ACL, StateManager, IVoteManagerParams {
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
+        offset = getEpoch();
         epochLength = _epochLength;
         timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
-        offset = _getEpoch();
     }
 }

@@ -111,6 +111,21 @@ const getBiggestStakeAndId = async (stakeManager, voteManager) => {
   return { biggestStake, biggestStakerId };
 };
 
+const getIterationCustom = async (voteManager, stakeManager, staker, biggestStake, epoch) => {
+  const numStakers = await stakeManager.getNumStakers();
+  const stakerId = staker.id;
+  const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
+  const salt = await voteManager.getSalt();
+  if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
+  // stake 0 represents that given staker has not voted in that epoch
+  // so anyway in propose its going to revert
+  for (let i = 0; i < 10000000000; i++) {
+    const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
+    if (isElected) return (i);
+  }
+  return 0;
+};
+
 const getIteration = async (voteManager, stakeManager, staker, biggestStake) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
@@ -262,6 +277,7 @@ module.exports = {
   getEpoch,
   getVote,
   getIteration,
+  getIterationCustom,
   getFalseIteration,
   getState,
   prng,

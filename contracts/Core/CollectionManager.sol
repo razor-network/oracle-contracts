@@ -106,7 +106,7 @@ contract CollectionManager is Initializable, CollectionStorage, CollectionManage
         require(jobs[job.id].id == job.id, "Job ID not present");
         require(job.weight <= 100, "Weight beyond max");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         jobs[job.id] = job;
         emit JobUpdated(job, epoch, block.timestamp);
@@ -116,16 +116,12 @@ contract CollectionManager is Initializable, CollectionStorage, CollectionManage
      * @param assetStatus the status that needs to be set for the collection
      * @param id the collection id for which the status needs to change
      */
-    function setCollectionStatus(bool assetStatus, uint16 id)
-        external
-        onlyRole(COLLECTION_MODIFIER_ROLE)
-        checkState(State.Confirm)
-    {
+    function setCollectionStatus(bool assetStatus, uint16 id) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm) {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
         require(assetStatus != collections[id].active, "status not being changed");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -165,7 +161,7 @@ contract CollectionManager is Initializable, CollectionStorage, CollectionManage
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -204,7 +200,7 @@ contract CollectionManager is Initializable, CollectionStorage, CollectionManage
         require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;

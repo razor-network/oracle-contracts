@@ -25,8 +25,8 @@ contract RandomNoManager is Initializable, RandomNoStorage, RandomNoManagerParam
 
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epoch = _getEpoch();
-        State state = _getState();
+        uint32 epoch = getEpoch();
+        State state = getState();
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
         // slither-disable-next-line incorrect-equality,timestamp
@@ -55,7 +55,7 @@ contract RandomNoManager is Initializable, RandomNoStorage, RandomNoManagerParam
 
     /// @inheritdoc IRandomNoClient
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         return _generateRandomNumber(epoch - 1, 0);
     }
 

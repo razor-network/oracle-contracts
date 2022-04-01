@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 import "../interfaces/IBlockManagerParams.sol";
 import "../ACL.sol";
 import "./StateManager.sol";
+
 abstract contract BlockManagerParams is ACL, StateManager, IBlockManagerParams {
     /// @notice maximum number of best proposed blocks to be considered for dispute
     uint8 public maxAltBlocks = 5;
@@ -36,8 +37,8 @@ abstract contract BlockManagerParams is ACL, StateManager, IBlockManagerParams {
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
+        offset = getEpoch();
         epochLength = _epochLength;
         timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
-        offset = _getEpoch();
     }
 }

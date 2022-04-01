@@ -5,7 +5,6 @@ import "../ACL.sol";
 import "./StateManager.sol";
 
 abstract contract RandomNoManagerParams is ACL, StateManager, IRandomNoManagerParams {
-
     function setBufferLength(uint8 _bufferLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only
@@ -16,8 +15,8 @@ abstract contract RandomNoManagerParams is ACL, StateManager, IRandomNoManagerPa
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
+        offset = getEpoch();
         epochLength = _epochLength;
         timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
-        offset = _getEpoch();
     }
 }

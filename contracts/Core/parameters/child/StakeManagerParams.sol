@@ -134,8 +134,8 @@ abstract contract StakeManagerParams is ACL, StateManager, IStakeManagerParams {
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
+        offset = getEpoch();
         epochLength = _epochLength;
         timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
-        offset = _getEpoch();
     }
 }

@@ -28,8 +28,8 @@ abstract contract CollectionManagerParams is ACL, StateManager, ICollectionManag
 
     function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
+        offset = getEpoch();
         epochLength = _epochLength;
         timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
-        offset = _getEpoch();
     }
 }
