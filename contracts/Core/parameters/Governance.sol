@@ -204,6 +204,7 @@ contract Governance is Initializable, ACL, Constants {
         require(_maxCommission <= 100, "Invalid Max Commission Update");
         emit ParameterChanged(msg.sender, "maxCommission", _maxCommission, block.timestamp);
         stakeManagerParams.setMaxCommission(_maxCommission);
+        rewardManagerParams.setMaxCommission(_maxCommission);
     }
 
     /**
@@ -241,8 +242,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _maxTolerance updated value for maxTolerance
      */
     function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        // slither-disable-next-line too-many-digits
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10000000");
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10_000_000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);

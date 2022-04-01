@@ -38,8 +38,7 @@ abstract contract StakeManagerParams is ACL, StateManager, IStakeManagerParams {
     /// @notice the number of epochs for which a staker cant change commission once set/change
     uint16 public epochLimitForUpdateCommission = 100;
     /// @notice slashing params being used if staker is slashed. Slash Penalty = bounty + burned + kept == 100%
-    // slither-disable-next-line too-many-digits
-    SlashNums public slashNums = SlashNums(500000, 9500000, 0);
+    SlashNums public slashNums = SlashNums(500_000, 9_500_000, 0);
     /// @notice minimum amount of stake required to participate
     uint256 public minStake = 20000 * (10**18);
     /// @notice minimum amount of stake required to become a staker

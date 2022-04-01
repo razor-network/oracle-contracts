@@ -14,8 +14,12 @@ contract Constants {
     enum StakeChanged {
         BlockReward,
         InactivityPenalty,
-        RandaoPenalty,
         Slashed
+    }
+
+    enum StakerRewardChanged {
+        StakerRewardAdded,
+        StakerRewardClaimed
     }
 
     enum AgeChanged {
@@ -26,8 +30,7 @@ contract Constants {
     uint8 public constant NUM_STATES = 5;
 
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
-    // slither-disable-next-line too-many-digits
-    uint32 public constant BASE_DENOMINATOR = 10000000;
+    uint32 public constant BASE_DENOMINATOR = 10_000_000;
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 public constant BLOCK_CONFIRMER_ROLE = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
 

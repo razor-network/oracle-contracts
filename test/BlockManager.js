@@ -31,7 +31,7 @@ const {
 
 const { utils } = ethers;
 const {
-  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians,
+  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed,
 } = require('./helpers/InternalEngine');
 
 describe('BlockManager', function () {
@@ -489,12 +489,13 @@ describe('BlockManager', function () {
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       const medians = await calculateMedians(collectionManager);
       medians[0] += 1;
+      const idsRevealed = await getIdsRevealed(collectionManager);
 
       await blockManager.connect(signers[5]).propose(epoch,
-        [2, 3, 4, 9],
+        idsRevealed,
         medians,
         iteration,
-        biggestStakerId); // [ 200, 300, 400, 900 ]
+        biggestStakerId);
       const proposedBlock = await blockManager.proposedBlocks(epoch, 0);
       assertBNEqual(proposedBlock.proposerId, toBigNumber('5'), 'incorrect proposalID');
       await reset();
@@ -866,8 +867,9 @@ describe('BlockManager', function () {
       let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       proposedBlocksIteration1[10] = iteration;
       proposedBlocksIteration.push(iteration);
+      const idsRevealed = await getIdsRevealed(collectionManager);
       await blockManager.connect(signers[10]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -877,7 +879,7 @@ describe('BlockManager', function () {
       proposedBlocksIteration1[11] = iteration;
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[11]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -887,7 +889,7 @@ describe('BlockManager', function () {
       proposedBlocksIteration1[12] = iteration;
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[12]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -897,7 +899,7 @@ describe('BlockManager', function () {
       proposedBlocksIteration1[13] = iteration;
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[13]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -907,7 +909,7 @@ describe('BlockManager', function () {
       proposedBlocksIteration1[14] = iteration;
       proposedBlocksIteration.push(iteration);
       await blockManager.connect(signers[14]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -988,8 +990,9 @@ describe('BlockManager', function () {
 
       // Block with Mid Stake
       const iteration = await getIteration(voteManager, stakeManager, staker, stakeMid);
+      const idsRevealed = await getIdsRevealed(collectionManager);
       await blockManager.connect(signers[11]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         stakerIds[4]); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1001,7 +1004,7 @@ describe('BlockManager', function () {
       staker = await stakeManager.getStaker(stakerIdAcc14);
       const iteration2 = await getIteration(voteManager, stakeManager, staker, stakeSmallest);
       await blockManager.connect(signers[13]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration2,
         stakerIds[0]); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1012,7 +1015,7 @@ describe('BlockManager', function () {
       staker = await stakeManager.getStaker(stakerIdAcc15);
       const iteration3 = await getIteration(voteManager, stakeManager, staker, stakeMid);
       await blockManager.connect(signers[14]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration3,
         stakerIds[4]); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1031,7 +1034,7 @@ describe('BlockManager', function () {
 
       const iteration1 = await getIteration(voteManager, stakeManager, staker, stakeLargest);
       await blockManager.connect(signers[12]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration1,
         stakerIds[3]); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1070,8 +1073,10 @@ describe('BlockManager', function () {
       const stakeMid = (await voteManager.getStakeSnapshot(epoch, 8));
       const iteration = await getIteration(voteManager, stakeManager, staker, stakeMid);
       const medians = await calculateMedians(collectionManager);
+      const idsRevealed = await getIdsRevealed(collectionManager);
+
       await blockManager.connect(signers[9]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration,
         8); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1080,7 +1085,7 @@ describe('BlockManager', function () {
       staker = await stakeManager.getStaker(stakerIdAcc11);
       const iteration1 = await getIteration(voteManager, stakeManager, staker, stakeMid);
       await blockManager.connect(signers[8]).propose(epoch,
-        [0, 0, 0],
+        idsRevealed,
         medians,
         iteration1,
         8); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1206,9 +1211,11 @@ describe('BlockManager', function () {
         proposeData.push({ id: (base + i), iteration });
       }
       proposeData.sort((a, b) => a.iteration - b.iteration);
+      const idsRevealed = await getIdsRevealed(collectionManager);
+
       for (let i = 0; i < maxAltBlocks + 1; i++) {
         await blockManager.connect(signers[(proposeData[i]).id]).propose(epoch,
-          [0, 0, 0],
+          idsRevealed,
           medians,
           (proposeData[i]).iteration,
           biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1277,10 +1284,11 @@ describe('BlockManager', function () {
         const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
         proposeData.push({ id: (base + i), iteration });
       }
+      const idsRevealed = await getIdsRevealed(collectionManager);
       proposeData.sort((a, b) => b.iteration - a.iteration);
       for (let i = 0; i < maxAltBlocks + 1; i++) {
         await blockManager.connect(signers[(proposeData[i]).id]).propose(epoch,
-          [0, 0, 0],
+          idsRevealed,
           medians,
           (proposeData[i]).iteration,
           biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
@@ -1580,6 +1588,48 @@ describe('BlockManager', function () {
       secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbceebcbcbcbc55555c0823ea4ececececebbb';
       await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
       expect(await blockManager.isBlockConfirmed(epoch - 1)).to.be.true;
+    });
+    it('should not be able to propose ids with different length than medians and vice versa', async function () {
+      await mineToNextEpoch();
+      let epoch = await getEpoch();
+      let secret = '0x772d5c9e6d18ed15ce7ac8dbcbcbcbcbeecbcbc55555c082bea4ececececebbb';
+      await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[19], 0, voteManager, stakeManager);
+      await mineToNextState(); // propose
+      let medians = await calculateMedians(collectionManager);
+      let idsRevealed = await getIdsRevealed(collectionManager);
+      idsRevealed.push(9); // intentionally making ids.length > medians.length
+      const stakerIdAcc19 = await stakeManager.stakerIds(signers[19].address);
+      let staker = await stakeManager.getStaker(stakerIdAcc19);
+      let { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      let iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      const tx1 = blockManager.connect(signers[19]).propose(epoch,
+        idsRevealed,
+        medians,
+        iteration,
+        biggestStakerId);
+      await assertRevert(tx1, 'Invalid block proposed');
+      await mineToNextEpoch();
+      epoch = await getEpoch();
+      secret = '0x772d5c9e6d18ed15ce78c8dbcbcbcbcbeecbcbc55555c082bea4ececececebbb';
+      await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[19], 0, voteManager, stakeManager);
+      await mineToNextState(); // propose
+      medians = await calculateMedians(collectionManager);
+      idsRevealed = await getIdsRevealed(collectionManager);
+      medians.push(1000); // intentionally making ids.length < medians.length
+      staker = await stakeManager.getStaker(stakerIdAcc19);
+      biggestStake = (await getBiggestStakeAndId(stakeManager, voteManager)).biggestStake;
+      biggestStakerId = (await getBiggestStakeAndId(stakeManager, voteManager)).biggestStakerId;
+      iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      const tx2 = blockManager.connect(signers[19]).propose(epoch,
+        idsRevealed,
+        medians,
+        iteration,
+        biggestStakerId);
+      await assertRevert(tx2, 'Invalid block proposed');
     });
   });
 });

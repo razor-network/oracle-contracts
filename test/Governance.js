@@ -96,6 +96,9 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setBlockReward(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setMaxAge(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -198,6 +201,9 @@ describe('Governance contract Test', async () => {
     assertBNEqual(_epochLength, toBigNumber('26'));
     _epochLength = await collectionManager.epochLength();
     assertBNEqual(_epochLength, toBigNumber('26'));
+    await governance.setBlockReward(toBigNumber('27'));
+    const blockReward = await blockManager.blockReward();
+    assertBNEqual(blockReward, toBigNumber('27'));
 
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
@@ -209,7 +215,7 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, 'Slash nums addtion exceeds 10mil');
 
     tx = governance.setMaxTolerance(toBigNumber('11000000'));
-    await assertRevert(tx, 'maxTolerance exceeds 10000000');
+    await assertRevert(tx, 'maxTolerance exceeds 10_000_000');
 
     await governance.connect(signers[0]).setToAssign(toBigNumber('10'));
     const toAssign = await voteManager.toAssign();

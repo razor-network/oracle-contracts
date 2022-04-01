@@ -79,10 +79,10 @@ abstract contract StateManager is Constants {
 
         if (block.timestamp <= timeStampOfCurrentEpochLengthUpdate + (epochLength / NUM_STATES)) {
             timeStamp = block.timestamp - timeStampOfCurrentEpochLengthUpdate + 4 * (epochLength / NUM_STATES);
-            console.log(block.timestamp, timeStampOfCurrentEpochLengthUpdate);
+            //console.log(block.timestamp, timeStampOfCurrentEpochLengthUpdate);
         } else {
             timeStamp = block.timestamp;
-            console.log(timeStamp);
+            //console.log(timeStamp);
         }
 
         // slither-disable-next-line timestamp,weak-prng

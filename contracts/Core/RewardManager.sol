@@ -6,6 +6,7 @@ import "./interface/IStakeManager.sol";
 import "./interface/IVoteManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/ICollectionManager.sol";
+import "../tokenization/IStakedToken.sol";
 import "../Initializable.sol";
 import "./storage/Constants.sol";
 import "./parameters/child/RewardManagerParams.sol";
@@ -46,8 +47,25 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
 
     /// @inheritdoc IRewardManager
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
-        uint256 prevStake = stakeManager.getStake(stakerId);
-        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, prevStake, prevStake + blockReward);
+        Structs.Staker memory staker = stakeManager.getStaker(stakerId);
+        if (!staker.acceptDelegation) {
+            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + blockReward);
+            return;
+        }
+        IStakedToken sToken = IStakedToken(staker.tokenAddress);
+        uint256 totalSupply = sToken.totalSupply();
+        uint256 stakerSRZR = sToken.balanceOf(staker._address);
+        uint256 delegatorShare = blockReward - ((blockReward * stakerSRZR) / totalSupply);
+        uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
+        uint256 stakerReward = (delegatorShare * commissionApplicable) / 100;
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + (blockReward - stakerReward));
+        stakeManager.setStakerStakerReward(
+            epoch,
+            stakerId,
+            StakerRewardChanged.StakerRewardAdded,
+            staker.stakerReward,
+            staker.stakerReward + stakerReward
+        );
     }
 
     /// @inheritdoc IRewardManager
