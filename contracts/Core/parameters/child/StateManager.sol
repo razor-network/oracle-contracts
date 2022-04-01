@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "../../storage/Constants.sol";
-import 'hardhat/console.sol';
+import "hardhat/console.sol";
+
 /** @title StateManager
  * @notice StateManager manages the state of the network
  */
@@ -56,7 +57,6 @@ abstract contract StateManager is Constants {
         return offset + uint32(block.timestamp - timeStampOfCurrentEpochLengthUpdate) / epochLength;
     }
 
-
     // "Version" + "Epoch"
     //              uint32
     //  000000010000000001 1
@@ -68,9 +68,9 @@ abstract contract StateManager is Constants {
     //  update epochlength
 
     //  000000020000001010 can be 6 or anything depending, but collision wont happen
-    //  000000020000001011 
-    //  000000020000010000 
-    //  000000020000010001 
+    //  000000020000001011
+    //  000000020000010000
+    //  000000020000010001
 
     function getState() public view returns (State) {
         uint8 lowerLimit = buffer;
