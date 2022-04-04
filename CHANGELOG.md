@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/razor-network/contracts/compare/v1.0.0...v1.0.1) (2022-04-04)
+
+
+### Bug Fixes
+
+* **release:** explicitly export abis before publish ([1931444](https://github.com/razor-network/contracts/commit/1931444e8ea05491c38685a81e826330748105db))
+
 # [1.0.0](https://github.com/razor-network/contracts/compare/v0.3.0...v1.0.0) (2022-04-04)
 
 
