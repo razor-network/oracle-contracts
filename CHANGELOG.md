@@ -1,3 +1,24 @@
+# [1.0.0](https://github.com/razor-network/contracts/compare/v0.3.0...v1.0.0) (2022-04-04)
+
+
+### Bug Fixes
+
+* increase footer max line length ([26d09e7](https://github.com/razor-network/contracts/commit/26d09e79170515e5efe51282e5c4bf6ad273c1e7))
+
+
+### chore
+
+* **release:** dummy commit to trigger release ([2ecb956](https://github.com/razor-network/contracts/commit/2ecb95696b99ff09dbda7f4fbf9832dd6ea06a8a))
+
+
+* Merge pull request #783 from razor-network/next ([b789199](https://github.com/razor-network/contracts/commit/b789199b162f3a763b04329a593bd2b109f81ea5)), closes [#783](https://github.com/razor-network/contracts/issues/783)
+
+
+### BREAKING CHANGES
+
+* Release
+* **release:** Release
+
 # [0.3.0](https://github.com/razor-network/contracts/compare/v0.2.1...v0.3.0) (2022-04-04)
 
 
