@@ -59,7 +59,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
         uint256 stakerReward = (delegatorShare * commissionApplicable) / 100;
         stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + (blockReward - stakerReward));
-        stakeManager.setStakerStakerReward(
+        stakeManager.setStakerReward(
             epoch,
             stakerId,
             StakerRewardChanged.StakerRewardAdded,
