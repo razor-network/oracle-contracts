@@ -50,10 +50,16 @@ contract StateManager is Constants {
         _;
     }
 
+    /**
+     * @return the value of current epoch
+     */
     function _getEpoch() internal view returns (uint32) {
         return (uint32(block.timestamp) / (EPOCH_LENGTH));
     }
 
+    /**
+     * @return the value of current state
+     */
     function _getState(uint8 buffer) internal view returns (State) {
         uint8 lowerLimit = buffer;
 

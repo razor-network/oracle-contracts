@@ -372,6 +372,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
+    /**
+     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch everytime a block is being confirmed
+     */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -386,6 +389,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev hashes the name of the collection and the hashed value is mapped to its corresponding collection ID
+     * @param name the name of collection
+     * @param _id the id of the collection
      */
     function _setIDName(string calldata name, uint16 _id) internal {
         bytes32 _name = keccak256(abi.encodePacked(name));
@@ -395,6 +400,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev calculates the current depth of the merkle tree that stakers have to submit at the time of commit/reveal
+     * @ return the depth of the MerkleTree
      */
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed

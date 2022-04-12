@@ -77,6 +77,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
      * @dev inactivity penalties are given to stakers if they have been inactive for more than the grace period.
      * For each inactive epoch, stakers lose their age by 1*10000 and their stake by penaltyNotRevealNum.
      * Activity is calculated based on the epoch the staker last revealed in.
+     * @param epoch in which inactivityPenalties if any, are being checked and given out
+     * @param stakerId id of the staker for whom inactivityPenalties are being checked and given out
      */
     function _giveInactivityPenalties(uint32 epoch, uint32 stakerId) internal {
         uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
@@ -111,6 +113,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
      * and their votes in the previous epoch compared to the medians confirmed. Penalties on votes depend upon how far were
      * the staker's votes from the median value. There is tolerance being added for each collection thereby not penalizing
      * stakers of their vote was within the tolerance limits of the collection
+     * @param epoch in which penalties if any, are being checked and given out
+     * @param stakerId id of the staker for whom penalties are being checked and given out
      */
     function _givePenalties(uint32 epoch, uint32 stakerId) internal {
         _giveInactivityPenalties(epoch, stakerId);
@@ -164,6 +168,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /** @notice Calculates the stake and age inactivity penalties of the staker
      * @param epochs The difference of epochs where the staker was inactive
      * @param stakeValue The Stake that staker had in last epoch
+     * @param ageValue The Age that staker had in last epoch
      */
     function _calculateInactivityPenalties(
         uint32 epochs,
