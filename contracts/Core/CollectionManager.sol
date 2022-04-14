@@ -373,7 +373,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /**
-     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch everytime a block is being confirmed
+     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new collection is created
      */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
