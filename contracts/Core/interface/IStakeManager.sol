@@ -24,8 +24,9 @@ interface IStakeManager {
 
     /**
      * @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
-     * to penalise the staker who lost his secret and make his stake less by "slashPenaltyAmount" and
+     * to penalise the staker who lost his secret or who got disputed and make his stake less by "slashPenaltyAmount" and
      * transfer to bounty hunter half the "slashPenaltyAmount" of the staker
+     * @param epoch The epoch in which staker is slashed
      * @param stakerId The ID of the staker who is penalised
      * @param bountyHunter The address of the bounty hunter
      */
@@ -36,7 +37,7 @@ interface IStakeManager {
     ) external;
 
     /**
-     * @notice External function for setting staker age of the staker
+     * @notice External function for setting age of the staker
      * Used by RewardManager
      * @param _epoch The epoch in which age changes
      * @param _id of the staker
@@ -59,7 +60,7 @@ interface IStakeManager {
      * @param prevStakerReward previous stakerReward of the staker
      * @param _stakerReward updated stakerReward of the staker
      */
-    function setStakerStakerReward(
+    function setStakerReward(
         uint32 _epoch,
         uint32 _id,
         Constants.StakerRewardChanged reason,
@@ -68,8 +69,9 @@ interface IStakeManager {
     ) external;
 
     /**
-     * @notice External function for setting epochLastPenalized of the staker
+     * @notice External function for setting epochFirstStakedOrLastPenalized of the staker
      * Used by RewardManager
+     * @param _epoch The epoch in which staker first staked or was last penalized
      * @param _id of the staker
      */
     function setStakerEpochFirstStakedOrLastPenalized(uint32 _epoch, uint32 _id) external;
@@ -84,7 +86,7 @@ interface IStakeManager {
      * @param from sender
      * @param to recepient
      * @param amount srzr amount being transferred
-     * @param stakerId of the staker
+     * @param stakerId the id of the staker whose sRZR is involved in the transfer
      */
     function srzrTransfer(
         address from,
@@ -111,16 +113,19 @@ interface IStakeManager {
     function getNumStakers() external view returns (uint32);
 
     /**
+     * @param stakerId ID of the staker
      * @return influence of staker
      */
     function getInfluence(uint32 stakerId) external view returns (uint256);
 
     /**
+     * @param stakerId ID of the staker
      * @return stake of staker
      */
     function getStake(uint32 stakerId) external view returns (uint256);
 
     /**
+     * @param stakerId ID of the staker
      * @return epochFirstStakedOrLastPenalized of staker
      */
     function getEpochFirstStakedOrLastPenalized(uint32 stakerId) external view returns (uint32);
