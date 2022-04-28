@@ -397,11 +397,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
-    /// @inheritdoc IBlockManager
-    function getLatestResults(uint16 id) external view override returns (uint32) {
-        return latestResults[id];
-    }
-
     /**
      * @notice an internal function in which the block is confirmed.
      * @dev The staker who confirms the block receives the block reward, creates the salt for the next epoch and stores
@@ -415,9 +410,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
 
         Structs.Block memory _block = blocks[epoch];
-        for (uint256 i = 0; i < _block.ids.length; i++) {
-            latestResults[_block.ids[i]] = _block.medians[i];
-        }
+        collectionManager.setResult(epoch, _block.ids, _block.medians);
 
         emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
 

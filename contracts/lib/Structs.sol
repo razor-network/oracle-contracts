@@ -64,6 +64,9 @@ library Structs {
         bool active;
         uint16 id;
         int8 power;
+        uint32 result;
+        uint32 occurrence;
+        uint32 epochLastReported;
         uint32 tolerance;
         uint32 aggregationMethod;
         uint16[] jobIDs;
@@ -79,5 +82,14 @@ library Structs {
         Structs.AssignedAsset[] values;
         bytes32[][] proofs;
         bytes32 root;
+    }
+
+    struct DataBond {
+        bool active;
+        uint16 collectionId;
+        uint32 epochBondLastUpdatedPerAddress;
+        address bondCreator;
+        uint16[] jobIds;
+        uint256 bond;
     }
 }

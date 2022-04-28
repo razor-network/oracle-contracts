@@ -24,10 +24,4 @@ interface IBlockManager {
      * @return true or false. true if a block has been confirmed, else false
      */
     function isBlockConfirmed(uint32 epoch) external view returns (bool);
-
-    /**
-     * @notice Allows to get latest result of collection from id, used by delegator
-     * @param id Collection ID
-     */
-    function getLatestResults(uint16 id) external view returns (uint32);
 }

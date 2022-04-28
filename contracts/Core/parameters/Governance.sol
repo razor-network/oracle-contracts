@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 import "../../Initializable.sol";
 import "./interfaces/IBlockManagerParams.sol";
+import "./interfaces/IBondManagerParams.sol";
 import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
@@ -17,6 +18,7 @@ import "./ACL.sol";
 // slither-disable-next-line missing-inheritance
 contract Governance is Initializable, ACL, Constants {
     IBlockManagerParams public blockManagerParams;
+    IBondManagerParams public bondManagerParams;
     IRewardManagerParams public rewardManagerParams;
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
@@ -44,6 +46,7 @@ contract Governance is Initializable, ACL, Constants {
      */
     function initialize(
         address blockManagerAddress,
+        address bondManagerAddress,
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
@@ -51,6 +54,7 @@ contract Governance is Initializable, ACL, Constants {
         address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         blockManagerParams = IBlockManagerParams(blockManagerAddress);
+        bondManagerParams = IBondManagerParams(bondManagerAddress);
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
@@ -106,6 +110,7 @@ contract Governance is Initializable, ACL, Constants {
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
+        bondManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
 
     /**
@@ -268,5 +273,21 @@ contract Governance is Initializable, ACL, Constants {
         voteManagerParams.setBufferLength(_bufferLength);
         collectionManagerParams.setBufferLength(_bufferLength);
         randomNoManagerParams.setBufferLength(_bufferLength);
+        bondManagerParams.setBufferLength(_bufferLength);
+    }
+
+    function setDepositPerJob(uint32 _depositPerJob) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_depositPerJob", _depositPerJob, block.timestamp);
+        bondManagerParams.setDepositPerJob(_depositPerJob);
+    }
+
+    function setMinBond(uint256 _minBond) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_minBond", _minBond, block.timestamp);
+        bondManagerParams.setMinBond(_minBond);
+    }
+
+    function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_epochLimitForUpdateBond", _epochLimitForUpdateBond, block.timestamp);
+        bondManagerParams.setEpochLimitForUpdateBond(_epochLimitForUpdateBond);
     }
 }
