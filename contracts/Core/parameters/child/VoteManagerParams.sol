@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 import "../interfaces/IVoteManagerParams.sol";
 import "../ACL.sol";
 import "../../storage/Constants.sol";
+import "./StateManager.sol";
 
-abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
-    uint8 public buffer = 5;
+abstract contract VoteManagerParams is ACL, StateManager, IVoteManagerParams {
     /// @notice maximum number of collections that can be assigned to the staker
     uint16 public toAssign = 3;
     /// @notice minimum amount of stake required to participate
@@ -29,5 +29,12 @@ abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         buffer = _bufferLength;
+    }
+
+    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        offset = getEpoch();
+        epochLength = _epochLength;
+        timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
     }
 }

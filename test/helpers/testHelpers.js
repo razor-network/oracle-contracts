@@ -139,6 +139,18 @@ const mineToNextState = async () => {
   await ethers.provider.send('evm_mine');
 };
 
+// Mines to the next state with custom stateLength
+const mineToNextStateCustom = async (stateLength) => {
+  const currentBlockNumber = toBigNumber(await web3.eth.getBlockNumber());
+  const currentBlock = await web3.eth.getBlock(currentBlockNumber);
+  const currentTimestamp = toBigNumber(currentBlock.timestamp);
+  const temp = currentTimestamp.div(stateLength).add('1');
+  const nextStateBlockNum = temp.mul(stateLength);
+  const diff = nextStateBlockNum.sub(currentTimestamp);
+  await ethers.provider.send('evm_increaseTime', [diff.toNumber() + 5]);
+  await ethers.provider.send('evm_mine');
+};
+
 const restoreSnapshot = async (id) => {
   await send({
     method: 'evm_revert',
@@ -171,4 +183,5 @@ module.exports = {
   mineToNextState,
   takeSnapshot,
   restoreSnapshot,
+  mineToNextStateCustom,
 };

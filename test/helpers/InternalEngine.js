@@ -3,8 +3,8 @@ const { BigNumber, utils } = ethers;
 const toBigNumber = (value) => BigNumber.from(value);
 
 const {
-  getAssignedCollections, getEpoch, getBiggestStakeAndId,
-  getIteration,
+  getAssignedCollections, getBiggestStakeAndId,
+  getIterationCustom,
 } = require('./utils');
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
@@ -57,7 +57,7 @@ const voteWeights = {};
 
 const commit = async (signer, deviation, voteManager, collectionManager, secret, blockManager) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
-  const epoch = await getEpoch();
+  const epoch = await blockManager.getEpoch();
   const numProposedBlocks = await blockManager.getNumProposedBlocks(epoch - 1);
   const toAssign = await voteManager.toAssign();
   const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
@@ -117,7 +117,7 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret,
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 
   commitments[signer.address] = commitment;
-  await voteManager.connect(signer).commit(getEpoch(), commitment);
+  await voteManager.connect(signer).commit(await blockManager.getEpoch(), commitment);
   root[signer.address] = tree[0][0];
 };
 
@@ -155,13 +155,13 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   };
   treeData[signer.address] = treeRevealData;
   // console.log('reveal', signer.address, treeRevealData.values);
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  await voteManager.connect(signer).reveal(await voteManager.getEpoch(), treeRevealData, store[signer.address].secret);
   // console.log(treeRevealData);
   const helper = {};
   const arr = [];
   for (let i = 0; i < store[signer.address].seqAllotedCollections.length; i++) {
     const stakerId = await stakeManager.stakerIds(signer.address);
-    const influence = await voteManager.getInfluenceSnapshot(getEpoch(), stakerId);
+    const influence = await voteManager.getInfluenceSnapshot(await voteManager.getEpoch(), stakerId);
     const leafId = (store[signer.address].seqAllotedCollections)[i];
     const voteValue = values[i].value;
     arr.push(voteValue);
@@ -203,9 +203,9 @@ const proposeWithDeviation = async (signer, deviation, stakeManager, blockManage
   const stakerID = await stakeManager.getStakerId(signer.address);
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
-  const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+  const iteration = await getIterationCustom(voteManager, stakeManager, staker, biggestStake, await blockManager.getEpoch());
   const activeCollectionIds = await collectionManager.getActiveCollections();
-  const epoch = await getEpoch();
+  const epoch = await blockManager.getEpoch();
   const idsRevealedThisEpoch = [];
   const mediansValues = [];
 

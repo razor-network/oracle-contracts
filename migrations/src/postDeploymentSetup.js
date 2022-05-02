@@ -147,7 +147,7 @@ module.exports = async () => {
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
   const numStates = await stakeManager.NUM_STATES();
-  const stateLength = (BigNumber.from(await stakeManager.EPOCH_LENGTH())).div(numStates);
+  const stateLength = (BigNumber.from(await stakeManager.epochLength())).div(numStates);
 
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);

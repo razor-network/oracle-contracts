@@ -143,7 +143,16 @@ describe('CollectionManager', function () {
 
     it('should be able to update Job', async function () {
       await collectionManager.createJob(50, 6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
-      await collectionManager.updateJob(4, 50, 4, 0, 'selector/5', 'http://testurl.com/5');
+      const updatedJob = {
+        id: 4,
+        selectorType: 0,
+        weight: 50,
+        power: 4,
+        name: 'hello',
+        selector: 'selector/5',
+        url: 'http://testurl.com/5',
+      };
+      await collectionManager.updateJob(updatedJob);
       const job = await collectionManager.jobs(4);
       assert(job.url === 'http://testurl.com/5');
       assert(job.selector === 'selector/5');
@@ -222,7 +231,16 @@ describe('CollectionManager', function () {
     });
 
     it('should not be able to update job if job does not exist', async function () {
-      const tx = collectionManager.updateJob(9, 50, 2, 0, 'http://testurl.com/4', 'selector/4');
+      const updatedJob = {
+        id: 9,
+        selectorType: 0,
+        weight: 50,
+        power: 4,
+        name: 'hello',
+        selector: 'selector/5',
+        url: 'http://testurl.com/5',
+      };
+      const tx = collectionManager.updateJob(updatedJob);
       await assertRevert(tx, 'Job ID not present');
     });
 
@@ -237,7 +255,16 @@ describe('CollectionManager', function () {
     });
 
     it('should not be able to update job if jobId is zero', async function () {
-      const tx = collectionManager.updateJob(0, 50, 2, 0, 'http://testurl.com/4', 'selector/4');
+      const updatedJob = {
+        id: 0,
+        selectorType: 0,
+        weight: 50,
+        power: 4,
+        name: 'hello',
+        selector: 'selector/5',
+        url: 'http://testurl.com/5',
+      };
+      const tx = collectionManager.updateJob(updatedJob);
       await assertRevert(tx, 'ID cannot be 0');
     });
 
@@ -277,8 +304,16 @@ describe('CollectionManager', function () {
 
     it('updateJob, updateCollection should not work in commit state', async function () {
       await mineToNextEpoch();
-
-      const tx = collectionManager.updateJob(5, 50, 4, 0, 'selector/6', 'http://testurl.com/6');
+      const updatedJob = {
+        id: 1,
+        selectorType: 0,
+        weight: 50,
+        power: 4,
+        name: 'hello',
+        selector: 'selector/5',
+        url: 'http://testurl.com/5',
+      };
+      const tx = collectionManager.updateJob(updatedJob);
       await assertRevert(tx, 'incorrect state');
 
       const tx2 = collectionManager.updateCollection(3, 500, 2, 5, [1, 2, 5]);
@@ -286,9 +321,18 @@ describe('CollectionManager', function () {
     });
 
     it('Should not be able to set Weight of job beyond max : 100', async function () {
+      const updatedJob = {
+        id: 4,
+        selectorType: 0,
+        weight: 102,
+        power: 4,
+        name: 'hello',
+        selector: 'selector/5',
+        url: 'http://testurl.com/5',
+      };
       const tx0 = collectionManager.createJob(125, 0, 0, 'testName', 'testSelector', 'http://testurl.com/5');
       await mineToNextState();
-      const tx1 = collectionManager.updateJob(4, 125, 0, 0, 'testSelector', 'http://testurl.com/5');
+      const tx1 = collectionManager.updateJob(updatedJob);
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });

@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 import "../interfaces/IStakeManagerParams.sol";
 import "../ACL.sol";
-import "../../storage/Constants.sol";
+import "./StateManager.sol";
 
-abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
+abstract contract StakeManagerParams is ACL, StateManager, IStakeManagerParams {
     struct SlashNums {
         // percent bounty from staker's stake to be received by the bounty hunter
         uint32 bounty;
@@ -15,8 +15,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
     /// @notice a boolean, if true, the default admin role can remove all the funds incase of emergency
     bool public escapeHatchEnabled = true;
-
-    uint8 public buffer = 5;
     /// @notice the number of epochs for which the sRZRs are locked for calling unstake()
     uint8 public unstakeLockPeriod = 1;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
@@ -131,5 +129,12 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         buffer = _bufferLength;
+    }
+
+    function setEpochLength(uint16 _epochLength) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        offset = getEpoch();
+        epochLength = _epochLength;
+        timeStampOfCurrentEpochLengthUpdate = uint32(block.timestamp);
     }
 }

@@ -29,8 +29,6 @@ contract Constants {
 
     uint8 public constant NUM_STATES = 5;
 
-    uint16 public constant EPOCH_LENGTH = 1800;
-
     address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
     uint32 public constant BASE_DENOMINATOR = 10_000_000;
     // keccak256("BLOCK_CONFIRMER_ROLE")

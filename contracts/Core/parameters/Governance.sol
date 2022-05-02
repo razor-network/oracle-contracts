@@ -7,6 +7,7 @@ import "./interfaces/IRandomNoManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
+import "./interfaces/IStateManager.sol";
 import "./../interface/IStakeManager.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
@@ -263,10 +264,25 @@ contract Governance is Initializable, ACL, Constants {
      * @param _bufferLength updated value to be set for buffer
      */
     function setBufferLength(uint8 _bufferLength) external onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "_bufferLength", _bufferLength, block.timestamp);
+        emit ParameterChanged(msg.sender, "bufferLength", _bufferLength, block.timestamp);
         blockManagerParams.setBufferLength(_bufferLength);
         voteManagerParams.setBufferLength(_bufferLength);
         collectionManagerParams.setBufferLength(_bufferLength);
         randomNoManagerParams.setBufferLength(_bufferLength);
+    }
+
+    /**
+     * @notice changing epoch length
+     * @dev can be called only by the the address that has the governance role
+     * @param _epochLength updated value to be set for epoch
+     */
+    function setEpochLength(uint16 _epochLength) external onlyRole(GOVERNER_ROLE) {
+        require(IStateManager(address(blockManagerParams)).getState() == 4, "not a confirm state");
+        emit ParameterChanged(msg.sender, "epochLength", _epochLength, block.timestamp);
+        blockManagerParams.setEpochLength(_epochLength);
+        collectionManagerParams.setEpochLength(_epochLength);
+        voteManagerParams.setEpochLength(_epochLength);
+        randomNoManagerParams.setEpochLength(_epochLength);
+        stakeManagerParams.setEpochLength(_epochLength);
     }
 }
