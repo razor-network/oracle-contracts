@@ -175,7 +175,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * and is valid. This will confirm the block and rewards the selected staker with the block reward
      */
     function claimBlockReward() external initialized checkState(State.Confirm, buffer) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
         // slither-disable-next-line timestamp
@@ -195,7 +195,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
     /// @inheritdoc IBlockManager
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
             _confirmBlock(epoch - 1, stakerId);
