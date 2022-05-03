@@ -78,6 +78,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         string calldata url
     ) external databondCreatorCheck(bondId, msg.sender) {
         uint32 epoch = _getEpoch();
+        // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "invalid databond update");
 
         databonds[bondId].epochBondLastUpdatedPerAddress = epoch;
@@ -97,6 +98,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         require(jobIds.length > 2, "invalid bond updation");
         require(jobIds.length <= maxJobs, "number of jobs exceed maxJobs");
         require(databonds[bondId].collectionId == collectionId, "incorrect collectionId specified");
+        // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "invalid databond update");
 
         databonds[bondId].epochBondLastUpdatedPerAddress = epoch;
@@ -114,16 +116,20 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     ) external databondCreatorCheck(bondId, msg.sender) {
         uint32 epoch = _getEpoch();
         require((databonds[bondId].jobIds.length + jobs.length) <= maxJobs, "number of jobs exceed maxJobs");
+        // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "invalid databond update");
 
         {
-            uint16[] memory jobIds = collectionManager.createMulJob(jobs);
+            uint16 numJobs = collectionManager.getNumJobs();
 
-            for (uint8 i = 0; i < jobIds.length; i++) {
-                databonds[bondId].jobIds.push(jobIds[i]);
+            for (uint8 i = 0; i < jobs.length; i++) {
+                numJobs = numJobs + 1;
+                databonds[bondId].jobIds.push(numJobs);
             }
         }
         databonds[bondId].epochBondLastUpdatedPerAddress = epoch;
+
+        collectionManager.createMulJob(jobs);
 
         collectionManager.updateCollection(
             databonds[bondId].collectionId,
@@ -144,6 +150,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         uint32 epoch = _getEpoch();
         require(bond > 0, "bond being unstaked can't be 0");
         require(databonds[bondId].bond <= bond, "invalid bond amount");
+        // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "databond been updated recently");
 
         databonds[bondId].bond = databonds[bondId].bond - bond;
@@ -164,6 +171,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     function withdrawBond(uint32 bondId) external databondCreatorCheck(bondId, msg.sender) {
         uint32 epoch = _getEpoch();
         require(bondLocks[bondId][msg.sender].amount != 0, "no lock created");
+        // slither-disable-next-line timestamp
         require(bondLocks[bondId][msg.sender].unlockAfter <= epoch, "Withdraw epoch not reached");
 
         uint256 withdrawAmount = bondLocks[bondId][msg.sender].amount;
@@ -195,6 +203,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             if (databonds[i].active && databonds[i].bond >= minBond) {
                 uint256 occurrence = (databonds[i].jobIds.length * depositPerJob) / databonds[i].bond;
                 if (occurrence == 0) occurrence = 1;
+                // slither-disable-next-line calls-loop
                 collectionManager.setCollectionOccurrence(databonds[i].collectionId, uint32(occurrence));
             }
         }

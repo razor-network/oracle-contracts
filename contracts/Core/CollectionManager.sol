@@ -235,13 +235,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     function setResult(
         uint32 epoch,
-        uint16[] memory ids,
+        uint16[] memory blockIds,
         uint32[] memory medians
     ) external override onlyRole(COLLECTION_CONFIRMER_ROLE) {
         bool toBeUpdated = false;
-        bondManager.setOccurrence();
-        for (uint256 i = 0; i < ids.length; i++) {
-            uint16 collectionId = ids[i];
+        for (uint256 i = 0; i < blockIds.length; i++) {
+            uint16 collectionId = blockIds[i];
             collections[collectionId].result = medians[i];
             collections[collectionId].epochLastReported = epoch;
             if (collections[collectionId].epochLastReported + collections[collectionId].occurrence != epoch + 1) {
@@ -333,10 +332,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return ids[_hname];
     }
 
-    /**
-     * @return total number of jobs
-     */
-    function getNumJobs() external view returns (uint16) {
+    /// @inheritdoc ICollectionManager
+    function getNumJobs() external view override returns (uint16) {
         return numJobs;
     }
 

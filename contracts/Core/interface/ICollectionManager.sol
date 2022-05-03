@@ -109,6 +109,11 @@ interface ICollectionManager {
     function getNumCollections() external view returns (uint16);
 
     /**
+     * @return total number of jobs
+     */
+    function getNumJobs() external view returns (uint16);
+
+    /**
      * @param i the leafId of the collection
      * @return tolerance of the collection
      */

@@ -7,9 +7,9 @@ import "../../storage/Constants.sol";
 abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
     uint8 public buffer = 5;
     /// @notice deposit need to be sent per job
-    uint256 public depositPerJob = 500000 * (10**18);
+    uint256 public depositPerJob = 500_000 * (10**18);
     /// @notice minimum bond to be paid
-    uint256 public minBond = 100000 * (10**18);
+    uint256 public minBond = 100_000 * (10**18);
     /// @notice the number of epochs for which a staker cant update job/collection they have created
     uint16 public epochLimitForUpdateBond = 100;
     uint8 public maxJobs = 6;
