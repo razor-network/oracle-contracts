@@ -93,6 +93,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint16[] memory jobIds = new uint16[](mulJob.length);
         for (uint8 i = 0; i < mulJob.length; i++) {
             require(mulJob[i].weight <= 100, "Weight beyond max");
+            // slither-disable-next-line costly-loop
             numJobs = numJobs + 1;
 
             jobs[numJobs] = Structs.Job(
