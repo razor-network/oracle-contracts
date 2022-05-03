@@ -244,6 +244,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             collections[collectionId].result = medians[i];
             collections[collectionId].epochLastReported = epoch;
             if (collections[collectionId].epochLastReported + collections[collectionId].occurrence != epoch + 1) {
+                // slither-disable-next-line costly-loop
                 numActiveCollections = numActiveCollections - 1;
                 collections[collectionId].active = false;
                 toBeUpdated = true;
@@ -257,6 +258,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
                 collections[collectionId].epochLastReported + collections[collectionId].occurrence == epoch + 1 &&
                 !collections[collectionId].active
             ) {
+                // slither-disable-next-line costly-loop
                 numActiveCollections = numActiveCollections + 1;
                 collections[collectionId].active = true;
                 toBeUpdated = true;

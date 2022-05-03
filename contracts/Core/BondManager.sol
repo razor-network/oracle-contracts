@@ -50,9 +50,9 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             if (minOccurence == 0) minOccurence = 1;
             require(minOccurence <= occurrence, "not enough bond paid per job");
         }
-
+        // slither-disable-next-line reentrancy-benign
         uint16[] memory jobIds = collectionManager.createMulJob(jobs);
-
+        // slither-disable-next-line reentrancy-benign
         uint16 collectionId = collectionManager.createCollection(
             collectionTolerance,
             collectionPower,
@@ -65,7 +65,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         databonds[numDataBond] = Structs.DataBond(true, collectionId, epoch, msg.sender, jobIds, bond);
         databondCollections.push(collectionId);
 
-        razor.transferFrom(msg.sender, address(this), bond);
+        require(razor.transferFrom(msg.sender, address(this), bond), "invalid transfer");
     }
 
     function updateDataBondJob(
@@ -122,13 +122,13 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         {
             uint16 numJobs = collectionManager.getNumJobs();
 
-            for (uint8 i = 0; i < jobs.length; i++) {
-                numJobs = numJobs + 1;
-                databonds[bondId].jobIds.push(numJobs);
+            for (uint16 i = numJobs + 1; i <= numJobs + jobs.length; i++) {
+                databonds[bondId].jobIds.push(i);
             }
         }
         databonds[bondId].epochBondLastUpdatedPerAddress = epoch;
 
+        // slither-disable-next-line unused-return
         collectionManager.createMulJob(jobs);
 
         collectionManager.updateCollection(
@@ -143,7 +143,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     function addBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) {
         require(databonds[bondId].active, "databond not active");
         databonds[bondId].bond = databonds[bondId].bond + bond;
-        razor.transferFrom(msg.sender, address(this), bond);
+        require(razor.transferFrom(msg.sender, address(this), bond), "invalid transfer");
     }
 
     function unstakeBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) checkState(State.Confirm, buffer) {
@@ -160,7 +160,9 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             for (uint8 i = 0; i < databondCollections.length; i++) {
                 if (databondCollections[i] == databonds[bondId].collectionId) {
                     databondCollections[i] = databondCollections[databondCollections.length - 1];
+                    // slither-disable-next-line costly-loop
                     databondCollections.pop();
+                    break;
                 }
             }
             databonds[bondId].active = false;
@@ -189,7 +191,9 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             for (uint8 i = 0; i < databondCollections.length; i++) {
                 if (databondCollections[i] == databonds[bondId].collectionId) {
                     databondCollections[i] = databondCollections[databondCollections.length - 1];
+                    // slither-disable-next-line costly-loop
                     databondCollections.pop();
+                    break;
                 }
             }
         }

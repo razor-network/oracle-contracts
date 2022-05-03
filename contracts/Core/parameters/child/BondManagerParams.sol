@@ -12,6 +12,7 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
     uint256 public minBond = 100_000 * (10**18);
     /// @notice the number of epochs for which a staker cant update job/collection they have created
     uint16 public epochLimitForUpdateBond = 100;
+    // slither-disable-next-line constable-states
     uint8 public maxJobs = 6;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
     uint8 public withdrawLockPeriod = 1;
