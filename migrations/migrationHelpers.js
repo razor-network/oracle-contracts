@@ -26,6 +26,53 @@ const appendDeploymentFile = async (data) => {
   await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
 };
 
+const updateDeploymentFile = async (contractName) => {
+  const { deployments } = hre;
+  const { get } = deployments;
+  const contract = await get(contractName);
+  await appendDeploymentFile({ [contractName]: contract.address });
+  // console.log(`${contractName} updated to: ${contract.address} in deployments folder`);
+  // Tenderly and hh verification
+  // try {
+  //   await hre.tenderly.persistArtifacts({
+  //     name: contractName,
+  //     address: contract.address,
+  //   });
+
+  //   await hre.tenderly.push({
+  //     name: contractName,
+  //     address: contract.address,
+  //   });
+
+  //   await hre.tenderly.verify({
+  //     name: contractName,
+  //     address: contract.address,
+  //   });
+  // } catch (err) {
+  //   console.log('Error pushing to tenderly:', err);
+  // }
+
+  // const config = {
+  //   address: contract.address,
+  //   constructorArguments: [...constructorParams],
+  // };
+
+  // // We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  // if (contractName === 'Structs') {
+  //   config.contract = 'contracts/lib/Structs.sol:Structs';
+  // }
+
+  // if (contractName === 'RAZOR') {
+  //   config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  // }
+
+  // try {
+  //   await hre.run('verify:verify', config);
+  // } catch (err) {
+  //   console.error('Etherscan verification failed', err);
+  // }
+};
+
 const deployContract = async (
   contractName,
   linkDependecies = [],
@@ -174,6 +221,7 @@ const waitForConfirmState = async (numStates, stateLength) => {
 };
 
 module.exports = {
+  updateDeploymentFile,
   deployContract,
   getdeployedContractInstance,
   appendDeploymentFile,

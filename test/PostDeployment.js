@@ -72,11 +72,12 @@ describe.only('PostDeployment', function () {
   });
   describe('razor', async () => {
     it('block confirmer role should be granted', async () => {
-      const isBlockConfirmerRoleGranted = await blockManager.hasRole(BLOCK_CONFIRMER_ROLE, signers[0].address);
+      // await Promise.all(await initializeContracts());
+      const isBlockConfirmerRoleGranted = await blockManager.hasRole(BLOCK_CONFIRMER_ROLE, voteManager.address);
       assert(isBlockConfirmerRoleGranted === true, 'Block Confirmer role was not Granted');
     });
     it('governance role should be granted', async () => {
-      const isGovernanceRoleGranted = await blockManager.hasRole(GOVERNANCE_ROLE, signers[0].address);
+      const isGovernanceRoleGranted = await blockManager.hasRole(GOVERNANCE_ROLE, governance.address);
       assert(isGovernanceRoleGranted === true, 'Governance role was not Granted');
     });
   });

@@ -14,7 +14,8 @@ fi
 
 npm run compile
 echo "Deploying contracts on network $NETWORK"
-npx hardhat run migrations/deploy_all.js --network $NETWORK
+# npx hardhat run migrations/deploy_all.js --network $NETWORK
+npx hardhat --network $NETWORK deploy
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi
