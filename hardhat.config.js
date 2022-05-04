@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 const dotenv = require('dotenv');
+require('hardhat-deploy');
 
 const dotenvResult = dotenv.config();
 
@@ -78,11 +79,13 @@ module.exports = {
         auto: true,
         interval: 2000,
       },
+      saveDeployments: true,
     },
     mumbai: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
+      saveDeployments: true,
     },
   },
   etherscan: {
@@ -108,5 +111,12 @@ module.exports = {
   },
   dodoc: {
     runOnCompile: false,
+  },
+  namedAccounts: {
+    deployer: 0,
+    tokenOwner: 1,
+  },
+  paths: {
+    sources: './contracts',
   },
 };

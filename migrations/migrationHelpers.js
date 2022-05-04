@@ -120,7 +120,7 @@ const getdeployedContractInstance = async (
   }
 
   const contractInstance = await Contract.attach(contractAddress);
-
+  console.log('contractInstance', contractInstance);
   return { Contract, contractInstance };
 };
 
