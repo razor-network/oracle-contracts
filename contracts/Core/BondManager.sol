@@ -30,7 +30,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
 
     function createBond(
         uint32 epoch,
-        Structs.Job[] memory jobs,
+        Structs.Job[] memory mulJobs,
         uint256 bond,
         uint32 occurrence,
         int8 collectionPower,
@@ -39,19 +39,19 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         string calldata collectionName
     ) external initialized checkEpochAndState(State.Confirm, epoch, buffer) whenNotPaused {
         // 2=>governance param
-        require(jobs.length > 2, "invalid bond creation");
-        require(jobs.length <= maxJobs, "number of jobs exceed maxJobs");
+        require(mulJobs.length > 2, "invalid bond creation");
+        require(mulJobs.length <= maxJobs, "number of jobs exceed maxJobs");
         require(minBond <= bond, "minBond not satisfied");
 
         numDataBond = numDataBond + 1;
 
-        {
-            uint256 minOccurence = (jobs.length * depositPerJob) / bond;
-            if (minOccurence == 0) minOccurence = 1;
-            require(minOccurence <= occurrence, "not enough bond paid per job");
+        {   
+            uint256 minOccurrence = (mulJobs.length * depositPerJob) / bond;
+            if (minOccurrence == 0) minOccurrence = 1;
+            require(minOccurrence <= occurrence, "not enough bond paid per job");
         }
         // slither-disable-next-line reentrancy-benign
-        uint16[] memory jobIds = collectionManager.createMulJob(jobs);
+        uint16[] memory jobIds = collectionManager.createMulJob(mulJobs);
         // slither-disable-next-line reentrancy-benign
         uint16 collectionId = collectionManager.createCollection(
             collectionTolerance,
@@ -62,7 +62,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             collectionName
         );
 
-        databonds[numDataBond] = Structs.DataBond(true, collectionId, epoch, msg.sender, jobIds, bond);
+        databonds[numDataBond] = Structs.DataBond(true, collectionId, numDataBond, epoch, msg.sender, jobIds, bond);
         databondCollections.push(collectionId);
 
         require(razor.transferFrom(msg.sender, address(this), bond), "invalid transfer");
@@ -149,7 +149,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     function unstakeBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) checkState(State.Confirm, buffer) {
         uint32 epoch = _getEpoch();
         require(bond > 0, "bond being unstaked can't be 0");
-        require(databonds[bondId].bond <= bond, "invalid bond amount");
+        require(databonds[bondId].bond >= bond, "invalid bond amount");
         // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "databond been updated recently");
 
@@ -183,8 +183,11 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     }
 
     function setDatabondStatus(bool databondStatus, uint16 bondId) external checkState(State.Confirm, buffer) {
+        uint32 epoch = _getEpoch();
         require(databondStatus != databonds[bondId].active, "status not being changed");
-        require(databonds[bondId].bond <= minBond, "bond needs to be >= to bond");
+        require(databonds[bondId].bond >= minBond, "bond needs to be >= minbond");
+        // slither-disable-next-line timestamp
+        require(databonds[bondId].epochBondLastUpdatedPerAddress + epochLimitForUpdateBond <= epoch, "databond been updated recently");
         if (databondStatus) {
             databondCollections.push(databonds[bondId].collectionId);
         } else {
@@ -202,7 +205,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         collectionManager.setCollectionStatus(databondStatus, databonds[bondId].collectionId);
     }
 
-    function setOccurrence() external override onlyRole(OCCURRENCE_MODIFIER_ROLE) {
+    function setOccurrence() external override onlyRole(OCCURRENCE_CALCULATOR_ROLE) {
         for (uint32 i = 1; i <= numDataBond; i++) {
             if (databonds[i].active && databonds[i].bond >= minBond) {
                 uint256 occurrence = (databonds[i].jobIds.length * depositPerJob) / databonds[i].bond;

@@ -89,21 +89,21 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function createMulJob(Structs.Job[] calldata mulJob) external override onlyRole(COLLECTION_MODIFIER_ROLE) returns (uint16[] memory) {
-        uint16[] memory jobIds = new uint16[](mulJob.length);
-        for (uint8 i = 0; i < mulJob.length; i++) {
-            require(mulJob[i].weight <= 100, "Weight beyond max");
-            // slither-disable-next-line costly-loop
+    function createMulJob(Structs.Job[] memory mulJobs) external override onlyRole(COLLECTION_MODIFIER_ROLE) returns (uint16[] memory) {
+        uint16[] memory jobIds = new uint16[](mulJobs.length);
+        for (uint8 i = 0; i < mulJobs.length; i++) {
+            require(mulJobs[i].weight <= 100, "Weight beyond max");
+            
             numJobs = numJobs + 1;
 
             jobs[numJobs] = Structs.Job(
                 numJobs,
-                uint8(mulJob[i].selectorType),
-                mulJob[i].weight,
-                mulJob[i].power,
-                mulJob[i].name,
-                mulJob[i].selector,
-                mulJob[i].url
+                uint8(mulJobs[i].selectorType),
+                mulJobs[i].weight,
+                mulJobs[i].power,
+                mulJobs[i].name,
+                mulJobs[i].selector,
+                mulJobs[i].url
             );
             jobIds[i] = numJobs;
 
@@ -144,7 +144,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
-        require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
 
@@ -223,7 +222,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint16[] memory jobIDs
     ) external override onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
         require(collectionID <= numCollections, "Collection ID not present");
-        require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch();
         collections[collectionID].power = power;

@@ -87,6 +87,7 @@ library Structs {
     struct DataBond {
         bool active;
         uint16 collectionId;
+        uint32 id;
         uint32 epochBondLastUpdatedPerAddress;
         address bondCreator;
         uint16[] jobIds;

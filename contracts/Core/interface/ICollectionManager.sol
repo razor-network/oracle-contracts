@@ -7,9 +7,9 @@ interface ICollectionManager {
     /**
      * @notice Creates a Multiple Jobs in the network.
      * @dev Jobs are not directly reported by staker but just stores the URL and its corresponding details
-     * @param mulJob multiple jobs that are to be created
+     * @param mulJobs multiple jobs that are to be created
      */
-    function createMulJob(Structs.Job[] memory mulJob) external returns (uint16[] memory);
+    function createMulJob(Structs.Job[] memory mulJobs) external returns (uint16[] memory);
 
     /**
      * @notice Creates a collection in the network.
