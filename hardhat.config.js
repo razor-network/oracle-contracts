@@ -79,13 +79,11 @@ module.exports = {
         auto: true,
         interval: 2000,
       },
-      saveDeployments: true,
     },
     mumbai: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
-      saveDeployments: false,
     },
   },
   etherscan: {
