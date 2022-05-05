@@ -13,6 +13,6 @@ module.exports = async () => {
     `VoteManager deployed at ${deployResult.address} by owner ${deployer} 
     using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
   );
-  updateDeploymentFile('VoteManager');
+  await updateDeploymentFile('VoteManager');
 };
 module.exports.tags = ['VoteManager'];

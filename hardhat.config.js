@@ -85,7 +85,7 @@ module.exports = {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
-      saveDeployments: true,
+      saveDeployments: false,
     },
   },
   etherscan: {

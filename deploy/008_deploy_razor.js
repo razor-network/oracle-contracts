@@ -20,7 +20,7 @@ module.exports = async () => {
       `RAZOR deployed at ${deployResult.address} by owner ${deployer} 
       using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
     );
-    updateDeploymentFile('RAZOR');
+    await updateDeploymentFile('RAZOR');
   } else {
     const { RAZOR } = await readOldDeploymentFile();
 

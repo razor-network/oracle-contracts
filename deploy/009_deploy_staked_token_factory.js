@@ -13,6 +13,6 @@ module.exports = async () => {
     `StakedTokenFactory deployed at ${deployResult.address} by owner ${deployer} 
     using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
   );
-  updateDeploymentFile('StakedTokenFactory');
+  await updateDeploymentFile('StakedTokenFactory');
 };
 module.exports.tags = ['StakedTokenFactory'];

@@ -13,6 +13,6 @@ module.exports = async () => {
     `BlockManager deployed at ${deployResult.address} by owner ${deployer} 
     using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
   );
-  updateDeploymentFile('BlockManager');
+  await updateDeploymentFile('BlockManager');
 };
 module.exports.tags = ['BlockManager'];

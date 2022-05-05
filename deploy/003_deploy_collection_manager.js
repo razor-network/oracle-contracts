@@ -13,6 +13,6 @@ module.exports = async () => {
     `CollectionManager deployed at ${deployResult.address} by owner ${deployer} 
     using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
   );
-  updateDeploymentFile('CollectionManager');
+  await updateDeploymentFile('CollectionManager');
 };
 module.exports.tags = ['CollectionManager'];

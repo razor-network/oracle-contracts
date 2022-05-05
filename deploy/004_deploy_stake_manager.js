@@ -13,6 +13,6 @@ module.exports = async () => {
     `StakeManager deployed at ${deployResult.address} by owner ${deployer} 
     using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
   );
-  updateDeploymentFile('StakeManager');
+  await updateDeploymentFile('StakeManager');
 };
 module.exports.tags = ['StakeManager'];

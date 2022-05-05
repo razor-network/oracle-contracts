@@ -17,7 +17,7 @@ module.exports = async () => {
       `Delegator deployed at ${deployResult.address} by owner ${deployer} 
       using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
     );
-    updateDeploymentFile('Delegator');
+    await updateDeploymentFile('Delegator');
   } else {
     const { Delegator } = await readOldDeploymentFile();
 

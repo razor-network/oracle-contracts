@@ -8,11 +8,12 @@ module.exports = async () => {
   const { deployer } = namedAccounts;
   const deployResult = await deploy('RandomNoManager', {
     from: deployer,
+    skipIfAlreadyDeployed: false,
   });
   log(
     `RandomNoManager deployed at ${deployResult.address} by owner ${deployer} 
-    using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
+    using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash} deployResult.newlyDeployed: ${deployResult.newlyDeployed}`
   );
-  updateDeploymentFile('RandomNoManager');
+  await updateDeploymentFile('RandomNoManager');
 };
 module.exports.tags = ['RandomNoManager'];
