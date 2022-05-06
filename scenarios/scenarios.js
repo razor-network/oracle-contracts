@@ -64,7 +64,7 @@ describe('Scenarios', async () => {
     await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
     await governance.grantRole(GOVERNER_ROLE, signers[0].address);
 
-    let jobs = [];
+    const jobs = [];
     const id = 0;
     const url = 'http://testurl.com';
     const selector = 'selector';
@@ -82,8 +82,8 @@ describe('Scenarios', async () => {
         power,
         name,
         selector,
-        url
-      }
+        url,
+      };
       jobs.push(job);
       i++;
     }

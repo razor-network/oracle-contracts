@@ -13,7 +13,7 @@ const {
   OCCURRENCE_CALCULATOR_ROLE,
   OCCURRENCE_MODIFIER_ROLE,
   COLLECTION_CONFIRMER_ROLE,
-  COLLECTION_MODIFIER_ROLE
+  COLLECTION_MODIFIER_ROLE,
 } = require('./constants');
 
 const setupContracts = async () => {

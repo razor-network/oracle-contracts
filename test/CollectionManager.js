@@ -57,7 +57,17 @@ describe('CollectionManager', function () {
       const name = 'testJSON';
       const power = -2;
       const weight = 50;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      await collectionManager.createMulJob(jobs);
       const job = await collectionManager.jobs(1);
       assert(job.url === url);
       assert(job.selector === selector);
@@ -67,13 +77,23 @@ describe('CollectionManager', function () {
 
     it('should be able to create Job with XHTML selector', async function () {
       await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
-      const url = 'http://testurl.com/2';
-      const selector = 'selector/2';
+      const url = 'http://testurl.com';
+      const selector = 'selector';
       const selectorType = 1;
       const name = 'testXHTML';
-      const power = 2;
+      const power = -2;
       const weight = 50;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      await collectionManager.createMulJob(jobs);
       const job = await collectionManager.jobs(2);
       assert(job.url === url);
       assert(job.selector === selector);
@@ -91,8 +111,8 @@ describe('CollectionManager', function () {
       const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const collectionName2 = 'Test Collection2';
-      await collectionManager.createCollection(tolerance, power, 1, [1, 2], collectionName);
-      await collectionManager.createCollection(tolerance, power, 2, [1], collectionName2);
+      await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], collectionName);
+      await collectionManager.createCollection(tolerance, power, 1, 2, [1], collectionName2);
       const collection1 = await collectionManager.getCollection(1);
       const collection2 = await collectionManager.getCollection(2);
       const collectionId = await delegator.getCollectionID(utils.formatBytes32String('Test Collection'));
@@ -116,7 +136,17 @@ describe('CollectionManager', function () {
       const name = 'test3';
       const power = -6;
       const weight = 50;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      await collectionManager.createMulJob(jobs);
 
       await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 5]);
       const collection = await collectionManager.getCollection(1);
@@ -125,7 +155,7 @@ describe('CollectionManager', function () {
     });
 
     it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
-      const tx = collectionManager.createCollection(1000001, 3, 1, [1, 2], 'Test Collection');
+      const tx = collectionManager.createCollection(1000001, 3, 1, 1, [1, 2], 'Test Collection');
       await assertRevert(tx, 'Invalid tolerance value');
     });
 
@@ -142,7 +172,23 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to update Job', async function () {
-      await collectionManager.createJob(50, 6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
+      const weight = 50;
+      const power = 6;
+      const selectorType = 0;
+      const name = 'test4';
+      const selector = 'selector/4';
+      const url = 'http://testurl.com/4';
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      await collectionManager.createMulJob(jobs);
       await collectionManager.updateJob(4, 50, 4, 0, 'selector/5', 'http://testurl.com/5');
       const job = await collectionManager.jobs(4);
       assert(job.url === 'http://testurl.com/5');
@@ -184,7 +230,7 @@ describe('CollectionManager', function () {
     it('should be able to inactivate collection', async function () {
       let epoch = await getEpoch();
       const collectionName = 'Test Collection6';
-      await collectionManager.createCollection(500, 0, 2, [1, 2], collectionName);
+      await collectionManager.createCollection(500, 0, 1, 2, [1, 2], collectionName);
       await collectionManager.setCollectionStatus(false, 3);
       const collectionIsActive = await collectionManager.getCollectionStatus(3);
       assert(collectionIsActive === false);
@@ -248,31 +294,15 @@ describe('CollectionManager', function () {
       await assertRevert(tx2, 'ID does not exist');
     });
 
-    it('should not be able to set Collection status if provided status is the same as current collectionstatus', async function () {
-      const tx1 = collectionManager.setCollectionStatus(false, 3);// status of collection with Id 3 is already false
-      await assertRevert(tx1, 'status not being changed');
-    });
-
     it('should not create collection if it does not have any jobIDs', async function () {
       const collectionName = 'Test Collection2';
-      const tx1 = collectionManager.createCollection(0, 0, 1, [], collectionName);
+      const tx1 = collectionManager.createCollection(0, 0, 1, 1, [], collectionName);
       await assertRevert(tx1, 'no jobs added');
     });
 
     it('updateCollection should only work for collections which exists', async function () {
       const tx = collectionManager.updateCollection(10, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection ID not present');
-    });
-
-    it('updateCollection should only work for collections which are currently active', async function () {
-      await mineToNextEpoch(); // commit
-      await mineToNextState(); // reveal
-      await mineToNextState(); // propose
-      await mineToNextState(); // dispute
-      await mineToNextState(); // confirm
-      await blockManager.connect(signers[5]).claimBlockReward();
-      const tx = collectionManager.updateCollection(3, 500, 2, 5, [1]);
-      await assertRevert(tx, 'Collection is inactive');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {
@@ -286,23 +316,27 @@ describe('CollectionManager', function () {
     });
 
     it('Should not be able to set Weight of job beyond max : 100', async function () {
-      const tx0 = collectionManager.createJob(125, 0, 0, 'testName', 'testSelector', 'http://testurl.com/5');
+      const weight = 125;
+      const power = 0;
+      const selectorType = 0;
+      const name = 'test4';
+      const selector = 'selector/4';
+      const url = 'http://testurl.com/4';
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      const tx0 = collectionManager.createMulJob(jobs);
       await mineToNextState();
       const tx1 = collectionManager.updateJob(4, 125, 0, 0, 'testSelector', 'http://testurl.com/5');
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });
-    // it('should be able to get result using proxy', async function () {
-    //  await delegator.upgradeDelegate(collectionManager.address);
-    //  assert(await delegator.delegate() === collectionManager.address);
-    //
-    //  const url = 'http://testurl.com/2';
-    //  const selector = 'selector/2';
-    //  const name = 'test2';
-    //  const repeat = true;
-    //  await collectionManager.createJob(url, selector, name, repeat);
-    //  //await collectionManager.grantRole(await parameters.getJobConfirmerHash(), signers[0].address);
-    //  await collectionManager.fulfillJob(2, 222);
-    // });
   });
 });
