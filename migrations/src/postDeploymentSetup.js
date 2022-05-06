@@ -47,7 +47,7 @@ module.exports = async () => {
     await ethers.provider.send('evm_setIntervalMining', [MINING_INTERVAL]);
   }
 
-  // Initialise Contracts and Grant Role
+  // Initialise Contracts and Grant Roles
   await postDeploymentInitialiseGrantRole();
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
