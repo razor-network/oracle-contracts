@@ -1,7 +1,3 @@
-/* eslint-disable prefer-destructuring */
-// @dev : above is a quick fix for this linting error
-// I couldnt understand what it meant, to solve it
-
 const {
   assertBNEqual,
   mineToNextEpoch,
