@@ -17,7 +17,6 @@ const {
   adhocPropose,
 } = require('./helpers/utils');
 
-const { utils } = ethers;
 const { setupContracts } = require('./helpers/testSetup');
 
 describe('PostDeploymentSetup', function () {
