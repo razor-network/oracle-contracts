@@ -38,7 +38,35 @@ describe('BondManager', async () => {
   let razor;
   let governance;
 
-  let stakes = [];
+  const stakes = [];
+
+  const jobs = [];
+  const id = 0;
+  const url = 'http://testurl.com';
+  const selector = 'selector';
+  const selectorType = 0;
+  let name;
+  const power = -2;
+  const weight = 50;
+  let i = 0;
+  while (i < 4) {
+    name = `test${i}`;
+    const job = {
+      id,
+      selectorType,
+      weight,
+      power,
+      name,
+      selector,
+      url,
+    };
+    jobs.push(job);
+    i++;
+  }
+  const collectionPower = -2;
+  const collectionTolerance = 100000;
+  const collectionAggregation = 1;
+  const collectionName = 'databond1';
 
   before(async () => {
     ({
@@ -53,15 +81,7 @@ describe('BondManager', async () => {
     await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
     await governance.grantRole(GOVERNER_ROLE, signers[0].address);
 
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
+    const collJobs = [...jobs];
     while (i < 9) {
       name = `test${i}`;
       const job = {
@@ -73,10 +93,10 @@ describe('BondManager', async () => {
         selector,
         url,
       };
-      jobs.push(job);
+      collJobs.push(job);
       i++;
     }
-    await collectionManager.createMulJob(jobs);
+    await collectionManager.createMulJob(collJobs);
 
     while (Number(await getState()) !== 4) {
       if (Number(await getState()) === -1) {
@@ -111,15 +131,6 @@ describe('BondManager', async () => {
       stakes.push(stake);
     }
     await collectionManager.revokeRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
-  });
-
-  afterEach(async () => {
-    await restoreSnapshot(snapShotId);
-    stakes = [];
-  });
-
-  it('create a bond', async () => {
-    const epoch = await getEpoch();
 
     const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     for (let i = 1; i <= 3; i++) {
@@ -155,38 +166,19 @@ describe('BondManager', async () => {
     await mineToNextState(); // dispute
     await mineToNextState(); // confirm
     await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
+  });
 
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
+  afterEach(async () => {
+    await restoreSnapshot(snapShotId);
+  });
+
+  it('create a bond', async () => {
+    const epoch = await getEpoch();
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
@@ -214,81 +206,24 @@ describe('BondManager', async () => {
 
   it('set result and deactivate collection if not to be reported next epoch', async () => {
     let epoch = await getEpoch();
-
     const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
 
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
 
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
     const databond = await bondManager.getDatabond(1);
     let collection = await collectionManager.getCollection(databond.collectionId);
 
+    let blockConfirmer = 0;
+    let blockIteration;
     while (collection.result === 0) {
       await mineToNextEpoch();
 
@@ -301,7 +236,7 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
+      const medians = await calculateMedians(collectionManager);
       blockConfirmer = 0;
       blockIteration;
       for (let i = 1; i <= 3; i++) {
@@ -327,10 +262,11 @@ describe('BondManager', async () => {
 
       await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
       collection = await collectionManager.getCollection(databond.collectionId);
+      if (collection.result === 0) assert(collection.active === true);
+      else assert(collection.active === false);
     }
 
     assert(collection.result === 1000);
-    assert(collection.active === false);
     const numActiveCollections = await collectionManager.numActiveCollections();
     assertBNEqual(numActiveCollections, toBigNumber('9'), 'collection not activated');
 
@@ -344,7 +280,7 @@ describe('BondManager', async () => {
       await reveal(signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
-    medians = await calculateMedians(collectionManager);
+    const medians = await calculateMedians(collectionManager);
     blockConfirmer = 0;
     blockIteration;
     for (let i = 1; i <= 3; i++) {
@@ -374,77 +310,19 @@ describe('BondManager', async () => {
   it('activate collection when it is to be reported next epoch', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    const databond = await bondManager.getDatabond(1);
 
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+    const databond = await bondManager.getDatabond(1);
 
     let collection = await collectionManager.getCollection(databond.collectionId);
     while (collection.result === 0) {
@@ -459,9 +337,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -485,11 +363,19 @@ describe('BondManager', async () => {
 
       await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
       collection = await collectionManager.getCollection(databond.collectionId);
+      if (collection.result === 0) {
+        assert(collection.active === true);
+      } else {
+        assert(collection.active === false);
+      }
     }
+    assert(collection.result === 1000);
+    assert(collection.active === false);
+    let numActiveCollections = await collectionManager.numActiveCollections();
+    assertBNEqual(numActiveCollections, toBigNumber('9'), 'collection not activated');
 
     for (let j = 1; j < collection.occurrence; j++) {
       await mineToNextEpoch();
-
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
@@ -499,9 +385,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -528,86 +414,23 @@ describe('BondManager', async () => {
     }
 
     assert(collection.active === true);
-    const numActiveCollections = await collectionManager.numActiveCollections();
+    numActiveCollections = await collectionManager.numActiveCollections();
     assertBNEqual(numActiveCollections, toBigNumber('10'), 'collection not activated');
   });
 
   it('update databond job', async () => {
     let epoch = await getEpoch();
-
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
-
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     const databond = await bondManager.getDatabond(1);
-
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
 
     for (let j = 1; j <= bondUpdation; j++) {
@@ -623,9 +446,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -668,79 +491,21 @@ describe('BondManager', async () => {
     let epoch = await getEpoch();
 
     const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
 
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
-
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+
     let databond = await bondManager.getDatabond(1);
-
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
+    let blockConfirmer = 0;
+    let blockIteration;
 
     for (let j = 1; j <= bondUpdation; j++) {
       await mineToNextEpoch();
@@ -755,7 +520,7 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
+      const medians = await calculateMedians(collectionManager);
       blockConfirmer = 0;
       blockIteration;
       for (let i = 1; i <= 3; i++) {
@@ -807,7 +572,7 @@ describe('BondManager', async () => {
       await reveal(signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
-    medians = await calculateMedians(collectionManager);
+    const medians = await calculateMedians(collectionManager);
     blockConfirmer = 0;
     blockIteration;
     for (let i = 1; i <= 3; i++) {
@@ -839,81 +604,23 @@ describe('BondManager', async () => {
   it('add jobs to databond collection and by changing number of jobIds, occurrence should update', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-
-    let jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
-
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
     let databond = await bondManager.getDatabond(1);
 
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
-
+    let blockConfirmer = 0;
+    let blockIteration;
     for (let j = 1; j <= bondUpdation; j++) {
       await mineToNextEpoch();
 
@@ -927,7 +634,7 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
+      const medians = await calculateMedians(collectionManager);
       blockConfirmer = 0;
       blockIteration;
       for (let i = 1; i <= 3; i++) {
@@ -953,12 +660,18 @@ describe('BondManager', async () => {
 
       await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
     }
-    jobs = [];
-
+    const newJobs = [];
+    let i = 4;
+    const url = 'http://testurl.com';
+    const selector = 'selector';
+    const selectorType = 0;
+    let name;
+    const power = -2;
+    const weight = 50;
     while (i < 6) {
       name = `test${i}`;
       const job = {
-        id,
+        id: 0,
         selectorType,
         weight,
         power,
@@ -966,14 +679,15 @@ describe('BondManager', async () => {
         selector,
         url,
       };
-      jobs.push(job);
+      newJobs.push(job);
       i++;
     }
     const newAggregation = 1;
     const newPower = -6;
     const newTolerance = 90;
-    await bondManager.connect(signers[4]).addJobsToCollection(databond.id, jobs, newPower, newTolerance, newAggregation);
     let collection = await collectionManager.getCollection(databond.collectionId);
+    await bondManager.connect(signers[4]).addJobsToCollection(databond.id, newJobs, newPower, newTolerance, newAggregation);
+    collection = await collectionManager.getCollection(databond.collectionId);
     databond = await bondManager.getDatabond(1);
     assert(collection.power === newPower);
     assert(collection.tolerance === newTolerance);
@@ -993,7 +707,7 @@ describe('BondManager', async () => {
       await reveal(signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
-    medians = await calculateMedians(collectionManager);
+    const medians = await calculateMedians(collectionManager);
     blockConfirmer = 0;
     blockIteration;
     for (let i = 1; i <= 3; i++) {
@@ -1025,77 +739,22 @@ describe('BondManager', async () => {
   it('add bond to a databond', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
     let databond = await bondManager.getDatabond(1);
     let collection = await collectionManager.getCollection(databond.collectionId);
+    let blockConfirmer = 0;
+    let blockIteration;
 
     while (collection.result === 0) {
       await mineToNextEpoch();
@@ -1109,7 +768,7 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
+      const medians = await calculateMedians(collectionManager);
       blockConfirmer = 0;
       blockIteration;
       for (let i = 1; i <= 3; i++) {
@@ -1142,6 +801,7 @@ describe('BondManager', async () => {
     await razor.connect(signers[4]).approve(bondManager.address, bondAdded);
     await bondManager.connect(signers[4]).addBond(databond.id, bondAdded);
     databond = await bondManager.getDatabond(1);
+
     assertBNEqual(databond.bond, bondAdded.add(tokenAmount('443000')));
     const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber(databond.jobIds.length))).div(databond.bond));
 
@@ -1156,7 +816,7 @@ describe('BondManager', async () => {
       await reveal(signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
-    medians = await calculateMedians(collectionManager);
+    const medians = await calculateMedians(collectionManager);
     blockConfirmer = 0;
     blockIteration;
     for (let i = 1; i <= 3; i++) {
@@ -1188,75 +848,17 @@ describe('BondManager', async () => {
   it('change the status of a bond', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
     let databond = await bondManager.getDatabond(1);
 
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
@@ -1274,9 +876,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -1322,9 +924,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -1361,75 +963,17 @@ describe('BondManager', async () => {
   it('partially unstake and withdraw bond from databond', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
     let databond = await bondManager.getDatabond(1);
 
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
@@ -1447,9 +991,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
@@ -1502,75 +1046,17 @@ describe('BondManager', async () => {
   it('fully unstake and withdraw bond from databond', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    let medians = await calculateMedians(collectionManager);
-    let blockConfirmer = 0;
-    let blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-
-    await mineToNextState(); // dispute
-    await mineToNextState(); // confirm
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    const jobs = [];
-    const id = 0;
-    const url = 'http://testurl.com';
-    const selector = 'selector';
-    const selectorType = 0;
-    let name;
-    const power = -2;
-    const weight = 50;
-    let i = 0;
-    while (i < 4) {
-      name = `test${i}`;
-      const job = {
-        id,
-        selectorType,
-        weight,
-        power,
-        name,
-        selector,
-        url,
-      };
-      jobs.push(job);
-      i++;
-    }
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
     const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
-    const collectionPower = -2;
-    const collectionTolerance = 100000;
-    const collectionAggregation = 1;
-    const collectionName = 'databond1';
+
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
     let databond = await bondManager.getDatabond(1);
 
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
@@ -1588,9 +1074,9 @@ describe('BondManager', async () => {
         await reveal(signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
-      medians = await calculateMedians(collectionManager);
-      blockConfirmer = 0;
-      blockIteration;
+      const medians = await calculateMedians(collectionManager);
+      let blockConfirmer = 0;
+      let blockIteration;
       for (let i = 1; i <= 3; i++) {
         const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
         const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
