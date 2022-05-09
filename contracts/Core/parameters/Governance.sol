@@ -286,6 +286,16 @@ contract Governance is Initializable, ACL, Constants {
         bondManagerParams.setMinBond(_minBond);
     }
 
+    function setMinJobs(uint8 _minJobs) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_minJobs", _minJobs, block.timestamp);
+        bondManagerParams.setMinJobs(_minJobs);
+    }
+
+    function setMaxJobs(uint8 _maxJobs) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_maxJobs", _maxJobs, block.timestamp);
+        bondManagerParams.setMaxJobs(_maxJobs);
+    }
+
     function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_epochLimitForUpdateBond", _epochLimitForUpdateBond, block.timestamp);
         bondManagerParams.setEpochLimitForUpdateBond(_epochLimitForUpdateBond);

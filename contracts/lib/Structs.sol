@@ -88,7 +88,7 @@ library Structs {
         bool active;
         uint16 collectionId;
         uint32 id;
-        uint32 epochBondLastUpdatedPerAddress;
+        uint32 epochBondLastUpdated;
         address bondCreator;
         uint16[] jobIds;
         uint256 bond;

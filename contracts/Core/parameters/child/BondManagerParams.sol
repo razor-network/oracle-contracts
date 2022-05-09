@@ -14,6 +14,8 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
     uint16 public epochLimitForUpdateBond = 5;
     // slither-disable-next-line constable-states
     uint8 public maxJobs = 6;
+    // slither-disable-next-line constable-states
+    uint8 public minJobs = 2;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
     uint8 public withdrawLockPeriod = 1;
 
@@ -32,6 +34,22 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
         // and their before setting, we are emitting event
         // slither-disable-next-line events-maths
         minBond = _minBond;
+    }
+
+    function setMinJobs(uint8 _minJobs) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-reason: Disabled across all params childs
+        // as they are being called by governance contract only
+        // and their before setting, we are emitting event
+        // slither-disable-next-line events-maths
+        minJobs = _minJobs;
+    }
+
+    function setMaxJobs(uint8 _maxJobs) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-reason: Disabled across all params childs
+        // as they are being called by governance contract only
+        // and their before setting, we are emitting event
+        // slither-disable-next-line events-maths
+        maxJobs = _maxJobs;
     }
 
     function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external override onlyRole(GOVERNANCE_ROLE) {

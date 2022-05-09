@@ -43,8 +43,10 @@ describe('Governance contract Test', async () => {
   const epochLimitForUpdateCommission = toBigNumber('100');
   const toAssign = toBigNumber('3');
   const depositPerJob = tokenAmount('500000');
-  const minBond = tokenAmount('100000'); 
+  const minBond = tokenAmount('100000');
   const epochLimitForUpdateBond = toBigNumber('5');
+  const minJobs = toBigNumber('2');
+  const maxJobs = toBigNumber('6');
 
   before(async () => {
     ({
@@ -127,6 +129,12 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setEpochLimitForUpdateBond(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMaxJobs(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMinJobs(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
   });
 
@@ -219,6 +227,14 @@ describe('Governance contract Test', async () => {
     const epochLimitForUpdateBond = await bondManager.epochLimitForUpdateBond();
     assertBNEqual(epochLimitForUpdateBond, toBigNumber('30'));
 
+    await governance.setMaxJobs(toBigNumber('31'));
+    const maxJobs = await bondManager.maxJobs();
+    assertBNEqual(maxJobs, toBigNumber('31'));
+
+    await governance.setMinJobs(toBigNumber('32'));
+    const minJobs = await bondManager.minJobs();
+    assertBNEqual(minJobs, toBigNumber('32'));
+
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
 
@@ -298,5 +314,11 @@ describe('Governance contract Test', async () => {
 
     const epochLimitForUpdateBondValue = await bondManager.epochLimitForUpdateBond();
     assertBNEqual(epochLimitForUpdateBond, epochLimitForUpdateBondValue);
+
+    const minJobsValue = await bondManager.minJobs();
+    assertBNEqual(minJobs, minJobsValue);
+    
+    const maxJobsValue = await bondManager.maxJobs();
+    assertBNEqual(maxJobs, maxJobsValue);
   });
 });
