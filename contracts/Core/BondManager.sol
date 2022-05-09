@@ -45,7 +45,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
 
         numDataBond = numDataBond + 1;
 
-        {   
+        {
             uint256 minOccurrence = (mulJobs.length * depositPerJob) / bond;
             if (minOccurrence == 0) minOccurrence = 1;
             require(minOccurrence <= occurrence, "not enough bond paid per job");

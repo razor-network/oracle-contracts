@@ -23,6 +23,6 @@ interface IBondManagerParams {
     function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
 
     function setMinJobs(uint8 _minJobs) external;
-    
+
     function setMaxJobs(uint8 _maxJobs) external;
 }
