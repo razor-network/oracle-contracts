@@ -317,7 +317,7 @@ describe('Governance contract Test', async () => {
 
     const minJobsValue = await bondManager.minJobs();
     assertBNEqual(minJobs, minJobsValue);
-    
+
     const maxJobsValue = await bondManager.maxJobs();
     assertBNEqual(maxJobs, maxJobsValue);
   });

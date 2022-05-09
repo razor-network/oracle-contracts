@@ -1254,70 +1254,70 @@ describe('BondManager', async () => {
                           BOND DEACTIVATION
       ////////////////////////////////////////////////////////////// */
 
-      await bondManager.connect(signers[5]).setDatabondStatus(false, 2);
-      let databond = await bondManager.getDatabond(2);
-      let collection = await collectionManager.getCollection(databond.collectionId);
-      let databondArray = await bondManager.getDatabondCollections();
-      assert(databond.active === false);
-      assert(databondArray.length === 2);
+    await bondManager.connect(signers[5]).setDatabondStatus(false, 2);
+    let databond = await bondManager.getDatabond(2);
+    let collection = await collectionManager.getCollection(databond.collectionId);
+    let databondArray = await bondManager.getDatabondCollections();
+    assert(databond.active === false);
+    assert(databondArray.length === 2);
 
     /* ///////////////////////////////////////////////////////////////
                         BOND ACTIVATION
     ////////////////////////////////////////////////////////////// */
 
     // Immediate deactivation <-> activation should not be possible
-      const tx = bondManager.connect(signers[5]).setDatabondStatus(true, databond.id);
-      await assertRevert(tx, 'databond been updated recently')
-      const bondUpdation = await bondManager.epochLimitForUpdateBond();
-      for(let i = 1; i <= bondUpdation; i++){
-        await mineToNextEpoch();
-      }
-      await mineToNextState(); // reveal
-      await mineToNextState(); // propose
-      await mineToNextState(); // dispute
-      await mineToNextState(); // confirm
-      await bondManager.connect(signers[5]).setDatabondStatus(true, databond.id);
-      databond = await bondManager.getDatabond(2);
-      collection = await collectionManager.getCollection(databond.collectionId);
-      databondArray = await bondManager.getDatabondCollections();
-      assert(databond.active === true);
-      assert(collection.active === true);
-      assert(databondArray.length === 3);
+    const tx = bondManager.connect(signers[5]).setDatabondStatus(true, databond.id);
+    await assertRevert(tx, 'databond been updated recently');
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+    await bondManager.connect(signers[5]).setDatabondStatus(true, databond.id);
+    databond = await bondManager.getDatabond(2);
+    collection = await collectionManager.getCollection(databond.collectionId);
+    databondArray = await bondManager.getDatabondCollections();
+    assert(databond.active === true);
+    assert(collection.active === true);
+    assert(databondArray.length === 3);
 
     /* ///////////////////////////////////////////////////////////////
                           UNSTAKE BOND
       ////////////////////////////////////////////////////////////// */
-      // Immediate unstake after changing databond details
-      const tx1 = bondManager.connect(signers[5]).unstakeBond(databond.id, databond.bond);
-      await assertRevert(tx1, 'databond been updated recently')
-      for(let i = 1; i <= bondUpdation; i++){
-        await mineToNextEpoch();
-      }
-      await mineToNextState(); // reveal
-      await mineToNextState(); // propose
-      await mineToNextState(); // dispute
-      await mineToNextState(); // confirm
-      const prevBond = databond.bond;
-      await bondManager.connect(signers[5]).unstakeBond(databond.id, databond.bond);
-      databond = await bondManager.getDatabond(2);
-      databondArray = await bondManager.getDatabondCollections();
-      const bondLock = await bondManager.bondLocks(databond.id, signers[5].address);
-      epoch = await getEpoch()
-      assertBNEqual(databond.bond, toBigNumber('0'), 'invalid amount of razors unstaked');
-      assert(databond.active === false);
-      assert(databondArray.length === 2);
-      assertBNEqual(bondLock.amount, prevBond, 'invalid amount locked');
-      assertBNEqual(bondLock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'invalid lock');
+    // Immediate unstake after changing databond details
+    const tx1 = bondManager.connect(signers[5]).unstakeBond(databond.id, databond.bond);
+    await assertRevert(tx1, 'databond been updated recently');
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+    const prevBond = databond.bond;
+    await bondManager.connect(signers[5]).unstakeBond(databond.id, databond.bond);
+    databond = await bondManager.getDatabond(2);
+    databondArray = await bondManager.getDatabondCollections();
+    const bondLock = await bondManager.bondLocks(databond.id, signers[5].address);
+    epoch = await getEpoch();
+    assertBNEqual(databond.bond, toBigNumber('0'), 'invalid amount of razors unstaked');
+    assert(databond.active === false);
+    assert(databondArray.length === 2);
+    assertBNEqual(bondLock.amount, prevBond, 'invalid amount locked');
+    assertBNEqual(bondLock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'invalid lock');
 
-      for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
-        await mineToNextEpoch();
-      }
+    for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      await mineToNextEpoch();
+    }
 
-      const prevRazorBalance = await razor.balanceOf(signers[5].address);
+    const prevRazorBalance = await razor.balanceOf(signers[5].address);
 
-      await bondManager.connect(signers[5]).withdrawBond(databond.id);
-      const newRazorBalance = await razor.balanceOf(signers[5].address);
+    await bondManager.connect(signers[5]).withdrawBond(databond.id);
+    const newRazorBalance = await razor.balanceOf(signers[5].address);
 
-      assertBNEqual(newRazorBalance, prevRazorBalance.add(prevBond), 'incorrect withdraw');
+    assertBNEqual(newRazorBalance, prevRazorBalance.add(prevBond), 'incorrect withdraw');
   });
 });
