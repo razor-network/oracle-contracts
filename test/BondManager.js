@@ -1329,21 +1329,21 @@ describe('BondManager', async () => {
     let tx = bondManager.connect(signers[4]).createBond(
       epoch, databondJobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    await assertRevert(tx, "number of jobs exceed maxJobs")
+    await assertRevert(tx, 'number of jobs exceed maxJobs');
     tx = bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, 1, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    await assertRevert(tx, "not enough bond paid per job")
+    await assertRevert(tx, 'not enough bond paid per job');
     tx = bondManager.connect(signers[4]).createBond(
-      epoch, databondJobs.slice(0,1), bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+      epoch, databondJobs.slice(0, 1), bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    await assertRevert(tx, "invalid bond creation")
+    await assertRevert(tx, 'invalid bond creation');
     const minBond = await bondManager.minBond();
     tx = bondManager.connect(signers[4]).createBond(
       epoch, jobs, minBond.sub(toBigNumber('1')), occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    await assertRevert(tx, "minBond not satisfied")
-  })
+    await assertRevert(tx, 'minBond not satisfied');
+  });
 
   it('negative test cases: Update Databond Job', async () => {
     const epoch = await getEpoch();
@@ -1356,7 +1356,7 @@ describe('BondManager', async () => {
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    
+
     const newUrl = 'http://testurl5.com';
     const newSelector = 'selector5';
     const newSelectorType = 1;
@@ -1380,7 +1380,7 @@ describe('BondManager', async () => {
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    
+
     const newAggregation = 1;
     const newPower = -6;
     const newTolerance = 90;
@@ -1388,7 +1388,7 @@ describe('BondManager', async () => {
     let tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1]);
     await assertRevert(tx, 'invalid bond updation');
 
-    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1,2,3,4,5,6,7]);
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1, 2, 3, 4, 5, 6, 7]);
     await assertRevert(tx, 'number of jobs exceed maxJobs');
 
     tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 4, newTolerance, newAggregation, newPower, jobIds);
@@ -1412,7 +1412,7 @@ describe('BondManager', async () => {
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
-    
+
     const newJobs = [];
     let i = 4;
     const url = 'http://testurl.com';
@@ -1438,16 +1438,16 @@ describe('BondManager', async () => {
     const newAggregation = 1;
     const newPower = -6;
     const newTolerance = 90;
-  
-    let tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0,2), newPower, newTolerance, newAggregation);
+
+    let tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0, 2), newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'invalid databond update');
 
-    tx = bondManager.connect(signers[7]).addJobsToCollection(1, newJobs.slice(0,2), newPower, newTolerance, newAggregation);
+    tx = bondManager.connect(signers[7]).addJobsToCollection(1, newJobs.slice(0, 2), newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'invalid access to databond');
 
     tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs, newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'number of jobs exceed maxJobs');
-  })
+  });
 
   it('negative test cases: Add bond', async () => {
     const epoch = await getEpoch();
@@ -1560,7 +1560,7 @@ describe('BondManager', async () => {
     await mineToNextState(); // confirm
     await bondManager.connect(signers[4]).unstakeBond(1, bond);
 
-    await mineToNextEpoch()
+    await mineToNextEpoch();
     await bondManager.connect(signers[4]).withdrawBond(1);
 
     await mineToNextState(); // reveal
@@ -1571,7 +1571,7 @@ describe('BondManager', async () => {
     tx = bondManager.connect(signers[4]).setDatabondStatus(true, 1);
     await assertRevert(tx, 'bond needs to be >= minbond');
   });
-  
+
   it('negative test case: get Databond', async () => {
     const epoch = await getEpoch();
 
@@ -1584,10 +1584,10 @@ describe('BondManager', async () => {
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
 
-    let tx = bondManager.getDatabond(0)
-    await assertRevert(tx, 'ID cannot be 0')
+    let tx = bondManager.getDatabond(0);
+    await assertRevert(tx, 'ID cannot be 0');
 
-    tx = bondManager.getDatabond(100)
-    await assertRevert(tx, 'ID does not exist')
+    tx = bondManager.getDatabond(100);
+    await assertRevert(tx, 'ID does not exist');
   });
 });
