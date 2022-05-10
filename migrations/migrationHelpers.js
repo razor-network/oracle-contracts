@@ -82,7 +82,7 @@ const verifyDeployedContracts = async (contractName, constructorParams = []) => 
   } catch (err) {
     console.error('Etherscan verification failed', err);
   }
-}
+};
 
 const deployHHContract = async (contractName, constructorParams = []) => {
   const { getNamedAccounts, deployments } = hre;
