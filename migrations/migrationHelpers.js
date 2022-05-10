@@ -58,25 +58,25 @@ const updateDeploymentFile = async (contractName) => {
     console.log('Error pushing to tenderly:', err);
   }
 
-  // const config = {
-  //   address: contract.address,
-  //   constructorArguments: [...constructorParams],
-  // };
+  const config = {
+    address: contract.address,
+    // constructorArguments: [...constructorParams],
+  };
 
-  // // We need to set explicitly for these as it was causing conflicts with OpenZeplin
-  // if (contractName === 'Structs') {
-  //   config.contract = 'contracts/lib/Structs.sol:Structs';
-  // }
+  // We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  if (contractName === 'Structs') {
+    config.contract = 'contracts/lib/Structs.sol:Structs';
+  }
 
-  // if (contractName === 'RAZOR') {
-  //   config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
-  // }
+  if (contractName === 'RAZOR') {
+    config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  }
 
-  // try {
-  //   await hre.run('verify:verify', config);
-  // } catch (err) {
-  //   console.error('Etherscan verification failed', err);
-  // }
+  try {
+    await hre.run('verify:verify', config);
+  } catch (err) {
+    console.error('Etherscan verification failed', err);
+  }
 };
 
 const deployContract = async (

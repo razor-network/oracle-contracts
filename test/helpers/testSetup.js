@@ -1,4 +1,6 @@
 const { BigNumber } = ethers;
+const hre = require('hardhat');
+
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const {
   BLOCK_CONFIRMER_ROLE,
@@ -13,40 +15,51 @@ const {
 } = require('./constants');
 
 const setupContracts = async () => {
-  const Governance = await ethers.getContractFactory('Governance');
-  const BlockManager = await ethers.getContractFactory('BlockManager');
-  const RandomNoManager = await ethers.getContractFactory('RandomNoManager');
-  const Delegator = await ethers.getContractFactory('Delegator');
-  const CollectionManager = await ethers.getContractFactory('CollectionManager');
-  const RAZOR = await ethers.getContractFactory('RAZOR');
-  const StakeManager = await ethers.getContractFactory('StakeManager');
-  const RewardManager = await ethers.getContractFactory('RewardManager');
-  const VoteManager = await ethers.getContractFactory('VoteManager');
-  const StakedTokenFactory = await ethers.getContractFactory('StakedTokenFactory');
+  const { deployments } = hre;
+  // const Governance = await ethers.getContractFactory('Governance');
+  // const BlockManager = await ethers.getContractFactory('BlockManager');
+  // const RandomNoManager = await ethers.getContractFactory('RandomNoManager');
+  // const Delegator = await ethers.getContractFactory('Delegator');
+  // const CollectionManager = await ethers.getContractFactory('CollectionManager');
+  // const RAZOR = await ethers.getContractFactory('RAZOR');
+  // const RewardManager = await ethers.getContractFactory('RewardManager');
+  // const VoteManager = await ethers.getContractFactory('VoteManager');
+  // const StakedTokenFactory = await ethers.getContractFactory('StakedTokenFactory');
+  await deployments.fixture();
   const signers = await ethers.getSigners();
-
-  const governance = await Governance.deploy();
-  const blockManager = await BlockManager.deploy();
+  // const governance = await Governance.deploy();
+  const governance = await ethers.getContract('Governance');
+  // const blockManager = await BlockManager.deploy();
+  const blockManager = await ethers.getContract('BlockManager');
   const stakedToken = await ethers.getContractFactory('StakedToken');
-  const delegator = await Delegator.deploy();
-  const collectionManager = await CollectionManager.deploy();
-  const stakeManager = await StakeManager.deploy();
-  const rewardManager = await RewardManager.deploy();
-  const voteManager = await VoteManager.deploy();
-  const razor = await RAZOR.deploy(initialSupply);
-  const stakedTokenFactory = await StakedTokenFactory.deploy();
-  const randomNoManager = await RandomNoManager.deploy();
+  // const delegator = await Delegator.deploy();
+  const delegator = await ethers.getContract('Delegator');
+  // const collectionManager = await CollectionManager.deploy();
+  const collectionManager = await ethers.getContract('CollectionManager');
+  // const stakeManager = await StakeManager.deploy();
+  const stakeManager = await ethers.getContract('StakeManager');
+  // const rewardManager = await RewardManager.deploy();
+  const rewardManager = await ethers.getContract('RewardManager');
+  // const voteManager = await VoteManager.deploy();
+  const voteManager = await ethers.getContract('VoteManager');
+  // const razor = await RAZOR.deploy(initialSupply);
+  const razor = await ethers.getContract('RAZOR');
+  // const stakedTokenFactory = await StakedTokenFactory.deploy();
+  const stakedTokenFactory = await ethers.getContract('StakedTokenFactory');
+  // const randomNoManager = await RandomNoManager.deploy();
+  const randomNoManager = await ethers.getContract('RandomNoManager');
 
-  await governance.deployed();
-  await blockManager.deployed();
-  await delegator.deployed();
-  await collectionManager.deployed();
-  await razor.deployed();
-  await stakedTokenFactory.deployed();
-  await stakeManager.deployed();
-  await rewardManager.deployed();
-  await voteManager.deployed();
-  await randomNoManager.deployed();
+
+  // await governance.deployed();
+  // await blockManager.deployed();
+  // await delegator.deployed();
+  // await collectionManager.deployed();
+  // await razor.deployed();
+  // await stakedTokenFactory.deployed();
+  // await stakeManager.deployed();
+  // await rewardManager.deployed();
+  // await voteManager.deployed();
+  // await randomNoManager.deployed();
 
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, collectionManager.address,
