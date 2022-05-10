@@ -1,7 +1,7 @@
-const { BigNumber } = ethers;
+// const { BigNumber } = ethers;
 const hre = require('hardhat');
 
-const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
+// const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 const {
   BLOCK_CONFIRMER_ROLE,
   STAKE_MODIFIER_ROLE,
@@ -48,7 +48,6 @@ const setupContracts = async () => {
   const stakedTokenFactory = await ethers.getContract('StakedTokenFactory');
   // const randomNoManager = await RandomNoManager.deploy();
   const randomNoManager = await ethers.getContract('RandomNoManager');
-
 
   // await governance.deployed();
   // await blockManager.deployed();
