@@ -1320,4 +1320,274 @@ describe('BondManager', async () => {
 
     assertBNEqual(newRazorBalance, prevRazorBalance.add(prevBond), 'incorrect withdraw');
   });
+
+  it('negative test cases: Create Bond', async () => {
+    const epoch = await getEpoch();
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+    let tx = bondManager.connect(signers[4]).createBond(
+      epoch, databondJobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    await assertRevert(tx, "number of jobs exceed maxJobs")
+    tx = bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, 1, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    await assertRevert(tx, "not enough bond paid per job")
+    tx = bondManager.connect(signers[4]).createBond(
+      epoch, databondJobs.slice(0,1), bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    await assertRevert(tx, "invalid bond creation")
+    const minBond = await bondManager.minBond();
+    tx = bondManager.connect(signers[4]).createBond(
+      epoch, jobs, minBond.sub(toBigNumber('1')), occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    await assertRevert(tx, "minBond not satisfied")
+  })
+
+  it('negative test cases: Update Databond Job', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    
+    const newUrl = 'http://testurl5.com';
+    const newSelector = 'selector5';
+    const newSelectorType = 1;
+    const newPower = -6;
+    const newWeight = 90;
+    let tx = bondManager.connect(signers[4]).updateDataBondJob(1, 0, newWeight, newPower, newSelectorType, newSelector, newUrl);
+    await assertRevert(tx, 'invalid databond update');
+
+    tx = bondManager.connect(signers[5]).updateDataBondJob(1, 0, newWeight, newPower, newSelectorType, newSelector, newUrl);
+    await assertRevert(tx, 'invalid access to databond');
+  });
+
+  it('negative test cases: Update Databond Collection', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    
+    const newAggregation = 1;
+    const newPower = -6;
+    const newTolerance = 90;
+    const jobIds = [1, 2, 3];
+    let tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1]);
+    await assertRevert(tx, 'invalid bond updation');
+
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1,2,3,4,5,6,7]);
+    await assertRevert(tx, 'number of jobs exceed maxJobs');
+
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 4, newTolerance, newAggregation, newPower, jobIds);
+    await assertRevert(tx, 'incorrect collectionId specified');
+
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, jobIds);
+    await assertRevert(tx, 'invalid databond update');
+
+    tx = bondManager.connect(signers[6]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, jobIds);
+    await assertRevert(tx, 'invalid access to databond');
+  });
+
+  it('negative test cases: Add Jobs to Collection', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    
+    const newJobs = [];
+    let i = 4;
+    const url = 'http://testurl.com';
+    const selector = 'selector';
+    const selectorType = 0;
+    let name;
+    const power = -2;
+    const weight = 50;
+    while (i < 7) {
+      name = `test${i}`;
+      const job = {
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      };
+      newJobs.push(job);
+      i++;
+    }
+    const newAggregation = 1;
+    const newPower = -6;
+    const newTolerance = 90;
+  
+    let tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0,2), newPower, newTolerance, newAggregation);
+    await assertRevert(tx, 'invalid databond update');
+
+    tx = bondManager.connect(signers[7]).addJobsToCollection(1, newJobs.slice(0,2), newPower, newTolerance, newAggregation);
+    await assertRevert(tx, 'invalid access to databond');
+
+    tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs, newPower, newTolerance, newAggregation);
+    await assertRevert(tx, 'number of jobs exceed maxJobs');
+  })
+
+  it('negative test cases: Add bond', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+
+    await bondManager.connect(signers[4]).setDatabondStatus(false, 1);
+
+    let tx = bondManager.connect(signers[4]).addBond(1, toBigNumber('1'));
+    await assertRevert(tx, 'databond not active');
+
+    tx = bondManager.connect(signers[8]).addBond(1, toBigNumber('1'));
+    await assertRevert(tx, 'invalid access to databond');
+  });
+
+  it('negative test cases: Unstake & Withdraw', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+
+    let tx = bondManager.connect(signers[4]).withdrawBond(1);
+    await assertRevert(tx, 'no lock created');
+
+    tx = bondManager.connect(signers[4]).unstakeBond(1, bond.add(toBigNumber('1')));
+    await assertRevert(tx, 'invalid bond amount');
+
+    tx = bondManager.connect(signers[4]).unstakeBond(1, 0);
+    await assertRevert(tx, 'bond being unstaked cant be 0');
+
+    tx = bondManager.connect(signers[4]).unstakeBond(1, bond);
+    await assertRevert(tx, 'databond been updated recently');
+
+    tx = bondManager.connect(signers[9]).unstakeBond(1, bond);
+    await assertRevert(tx, 'invalid access to databond');
+
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+    await bondManager.connect(signers[4]).unstakeBond(1, bond);
+
+    tx = bondManager.connect(signers[4]).withdrawBond(1);
+    await assertRevert(tx, 'Withdraw epoch not reached');
+
+    tx = bondManager.connect(signers[9]).withdrawBond(1);
+    await assertRevert(tx, 'invalid access to databond');
+  });
+
+  it('negative test case: set databond status', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+
+    let tx = bondManager.connect(signers[4]).setDatabondStatus(true, 1);
+    await assertRevert(tx, 'status not being changed');
+
+    tx = bondManager.connect(signers[4]).setDatabondStatus(false, 1);
+    await assertRevert(tx, 'databond been updated recently');
+
+    tx = bondManager.connect(signers[10]).setDatabondStatus(false, 1);
+    await assertRevert(tx, 'invalid access to databond');
+
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+    await bondManager.connect(signers[4]).unstakeBond(1, bond);
+
+    await mineToNextEpoch()
+    await bondManager.connect(signers[4]).withdrawBond(1);
+
+    await mineToNextState(); // reveal
+    await mineToNextState(); // propose
+    await mineToNextState(); // dispute
+    await mineToNextState(); // confirm
+
+    tx = bondManager.connect(signers[4]).setDatabondStatus(true, 1);
+    await assertRevert(tx, 'bond needs to be >= minbond');
+  });
+  
+  it('negative test case: get Databond', async () => {
+    const epoch = await getEpoch();
+
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+
+    let tx = bondManager.getDatabond(0)
+    await assertRevert(tx, 'ID cannot be 0')
+
+    tx = bondManager.getDatabond(100)
+    await assertRevert(tx, 'ID does not exist')
+  });
 });

@@ -148,7 +148,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
 
     function unstakeBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) checkState(State.Confirm, buffer) {
         uint32 epoch = _getEpoch();
-        require(bond > 0, "bond being unstaked can't be 0");
+        require(bond > 0, "bond being unstaked cant be 0");
         require(databonds[bondId].bond >= bond, "invalid bond amount");
         // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdated + epochLimitForUpdateBond <= epoch, "databond been updated recently");
@@ -182,7 +182,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         require(razor.transfer(msg.sender, withdrawAmount), "couldnt transfer");
     }
 
-    function setDatabondStatus(bool databondStatus, uint16 bondId) external {
+    function setDatabondStatus(bool databondStatus, uint16 bondId) external databondCreatorCheck(bondId, msg.sender) {
         uint32 epoch = _getEpoch();
         require(databondStatus != databonds[bondId].active, "status not being changed");
         require(databonds[bondId].bond >= minBond, "bond needs to be >= minbond");
