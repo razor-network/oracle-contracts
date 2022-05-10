@@ -1,18 +1,10 @@
-const hre = require('hardhat');
-const { updateDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployHHContract } = require('../migrations/migrationHelpers');
+
+const deployStakedTokenFactory = async () => {
+  await deployHHContract('StakedTokenFactory');
+};
 
 module.exports = async () => {
-  const { getNamedAccounts, deployments } = hre;
-  const { log, deploy } = deployments;
-  const namedAccounts = await getNamedAccounts();
-  const { deployer } = namedAccounts;
-  const deployResult = await deploy('StakedTokenFactory', {
-    from: deployer,
-  });
-  log(
-    `StakedTokenFactory deployed at ${deployResult.address} by owner ${deployer} 
-    using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
-  );
-  await updateDeploymentFile('StakedTokenFactory');
+  await deployStakedTokenFactory();
 };
 module.exports.tags = ['StakedTokenFactory'];

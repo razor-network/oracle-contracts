@@ -37,7 +37,12 @@ const updateDeploymentFile = async (contractName) => {
   const { get } = deployments;
   const contract = await get(contractName);
   await appendDeploymentFile({ [contractName]: contract.address });
-  // console.log(`${contractName} updated to: ${contract.address} in deployments folder`);
+};
+
+const verifyDeployedContracts = async (contractName, constructorParams = []) => {
+  const { deployments } = hre;
+  const { get } = deployments;
+  const contract = await get(contractName);
   // Tenderly and hh verification
   try {
     await hre.tenderly.persistArtifacts({
@@ -60,7 +65,7 @@ const updateDeploymentFile = async (contractName) => {
 
   const config = {
     address: contract.address,
-    // constructorArguments: [...constructorParams],
+    constructorArguments: [...constructorParams],
   };
 
   // We need to set explicitly for these as it was causing conflicts with OpenZeplin
@@ -77,6 +82,25 @@ const updateDeploymentFile = async (contractName) => {
   } catch (err) {
     console.error('Etherscan verification failed', err);
   }
+}
+
+const deployHHContract = async (contractName, constructorParams = []) => {
+  const { getNamedAccounts, deployments } = hre;
+  const { log, deploy } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer } = namedAccounts;
+  log(`constructorParams ${constructorParams}, ${[...constructorParams]}`);
+  const Contract = await deploy(contractName, {
+    from: deployer,
+    args: [...constructorParams],
+  });
+  log(
+    `${contractName} deployed at ${Contract.address} by owner ${deployer} 
+    using ${Contract.receipt.gasUsed} gas with tx hash ${Contract.transactionHash}`
+  );
+  await updateDeploymentFile(contractName);
+  await verifyDeployedContracts(contractName, constructorParams);
+  return Contract;
 };
 
 const deployContract = async (
@@ -298,6 +322,7 @@ const postDeploymentInitialiseGrantRole = async () => {
 module.exports = {
   updateDeploymentFile,
   deployContract,
+  deployHHContract,
   getdeployedContractInstance,
   appendDeploymentFile,
   readDeploymentFile,

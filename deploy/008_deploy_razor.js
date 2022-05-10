@@ -1,26 +1,12 @@
-const hre = require('hardhat');
-const { updateDeploymentFile, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployHHContract, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
 
 const { NETWORK, RAZOR_ADDRESS } = process.env;
 const { BigNumber } = ethers;
 const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 
-module.exports = async () => {
-  const { getNamedAccounts, deployments } = hre;
-  const { log, deploy } = deployments;
-  const namedAccounts = await getNamedAccounts();
-
+const deployRAZOR = async () => {
   if (NETWORK !== 'mainnet' && RAZOR_ADDRESS === '') {
-    const { deployer } = namedAccounts;
-    const deployResult = await deploy('RAZOR', {
-      from: deployer,
-      args: [initialSupply],
-    });
-    log(
-      `RAZOR deployed at ${deployResult.address} by owner ${deployer} 
-      using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
-    );
-    await updateDeploymentFile('RAZOR');
+    await deployHHContract('RAZOR', [initialSupply]);
   } else {
     const { RAZOR } = await readOldDeploymentFile();
 
@@ -32,5 +18,9 @@ module.exports = async () => {
     console.log('Re-using Razor instance deployed at', RAZOR);
     await appendDeploymentFile({ RAZOR });
   }
+};
+
+module.exports = async () => {
+  await deployRAZOR();
 };
 module.exports.tags = ['RAZOR'];

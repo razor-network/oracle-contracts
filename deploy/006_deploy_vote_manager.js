@@ -1,18 +1,10 @@
-const hre = require('hardhat');
-const { updateDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployHHContract } = require('../migrations/migrationHelpers');
+
+const deployVoteManager = async () => {
+  await deployHHContract('VoteManager');
+};
 
 module.exports = async () => {
-  const { getNamedAccounts, deployments } = hre;
-  const { log, deploy } = deployments;
-  const namedAccounts = await getNamedAccounts();
-  const { deployer } = namedAccounts;
-  const deployResult = await deploy('VoteManager', {
-    from: deployer,
-  });
-  log(
-    `VoteManager deployed at ${deployResult.address} by owner ${deployer} 
-    using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
-  );
-  await updateDeploymentFile('VoteManager');
+  await deployVoteManager();
 };
 module.exports.tags = ['VoteManager'];

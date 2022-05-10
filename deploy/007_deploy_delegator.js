@@ -1,23 +1,10 @@
-const hre = require('hardhat');
-const { updateDeploymentFile, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployHHContract, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
 
 const { DELEGATOR_ADDRESS } = process.env;
 
-module.exports = async () => {
-  const { getNamedAccounts, deployments } = hre;
-  const { log, deploy } = deployments;
-  const namedAccounts = await getNamedAccounts();
-
+const deployDelegator = async () => {
   if (DELEGATOR_ADDRESS === '' || !DELEGATOR_ADDRESS) {
-    const { deployer } = namedAccounts;
-    const deployResult = await deploy('Delegator', {
-      from: deployer,
-    });
-    log(
-      `Delegator deployed at ${deployResult.address} by owner ${deployer} 
-      using ${deployResult.receipt.gasUsed} gas with tx hash ${deployResult.transactionHash}`
-    );
-    await updateDeploymentFile('Delegator');
+    await deployHHContract('Delegator');
   } else {
     const { Delegator } = await readOldDeploymentFile();
 
@@ -28,5 +15,9 @@ module.exports = async () => {
     console.log('Re-using Delegator instance deployed at', Delegator);
     await appendDeploymentFile({ Delegator });
   }
+};
+
+module.exports = async () => {
+  await deployDelegator();
 };
 module.exports.tags = ['Delegator'];
