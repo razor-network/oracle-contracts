@@ -1,7 +1,7 @@
-const { deployHHContract } = require('../migrations/migrationHelpers');
+const { deployContractHH } = require('../migrations/migrationHelpers');
 
 const deployStakedTokenFactory = async () => {
-  await deployHHContract('StakedTokenFactory');
+  await deployContractHH('StakedTokenFactory');
 };
 
 module.exports = async () => {

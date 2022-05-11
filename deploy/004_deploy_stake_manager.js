@@ -1,7 +1,7 @@
-const { deployHHContract } = require('../migrations/migrationHelpers');
+const { deployContractHH } = require('../migrations/migrationHelpers');
 
 const deployStakeManager = async () => {
-  await deployHHContract('StakeManager');
+  await deployContractHH('StakeManager');
 };
 
 module.exports = async () => {

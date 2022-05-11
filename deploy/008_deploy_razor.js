@@ -1,4 +1,4 @@
-const { deployHHContract, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployContractHH, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
 
 const { NETWORK, RAZOR_ADDRESS } = process.env;
 const { BigNumber } = ethers;
@@ -6,7 +6,7 @@ const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
 
 const deployRAZOR = async () => {
   if (NETWORK !== 'mainnet' && RAZOR_ADDRESS === '') {
-    await deployHHContract('RAZOR', [initialSupply]);
+    await deployContractHH('RAZOR', [initialSupply]);
   } else {
     const { RAZOR } = await readOldDeploymentFile();
 

@@ -84,7 +84,7 @@ const verifyDeployedContracts = async (contractName, constructorParams = []) => 
   }
 };
 
-const deployHHContract = async (contractName, constructorParams = []) => {
+const deployContractHH = async (contractName, constructorParams = []) => {
   const { getNamedAccounts, deployments } = hre;
   const { log, deploy } = deployments;
   const namedAccounts = await getNamedAccounts();
@@ -322,7 +322,7 @@ const postDeploymentInitialiseGrantRole = async () => {
 module.exports = {
   updateDeploymentFile,
   deployContract,
-  deployHHContract,
+  deployContractHH,
   getdeployedContractInstance,
   appendDeploymentFile,
   readDeploymentFile,

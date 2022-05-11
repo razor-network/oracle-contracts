@@ -1,10 +1,10 @@
-const { deployHHContract, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
+const { deployContractHH, readOldDeploymentFile, appendDeploymentFile } = require('../migrations/migrationHelpers');
 
 const { DELEGATOR_ADDRESS } = process.env;
 
 const deployDelegator = async () => {
   if (DELEGATOR_ADDRESS === '' || !DELEGATOR_ADDRESS) {
-    await deployHHContract('Delegator');
+    await deployContractHH('Delegator');
   } else {
     const { Delegator } = await readOldDeploymentFile();
 
