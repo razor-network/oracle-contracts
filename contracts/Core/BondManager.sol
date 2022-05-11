@@ -77,7 +77,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         string calldata selector,
         string calldata url
     ) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdated + epochLimitForUpdateBond <= epoch, "invalid databond update");
 
@@ -94,7 +94,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         int8 power,
         uint16[] memory jobIds
     ) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(jobIds.length >= minJobs, "invalid bond updation");
         require(jobIds.length <= maxJobs, "number of jobs exceed maxJobs");
         require(databonds[bondId].collectionId == collectionId, "incorrect collectionId specified");
@@ -114,7 +114,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         uint32 collectionTolerance,
         uint32 collectionAggregation
     ) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require((databonds[bondId].jobIds.length + jobs.length) <= maxJobs, "number of jobs exceed maxJobs");
         // slither-disable-next-line timestamp
         require(databonds[bondId].epochBondLastUpdated + epochLimitForUpdateBond <= epoch, "invalid databond update");
@@ -147,7 +147,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     }
 
     function unstakeBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) checkState(State.Confirm, buffer) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(bond > 0, "bond being unstaked cant be 0");
         require(databonds[bondId].bond >= bond, "invalid bond amount");
         // slither-disable-next-line timestamp
@@ -171,7 +171,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     }
 
     function withdrawBond(uint32 bondId) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(bondLocks[bondId][msg.sender].amount != 0, "no lock created");
         // slither-disable-next-line timestamp
         require(bondLocks[bondId][msg.sender].unlockAfter <= epoch, "Withdraw epoch not reached");
@@ -183,7 +183,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     }
 
     function setDatabondStatus(bool databondStatus, uint16 bondId) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(databondStatus != databonds[bondId].active, "status not being changed");
         require(databonds[bondId].bond >= minBond, "bond needs to be >= minbond");
         // slither-disable-next-line timestamp
@@ -201,7 +201,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             }
         }
         databonds[bondId].active = databondStatus;
-        databonds[bondId].epochBondLastUpdated = _getEpoch();
+        databonds[bondId].epochBondLastUpdated = getEpoch();
         collectionManager.setCollectionStatus(databondStatus, databonds[bondId].collectionId);
     }
 
