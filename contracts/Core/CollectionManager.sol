@@ -126,7 +126,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -146,7 +146,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -179,7 +179,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -224,7 +224,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     ) external override onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
         require(collectionID <= numCollections, "Collection ID not present");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
@@ -405,6 +405,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
+    /**
+     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new collection is created
+     */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -419,6 +422,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev hashes the name of the collection and the hashed value is mapped to its corresponding collection ID
+     * @param name the name of collection
+     * @param _id the id of the collection
      */
     function _setIDName(string calldata name, uint16 _id) internal {
         bytes32 _name = keccak256(abi.encodePacked(name));
@@ -428,6 +433,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev calculates the current depth of the merkle tree that stakers have to submit at the time of commit/reveal
+     * @ return the depth of the MerkleTree
      */
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed
