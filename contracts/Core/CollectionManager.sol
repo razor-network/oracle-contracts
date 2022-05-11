@@ -133,7 +133,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         jobs[jobID].url = url;
         jobs[jobID].selector = selector;
@@ -156,7 +156,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(id <= numCollections, "ID does not exist");
         require(assetStatus != collections[id].active, "status not being changed");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -196,7 +196,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
@@ -235,7 +235,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(collectionID <= numCollections, "Collection ID not present");
         require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
