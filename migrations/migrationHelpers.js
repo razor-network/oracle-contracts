@@ -89,7 +89,6 @@ const deployContractHH = async (contractName, constructorParams = []) => {
   const { log, deploy } = deployments;
   const namedAccounts = await getNamedAccounts();
   const { deployer } = namedAccounts;
-  log(`constructorParams ${constructorParams}, ${[...constructorParams]}`);
   const Contract = await deploy(contractName, {
     from: deployer,
     args: [...constructorParams],
@@ -197,7 +196,7 @@ const getdeployedContractInstance = async (
   }
 
   const contractInstance = await Contract.attach(contractAddress);
-  return { contractInstance };
+  return { Contract, contractInstance };
 };
 
 const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master';
@@ -249,9 +248,7 @@ const waitForConfirmState = async (numStates, stateLength) => {
   }
 };
 
-const postDeploymentInitialiseGrantRole = async () => {
-  const signers = await ethers.getSigners();
-
+const fetchDeployedContractDetails = async () => {
   const {
     Governance: governanceAddress,
     BlockManager: blockManagerAddress,
@@ -265,7 +262,6 @@ const postDeploymentInitialiseGrantRole = async () => {
     RandomNoManager: randomNoManagerAddress,
   } = await readDeploymentFile();
 
-  const pendingTransactions = [];
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
   const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
@@ -274,7 +270,95 @@ const postDeploymentInitialiseGrantRole = async () => {
   const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
   const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
   const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
+  const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
   const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
+
+  return {
+    Governance: {
+      governanceAddress,
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegatorAddress,
+      delegator,
+    },
+    RAZOR: {
+      RAZORAddress,
+      RAZOR,
+    },
+    StakedTokenFactory: {
+      stakedTokenFactoryAddress,
+      stakedTokenFactory,
+    },
+    RandomNoManager: {
+      randomNoManagerAddress,
+      randomNoManager,
+    },
+  };
+};
+
+const postDeploymentInitialiseContracts = async () => {
+  const {
+    Governance: {
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegator,
+    },
+    RAZOR: {
+      RAZORAddress,
+      RAZOR,
+    },
+    StakedTokenFactory: {
+      stakedTokenFactoryAddress,
+    },
+    RandomNoManager: {
+      randomNoManagerAddress,
+      randomNoManager,
+    },
+  } = await fetchDeployedContractDetails();
+
+  const pendingTransactions = [];
   if (NETWORK !== 'mainnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
     const supply = (BigNumber.from(10).pow(BigNumber.from(23))).mul(BigNumber.from(5));
@@ -282,16 +366,59 @@ const postDeploymentInitialiseGrantRole = async () => {
   }
 
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
-    collectionManagerAddress, randomNoManagerAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
-  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress));
-  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
+    collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress,
+    blockManagerAddress, collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress,
+    stakedTokenFactoryAddress).catch(() => {}));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress,
+    blockManagerAddress, collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress).catch(() => {}));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
-    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));
-  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
+    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress).catch(() => {}));
 
+  Promise.allSettled(pendingTransactions).then(() => console.log('Contracts Initialised'));
+};
+
+const postDeploymentGrantRoles = async () => {
+  const signers = await ethers.getSigners();
+
+  const {
+    Governance: {
+      governanceAddress,
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegator,
+    },
+    RandomNoManager: {
+      randomNoManager,
+    },
+  } = await fetchDeployedContractDetails();
+
+  const pendingTransactions = [];
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
@@ -332,5 +459,6 @@ module.exports = {
   getCollections,
   sleep,
   waitForConfirmState,
-  postDeploymentInitialiseGrantRole,
+  postDeploymentInitialiseContracts,
+  postDeploymentGrantRoles,
 };

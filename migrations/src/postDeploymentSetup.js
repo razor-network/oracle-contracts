@@ -5,7 +5,8 @@ const {
   getJobs,
   getCollections,
   waitForConfirmState,
-  postDeploymentInitialiseGrantRole,
+  postDeploymentInitialiseContracts,
+  postDeploymentGrantRoles,
 } = require('../migrationHelpers');
 
 const { BigNumber } = ethers;
@@ -48,7 +49,8 @@ module.exports = async () => {
   }
 
   // Initialise Contracts and Grant Roles
-  await postDeploymentInitialiseGrantRole();
+  await postDeploymentInitialiseContracts();
+  await postDeploymentGrantRoles();
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {
