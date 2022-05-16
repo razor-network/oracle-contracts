@@ -126,28 +126,28 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         Structs.Block memory _block = blockManager.getBlock(epochLastRevealed);
 
         uint16[] memory idsRevealedLastEpoch = _block.ids;
-        uint32[] memory mediansLastEpoch = _block.medians;
+        uint256[] memory mediansLastEpoch = _block.medians;
 
         if (idsRevealedLastEpoch.length == 0) return;
-        uint64 penalty = 0;
+        uint256 penalty = 0;
         for (uint16 i = 0; i < idsRevealedLastEpoch.length; i++) {
             // get leaf id from collection id, as voting happens w.r.t leaf ids
             // slither-disable-next-line calls-loop
             uint16 leafId = collectionManager.getLeafIdOfCollectionForLastEpoch(idsRevealedLastEpoch[i]);
             // slither-disable-next-line calls-loop
-            uint64 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, leafId);
+            uint256 voteValueLastEpoch = voteManager.getVoteValue(epoch - 1, stakerId, leafId);
             if (
                 voteValueLastEpoch != 0
             ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
             {
-                uint32 medianLastEpoch = mediansLastEpoch[i];
+                uint256 medianLastEpoch = mediansLastEpoch[i];
                 if (medianLastEpoch == 0) continue;
-                uint64 prod = age * voteValueLastEpoch;
+                uint256 prod = age * voteValueLastEpoch;
                 // slither-disable-next-line calls-loop
                 uint32 tolerance = collectionManager.getCollectionTolerance(i);
                 tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
-                uint64 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
-                uint64 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                uint256 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
+                uint256 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 // if (voteWeightLastEpoch > 0) {
                 if (voteValueLastEpoch > maxVoteTolerance) {
                     penalty = penalty + (prod / maxVoteTolerance - age);

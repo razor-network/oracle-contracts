@@ -224,7 +224,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         uint32 epoch,
         uint32 stakerId,
         uint16 leafId
-    ) external view override returns (uint32) {
+    ) external view override returns (uint256) {
         //epoch -> stakerid -> asserId
         return votes[epoch][stakerId][leafId];
     }
@@ -233,7 +233,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function getVoteWeight(
         uint32 epoch,
         uint16 leafId,
-        uint32 voteValue
+        uint256 voteValue
     ) external view override returns (uint256) {
         //epoch -> leafId -> voteValue -> weight
         return (voteWeights[epoch][leafId][voteValue]);

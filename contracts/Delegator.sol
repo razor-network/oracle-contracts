@@ -31,12 +31,12 @@ contract Delegator is StateManager, ACL, IDelegator {
     }
 
     /// @inheritdoc IDelegator
-    function getResult(bytes32 _name) external view override returns (uint32, int8) {
+    function getResult(bytes32 _name) external view override returns (uint256, int8) {
         return collectionManager.getResult(_name);
     }
 
     /// @inheritdoc IDelegator
-    function getResultFromID(uint16 _id) external view override returns (uint32, int8) {
+    function getResultFromID(uint16 _id) external view override returns (uint256, int8) {
         return collectionManager.getResultFromID(_id);
     }
 }
