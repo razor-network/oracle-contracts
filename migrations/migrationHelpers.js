@@ -441,9 +441,8 @@ const postDeploymentGrantRoles = async () => {
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
   pendingTransactions.push(await voteManager.grantRole(SALT_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(DEPTH_MODIFIER_ROLE, collectionManagerAddress));
-  for (let i = 0; i < pendingTransactions.length; i++) {
-    pendingTransactions[i].wait();
-  }
+
+  Promise.allSettled(pendingTransactions).then(() => console.log('Contract Roles Granted'));
 };
 
 module.exports = {
