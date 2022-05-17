@@ -1,6 +1,6 @@
 ## hardhat-deploy in a nutshell
 
-**hardhat-deploy** allows you to write `[deploy scripts](notion://www.notion.so/razorto/fcce5eaaa87a43abbfb5bb198a5e075f#deploy-scripts)` in the `deploy` folder. Each of these files that look as follows will be executed in turn when you execute the following task: `hardhat --network <networkName> deploy`
+**hardhat-deploy** allows you to write `deploy scripts` in the `deploy` folder. Each of these files that look as follows will be executed in turn when you execute the following task: `hardhat --network <networkName> deploy`
 
 Note: `hre.deployments.deploy` function will by default only deploy a contract if the contract code has changed, making it easier to write idempotent scripts.
 
@@ -28,7 +28,7 @@ module.exports = async ({
 
 As you can see the HRE passed in has 4 new fields :
 
-- `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration (see `[namedAccounts](notion://www.notion.so/razorto/fcce5eaaa87a43abbfb5bb198a5e075f#namedaccounts)`).
+- `getNamedAccounts` is a function that returns a promise to an object whose keys are names and values are addresses. It is parsed from the `namedAccounts` configuration.
 - `getUnnamedAccounts` is a function that return a promise to an array of accounts which were not named (see `namedAccounts` ). It is useful for tests where you want to be sure that the account has no speicifc role in the system (no token given, no admin access, etc...).
 - `getChainId` is a function which return a promise for the chainId, as convenience
 - `deployments` is an object which contains functions to access past deployments or to save new ones, as well as helpers functions.
