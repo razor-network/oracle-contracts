@@ -175,13 +175,20 @@ workflows:
           - install_dependencies
   release:
     jobs:
-      - checkout_source 
-      - publish-npm:
-          context: Stag
+      - checkout_source:
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^v.*/
+      - install_dependencies:
           requires:
             - checkout_source
+      - publish-npm:
+          context: Stag
+          # filters:
+          #   branches:
+          #     ignore: /.*/
+          #   tags:
+          #     only: /^v.*/
+
