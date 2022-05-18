@@ -185,7 +185,10 @@ workflows:
           requires:
             - checkout_source
       - publish-npm:
+          requires:
+            - install_dependencies
           context: Stag
+          
           # filters:
           #   branches:
           #     ignore: /.*/
