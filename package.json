@@ -1,6 +1,6 @@
 {
   "name": "@razor-network/contracts",
-  "version": "1.0.1-patch2",
+  "version": "1.0.1-patch3",
   "description": "These are the contracts for Razor network testnet",
   "author": "Razor Network",
   "private": false,
