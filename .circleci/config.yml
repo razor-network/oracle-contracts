@@ -173,6 +173,9 @@ workflows:
       - gasCompare:
           requires:
           - install_dependencies
+  release:
+    jobs:
+      - checkout_source 
       - publish-npm:
           context: Stag
           filters:
