@@ -28,7 +28,7 @@ interface IVoteManager {
         uint32 epoch,
         uint32 stakerId,
         uint16 leafId
-    ) external view returns (uint32);
+    ) external view returns (uint256);
 
     /**
      * @notice returns vote weight of the value of the collection reported
@@ -40,7 +40,7 @@ interface IVoteManager {
     function getVoteWeight(
         uint32 epoch,
         uint16 leafId,
-        uint32 voteValue
+        uint256 voteValue
     ) external view returns (uint256);
 
     /**

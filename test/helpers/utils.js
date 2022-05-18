@@ -30,7 +30,7 @@ const calculateDisputesData = async (leafId, voteManager, stakeManager, collecti
     // if (vote[0] === epoch) {
     //   sortedStakers.push(i);
     //   votes.push(vote[1][leafId]);
-    if ((!(checkVotes[vote])) && (vote !== 0)) {
+    if ((!(checkVotes[vote])) && (Number(vote) !== 0)) {
       sortedValues.push(vote);
     }
     checkVotes[vote] = true;
