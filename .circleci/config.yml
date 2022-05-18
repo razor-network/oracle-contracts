@@ -184,10 +184,20 @@ workflows:
       - install_dependencies:
           requires:
             - checkout_source
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/            
       - publish-npm:
           requires:
             - install_dependencies
           context: Stag
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v.*/
           
           # filters:
           #   branches:
