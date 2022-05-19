@@ -252,6 +252,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
                 databondCollections.push(databonds[i].collectionId);
             } else if (databonds[i].active) {
                 databonds[i].active = false;
+                // slither-disable-next-line calls-loop
                 collectionManager.setCollectionStatus(false, databonds[i].collectionId);
             }
         }
@@ -262,8 +263,8 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
             if (databonds[i].active && databonds[i].bond >= minBond) {
                 uint256 occurrence = (databonds[i].jobIds.length * depositPerJob) / databonds[i].bond;
                 if (occurrence == 0) occurrence = 1;
-                // slither-disable-next-line calls-loop
                 databonds[i].desiredOccurrence = uint16(occurrence);
+                // slither-disable-next-line calls-loop
                 collectionManager.setCollectionOccurrence(databonds[i].collectionId, uint16(occurrence));
             }
         }

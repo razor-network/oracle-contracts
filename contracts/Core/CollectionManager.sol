@@ -239,13 +239,13 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32[] memory medians
     ) external override onlyRole(COLLECTION_CONFIRMER_ROLE) {
         bool toBeUpdated = false;
+        uint16 _numActiveCollections = numActiveCollections;
         for (uint256 i = 0; i < blockIds.length; i++) {
             uint16 collectionId = blockIds[i];
             collections[collectionId].result = medians[i];
             collections[collectionId].epochLastReported = epoch;
             if (collections[collectionId].epochLastReported + collections[collectionId].occurrence != epoch + 1) {
-                // slither-disable-next-line costly-loop
-                numActiveCollections = numActiveCollections - 1;
+                _numActiveCollections = _numActiveCollections - 1;
                 collections[collectionId].active = false;
                 toBeUpdated = true;
             }
@@ -258,8 +258,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
                 collections[collectionId].epochLastReported + collections[collectionId].occurrence == epoch + 1 &&
                 !collections[collectionId].active
             ) {
-                // slither-disable-next-line costly-loop
-                numActiveCollections = numActiveCollections + 1;
+                _numActiveCollections = _numActiveCollections + 1;
                 collections[collectionId].active = true;
                 toBeUpdated = true;
             }
@@ -272,6 +271,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             }
             updateRegistryEpoch = epoch + 1;
             _updateRegistry();
+            numActiveCollections = _numActiveCollections;
         }
     }
 
