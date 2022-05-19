@@ -25,7 +25,7 @@ interface ICollectionManager {
     function createCollection(
         uint32 tolerance,
         int8 power,
-        uint32 occurrence,
+        uint16 occurrence,
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
         string calldata name
@@ -70,7 +70,7 @@ interface ICollectionManager {
         uint32[] memory medians
     ) external;
 
-    function setCollectionOccurrence(uint16 collectionId, uint32 occurrence) external;
+    function setCollectionOccurrence(uint16 collectionId, uint16 occurrence) external;
 
     /**
      * @notice Sets the status of the collection in the network.

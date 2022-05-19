@@ -7,7 +7,7 @@ interface IBondManagerParams {
      * @dev can be called only by the the address that has the governance role
      * @param _depositPerJob updated value for maxTolerance
      */
-    function setDepositPerJob(uint32 _depositPerJob) external;
+    function setDepositPerJob(uint256 _depositPerJob) external;
 
     /**
      * @notice changing buffer length between the states

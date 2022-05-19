@@ -9,6 +9,7 @@ import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
 import "./../interface/IStakeManager.sol";
+import "./../interface/IBondManager.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
 
@@ -24,6 +25,7 @@ contract Governance is Initializable, ACL, Constants {
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
     IStakeManager public stakeManager;
+    IBondManager public bondManager;
     IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
@@ -60,6 +62,7 @@ contract Governance is Initializable, ACL, Constants {
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
         stakeManager = IStakeManager(stakeManagerAddress);
+        bondManager = IBondManager(bondManagerAddress);
         randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
 
@@ -276,24 +279,28 @@ contract Governance is Initializable, ACL, Constants {
         bondManagerParams.setBufferLength(_bufferLength);
     }
 
-    function setDepositPerJob(uint32 _depositPerJob) external onlyRole(GOVERNER_ROLE) {
+    function setDepositPerJob(uint256 _depositPerJob) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_depositPerJob", _depositPerJob, block.timestamp);
         bondManagerParams.setDepositPerJob(_depositPerJob);
+        bondManager.occurrenceRecalculation();
     }
 
     function setMinBond(uint256 _minBond) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_minBond", _minBond, block.timestamp);
         bondManagerParams.setMinBond(_minBond);
+        bondManager.databondCollectionsReset();
     }
 
     function setMinJobs(uint8 _minJobs) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_minJobs", _minJobs, block.timestamp);
         bondManagerParams.setMinJobs(_minJobs);
+        bondManager.databondCollectionsReset();
     }
 
     function setMaxJobs(uint8 _maxJobs) external onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_maxJobs", _maxJobs, block.timestamp);
         bondManagerParams.setMaxJobs(_maxJobs);
+        bondManager.databondCollectionsReset();
     }
 
     function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external onlyRole(GOVERNER_ROLE) {

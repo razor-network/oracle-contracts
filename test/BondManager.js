@@ -206,6 +206,37 @@ describe('BondManager', async () => {
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
   });
 
+  it('create a databond with desired occurrence > minOccurrence', async () => {
+    const epoch = await getEpoch();
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond)) + 10;
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+    const databond = await bondManager.getDatabond(1);
+    const collection = await collectionManager.getCollection(databond.collectionId);
+    assertBNEqual(bond, databond.bond, 'invalid amount');
+    assert(databond.collectionId === 10);
+    assert(databond.bondCreator === signers[4].address);
+    assert(databond.epochBondLastUpdated === epoch);
+    assert(databond.jobIds.length === 4);
+    assert(collection.power === collectionPower);
+    assert(collection.tolerance === collectionTolerance);
+    assert(collection.name === collectionName);
+    assert(collection.occurrence === occurrence);
+    for (let i = 0; i < databond.jobIds.length; i++) {
+      const job = await collectionManager.getJob(databond.jobIds[i]);
+      assert(job.power === collectionPower);
+      assert(job.url === url);
+      assert(job.name === `test${databond.jobIds[i] - 1}`);
+      assert(job.weight === weight);
+      assert(job.selector === selector);
+    }
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+  });
+
   it('set result and deactivate collection if not to be reported next epoch', async () => {
     let epoch = await getEpoch();
     const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
@@ -553,54 +584,20 @@ describe('BondManager', async () => {
     const newPower = -6;
     const newTolerance = 90;
     const jobIds = [1, 2, 3];
-    await bondManager.connect(signers[4]).updateDataBondCollection(databond.id, databond.collectionId, newTolerance, newAggregation, newPower, jobIds);
-    let collection = await collectionManager.getCollection(databond.collectionId);
+    databond = await bondManager.getDatabond(1);
+    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber(jobIds.length))).div(databond.bond)) + 5;
+    await bondManager.connect(signers[4]).updateDataBondCollection(
+      databond.id, databond.collectionId, newOccurrence, newTolerance, newAggregation, newPower, jobIds
+    );
+    const collection = await collectionManager.getCollection(databond.collectionId);
     databond = await bondManager.getDatabond(1);
     assert(collection.power === newPower);
     assert(collection.tolerance === newTolerance);
     assert(collection.aggregationMethod === newAggregation);
     assert(collection.jobIDs.length === jobIds.length);
     assert(databond.jobIds.length === jobIds.length);
-    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber(jobIds.length))).div(databond.bond));
-
-    await mineToNextEpoch();
-
-    epoch = await getEpoch();
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    const medians = await calculateMedians(collectionManager);
-    blockConfirmer = 0;
-    blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-    await mineToNextState();
-    await mineToNextState();
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    collection = await collectionManager.getCollection(databond.collectionId);
-    assert(collection.occurrence === newOccurrence);
+    assertBNEqual(databond.desiredOccurrence, newOccurrence, 'invalid databond occurrence calculation');
+    assertBNEqual(collection.occurrence, newOccurrence, 'invalid collection occurrence calculation');
   });
 
   it('add jobs to databond collection and by changing number of jobIds, occurrence should update', async () => {
@@ -688,7 +685,9 @@ describe('BondManager', async () => {
     const newPower = -6;
     const newTolerance = 90;
     let collection = await collectionManager.getCollection(databond.collectionId);
-    await bondManager.connect(signers[4]).addJobsToCollection(databond.id, newJobs, newPower, newTolerance, newAggregation);
+    databond = await bondManager.getDatabond(1);
+    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber('6'))).div(databond.bond)) + 10;
+    await bondManager.connect(signers[4]).addJobsToCollection(databond.id, newJobs, newOccurrence, newPower, newTolerance, newAggregation);
     collection = await collectionManager.getCollection(databond.collectionId);
     databond = await bondManager.getDatabond(1);
     assert(collection.power === newPower);
@@ -696,49 +695,11 @@ describe('BondManager', async () => {
     assert(collection.aggregationMethod === newAggregation);
     assert(collection.jobIDs.length === 6);
     assert(databond.jobIds.length === 6);
-    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber('6'))).div(databond.bond));
-
-    await mineToNextEpoch();
-
-    epoch = await getEpoch();
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    const medians = await calculateMedians(collectionManager);
-    blockConfirmer = 0;
-    blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-    await mineToNextState();
-    await mineToNextState();
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
-
-    collection = await collectionManager.getCollection(databond.collectionId);
-    assert(collection.occurrence === newOccurrence);
+    assertBNEqual(databond.desiredOccurrence, newOccurrence, 'invalid databond occurrence calculation');
+    assertBNEqual(collection.occurrence, newOccurrence, 'invalid collection occurrence calculation');
   });
 
-  it('add bond to a databond', async () => {
+  it('add bond to a databond but not change occurrence', async () => {
     let epoch = await getEpoch();
 
     const bond = await razor.balanceOf(signers[4].address);
@@ -799,52 +760,90 @@ describe('BondManager', async () => {
     }
 
     const bondAdded = tokenAmount('500000');
+    databond = await bondManager.getDatabond(1);
     await razor.transfer(signers[4].address, bondAdded);
     await razor.connect(signers[4]).approve(bondManager.address, bondAdded);
-    await bondManager.connect(signers[4]).addBond(databond.id, bondAdded);
+    await bondManager.connect(signers[4]).addBond(databond.id, bondAdded, occurrence);
     databond = await bondManager.getDatabond(1);
 
     assertBNEqual(databond.bond, bondAdded.add(tokenAmount('443000')));
-    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber(databond.jobIds.length))).div(databond.bond));
+    assertBNEqual(databond.desiredOccurrence, toBigNumber(occurrence), 'invalid databond occurrence assignment');
+    assertBNEqual(collection.occurrence, toBigNumber(occurrence), 'invalid collection occurrence assignment');
+  });
 
-    await mineToNextEpoch();
+  it('add bond to a databond and change occurrence', async () => {
+    let epoch = await getEpoch();
 
-    epoch = await getEpoch();
-    for (let i = 1; i <= 3; i++) {
-      await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
-    }
-    await mineToNextState(); // reveal
-    for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
-    }
-    await mineToNextState(); // propose
-    const medians = await calculateMedians(collectionManager);
-    blockConfirmer = 0;
-    blockIteration;
-    for (let i = 1; i <= 3; i++) {
-      const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
-      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      if (blockConfirmer === 0) {
-        blockConfirmer = i;
-        blockIteration = iteration;
-      } else if (blockIteration > iteration) {
-        blockConfirmer = i;
-        blockIteration = iteration;
+    const bond = await razor.balanceOf(signers[4].address);
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bond);
+    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
+    );
+
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
+    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+
+    let databond = await bondManager.getDatabond(1);
+    let collection = await collectionManager.getCollection(databond.collectionId);
+    let blockConfirmer = 0;
+    let blockIteration;
+
+    while (collection.result === 0) {
+      await mineToNextEpoch();
+
+      epoch = await getEpoch();
+      for (let i = 1; i <= 3; i++) {
+        await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
-      const idsRevealed = await getIdsRevealed(collectionManager);
-      await blockManager.connect(signers[i]).propose(epoch,
-        idsRevealed,
-        medians,
-        iteration,
-        biggestStakerId);
-    }
-    await mineToNextState();
-    await mineToNextState();
-    await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
+      await mineToNextState(); // reveal
+      for (let i = 1; i <= 3; i++) {
+        await reveal(signers[i], 0, voteManager, stakeManager);
+      }
+      await mineToNextState(); // propose
+      const medians = await calculateMedians(collectionManager);
+      blockConfirmer = 0;
+      blockIteration;
+      for (let i = 1; i <= 3; i++) {
+        const staker = await stakeManager.getStaker(await stakeManager.getStakerId(signers[i].address));
+        const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+        const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+        if (blockConfirmer === 0) {
+          blockConfirmer = i;
+          blockIteration = iteration;
+        } else if (blockIteration > iteration) {
+          blockConfirmer = i;
+          blockIteration = iteration;
+        }
+        const idsRevealed = await getIdsRevealed(collectionManager);
+        await blockManager.connect(signers[i]).propose(epoch,
+          idsRevealed,
+          medians,
+          iteration,
+          biggestStakerId);
+      }
+      await mineToNextState();
+      await mineToNextState();
 
+      await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
+      collection = await collectionManager.getCollection(databond.collectionId);
+    }
+
+    const bondAdded = tokenAmount('500000');
+    databond = await bondManager.getDatabond(1);
+    const newBond = (databond.bond).add(bondAdded);
+    await razor.transfer(signers[4].address, bondAdded);
+    await razor.connect(signers[4]).approve(bondManager.address, bondAdded);
+    const newOccurrence = Math.floor((jobDeposit.mul(toBigNumber(databond.jobIds.length))).div(newBond));
+    await bondManager.connect(signers[4]).addBond(databond.id, bondAdded, newOccurrence);
+    databond = await bondManager.getDatabond(1);
     collection = await collectionManager.getCollection(databond.collectionId);
-    assert(collection.occurrence === newOccurrence);
+
+    assertBNEqual(databond.bond, bondAdded.add(tokenAmount('443000')));
+    assertBNEqual(databond.desiredOccurrence, toBigNumber(newOccurrence), 'invalid databond occurrence assignment');
+    assertBNEqual(collection.occurrence, toBigNumber(newOccurrence), 'invalid collection occurrence assignment');
   });
 
   it('change the status of a bond', async () => {
@@ -1321,6 +1320,154 @@ describe('BondManager', async () => {
     assertBNEqual(newRazorBalance, prevRazorBalance.add(prevBond), 'incorrect withdraw');
   });
 
+  it('changing minBond through governance', async () => {
+    const epoch = await getEpoch();
+    /* ///////////////////////////////////////////////////////////////
+                          BOND CREATION
+      ////////////////////////////////////////////////////////////// */
+    const bonds = [];
+    for (let i = 4; i <= 6; i++) {
+      let bond = await razor.balanceOf(signers[i].address);
+      bond = bond.sub(toBigNumber(i - 4).mul(tokenAmount('100000')));
+      bonds.push(bond);
+    }
+
+    const jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bonds[0]);
+    await razor.connect(signers[5]).approve(bondManager.address, bonds[1]);
+    await razor.connect(signers[6]).approve(bondManager.address, bonds[2]);
+    const numJobs = [2, 3, 4];
+    const occurrences = [];
+    for (let i = 0; i <= 2; i++) {
+      const occurrence = Math.floor((jobDeposit.mul(toBigNumber(numJobs[i]))).div(bonds[i]));
+      occurrences.push(occurrence);
+    }
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs3, bonds[0], occurrences[0], collectionPower, collectionTolerance, collectionAggregation, 'databond1'
+    );
+    await bondManager.connect(signers[5]).createBond(
+      epoch, jobs2, bonds[1], occurrences[1], collectionPower, collectionTolerance, collectionAggregation, 'databond2'
+    );
+    await bondManager.connect(signers[6]).createBond(
+      epoch, jobs, bonds[2], occurrences[2], collectionPower, collectionTolerance, collectionAggregation, 'databond3'
+    );
+    const numDatabonds = await bondManager.numDataBond();
+    for (let j = 1; j <= numDatabonds; j++) {
+      const databond = await bondManager.getDatabond(j);
+      const collection = await collectionManager.getCollection(databond.collectionId);
+      assertBNEqual(bonds[j - 1], databond.bond, 'invalid amount');
+      assert(databond.collectionId === 9 + j);
+      assert(databond.bondCreator === signers[j + 3].address);
+      assert(databond.epochBondLastUpdated === epoch);
+      assert(databond.jobIds.length === numJobs[j - 1]);
+      assert(collection.power === collectionPower);
+      assert(collection.tolerance === collectionTolerance);
+      assert(collection.name === `databond${j}`);
+      assert(collection.occurrence === occurrences[j - 1]);
+    }
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('12'), 'databond not created');
+
+    /* ///////////////////////////////////////////////////////////////
+                          GOVERNANCE CHANGE
+      ////////////////////////////////////////////////////////////// */
+
+    await governance.setMinBond(tokenAmount('343000'));
+
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('11'), 'databond 3 collection not deactivated');
+    for (let i = 1; i <= 3; i++) {
+      const databond = await bondManager.getDatabond(i);
+      const collection = await collectionManager.getCollection(databond.collectionId);
+      if (databond.id === 3) {
+        assert(collection.active === false);
+        assert(databond.active === false);
+      } else {
+        assert(collection.active === true);
+        assert(databond.active === true);
+      }
+    }
+
+    const databondCollections = await bondManager.getDatabondCollections();
+    assertBNEqual(databondCollections.length, toBigNumber('2'), 'array not reset');
+  });
+
+  it('changing depositPerJob through governance', async () => {
+    const epoch = await getEpoch();
+    /* ///////////////////////////////////////////////////////////////
+                          BOND CREATION
+      ////////////////////////////////////////////////////////////// */
+    const bonds = [];
+    for (let i = 4; i <= 6; i++) {
+      let bond = await razor.balanceOf(signers[i].address);
+      bond = bond.sub(toBigNumber(i - 4).mul(tokenAmount('100000')));
+      bonds.push(bond);
+    }
+
+    let jobDeposit = await bondManager.depositPerJob();
+    await razor.connect(signers[4]).approve(bondManager.address, bonds[0]);
+    await razor.connect(signers[5]).approve(bondManager.address, bonds[1]);
+    await razor.connect(signers[6]).approve(bondManager.address, bonds[2]);
+    const numJobs = [2, 3, 4];
+    const occurrences = [];
+    for (let i = 0; i <= 2; i++) {
+      const occurrence = Math.floor((jobDeposit.mul(toBigNumber(numJobs[i]))).div(bonds[i]));
+      occurrences.push(occurrence);
+    }
+    await bondManager.connect(signers[4]).createBond(
+      epoch, jobs3, bonds[0], occurrences[0], collectionPower, collectionTolerance, collectionAggregation, 'databond1'
+    );
+    await bondManager.connect(signers[5]).createBond(
+      epoch, jobs2, bonds[1], occurrences[1], collectionPower, collectionTolerance, collectionAggregation, 'databond2'
+    );
+    await bondManager.connect(signers[6]).createBond(
+      epoch, jobs, bonds[2], occurrences[2], collectionPower, collectionTolerance, collectionAggregation, 'databond3'
+    );
+    const numDatabonds = await bondManager.numDataBond();
+    for (let j = 1; j <= numDatabonds; j++) {
+      const databond = await bondManager.getDatabond(j);
+      const collection = await collectionManager.getCollection(databond.collectionId);
+      assertBNEqual(bonds[j - 1], databond.bond, 'invalid amount');
+      assert(databond.collectionId === 9 + j);
+      assert(databond.bondCreator === signers[j + 3].address);
+      assert(databond.epochBondLastUpdated === epoch);
+      assert(databond.jobIds.length === numJobs[j - 1]);
+      assert(collection.power === collectionPower);
+      assert(collection.tolerance === collectionTolerance);
+      assert(collection.name === `databond${j}`);
+      assert(collection.occurrence === occurrences[j - 1]);
+    }
+    assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('12'), 'databond not created');
+
+    /* ///////////////////////////////////////////////////////////////
+                          GOVERNANCE CHANGE: INCREASE
+      ////////////////////////////////////////////////////////////// */
+
+    await governance.setDepositPerJob(tokenAmount('700000'));
+    jobDeposit = await bondManager.depositPerJob();
+
+    for (let i = 0; i <= 2; i++) {
+      const occurrence = Math.floor((jobDeposit.mul(toBigNumber(numJobs[i]))).div(bonds[i]));
+      const databond = await bondManager.getDatabond(i + 1);
+      const collection = await collectionManager.getCollection(databond.collectionId);
+      assertBNEqual(databond.desiredOccurrence, toBigNumber(occurrence), 'incorrect occurrence calculation:databond');
+      assertBNEqual(collection.occurrence, toBigNumber(occurrence), 'incorrect occurrence calculation:collection');
+    }
+
+    /* ///////////////////////////////////////////////////////////////
+                          GOVERNANCE CHANGE: DECREASE
+      ////////////////////////////////////////////////////////////// */
+
+    await governance.setDepositPerJob(tokenAmount('300000'));
+    jobDeposit = await bondManager.depositPerJob();
+
+    for (let i = 0; i <= 2; i++) {
+      const occurrence = Math.floor((jobDeposit.mul(toBigNumber(numJobs[i]))).div(bonds[i]));
+      const databond = await bondManager.getDatabond(i + 1);
+      const collection = await collectionManager.getCollection(databond.collectionId);
+      assertBNEqual(databond.desiredOccurrence, toBigNumber(occurrence), 'incorrect occurrence calculation:databond');
+      assertBNEqual(collection.occurrence, toBigNumber(occurrence), 'incorrect occurrence calculation:collection');
+    }
+  });
+
   it('negative test cases: Create Bond', async () => {
     const epoch = await getEpoch();
     const bond = await razor.balanceOf(signers[4].address);
@@ -1375,7 +1522,7 @@ describe('BondManager', async () => {
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
-    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+    let occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
 
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
@@ -1385,20 +1532,30 @@ describe('BondManager', async () => {
     const newPower = -6;
     const newTolerance = 90;
     const jobIds = [1, 2, 3];
-    let tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1]);
+    let tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, occurrence, newTolerance, newAggregation, newPower, [1]);
     await assertRevert(tx, 'invalid bond updation');
 
-    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, [1, 2, 3, 4, 5, 6, 7]);
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, occurrence, newTolerance, newAggregation, newPower, [1, 2, 3, 4, 5, 6, 7]);
     await assertRevert(tx, 'number of jobs exceed maxJobs');
 
-    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 4, newTolerance, newAggregation, newPower, jobIds);
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 4, occurrence, newTolerance, newAggregation, newPower, jobIds);
     await assertRevert(tx, 'incorrect collectionId specified');
 
-    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, jobIds);
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, occurrence, newTolerance, newAggregation, newPower, jobIds);
     await assertRevert(tx, 'invalid databond update');
 
-    tx = bondManager.connect(signers[6]).updateDataBondCollection(1, 10, newTolerance, newAggregation, newPower, jobIds);
+    tx = bondManager.connect(signers[6]).updateDataBondCollection(1, 10, occurrence, newTolerance, newAggregation, newPower, jobIds);
     await assertRevert(tx, 'invalid access to databond');
+
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+
+    occurrence = Math.floor((jobDeposit.mul(toBigNumber(jobIds.length))).div(bond));
+    tx = bondManager.connect(signers[4]).updateDataBondCollection(1, 10, occurrence - 1, newTolerance, newAggregation, newPower, jobIds);
+    await assertRevert(tx, 'not enough bond paid per job');
   });
 
   it('negative test cases: Add Jobs to Collection', async () => {
@@ -1407,7 +1564,7 @@ describe('BondManager', async () => {
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
-    const occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
+    let occurrence = Math.floor((jobDeposit.mul(toBigNumber('4'))).div(bond));
 
     await bondManager.connect(signers[4]).createBond(
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
@@ -1439,14 +1596,24 @@ describe('BondManager', async () => {
     const newPower = -6;
     const newTolerance = 90;
 
-    let tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0, 2), newPower, newTolerance, newAggregation);
+    let tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0, 2), occurrence, newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'invalid databond update');
 
-    tx = bondManager.connect(signers[7]).addJobsToCollection(1, newJobs.slice(0, 2), newPower, newTolerance, newAggregation);
+    tx = bondManager.connect(signers[7]).addJobsToCollection(1, newJobs.slice(0, 2), occurrence, newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'invalid access to databond');
 
-    tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs, newPower, newTolerance, newAggregation);
+    tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs, occurrence, newPower, newTolerance, newAggregation);
     await assertRevert(tx, 'number of jobs exceed maxJobs');
+
+    const bondUpdation = await bondManager.epochLimitForUpdateBond();
+
+    for (let i = 1; i <= bondUpdation; i++) {
+      await mineToNextEpoch();
+    }
+
+    occurrence = Math.floor((jobDeposit.mul(toBigNumber('6'))).div(bond));
+    tx = bondManager.connect(signers[4]).addJobsToCollection(1, newJobs.slice(0, 2), occurrence - 1, newPower, newTolerance, newAggregation);
+    await assertRevert(tx, 'not enough bond paid per job');
   });
 
   it('negative test cases: Add bond', async () => {
@@ -1474,10 +1641,10 @@ describe('BondManager', async () => {
 
     await bondManager.connect(signers[4]).setDatabondStatus(false, 1);
 
-    let tx = bondManager.connect(signers[4]).addBond(1, toBigNumber('1'));
-    await assertRevert(tx, 'databond not active');
+    let tx = bondManager.connect(signers[4]).addBond(1, toBigNumber('1'), occurrence - 1);
+    await assertRevert(tx, 'not enough bond paid per job');
 
-    tx = bondManager.connect(signers[8]).addBond(1, toBigNumber('1'));
+    tx = bondManager.connect(signers[8]).addBond(1, toBigNumber('1'), occurrence);
     await assertRevert(tx, 'invalid access to databond');
   });
 

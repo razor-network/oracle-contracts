@@ -20,7 +20,7 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
     uint8 public withdrawLockPeriod = 1;
 
     /// @inheritdoc IBondManagerParams
-    function setDepositPerJob(uint32 _depositPerJob) external override onlyRole(GOVERNANCE_ROLE) {
+    function setDepositPerJob(uint256 _depositPerJob) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-reason: Disabled across all params childs
         // as they are being called by governance contract only
         // and their before setting, we are emitting event

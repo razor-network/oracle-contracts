@@ -171,7 +171,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function createCollection(
         uint32 tolerance,
         int8 power,
-        uint32 occurrence,
+        uint16 occurrence,
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
         string calldata name
@@ -191,9 +191,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         collections[numCollections] = Structs.Collection(
             true,
             numCollections,
+            occurrence,
             power,
             0,
-            occurrence,
             0,
             tolerance,
             aggregationMethod,
@@ -275,7 +275,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
-    function setCollectionOccurrence(uint16 collectionId, uint32 occurrence) external override onlyRole(OCCURRENCE_MODIFIER_ROLE) {
+    function setCollectionOccurrence(uint16 collectionId, uint16 occurrence) external override onlyRole(OCCURRENCE_MODIFIER_ROLE) {
         collections[collectionId].occurrence = occurrence;
     }
 

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IBlockManager.sol";
-import "./interface/IBondManager.sol";
 import "./interface/IStakeManager.sol";
 import "./interface/IRewardManager.sol";
 import "./interface/IVoteManager.sol";
@@ -24,7 +23,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     IVoteManager public voteManager;
     ICollectionManager public collectionManager;
     IRandomNoProvider public randomNoProvider;
-    IBondManager public bondManager;
 
     /**
      * @dev Emitted when a block is confirmed
@@ -68,15 +66,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         address rewardManagerAddress,
         address voteManagerAddress,
         address collectionManagerAddress,
-        address randomNoManagerAddress,
-        address bondManagerAddress
+        address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         stakeManager = IStakeManager(stakeManagerAddress);
         rewardManager = IRewardManager(rewardManagerAddress);
         voteManager = IVoteManager(voteManagerAddress);
         collectionManager = ICollectionManager(collectionManagerAddress);
         randomNoProvider = IRandomNoProvider(randomNoManagerAddress);
-        bondManager = IBondManager(bondManagerAddress);
     }
 
     /**
@@ -417,7 +413,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
 
-        bondManager.setOccurrence();
         collectionManager.setResult(epoch, _block.ids, _block.medians);
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);

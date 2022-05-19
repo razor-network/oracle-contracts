@@ -63,9 +63,9 @@ library Structs {
     struct Collection {
         bool active;
         uint16 id;
+        uint16 occurrence;
         int8 power;
         uint32 result;
-        uint32 occurrence;
         uint32 epochLastReported;
         uint32 tolerance;
         uint32 aggregationMethod;
@@ -87,6 +87,7 @@ library Structs {
     struct DataBond {
         bool active;
         uint16 collectionId;
+        uint16 desiredOccurrence;
         uint32 id;
         uint32 epochBondLastUpdated;
         address bondCreator;

@@ -32,7 +32,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         uint32 epoch,
         Structs.Job[] memory mulJobs,
         uint256 bond,
-        uint32 occurrence,
+        uint16 occurrence,
         int8 collectionPower,
         uint32 collectionTolerance,
         uint32 collectionAggregation,
@@ -56,13 +56,13 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         uint16 collectionId = collectionManager.createCollection(
             collectionTolerance,
             collectionPower,
-            uint32(occurrence),
+            occurrence,
             collectionAggregation,
             jobIds,
             collectionName
         );
 
-        databonds[numDataBond] = Structs.DataBond(true, collectionId, numDataBond, epoch, msg.sender, jobIds, bond);
+        databonds[numDataBond] = Structs.DataBond(true, collectionId, occurrence, numDataBond, epoch, msg.sender, jobIds, bond);
         databondCollections.push(collectionId);
 
         require(razor.transferFrom(msg.sender, address(this), bond), "invalid transfer");
@@ -89,6 +89,7 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
     function updateDataBondCollection(
         uint32 bondId,
         uint16 collectionId,
+        uint16 desiredOccurrence,
         uint32 tolerance,
         uint32 aggregationMethod,
         int8 power,
@@ -104,29 +105,51 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         databonds[bondId].epochBondLastUpdated = epoch;
         databonds[bondId].jobIds = jobIds;
 
+        uint256 minOccurrence = (databonds[bondId].jobIds.length * depositPerJob) / databonds[bondId].bond;
+        if (minOccurrence == 0) minOccurrence = 1;
+        require(minOccurrence <= desiredOccurrence, "not enough bond paid per job");
+        if (desiredOccurrence != databonds[bondId].desiredOccurrence) {
+            databonds[bondId].desiredOccurrence = uint16(desiredOccurrence);
+            collectionManager.setCollectionOccurrence(databonds[bondId].collectionId, uint16(desiredOccurrence));
+        }
+
         collectionManager.updateCollection(collectionId, tolerance, aggregationMethod, power, jobIds);
     }
 
     function addJobsToCollection(
         uint32 bondId,
         Structs.Job[] memory jobs,
+        uint16 desiredOccurrence,
         int8 collectionPower,
         uint32 collectionTolerance,
         uint32 collectionAggregation
     ) external databondCreatorCheck(bondId, msg.sender) {
-        uint32 epoch = getEpoch();
         require((databonds[bondId].jobIds.length + jobs.length) <= maxJobs, "number of jobs exceed maxJobs");
-        // slither-disable-next-line timestamp
-        require(databonds[bondId].epochBondLastUpdated + epochLimitForUpdateBond <= epoch, "invalid databond update");
 
+        // Add jobs to databond
         {
+            uint32 epoch = getEpoch();
+            // slither-disable-next-line timestamp
+            require(databonds[bondId].epochBondLastUpdated + epochLimitForUpdateBond <= epoch, "invalid databond update");
             uint16 numJobs = collectionManager.getNumJobs();
 
             for (uint16 i = numJobs + 1; i <= numJobs + jobs.length; i++) {
                 databonds[bondId].jobIds.push(i);
             }
+            databonds[bondId].epochBondLastUpdated = epoch;
         }
-        databonds[bondId].epochBondLastUpdated = epoch;
+
+        // Change occurrence
+        {
+            uint256 minOccurrence = ((databonds[bondId].jobIds.length) * depositPerJob) / databonds[bondId].bond;
+            if (minOccurrence == 0) minOccurrence = 1;
+            require(minOccurrence <= desiredOccurrence, "not enough bond paid per job");
+
+            if (desiredOccurrence != databonds[bondId].desiredOccurrence) {
+                databonds[bondId].desiredOccurrence = uint16(desiredOccurrence);
+                collectionManager.setCollectionOccurrence(databonds[bondId].collectionId, uint16(desiredOccurrence));
+            }
+        }
 
         // slither-disable-next-line unused-return
         collectionManager.createMulJob(jobs);
@@ -140,9 +163,21 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         );
     }
 
-    function addBond(uint32 bondId, uint256 bond) external databondCreatorCheck(bondId, msg.sender) {
-        require(databonds[bondId].active, "databond not active");
+    function addBond(
+        uint32 bondId,
+        uint256 bond,
+        uint16 desiredOccurrence
+    ) external databondCreatorCheck(bondId, msg.sender) {
         databonds[bondId].bond = databonds[bondId].bond + bond;
+        uint256 minOccurrence = (databonds[bondId].jobIds.length * depositPerJob) / databonds[bondId].bond;
+        if (minOccurrence == 0) minOccurrence = 1;
+        require(minOccurrence <= desiredOccurrence, "not enough bond paid per job");
+
+        if (desiredOccurrence != databonds[bondId].desiredOccurrence) {
+            databonds[bondId].desiredOccurrence = uint16(desiredOccurrence);
+            collectionManager.setCollectionOccurrence(databonds[bondId].collectionId, uint16(desiredOccurrence));
+        }
+
         require(razor.transferFrom(msg.sender, address(this), bond), "invalid transfer");
     }
 
@@ -205,13 +240,31 @@ contract BondManager is Initializable, BondStorage, StateManager, Pause, BondMan
         collectionManager.setCollectionStatus(databondStatus, databonds[bondId].collectionId);
     }
 
-    function setOccurrence() external override onlyRole(OCCURRENCE_CALCULATOR_ROLE) {
+    function databondCollectionsReset() external override onlyRole(RESET_DATABOND_ROLE) {
+        delete databondCollections;
+        for (uint32 i = 1; i <= numDataBond; i++) {
+            if (
+                databonds[i].active &&
+                databonds[i].bond >= minBond &&
+                databonds[i].jobIds.length >= minJobs &&
+                databonds[i].jobIds.length <= maxJobs
+            ) {
+                databondCollections.push(databonds[i].collectionId);
+            } else if (databonds[i].active) {
+                databonds[i].active = false;
+                collectionManager.setCollectionStatus(false, databonds[i].collectionId);
+            }
+        }
+    }
+
+    function occurrenceRecalculation() external override onlyRole(RESET_DATABOND_ROLE) {
         for (uint32 i = 1; i <= numDataBond; i++) {
             if (databonds[i].active && databonds[i].bond >= minBond) {
                 uint256 occurrence = (databonds[i].jobIds.length * depositPerJob) / databonds[i].bond;
                 if (occurrence == 0) occurrence = 1;
                 // slither-disable-next-line calls-loop
-                collectionManager.setCollectionOccurrence(databonds[i].collectionId, uint32(occurrence));
+                databonds[i].desiredOccurrence = uint16(occurrence);
+                collectionManager.setCollectionOccurrence(databonds[i].collectionId, uint16(occurrence));
             }
         }
     }

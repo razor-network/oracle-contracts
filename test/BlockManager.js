@@ -37,7 +37,6 @@ const {
 describe('BlockManager', function () {
   let signers;
   let blockManager;
-  let bondManager;
   let collectionManager;
   let voteManager;
   let razor;
@@ -50,7 +49,6 @@ describe('BlockManager', function () {
   before(async () => {
     ({
       blockManager,
-      bondManager,
       governance,
       collectionManager,
       razor,
@@ -90,8 +88,7 @@ describe('BlockManager', function () {
         rewardManager.address,
         voteManager.address,
         collectionManager.address,
-        randomNoManager.address,
-        bondManager.address
+        randomNoManager.address
       );
       await governance.grantRole(GOVERNER_ROLE, signers[0].address);
       await assertRevert(tx, 'AccessControl');

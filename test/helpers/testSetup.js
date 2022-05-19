@@ -10,7 +10,7 @@ const {
   SALT_MODIFIER_ROLE,
   DEPTH_MODIFIER_ROLE,
   ESCAPE_HATCH_ROLE,
-  OCCURRENCE_CALCULATOR_ROLE,
+  RESET_DATABOND_ROLE,
   OCCURRENCE_MODIFIER_ROLE,
   COLLECTION_CONFIRMER_ROLE,
   COLLECTION_MODIFIER_ROLE,
@@ -57,7 +57,7 @@ const setupContracts = async () => {
 
   const initializeContracts = async () => [
     blockManager.initialize(stakeManager.address, rewardManager.address, voteManager.address, collectionManager.address,
-      randomNoManager.address, bondManager.address),
+      randomNoManager.address),
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, collectionManager.address),
@@ -69,7 +69,7 @@ const setupContracts = async () => {
     bondManager.initialize(razor.address, collectionManager.address),
 
     blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManager.address),
-    bondManager.grantRole(OCCURRENCE_CALCULATOR_ROLE, blockManager.address),
+    bondManager.grantRole(RESET_DATABOND_ROLE, governance.address),
     stakeManager.grantRole(PAUSE_ROLE, signers[0].address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManager.address),
     rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManager.address),
