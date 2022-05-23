@@ -19,7 +19,7 @@ const {
 
 const { setupContracts } = require('./helpers/testSetup');
 
-describe('PostDeploymentSetup', function () {
+describe('PostDeployment Test', function () {
   let signers;
   let blockManager;
   let collectionManager;
