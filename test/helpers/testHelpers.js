@@ -1,5 +1,6 @@
 const { assert } = require('chai');
 const { BigNumber } = require('ethers');
+const { ethers } = require('hardhat');
 const { EPOCH_LENGTH, STATE_LENGTH } = require('./constants');
 const { getEpoch, toBigNumber } = require('./utils');
 
@@ -81,44 +82,27 @@ const assertRevert = async (promise, reason) => {
   assert.strictEqual(errorEncountered, true, 'Transaction did not revert as expected');
 };
 
-const send = (payload) => {
-  if (!payload.jsonrpc) payload.jsonrpc = '2.0';
-  if (!payload.id) payload.id = new Date().getTime();
-
-  return new Promise((resolve, reject) => {
-    web3.currentProvider.send(payload, (error, result) => {
-      if (error) return reject(error);
-
-      return resolve(result);
-    });
-  });
-};
-
 const waitNBlocks = async (n) => {
   await Promise.all(
-    [...Array(n).keys()].map((i) => send({
-      jsonrpc: '2.0',
-      method: 'evm_mine',
-      id: i,
-    }))
+    [...Array(n).keys()].map(() => ethers.provider.send('evm_mine'))
   );
 };
 
 const mineAdvance = async (n) => {
   n = toBigNumber(n);
-  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
+  const blockNumber = toBigNumber(await ethers.provider.getBlockNumber());
   if (n.gt(blockNumber)) {
     const diff = n.sub(blockNumber);
     await waitNBlocks(diff.toNumber());
   }
 };
 
-const mineBlock = () => send({ method: 'evm_mine' });
+const mineBlock = () => ethers.provider.send('evm_mine');
 
 // Mines to the next Epoch from which ever block it is in the current Epoch
 const mineToNextEpoch = async () => {
-  const currentBlockNumber = await web3.eth.getBlockNumber();
-  const currentBlock = await web3.eth.getBlock(currentBlockNumber);
+  const currentBlockNumber = await ethers.provider.getBlockNumber();
+  const currentBlock = await ethers.provider.getBlock(currentBlockNumber);
   const currentTimestamp = currentBlock.timestamp;
   const currentEpoch = await getEpoch();
   const nextEpochBlockTimestamp = (currentEpoch + 1) * EPOCH_LENGTH.toNumber(); // currentBlocktimestamp + epochLength
@@ -129,8 +113,8 @@ const mineToNextEpoch = async () => {
 
 // Mines to the next state in the current epoch
 const mineToNextState = async () => {
-  const currentBlockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  const currentBlock = await web3.eth.getBlock(currentBlockNumber);
+  const currentBlockNumber = await ethers.provider.getBlockNumber();
+  const currentBlock = await ethers.provider.getBlock(currentBlockNumber);
   const currentTimestamp = toBigNumber(currentBlock.timestamp);
   const temp = currentTimestamp.div(STATE_LENGTH).add('1');
   const nextStateBlockNum = temp.mul(STATE_LENGTH);
@@ -140,18 +124,12 @@ const mineToNextState = async () => {
 };
 
 const restoreSnapshot = async (id) => {
-  await send({
-    method: 'evm_revert',
-    params: [id],
-  });
+  await ethers.provider.send('evm_revert', [id]);
   await mineBlock();
 };
 
 const takeSnapshot = async () => {
-  const { result } = await send({
-    jsonrpc: '2.0',
-    method: 'evm_snapshot',
-  });
+  const result = await ethers.provider.send('evm_snapshot');
 
   await mineBlock();
 

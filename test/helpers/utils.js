@@ -1,4 +1,8 @@
-const { BigNumber, utils } = ethers;
+const { ethers } = require('hardhat');
+
+const {
+  BigNumber, utils, provider
+} = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
@@ -57,7 +61,7 @@ const prng = async (max, prngHashes) => {
 
 // pseudo random hash generator based on block hashes.
 const prngHash = async (seed, salt) => {
-  const sum = await web3.utils.soliditySha3(seed, salt);
+  const sum = await utils.solidityKeccak256(['bytes32', 'bytes32'], [seed, salt]);
   return (sum);
 };
 
@@ -68,12 +72,13 @@ const maturity = async (age) => {
 
 const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
-  const salt1 = await web3.utils.soliditySha3(iteration);
+  const abiCoder = ethers.utils.defaultAbiCoder;
+  const salt1 = await utils.solidityKeccak256(['bytes'], [await abiCoder.encode(['uint256'], [iteration])]);
   const seed1 = await prngHash(salt, salt1);
   const rand1 = await prng(numStakers, seed1);
   if (!(toBigNumber(rand1).add(1).eq(stakerId))) return false;
 
-  const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
+  const salt2 = await utils.solidityKeccak256(['bytes'], [await abiCoder.encode(['uint32', 'uint256'], [stakerId, iteration])]);
   const seed2 = await prngHash(salt, salt2);
   const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
   if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) return true;
@@ -82,8 +87,8 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
 };
 
 const getEpoch = async () => {
-  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  const getCurrentBlock = await web3.eth.getBlock(blockNumber.toNumber());
+  const blockNumber = toBigNumber(await provider.getBlockNumber());
+  const getCurrentBlock = await provider.getBlock(blockNumber.toNumber());
   const timestamp = toBigNumber(getCurrentBlock.timestamp);
   return timestamp.div(EPOCH_LENGTH).toNumber();
 };
@@ -159,8 +164,8 @@ const getFalseIteration = async (voteManager, stakeManager, staker) => {
 };
 
 const getState = async () => {
-  const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
-  const getCurrentBlock = await web3.eth.getBlock(blockNumber.toNumber());
+  const blockNumber = toBigNumber(await provider.getBlockNumber());
+  const getCurrentBlock = await provider.getBlock(blockNumber.toNumber());
   const timestamp = toBigNumber(getCurrentBlock.timestamp);
   const state = timestamp.div(EPOCH_LENGTH.div(NUM_STATES));
   const lowerLimit = 5;
