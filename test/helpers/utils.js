@@ -1,7 +1,7 @@
 const { ethers } = require('hardhat');
 
 const {
-  BigNumber, utils, provider
+  BigNumber, utils, provider,
 } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
