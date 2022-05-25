@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 const dotenv = require('dotenv');
+require('hardhat-deploy');
 
 const dotenvResult = dotenv.config();
 
@@ -8,7 +9,6 @@ if (dotenvResult.error) {
 }
 
 require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
@@ -108,5 +108,12 @@ module.exports = {
   },
   dodoc: {
     runOnCompile: false,
+  },
+  namedAccounts: {
+    deployer: 0,
+    tokenOwner: 1,
+  },
+  paths: {
+    sources: './contracts',
   },
 };

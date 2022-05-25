@@ -2,9 +2,15 @@
 const jsonfile = require('jsonfile');
 const hre = require('hardhat');
 const axios = require('axios');
+const {
+  ESCAPE_HATCH_ROLE, BLOCK_CONFIRMER_ROLE, STAKE_MODIFIER_ROLE, REWARD_MODIFIER_ROLE, COLLECTION_MODIFIER_ROLE,
+  REGISTRY_MODIFIER_ROLE, GOVERNER_ROLE, GOVERNANCE_ROLE, PAUSE_ROLE, SALT_MODIFIER_ROLE, DEPTH_MODIFIER_ROLE,
+} = require('../test/helpers/constants');
 
+const {
+  NETWORK,
+} = process.env;
 const { BigNumber } = ethers;
-
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
@@ -24,6 +30,76 @@ const appendDeploymentFile = async (data) => {
   }
 
   await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
+};
+
+const updateDeploymentFile = async (contractName) => {
+  const { deployments } = hre;
+  const { get } = deployments;
+  const contract = await get(contractName);
+  await appendDeploymentFile({ [contractName]: contract.address });
+};
+
+const verifyDeployedContracts = async (contractName, constructorParams = []) => {
+  const { deployments } = hre;
+  const { get } = deployments;
+  const contract = await get(contractName);
+  // Tenderly and hh verification
+  try {
+    await hre.tenderly.persistArtifacts({
+      name: contractName,
+      address: contract.address,
+    });
+
+    await hre.tenderly.push({
+      name: contractName,
+      address: contract.address,
+    });
+
+    await hre.tenderly.verify({
+      name: contractName,
+      address: contract.address,
+    });
+  } catch (err) {
+    console.log('Error pushing to tenderly:', err);
+  }
+
+  const config = {
+    address: contract.address,
+    constructorArguments: [...constructorParams],
+  };
+
+  // We need to set explicitly for these as it was causing conflicts with OpenZeplin
+  if (contractName === 'Structs') {
+    config.contract = 'contracts/lib/Structs.sol:Structs';
+  }
+
+  if (contractName === 'RAZOR') {
+    config.contract = 'contracts/tokenization/RAZOR.sol:RAZOR';
+  }
+
+  try {
+    await hre.run('verify:verify', config);
+  } catch (err) {
+    console.error('Etherscan verification failed', err);
+  }
+};
+
+const deployContractHH = async (contractName, constructorParams = []) => {
+  const { getNamedAccounts, deployments } = hre;
+  const { log, deploy } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer } = namedAccounts;
+  const Contract = await deploy(contractName, {
+    from: deployer,
+    args: [...constructorParams],
+  });
+  log(
+    `${contractName} deployed at ${Contract.address} by owner ${deployer} 
+    using ${Contract.receipt.gasUsed} gas with tx hash ${Contract.transactionHash}`
+  );
+  await updateDeploymentFile(contractName);
+  await verifyDeployedContracts(contractName, constructorParams);
+  return Contract;
 };
 
 const deployContract = async (
@@ -120,7 +196,6 @@ const getdeployedContractInstance = async (
   }
 
   const contractInstance = await Contract.attach(contractAddress);
-
   return { Contract, contractInstance };
 };
 
@@ -173,8 +248,207 @@ const waitForConfirmState = async (numStates, stateLength) => {
   }
 };
 
+const fetchDeployedContractDetails = async () => {
+  const {
+    Governance: governanceAddress,
+    BlockManager: blockManagerAddress,
+    CollectionManager: collectionManagerAddress,
+    StakeManager: stakeManagerAddress,
+    RewardManager: rewardManagerAddress,
+    VoteManager: voteManagerAddress,
+    Delegator: delegatorAddress,
+    RAZOR: RAZORAddress,
+    StakedTokenFactory: stakedTokenFactoryAddress,
+    RandomNoManager: randomNoManagerAddress,
+  } = await readDeploymentFile();
+
+  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
+  const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
+  const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
+  const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
+  const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
+  const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
+  const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
+  const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
+  const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
+  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
+
+  return {
+    Governance: {
+      governanceAddress,
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegatorAddress,
+      delegator,
+    },
+    RAZOR: {
+      RAZORAddress,
+      RAZOR,
+    },
+    StakedTokenFactory: {
+      stakedTokenFactoryAddress,
+      stakedTokenFactory,
+    },
+    RandomNoManager: {
+      randomNoManagerAddress,
+      randomNoManager,
+    },
+  };
+};
+
+const postDeploymentInitialiseContracts = async () => {
+  const {
+    Governance: {
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegator,
+    },
+    RAZOR: {
+      RAZORAddress,
+      RAZOR,
+    },
+    StakedTokenFactory: {
+      stakedTokenFactoryAddress,
+    },
+    RandomNoManager: {
+      randomNoManagerAddress,
+      randomNoManager,
+    },
+  } = await fetchDeployedContractDetails();
+
+  const pendingTransactions = [];
+  if (NETWORK !== 'mainnet') {
+    // Add new instance of StakeManager contract & Deployer address as Minter
+    const supply = (BigNumber.from(10).pow(BigNumber.from(23))).mul(BigNumber.from(5));
+    await RAZOR.transfer(stakeManagerAddress, supply);
+  }
+
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
+    collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress,
+    blockManagerAddress, collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress,
+    stakedTokenFactoryAddress).catch(() => {}));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress,
+    blockManagerAddress, collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress).catch(() => {}));
+  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
+    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress).catch(() => {}));
+
+  Promise.allSettled(pendingTransactions).then(() => console.log('Contracts Initialised'));
+};
+
+const postDeploymentGrantRoles = async () => {
+  const signers = await ethers.getSigners();
+
+  const {
+    Governance: {
+      governanceAddress,
+      governance,
+    },
+    BlockManager: {
+      blockManagerAddress,
+      blockManager,
+    },
+    CollectionManager: {
+      collectionManagerAddress,
+      collectionManager,
+    },
+    StakeManager: {
+      stakeManagerAddress,
+      stakeManager,
+    },
+    RewardManager: {
+      rewardManagerAddress,
+      rewardManager,
+    },
+    VoteManager: {
+      voteManagerAddress,
+      voteManager,
+    },
+    Delegator: {
+      delegator,
+    },
+    RandomNoManager: {
+      randomNoManager,
+    },
+  } = await fetchDeployedContractDetails();
+
+  const pendingTransactions = [];
+  pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await stakeManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await voteManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await delegator.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await randomNoManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+
+  pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await rewardManager.grantRole(REWARD_MODIFIER_ROLE, stakeManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, rewardManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(STAKE_MODIFIER_ROLE, voteManagerAddress));
+  pendingTransactions.push(await stakeManager.grantRole(ESCAPE_HATCH_ROLE, signers[0].address));
+  pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
+  pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
+  pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
+  pendingTransactions.push(await voteManager.grantRole(SALT_MODIFIER_ROLE, blockManagerAddress));
+  pendingTransactions.push(await voteManager.grantRole(DEPTH_MODIFIER_ROLE, collectionManagerAddress));
+
+  Promise.allSettled(pendingTransactions).then(() => console.log('Contract Roles Granted'));
+};
+
 module.exports = {
+  updateDeploymentFile,
   deployContract,
+  deployContractHH,
   getdeployedContractInstance,
   appendDeploymentFile,
   readDeploymentFile,
@@ -184,4 +458,6 @@ module.exports = {
   getCollections,
   sleep,
   waitForConfirmState,
+  postDeploymentInitialiseContracts,
+  postDeploymentGrantRoles,
 };
