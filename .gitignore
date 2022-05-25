@@ -18,3 +18,4 @@ deployments
 gasReporterOutput.json
 .vscode/
 docs
+package-lock.json

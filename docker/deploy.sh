@@ -16,8 +16,9 @@ fi
 
 cp .env.$ENV .env
 
-npm run compile
-npx hardhat run migrations/deploy_all.js --network $ENV
+echo "Deploying contracts on network $ENV"
+npx hardhat --network $ENV deploy
+npx hardhat run migrations/postDeployment.js --network $ENV
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi

@@ -1,5 +1,6 @@
 /* eslint-disable no-undef */
 const dotenv = require('dotenv');
+require('hardhat-deploy');
 
 const dotenvResult = dotenv.config();
 
@@ -108,5 +109,12 @@ module.exports = {
   },
   dodoc: {
     runOnCompile: false,
+  },
+  namedAccounts: {
+    deployer: 0,
+    tokenOwner: 1,
+  },
+  paths: {
+    sources: './contracts',
   },
 };
