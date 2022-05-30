@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 const dotenv = require('dotenv');
-require('hardhat-deploy');
 
 const dotenvResult = dotenv.config();
 
@@ -8,6 +7,7 @@ if (dotenvResult.error) {
   throw dotenvResult.error;
 }
 
+require('hardhat-deploy');
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
@@ -89,7 +89,7 @@ module.exports = {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
-    }
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_KEY,
