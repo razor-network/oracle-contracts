@@ -1,6 +1,5 @@
 /* eslint-disable no-undef */
 const dotenv = require('dotenv');
-require('hardhat-deploy');
 
 const dotenvResult = dotenv.config();
 
@@ -8,6 +7,7 @@ if (dotenvResult.error) {
   throw dotenvResult.error;
 }
 
+require('hardhat-deploy');
 require('@nomiclabs/hardhat-ethers');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
@@ -32,6 +32,7 @@ const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
   mumbai: 80001,
+  skale: 132333505628089,
 };
 
 module.exports = {
@@ -80,6 +81,11 @@ module.exports = {
       },
     },
     mumbai: {
+      url: PROVIDER_URL || '',
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+    },
+    skale: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
