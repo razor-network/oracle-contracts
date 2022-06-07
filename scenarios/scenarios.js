@@ -1,3 +1,4 @@
+const { assert } = require('chai');
 const {
   getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
