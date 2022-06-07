@@ -254,10 +254,9 @@ describe('BondManager', async () => {
 
     const databond = await bondManager.getDatabond(1);
     let collection = await collectionManager.getCollection(databond.collectionId);
-
     let blockConfirmer = 0;
     let blockIteration;
-    while (collection.result === 0) {
+    while (Number(collection.result) === 0) {
       await mineToNextEpoch();
 
       epoch = await getEpoch();
@@ -295,11 +294,11 @@ describe('BondManager', async () => {
 
       await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
       collection = await collectionManager.getCollection(databond.collectionId);
-      if (collection.result === 0) assert(collection.active === true);
+      if (Number(collection.result) === 0) assert(collection.active === true);
       else assert(collection.active === false);
     }
 
-    assert(collection.result === 1000);
+    assertBNEqual(collection.result, toBigNumber('1000'), 'incorrect result');
     const numActiveCollections = await collectionManager.numActiveCollections();
     assertBNEqual(numActiveCollections, toBigNumber('9'), 'collection not activated');
 
@@ -358,7 +357,7 @@ describe('BondManager', async () => {
     const databond = await bondManager.getDatabond(1);
 
     let collection = await collectionManager.getCollection(databond.collectionId);
-    while (collection.result === 0) {
+    while (Number(collection.result) === 0) {
       await mineToNextEpoch();
 
       epoch = await getEpoch();
@@ -396,13 +395,13 @@ describe('BondManager', async () => {
 
       await blockManager.connect(signers[blockConfirmer]).claimBlockReward();
       collection = await collectionManager.getCollection(databond.collectionId);
-      if (collection.result === 0) {
+      if (Number(collection.result) === 0) {
         assert(collection.active === true);
       } else {
         assert(collection.active === false);
       }
     }
-    assert(collection.result === 1000);
+    assertBNEqual(collection.result, toBigNumber('1000'), 'incorrect result');
     assert(collection.active === false);
     let numActiveCollections = await collectionManager.numActiveCollections();
     assertBNEqual(numActiveCollections, toBigNumber('9'), 'collection not activated');
@@ -719,7 +718,7 @@ describe('BondManager', async () => {
     let blockConfirmer = 0;
     let blockIteration;
 
-    while (collection.result === 0) {
+    while (Number(collection.result) === 0) {
       await mineToNextEpoch();
 
       epoch = await getEpoch();
@@ -791,7 +790,7 @@ describe('BondManager', async () => {
     let blockConfirmer = 0;
     let blockIteration;
 
-    while (collection.result === 0) {
+    while (Number(collection.result) === 0) {
       await mineToNextEpoch();
 
       epoch = await getEpoch();

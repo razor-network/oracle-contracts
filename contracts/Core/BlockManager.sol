@@ -32,7 +32,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param medians of the confirmed block
      * @param timestamp time when the block was confirmed
      */
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
 
     /**
      * @dev Emitted when a block is proposed
@@ -47,11 +47,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     event Proposed(
         uint32 epoch,
         uint32 stakerId,
-        uint16[] ids,
-        uint32[] medians,
-        uint256 iteration,
         uint32 biggestStakerId,
-        uint256 timestamp
+        uint16[] ids,
+        uint256 iteration,
+        uint256 timestamp,
+        uint256[] medians
     );
 
     /**
@@ -96,7 +96,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function propose(
         uint32 epoch,
         uint16[] memory ids,
-        uint32[] memory medians,
+        uint256[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
@@ -112,13 +112,13 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, ids, iteration, biggestStake);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, ids, iteration, biggestStake, medians);
         bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestStake);
         epochLastProposed[proposerId] = epoch;
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, ids, medians, iteration, biggestStakerId, block.timestamp);
+        emit Proposed(epoch, proposerId, biggestStakerId, ids, iteration, block.timestamp, medians);
     }
 
     /**
@@ -137,7 +137,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-        uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
+        uint256 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
         if (disputes[epoch][msg.sender].accWeight == 0) {
             disputes[epoch][msg.sender].leafId = leafId;
@@ -361,7 +361,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
         require(_block.ids[postionOfCollectionInBlock] == id, "Wrong Coll Index passed");
-        uint32 proposedValue = proposedBlocks[epoch][blockId].medians[postionOfCollectionInBlock];
+        uint256 proposedValue = proposedBlocks[epoch][blockId].medians[postionOfCollectionInBlock];
 
         require(proposedValue != disputes[epoch][msg.sender].median, "Block proposed with same medians");
         _executeDispute(epoch, blockIndex, blockId);
@@ -411,7 +411,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
         Structs.Block memory _block = blocks[epoch];
 
-        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);
 
         collectionManager.setResult(epoch, _block.ids, _block.medians);
         voteManager.storeSalt(salt);

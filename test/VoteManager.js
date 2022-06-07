@@ -428,7 +428,7 @@ describe('VoteManager', function () {
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
 
           prod = toBigNumber(votesOfLastEpoch).mul(expectedAgeAfter4);
-          if (votesOfLastEpoch !== 0) {
+          if (Number(votesOfLastEpoch) !== 0) {
             if (votesOfLastEpoch > maxVoteTolerance) {
               const toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter4);
               penalty = penalty.add(toAdd);

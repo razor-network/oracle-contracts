@@ -37,16 +37,16 @@ library Structs {
     struct Block {
         bool valid;
         uint32 proposerId;
-        uint32[] medians;
         uint16[] ids;
         uint256 iteration;
         uint256 biggestStake;
+        uint256[] medians;
     }
 
     struct Dispute {
         uint16 leafId;
-        uint32 median;
-        uint32 lastVisitedValue;
+        uint256 median;
+        uint256 lastVisitedValue;
         uint256 accWeight;
     }
 
@@ -65,17 +65,17 @@ library Structs {
         uint16 id;
         uint16 occurrence;
         int8 power;
-        uint32 result;
         uint32 epochLastReported;
         uint32 tolerance;
         uint32 aggregationMethod;
         uint16[] jobIDs;
         string name;
+        uint256 result;
     }
 
     struct AssignedAsset {
         uint16 leafId;
-        uint32 value;
+        uint256 value;
     }
 
     struct MerkleTree {

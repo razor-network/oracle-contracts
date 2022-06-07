@@ -194,11 +194,11 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             occurrence,
             power,
             0,
-            0,
             tolerance,
             aggregationMethod,
             jobIDs,
-            name
+            name,
+            0
         );
 
         numActiveCollections = numActiveCollections + 1;
@@ -236,7 +236,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function setResult(
         uint32 epoch,
         uint16[] memory blockIds,
-        uint32[] memory medians
+        uint256[] memory medians
     ) external override onlyRole(COLLECTION_CONFIRMER_ROLE) {
         bool toBeUpdated = false;
         uint16 _numActiveCollections = numActiveCollections;
@@ -307,7 +307,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getResult(bytes32 _name) external view override returns (uint32, int8) {
+    function getResult(bytes32 _name) external view override returns (uint256, int8) {
         uint16 id = ids[_name];
         return getResultFromID(id);
     }
@@ -385,7 +385,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
+    function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (collections[_id].result, collections[_id].power);
     }
 
