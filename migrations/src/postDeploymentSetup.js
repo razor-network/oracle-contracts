@@ -61,11 +61,7 @@ module.exports = async () => {
   const collections = await getCollections();
   console.log('Creating Jobs');
 
-  for (let i = 0; i < jobs.length; i++) {
-    const job = jobs[i];
-    await collectionManager.createJob(job.weight, job.power, job.selectorType, job.name, job.selector, job.url);
-    console.log(`Job Created :  ${job.name}`);
-  }
+  await collectionManager.createMulJob(jobs);
 
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
