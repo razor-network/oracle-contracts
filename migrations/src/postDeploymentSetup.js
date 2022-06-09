@@ -58,10 +58,21 @@ module.exports = async () => {
   }
 
   const jobs = await getJobs();
+  const jobsOverride = [];
   const collections = await getCollections();
+  for (let i = 0; i < jobs.length; i++) {
+    jobsOverride.push({
+      id: 0,
+      selectorType: jobs[i].selectorType,
+      weight: jobs[i].weight,
+      power: jobs[i].power,
+      name: jobs[i].name,
+      selector: jobs[i].selector,
+      url: jobs[i].url,
+    });
+  }
   console.log('Creating Jobs');
-
-  await collectionManager.createMulJob(jobs);
+  await collectionManager.createMulJob(jobsOverride);
 
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
