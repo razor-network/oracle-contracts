@@ -82,7 +82,14 @@ module.exports = async () => {
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);
     collections[i].occurrence = 1;
-    await collectionManager.createCollection(collections[i].tolerance, collections[i].power, collections[i].occurrence , collections[i].aggregationMethod, collections[i].jobIDs, collections[i].name);
+    await collectionManager.createCollection(
+      collections[i].tolerance,
+      collections[i].power,
+      collections[i].occurrence,
+      collections[i].aggregationMethod,
+      collections[i].jobIDs,
+      collections[i].name
+    );
     console.log(`Collection Created :  ${collections[i].name}`);
   }
   console.log('Contracts deployed successfully & initial setup is done');
