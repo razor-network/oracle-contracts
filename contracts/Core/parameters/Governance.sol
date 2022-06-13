@@ -33,7 +33,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param valueChangedTo new value of the parameter
      * @param timestamp the exact time the parameter change took place
      */
-    event ParameterChanged(address admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
+    event ParameterChanged(address indexed admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
 
     /**
      * @param blockManagerAddress The address of the BlockManager contract
