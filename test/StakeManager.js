@@ -655,6 +655,12 @@ describe('StakeManager', function () {
       assert.strictEqual(acceptDelegation, true, 'Staker does not accept delgation');
     });
 
+    it('Staker should not be able to delegate to themself', async function () {
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      const tx = stakeManager.connect(signers[4]).delegate(stakerId, tokenAmount('1000'));
+      await assertRevert(tx, 'Staker cannot delegate themself');
+    });
+
     it('Delegator should not be able to delegate more than his rzr balance', async function () {
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       const tx = stakeManager.connect(signers[5]).delegate(stakerId, tokenAmount('500000'));
