@@ -32,7 +32,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param medians of the confirmed block
      * @param timestamp time when the block was confirmed
      */
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
+    event BlockConfirmed(uint32 epoch, uint32 indexed stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
 
     /**
      * @dev Emitted when a block is proposed
@@ -46,7 +46,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      */
     event Proposed(
         uint32 epoch,
-        uint32 stakerId,
+        uint32 indexed stakerId,
         uint32 biggestStakerId,
         uint16[] ids,
         uint256 iteration,
