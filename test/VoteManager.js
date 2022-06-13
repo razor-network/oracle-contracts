@@ -77,18 +77,30 @@ describe('VoteManager', function () {
         await Promise.all(await initializeContracts());
 
         await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+        const jobs = [];
+        const id = 0;
         const url = 'http://testurl.com';
         const selector = 'selector';
+        const selectorType = 0;
         let name;
         const power = -2;
-        const selectorType = 0;
         const weight = 50;
         let i = 0;
         while (i < 9) {
           name = `test${i}`;
-          await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+          const job = {
+            id,
+            selectorType,
+            weight,
+            power,
+            name,
+            selector,
+            url,
+          };
+          jobs.push(job);
           i++;
         }
+        await collectionManager.createMulJob(jobs);
         await mineToNextEpoch();
         await mineToNextState();
         await mineToNextState();
@@ -98,10 +110,10 @@ describe('VoteManager', function () {
         let Cname;
         for (let i = 1; i <= 8; i++) {
           Cname = `Test Collection${String(i)}`;
-          await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+          await collectionManager.createCollection(500, 3, 1, 1, [i, i + 1], Cname);
         }
         Cname = 'Test Collection10';
-        await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+        await collectionManager.createCollection(500, 3, 1, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
         await razor.transfer(signers[1].address, tokenAmount('30000'));
@@ -416,7 +428,7 @@ describe('VoteManager', function () {
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
 
           prod = toBigNumber(votesOfLastEpoch).mul(expectedAgeAfter4);
-          if (votesOfLastEpoch !== 0) {
+          if (Number(votesOfLastEpoch) !== 0) {
             if (votesOfLastEpoch > maxVoteTolerance) {
               const toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfter4);
               penalty = penalty.add(toAdd);

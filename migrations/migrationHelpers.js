@@ -5,6 +5,7 @@ const axios = require('axios');
 const {
   ESCAPE_HATCH_ROLE, BLOCK_CONFIRMER_ROLE, STAKE_MODIFIER_ROLE, REWARD_MODIFIER_ROLE, COLLECTION_MODIFIER_ROLE,
   REGISTRY_MODIFIER_ROLE, GOVERNER_ROLE, GOVERNANCE_ROLE, PAUSE_ROLE, SALT_MODIFIER_ROLE, DEPTH_MODIFIER_ROLE,
+  COLLECTION_CONFIRMER_ROLE, OCCURRENCE_MODIFIER_ROLE, RESET_DATABOND_ROLE,
 } = require('../test/helpers/constants');
 
 const {
@@ -260,6 +261,7 @@ const fetchDeployedContractDetails = async () => {
     RAZOR: RAZORAddress,
     StakedTokenFactory: stakedTokenFactoryAddress,
     RandomNoManager: randomNoManagerAddress,
+    BondManager: bondManagerAddress,
   } = await readDeploymentFile();
 
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
@@ -272,6 +274,7 @@ const fetchDeployedContractDetails = async () => {
   const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
   const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
   const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
+  const { contractInstance: bondManager } = await getdeployedContractInstance('BondManager', bondManagerAddress);
 
   return {
     Governance: {
@@ -313,6 +316,10 @@ const fetchDeployedContractDetails = async () => {
     RandomNoManager: {
       randomNoManagerAddress,
       randomNoManager,
+    },
+    BondManager: {
+      bondManagerAddress,
+      bondManager,
     },
   };
 };
@@ -356,6 +363,9 @@ const postDeploymentInitialiseContracts = async () => {
       randomNoManagerAddress,
       randomNoManager,
     },
+    BondManager: {
+      bondManager,
+    },
   } = await fetchDeployedContractDetails();
 
   const pendingTransactions = [];
@@ -378,6 +388,7 @@ const postDeploymentInitialiseContracts = async () => {
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
   pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress).catch(() => {}));
+  pendingTransactions.push(await bondManager.initialize(RAZORAddress, collectionManagerAddress).catch(() => {}));
 
   Promise.allSettled(pendingTransactions).then(() => console.log('Contracts Initialised'));
 };
@@ -416,11 +427,18 @@ const postDeploymentGrantRoles = async () => {
     RandomNoManager: {
       randomNoManager,
     },
+    BondManager: {
+      bondManager,
+    },
   } = await fetchDeployedContractDetails();
 
   const pendingTransactions = [];
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
+  pendingTransactions.push(await bondManager.grantRole(RESET_DATABOND_ROLE, governance.address));
+  pendingTransactions.push(await collectionManager.grantRole(COLLECTION_CONFIRMER_ROLE, blockManager.address));
+  pendingTransactions.push(await collectionManager.grantRole(OCCURRENCE_MODIFIER_ROLE, bondManager.address));
+  pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, bondManager.address));
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await stakeManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await voteManager.grantRole(GOVERNANCE_ROLE, governanceAddress));

@@ -58,14 +58,21 @@ module.exports = async () => {
   }
 
   const jobs = await getJobs();
+  const jobsOverride = [];
   const collections = await getCollections();
-  console.log('Creating Jobs');
-
   for (let i = 0; i < jobs.length; i++) {
-    const job = jobs[i];
-    await collectionManager.createJob(job.weight, job.power, job.selectorType, job.name, job.selector, job.url);
-    console.log(`Job Created :  ${job.name}`);
+    jobsOverride.push({
+      id: 0,
+      selectorType: jobs[i].selectorType,
+      weight: jobs[i].weight,
+      power: jobs[i].power,
+      name: jobs[i].name,
+      selector: jobs[i].selector,
+      url: jobs[i].url,
+    });
   }
+  console.log('Creating Jobs');
+  await collectionManager.createMulJob(jobsOverride);
 
   console.log('Creating Collections');
   console.log('Waiting for Confirm state : 4.......');
@@ -74,9 +81,16 @@ module.exports = async () => {
 
   for (let i = 0; i < collections.length; i++) {
     await waitForConfirmState(numStates, stateLength);
-    const collection = collections[i];
-    await collectionManager.createCollection(collection.tolerance, collection.power, collection.aggregationMethod, collection.jobIDs, collection.name);
-    console.log(`Collection Created :  ${collection.name}`);
+    collections[i].occurrence = 1;
+    await collectionManager.createCollection(
+      collections[i].tolerance,
+      collections[i].power,
+      collections[i].occurrence,
+      collections[i].aggregationMethod,
+      collections[i].jobIDs,
+      collections[i].name
+    );
+    console.log(`Collection Created :  ${collections[i].name}`);
   }
   console.log('Contracts deployed successfully & initial setup is done');
 };

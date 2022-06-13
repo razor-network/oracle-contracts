@@ -62,25 +62,37 @@ describe('RandomNoManager', function () {
       await Promise.all(await initializeContracts());
       await mineToNextEpoch();
       await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+      const jobs = [];
+      const id = 0;
       const url = 'http://testurl.com';
       const selector = 'selector';
+      const selectorType = 0;
       let name;
       const power = -2;
-      const selectorType = 0;
       const weight = 50;
-      let i = 1;
-      while (i <= 10) {
+      let i = 0;
+      while (i < 9) {
         name = `test${i}`;
-        await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+        const job = {
+          id,
+          selectorType,
+          weight,
+          power,
+          name,
+          selector,
+          url,
+        };
+        jobs.push(job);
         i++;
       }
+      await collectionManager.createMulJob(jobs);
       while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
 
-      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
-      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');
-      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c3');
-      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c4');
-      await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c5');
+      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c1');
+      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c2');
+      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c3');
+      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c4');
+      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c5');
 
       await mineToNextEpoch();
       const epoch = await getEpoch();

@@ -4,10 +4,6 @@ pragma solidity ^0.8.0;
 import "../../lib/Structs.sol";
 
 contract CollectionStorage {
-    enum JobSelectorType {
-        JSON,
-        XHTML
-    }
     /// @notice mapping for JobID -> Job Info
     mapping(uint16 => Structs.Job) public jobs;
     /// @notice mapping for CollectionID -> Collection Info
