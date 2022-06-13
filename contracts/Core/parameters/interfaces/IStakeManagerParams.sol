@@ -42,7 +42,7 @@ interface IStakeManagerParams {
      * @dev can be called only by the the address that has the governance role
      * @param _resetUnstakePenalty updated value to be set for resetUnstakePenalty
      */
-    function setResetUnstakeLockPenalty(uint8 _resetUnstakePenalty) external;
+    function setResetUnstakeLockPenalty(uint32 _resetUnstakePenalty) external;
 
     /**
      * @notice changing minimum amount that to be staked for participation

@@ -34,7 +34,7 @@ describe('Governance contract Test', async () => {
   const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
-  const resetUnstakeLockPenalty = toBigNumber('1');
+  const resetUnstakeLockPenalty = toBigNumber('100000');
   const maxAge = toBigNumber('1000000');
   const maxTolerance = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
@@ -162,9 +162,9 @@ describe('Governance contract Test', async () => {
     const withdrawInitiationPeriod = await stakeManager.withdrawInitiationPeriod();
     assertBNEqual(withdrawInitiationPeriod, toBigNumber('16'));
 
-    await governance.setResetUnstakeLockPenalty(toBigNumber('17'));
+    await governance.setResetUnstakeLockPenalty(toBigNumber('200000'));
     const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
-    assertBNEqual(resetUnstakeLockPenalty, toBigNumber('17'));
+    assertBNEqual(resetUnstakeLockPenalty, toBigNumber('200000'));
 
     await governance.setMaxAge(toBigNumber('18'));
     const maxAge = await rewardManager.maxAge();
