@@ -272,7 +272,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getResult(bytes32 _name) external view override returns (uint32, int8) {
+    function getResult(bytes32 _name) external view override returns (uint256, int8) {
         uint16 id = ids[_name];
         return getResultFromID(id);
     }
@@ -352,7 +352,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getResultFromID(uint16 _id) public view override returns (uint32, int8) {
+    function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (blockManager.getLatestResults(_id), collections[_id].power);
     }
 

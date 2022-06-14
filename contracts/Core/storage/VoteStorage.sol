@@ -9,13 +9,13 @@ contract VoteStorage {
 
     // Epoch needs to be brought back due to AAR, each epoch would have different set of assets revealed
     /// @notice mapping of epoch -> stakerid -> assetid -> vote
-    mapping(uint32 => mapping(uint32 => mapping(uint16 => uint32))) public votes;
+    mapping(uint32 => mapping(uint32 => mapping(uint16 => uint256))) public votes;
 
     /// @notice mapping of epoch -> assetid -> weight
     mapping(uint32 => mapping(uint16 => uint256)) public totalInfluenceRevealed;
 
     /// @notice mapping of epoch -> assetid -> voteValue -> weight
-    mapping(uint32 => mapping(uint16 => mapping(uint32 => uint256))) public voteWeights;
+    mapping(uint32 => mapping(uint16 => mapping(uint256 => uint256))) public voteWeights;
 
     /// @notice mapping of epoch-> stakerid->influence
     mapping(uint32 => mapping(uint32 => uint256)) public influenceSnapshot;
