@@ -18,16 +18,18 @@ const {
 } = require('./helpers/utils');
 
 const { setupContracts } = require('./helpers/testSetup');
+const {
+  deployPostDeploymentTestContracts, postDeploymentInitialiseContracts, postDeploymentGrantRoles, fetchDeployedContractDetails,
+} = require('../migrations/migrationHelpers');
 
-describe('PostDeployment Test', function () {
+describe.only('PostDeployment Test', function () {
   let signers;
-  let blockManager;
-  let collectionManager;
-  let voteManager;
-  let razor;
-  let stakeManager;
-  let initializeContracts;
-  let governance;
+  let blockManagerContract;
+  let collectionManagerContract;
+  let voteManagerContract;
+  let razorContract;
+  let stakeManagerContract;
+  let governanceContract;
   const stakes = [];
   let blockReward;
 
@@ -35,20 +37,62 @@ describe('PostDeployment Test', function () {
   const ids = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   before(async () => {
-    ({
-      blockManager,
-      governance,
-      collectionManager,
-      razor,
-      stakeManager,
-      voteManager,
-      initializeContracts,
-    } = await setupContracts());
+    // ({
+    //   blockManager,
+    //   governance,
+    //   collectionManager,
+    //   razor,
+    //   stakeManager,
+    //   voteManager,
+    //   initializeContracts,
+    // } = await setupContracts());
+    const { BigNumber } = ethers;
+    const initialSupply = (BigNumber.from(10).pow(BigNumber.from(27)));
+    await deployPostDeploymentTestContracts('Governance');
+    await deployPostDeploymentTestContracts('BlockManager');
+    await deployPostDeploymentTestContracts('CollectionManager');
+    await deployPostDeploymentTestContracts('StakeManager');
+    await deployPostDeploymentTestContracts('RewardManager');
+    await deployPostDeploymentTestContracts('VoteManager');
+    await deployPostDeploymentTestContracts('Delegator');
+    await deployPostDeploymentTestContracts('RAZOR', [initialSupply]);
+    await deployPostDeploymentTestContracts('StakedTokenFactory');
+    await deployPostDeploymentTestContracts('RandomNoManager');
+    // Initialise Contracts and Grant Roles
+    await postDeploymentInitialiseContracts('deploy');
+    await postDeploymentGrantRoles('deploy');
+
+    const {
+      Governance: {
+        governance,
+      },
+      BlockManager: {
+        blockManager,
+      },
+      CollectionManager: {
+        collectionManager,
+      },
+      StakeManager: {
+        stakeManager,
+      },
+      VoteManager: {
+        voteManager,
+      },
+      RAZOR: {
+        RAZOR,
+      },
+    } = await fetchDeployedContractDetails('test');
+    blockManagerContract = blockManager;
+    collectionManagerContract = collectionManager;
+    voteManagerContract = voteManager;
+    razorContract = RAZOR;
+    stakeManagerContract = stakeManager;
+    governanceContract = governance;
+
     signers = await ethers.getSigners();
-    await Promise.all(await initializeContracts());
-    blockReward = await blockManager.blockReward();
-    await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
-    await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+    blockReward = await blockManagerContract.blockReward();
+    await collectionManagerContract.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+    await governanceContract.grantRole(GOVERNER_ROLE, signers[0].address);
 
     const url = 'http://testurl.com';
     const selector = 'selector';
@@ -59,7 +103,7 @@ describe('PostDeployment Test', function () {
     let i = 0;
     while (i < 9) {
       name = `test${i}`;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      await collectionManagerContract.createJob(weight, power, selectorType, name, selector, url);
       i++;
     }
 
@@ -74,53 +118,53 @@ describe('PostDeployment Test', function () {
     let Cname;
     for (let i = 1; i <= 8; i++) {
       Cname = `Test Collection${String(i)}`;
-      await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+      await collectionManagerContract.createCollection(500, 3, 1, [i, i + 1], Cname);
     }
     Cname = 'Test Collection9';
-    await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+    await collectionManagerContract.createCollection(500, 3, 1, [9, 1], Cname);
     await mineToNextEpoch();
     const epoch = getEpoch();
     const razors = tokenAmount('443000');
 
-    await razor.transfer(signers[1].address, razors);
+    await razorContract.transfer(signers[1].address, razors);
 
-    await governance.connect(signers[0]).setToAssign(7);
+    await governanceContract.connect(signers[0]).setToAssign(7);
 
     const stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
 
-    await razor.connect(signers[1]).approve(stakeManager.address, stake);
-    await stakeManager.connect(signers[1]).stake(epoch, stake);
+    await razorContract.connect(signers[1]).approve(stakeManager.address, stake);
+    await stakeManagerContract.connect(signers[1]).stake(epoch, stake);
     stakes.push(stake);
   });
 
   it('1 epoch of constant voting and participation', async () => {
-    await governance.connect(signers[0]).setToAssign(7);
+    await governanceContract.connect(signers[0]).setToAssign(7);
     const secret = [];
     secret.push('0x727d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec');
 
     // commit
     const epoch = await getEpoch();
-    await adhocCommit(medians, signers[1], 0, voteManager, collectionManager, secret[0]);
+    await adhocCommit(medians, signers[1], 0, voteManagerContract, collectionManagerContract, secret[0]);
     await mineToNextState();
     // reveal
-    await adhocReveal(signers[1], 0, voteManager);
+    await adhocReveal(signers[1], 0, voteManagerContract);
     await mineToNextState();
     // propose
-    await adhocPropose(signers[1], ids, medians, stakeManager, blockManager, voteManager);
+    await adhocPropose(signers[1], ids, medians, stakeManagerContract, blockManagerContract, voteManagerContract);
     await mineToNextState();
     // dispute
     await mineToNextState();
     // confirm
-    const sortedProposedBlockId = await blockManager.sortedProposedBlockIds(epoch, 0);
-    const sortedProposedBlock = await blockManager.proposedBlocks(epoch, sortedProposedBlockId);
-    const stakeBefore = await stakeManager.getStake(sortedProposedBlock.proposerId);
+    const sortedProposedBlockId = await blockManagerContract.sortedProposedBlockIds(epoch, 0);
+    const sortedProposedBlock = await blockManagerContract.proposedBlocks(epoch, sortedProposedBlockId);
+    const stakeBefore = await stakeManagerContract.getStake(sortedProposedBlock.proposerId);
     for (let j = 1; j < 2; j++) {
       if (j === Number(sortedProposedBlock.proposerId)) {
-        await blockManager.connect(signers[j]).claimBlockReward();
+        await blockManagerContract.connect(signers[j]).claimBlockReward();
         break;
       }
     }
-    const stakeAfter = await stakeManager.getStake(sortedProposedBlock.proposerId);
+    const stakeAfter = await stakeManagerContract.getStake(sortedProposedBlock.proposerId);
     assertBNEqual(stakeAfter, stakeBefore.add(blockReward), 'Staker not rewarded');
     await mineToNextEpoch();
   });
