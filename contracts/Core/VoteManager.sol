@@ -39,6 +39,13 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param timestamp time when the staker revealed
      */
     event Revealed(uint32 epoch, uint32 stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
+    /**
+     * @dev Emitted when bountyHunter snitch the staker
+     * @param epoch epoch when the bountyHunter snitch the staker
+     * @param stakerId id of the staker that is snitched
+     * @param bountyHunter address who will snitch the staker
+     */
+    event Snitch(uint32 epoch, uint32 indexed stakerId, address indexed bountyHunter);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -202,6 +209,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
         stakeManager.slash(epoch, thisStakerId, msg.sender);
+        emit Snitch(epoch, thisStakerId, msg.sender);
     }
 
     /// @inheritdoc IVoteManager
