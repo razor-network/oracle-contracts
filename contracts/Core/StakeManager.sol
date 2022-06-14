@@ -32,7 +32,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param amount amount of sRZR transferred
      * @param stakerId the id of the staker whose sRZR is involved in the transfer
      */
-    event SrzrTransfer(address from, address to, uint256 amount, uint32 stakerId);
+    event SrzrTransfer(address indexed from, address indexed to, uint256 amount, uint32 indexed stakerId);
 
     /**
      * @dev Emitted when there has been change in the stake of the staker.
@@ -92,7 +92,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the staker staked
      */
     event Staked(
-        address staker,
+        address indexed staker,
         address sToken,
         uint32 epoch,
         uint32 indexed stakerId,
@@ -111,7 +111,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after unstaking
      * @param timestamp time at which the staker/delegator unstaked
      */
-    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address indexed staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /**
      * @dev Emitted when staker/delegator initiates withdraw.
@@ -123,7 +123,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the staker/delegator initiated withdraw
      */
     event WithdrawInitiated(
-        address staker,
+        address indexed staker,
         uint32 epoch,
         uint32 indexed stakerId,
         uint256 amount,
@@ -141,7 +141,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after withdraw process is completed
      * @param timestamp time at which the staker/delegator withdrew
      */
-    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address indexed staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /**
      * @dev Emitted when delegator delegates his RAZOR to a particular staker.
@@ -153,7 +153,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the delegator delegated
      */
     event Delegated(
-        address delegator,
+        address indexed delegator,
         uint32 epoch,
         uint32 indexed stakerId,
         uint256 amount,
@@ -168,7 +168,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param stakerId the stakerId for which extension took place
      */
-    event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
+    event DelegationAcceptanceChanged(bool delegationEnabled, address indexed staker, uint32 indexed stakerId);
 
     /**
      * @dev Emitted when the staker/delegator lock resets after successfully withdrawing
@@ -176,7 +176,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the reset took place
      */
-    event ResetLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ResetLock(uint32 indexed stakerId, address indexed staker, uint32 epoch);
 
     /**
      * @dev Emitted when the staker/delegator extends unstake lock
@@ -184,7 +184,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the extension took place
      */
-    event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ResetUnstakeLock(uint32 indexed stakerId, address indexed staker, uint32 epoch);
 
     /**
      * @dev Emitted when the staker changes commission
@@ -198,7 +198,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param bountyId unique id for each bounty to be claimed by bounty hunter
      * @param bountyHunter address who will claim the bounty caused by slash
      */
-    event Slashed(uint32 bountyId, address bountyHunter);
+    event Slashed(uint32 bountyId, address indexed bountyHunter);
 
     /** @param razorAddress The address of the Razor token ERC20 contract
      * @param rewardManagerAddress The address of the RewardManager contract

@@ -18,14 +18,14 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param id the id of the job that was created
      * @param timestamp time at which the job was created
      */
-    event JobCreated(uint16 id, uint256 timestamp);
+    event JobCreated(uint16 indexed id, uint256 timestamp);
 
     /**
      * @dev Emitted when a collection has been created
      * @param id the id of the collection that was created
      * @param timestamp time at which the collection was created
      */
-    event CollectionCreated(uint16 id, uint256 timestamp);
+    event CollectionCreated(uint16 indexed id, uint256 timestamp);
 
     /**
      * @dev Emitted when a job has been updated
@@ -39,7 +39,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param url updated url
      */
     event JobUpdated(
-        uint16 id,
+        uint16 indexed id,
         JobSelectorType selectorType,
         uint32 epoch,
         uint8 weight,
@@ -56,7 +56,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param epoch in which the status change took place
      * @param timestamp time at which the status change took place
      */
-    event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
+    event CollectionActivityStatus(bool active, uint16 indexed id, uint32 epoch, uint256 timestamp);
 
     /**
      * @dev Emitted when a collection has been updated
@@ -69,7 +69,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param timestamp time at which the collection was updated
      */
     event CollectionUpdated(
-        uint16 id,
+        uint16 indexed id,
         int8 power,
         uint32 epoch,
         uint32 aggregationMethod,
