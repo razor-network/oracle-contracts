@@ -17,7 +17,6 @@ const {
   adhocPropose,
 } = require('./helpers/utils');
 
-const { setupContracts } = require('./helpers/testSetup');
 const {
   deployPostDeploymentTestContracts, postDeploymentInitialiseContracts, postDeploymentGrantRoles, fetchDeployedContractDetails,
 } = require('../migrations/migrationHelpers');
@@ -59,8 +58,8 @@ describe.only('PostDeployment Test', function () {
     await deployPostDeploymentTestContracts('StakedTokenFactory');
     await deployPostDeploymentTestContracts('RandomNoManager');
     // Initialise Contracts and Grant Roles
-    await postDeploymentInitialiseContracts('deploy');
-    await postDeploymentGrantRoles('deploy');
+    await postDeploymentInitialiseContracts('test');
+    await postDeploymentGrantRoles('test');
 
     const {
       Governance: {
