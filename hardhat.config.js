@@ -90,6 +90,9 @@ module.exports = {
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
     },
+    hardhat: {
+      saveDeployments: false,
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_KEY,
