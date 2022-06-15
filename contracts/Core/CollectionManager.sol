@@ -215,7 +215,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
-        voteManager.storeDepth(_getDepth()); // TODO : Create method called as createCollectionBatch and update storeDepth only once
+        voteManager.storeDepth(_getDepth());
     }
 
     /** @notice Updates a Collection in the network.
@@ -399,8 +399,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed
         // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
-        // TODO : Looks like there is better version compared in gas
-        // https://ethereum.stackexchange.com/questions/8086/logarithm-math-operation-in-solidity/32900
 
         // 100000;
         // >= 2**4 , n = 4

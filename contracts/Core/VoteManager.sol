@@ -158,8 +158,6 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                     ),
                     "invalid merkle proof"
                 );
-                // TODO : Possible opt
-                /// Can we remove epochs ? would save lot of gas
                 votes[epoch][stakerId][tree.values[i].leafId] = tree.values[i].value;
                 voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] =
                     voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] +
