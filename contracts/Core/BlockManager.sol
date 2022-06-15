@@ -55,6 +55,16 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when a staker claims block reward
+     * @param epoch epoch when the staker claims block reward
+     * @param stakerId id of the staker that claims block reward
+     */
+    event ClaimBlockReward(
+        uint32 epoch,
+        uint32 indexed stakerId
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -185,6 +195,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
             _confirmBlock(epoch, proposerId);
+            emit ClaimBlockReward(epoch, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality, timestamp
