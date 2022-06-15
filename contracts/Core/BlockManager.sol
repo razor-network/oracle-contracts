@@ -121,6 +121,22 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when the disputer raise dispute for the ids passed are not sorted in ascend order, or there is duplication
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param index0 lower
+     * @param index1 upper
+     * @param disputer address that raised the dispute
+     */
+    event DisputeOnOrderOfIds(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint256 index0,
+        uint256 index1,
+        address indexed disputer
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -400,6 +416,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(index0 < index1, "index1 not greater than index0 0");
         require(proposedBlocks[epoch][blockId].ids[index0] >= proposedBlocks[epoch][blockId].ids[index1], "ID at i0 not gt than of i1");
+        emit DisputeOnOrderOfIds(epoch, blockIndex, index0, index1, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
