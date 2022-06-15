@@ -91,6 +91,22 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when the disputer raise dispute for collection id that should be absent
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
+     * @param disputer address that raised the dispute
+     */
+    event DisputeCollectionIdShouldBeAbsent(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 indexed id,
+        uint256 postionOfCollectionInBlock,
+        address indexed disputer
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -290,7 +306,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
         // Step 2: Prove that given id is indeed present in block
         require(proposedBlocks[epoch][blockId].ids[postionOfCollectionInBlock] == id, "Dispute: ID absent only");
-
+        emit DisputeCollectionIdShouldBeAbsent(epoch, blockIndex, id, postionOfCollectionInBlock, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
