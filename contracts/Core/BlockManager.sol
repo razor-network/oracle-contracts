@@ -77,6 +77,20 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when the disputer raise dispute for biggestStakeProposed
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param correctBiggestStakerId the correct biggest staker id
+     * @param disputer address that raised the dispute
+     */
+    event DisputeBiggestStakeProposed(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 indexed correctBiggestStakerId,
+        address indexed disputer
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -248,6 +262,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
         require(correctBiggestStake > proposedBlocks[epoch][blockId].biggestStake, "Invalid dispute : Stake");
+        emit DisputeBiggestStakeProposed(epoch, blockIndex, correctBiggestStakerId, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
