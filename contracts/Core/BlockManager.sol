@@ -65,6 +65,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when the staker calls giveSorted
+     * @param epoch epoch in which the dispute was setup and raised
+     * @param leafId index of the collection that is to be disputed
+     * @param sortedValues values reported by staker for a collection in ascending order
+     */
+    event GiveSorted(
+        uint32 epoch,
+        uint16 indexed leafId,
+        uint256[] sortedValues
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -169,6 +181,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
         disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
+        emit GiveSorted(epoch, leafId, sortedValues);
     }
 
     /**
