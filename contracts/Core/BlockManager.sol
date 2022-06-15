@@ -107,6 +107,20 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
+     * @dev Emitted when the disputer raise dispute for collection id that should be present
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id that should be present
+     * @param disputer address that raised the dispute
+     */
+    event DisputeCollectionIdShouldBePresent(
+        uint32 epoch,
+        uint8 blockIndex,
+        uint32 indexed id,
+        address indexed disputer
+    );
+
+    /**
      * @param stakeManagerAddress The address of the StakeManager contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagerAddress The address of the VoteManager contract
@@ -362,6 +376,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
 
         require(toDispute, "Dispute: ID present only");
+        emit DisputeCollectionIdShouldBePresent(epoch, blockIndex, id, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
