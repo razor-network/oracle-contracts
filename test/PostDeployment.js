@@ -21,7 +21,7 @@ const {
   deployPostDeploymentTestContracts, postDeploymentInitialiseContracts, postDeploymentGrantRoles, fetchDeployedContractDetails,
 } = require('../migrations/migrationHelpers');
 
-describe('PostDeployment Test', function () {
+describe.only('Post Deployment Test', function () {
   let signers;
   let blockManagerContract;
   let collectionManagerContract;
@@ -48,10 +48,10 @@ describe('PostDeployment Test', function () {
     await deployPostDeploymentTestContracts('RAZOR', [initialSupply]);
     await deployPostDeploymentTestContracts('StakedTokenFactory');
     await deployPostDeploymentTestContracts('RandomNoManager');
+    await deployPostDeploymentTestContracts('BondManager');
     // Initialise Contracts and Grant Roles using the post deployment helper functions
     await postDeploymentInitialiseContracts('test');
     await postDeploymentGrantRoles('test');
-
     const {
       Governance: {
         governance,
@@ -84,6 +84,8 @@ describe('PostDeployment Test', function () {
     await collectionManagerContract.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
     await governanceContract.grantRole(GOVERNER_ROLE, signers[0].address);
 
+    const jobs = [];
+    const id = 0;
     const url = 'http://testurl.com';
     const selector = 'selector';
     const selectorType = 0;
@@ -93,9 +95,20 @@ describe('PostDeployment Test', function () {
     let i = 0;
     while (i < 9) {
       name = `test${i}`;
-      await collectionManagerContract.createJob(weight, power, selectorType, name, selector, url);
+      const job = {
+        id,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      };
+      jobs.push(job);
       i++;
     }
+    console.log('Creating Jobs');
+    await collectionManagerContract.createMulJob(jobs);
 
     while (Number(await getState()) !== 4) {
       if (Number(await getState()) === -1) {
@@ -108,10 +121,10 @@ describe('PostDeployment Test', function () {
     let Cname;
     for (let i = 1; i <= 8; i++) {
       Cname = `Test Collection${String(i)}`;
-      await collectionManagerContract.createCollection(500, 3, 1, [i, i + 1], Cname);
+      await collectionManagerContract.createCollection(500, 3, 1, 1, [i, i + 1], Cname);
     }
     Cname = 'Test Collection9';
-    await collectionManagerContract.createCollection(500, 3, 1, [9, 1], Cname);
+    await collectionManagerContract.createCollection(500, 3, 1, 1, [9, 1], Cname);
     await mineToNextEpoch();
     const epoch = getEpoch();
     const razors = tokenAmount('443000');
