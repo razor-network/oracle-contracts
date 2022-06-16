@@ -59,10 +59,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param epoch epoch when the staker claims block reward
      * @param stakerId id of the staker that claims block reward
      */
-    event ClaimBlockReward(
-        uint32 epoch,
-        uint32 indexed stakerId
-    );
+    event ClaimBlockReward(uint32 epoch, uint32 indexed stakerId);
 
     /**
      * @dev Emitted when the staker calls giveSorted
@@ -70,11 +67,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param leafId index of the collection that is to be disputed
      * @param sortedValues values reported by staker for a collection in ascending order
      */
-    event GiveSorted(
-        uint32 epoch,
-        uint16 indexed leafId,
-        uint256[] sortedValues
-    );
+    event GiveSorted(uint32 epoch, uint16 indexed leafId, uint256[] sortedValues);
 
     /**
      * @dev Emitted when the disputer raise dispute for biggestStakeProposed
@@ -83,12 +76,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param correctBiggestStakerId the correct biggest staker id
      * @param disputer address that raised the dispute
      */
-    event DisputeBiggestStakeProposed(
-        uint32 epoch,
-        uint8 blockIndex,
-        uint32 indexed correctBiggestStakerId,
-        address indexed disputer
-    );
+    event DisputeBiggestStakeProposed(uint32 epoch, uint8 blockIndex, uint32 indexed correctBiggestStakerId, address indexed disputer);
 
     /**
      * @dev Emitted when the disputer raise dispute for collection id that should be absent
@@ -113,12 +101,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param id collection id that should be present
      * @param disputer address that raised the dispute
      */
-    event DisputeCollectionIdShouldBePresent(
-        uint32 epoch,
-        uint8 blockIndex,
-        uint32 indexed id,
-        address indexed disputer
-    );
+    event DisputeCollectionIdShouldBePresent(uint32 epoch, uint8 blockIndex, uint32 indexed id, address indexed disputer);
 
     /**
      * @dev Emitted when the disputer raise dispute for the ids passed are not sorted in ascend order, or there is duplication
@@ -128,13 +111,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param index1 upper
      * @param disputer address that raised the dispute
      */
-    event DisputeOnOrderOfIds(
-        uint32 epoch,
-        uint8 blockIndex,
-        uint256 index0,
-        uint256 index1,
-        address indexed disputer
-    );
+    event DisputeOnOrderOfIds(uint32 epoch, uint8 blockIndex, uint256 index0, uint256 index1, address indexed disputer);
 
     /**
      * @dev Emitted when the disputer calls finalizeDispute
@@ -143,12 +120,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
      * @param disputer address that raised the dispute
      */
-    event FinalizeDispute(
-        uint32 epoch,
-        uint8 blockIndex,
-        uint256 postionOfCollectionInBlock,
-        address indexed disputer
-    );
+    event FinalizeDispute(uint32 epoch, uint8 blockIndex, uint256 postionOfCollectionInBlock, address indexed disputer);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
