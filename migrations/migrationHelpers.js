@@ -470,6 +470,7 @@ const postDeploymentInitialiseContracts = async (type) => {
     },
     BondManager: {
       bondManager,
+      bondManagerAddress,
     },
   } = await fetchDeployedContractDetails(type);
 
@@ -490,9 +491,9 @@ const postDeploymentInitialiseContracts = async (type) => {
     blockManagerAddress, collectionManagerAddress).catch(() => {}));
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress).catch(() => {}));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress).catch(() => {}));
-  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
+  pendingTransactions.push(await governance.initialize(blockManagerAddress, bondManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
-  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress).catch(() => {}));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, bondManagerAddress).catch(() => {}));
   pendingTransactions.push(await bondManager.initialize(RAZORAddress, collectionManagerAddress).catch(() => {}));
 
   Promise.allSettled(pendingTransactions).then(() => console.log('Contracts Initialised'));

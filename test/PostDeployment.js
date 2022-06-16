@@ -107,6 +107,7 @@ describe.only('Post Deployment Test', function () {
       jobs.push(job);
       i++;
     }
+    // eslint-disable-next-line no-console
     console.log('Creating Jobs');
     await collectionManagerContract.createMulJob(jobs);
 
@@ -130,11 +131,9 @@ describe.only('Post Deployment Test', function () {
     const razors = tokenAmount('443000');
 
     await razorContract.transfer(signers[1].address, razors);
-
     await governanceContract.connect(signers[0]).setToAssign(7);
 
     const stake = razors.sub(tokenAmount(Math.floor((Math.random() * 423000))));
-
     await razorContract.connect(signers[1]).approve(stakeManager.address, stake);
     await stakeManagerContract.connect(signers[1]).stake(epoch, stake);
     stakes.push(stake);
@@ -161,12 +160,9 @@ describe.only('Post Deployment Test', function () {
     const sortedProposedBlockId = await blockManagerContract.sortedProposedBlockIds(epoch, 0);
     const sortedProposedBlock = await blockManagerContract.proposedBlocks(epoch, sortedProposedBlockId);
     const stakeBefore = await stakeManagerContract.getStake(sortedProposedBlock.proposerId);
-    for (let j = 1; j < 2; j++) {
-      if (j === Number(sortedProposedBlock.proposerId)) {
-        await blockManagerContract.connect(signers[j]).claimBlockReward();
-        break;
-      }
-    }
+
+    await blockManagerContract.connect(signers[1]).claimBlockReward();
+
     const stakeAfter = await stakeManagerContract.getStake(sortedProposedBlock.proposerId);
     assertBNEqual(stakeAfter, stakeBefore.add(blockReward), 'Staker not rewarded');
     await mineToNextEpoch();
