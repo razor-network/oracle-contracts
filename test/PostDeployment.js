@@ -21,7 +21,7 @@ const {
   deployPostDeploymentTestContracts, postDeploymentInitialiseContracts, postDeploymentGrantRoles, fetchDeployedContractDetails,
 } = require('../migrations/migrationHelpers');
 
-describe.only('Post Deployment Test', function () {
+describe('Post Deployment Test', function () {
   let signers;
   let blockManagerContract;
   let collectionManagerContract;
