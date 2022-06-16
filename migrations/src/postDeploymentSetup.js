@@ -76,7 +76,7 @@ module.exports = async () => {
   const stakerAddressList = STAKER_ADDRESSES.split(',');
 
   // Only transfer tokens in testnets
-  if (NETWORK !== 'mainnet') {
+  if (NETWORK === 'testnet') {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
     const supply = (BigNumber.from(10).pow(BigNumber.from(23))).mul(BigNumber.from(5));
