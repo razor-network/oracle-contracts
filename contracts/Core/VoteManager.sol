@@ -208,8 +208,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(keccak256(abi.encode(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
-        stakeManager.slash(epoch, thisStakerId, msg.sender);
         emit Snitch(epoch, thisStakerId, msg.sender);
+        stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     /// @inheritdoc IVoteManager
