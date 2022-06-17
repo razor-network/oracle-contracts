@@ -55,13 +55,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     );
 
     /**
-     * @dev Emitted when a staker claims block reward
-     * @param epoch epoch when the staker claims block reward
-     * @param stakerId id of the staker that claims block reward
-     */
-    event ClaimBlockReward(uint32 epoch, uint32 indexed stakerId);
-
-    /**
      * @dev Emitted when the staker calls giveSorted
      * @param epoch epoch in which the dispute was setup and raised
      * @param leafId index of the collection that is to be disputed
@@ -253,7 +246,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
-            emit ClaimBlockReward(epoch, stakerId);
+            emit BlockConfirmed(epoch, proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -268,6 +261,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
+            emit BlockConfirmed(epoch, blocks[epoch].proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -492,8 +486,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         for (uint256 i = 0; i < _block.ids.length; i++) {
             latestResults[_block.ids[i]] = _block.medians[i];
         }
-
-        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);
 
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
