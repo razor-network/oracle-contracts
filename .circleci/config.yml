@@ -127,6 +127,7 @@ jobs:
             npm install
             CI=true npm run test
             mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+            git reset --hard
             git checkout $CIRCLE_BRANCH
             npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
 
