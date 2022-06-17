@@ -261,7 +261,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
-            emit BlockConfirmed(epoch, blocks[epoch].proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
+            emit BlockConfirmed(epoch, blocks[epoch - 1].proposerId, blocks[epoch - 1].ids, block.timestamp, blocks[epoch - 1].medians);
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
