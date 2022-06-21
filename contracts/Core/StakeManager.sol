@@ -483,7 +483,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         //Giving out the extendLock penalty
-        uint256 penalty = (lock.amount * resetUnstakeLockPenalty) / 100;
+        uint256 penalty = (lock.amount * resetUnstakeLockPenalty) / BASE_DENOMINATOR;
         uint256 rPenalty = _convertSRZRToRZR(penalty, staker.stake, sToken.totalSupply());
 
         lock.amount = lock.amount - penalty;

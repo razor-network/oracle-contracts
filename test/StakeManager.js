@@ -956,7 +956,7 @@ describe('StakeManager', function () {
       let lock = await stakeManager.locks(signers[5].address, staker.tokenAddress, 0);
       const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
       let lockedAmount = lock.amount;
-      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(100);
+      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(toBigNumber('10000000'));
       lockedAmount = lockedAmount.sub(penalty);
       staker = await stakeManager.getStaker(4);
       const sToken = await stakedToken.attach(staker.tokenAddress);
@@ -1832,7 +1832,7 @@ describe('StakeManager', function () {
 
       const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
       let lockedAmount = lock.amount;
-      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(100);
+      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(toBigNumber('10000000'));
       lockedAmount = lockedAmount.sub(penalty);
       const prevTotalSupply = await sToken.totalSupply();
       let rPenalty = (penalty.mul(staker.stake)).div(prevTotalSupply);
@@ -1870,7 +1870,7 @@ describe('StakeManager', function () {
       await assertRevert(tx2, 'Initiation Period Passed');
 
       lockedAmount = lock.amount;
-      const penalty2 = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(100);
+      const penalty2 = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(toBigNumber('10000000'));
       lockedAmount = lockedAmount.sub(penalty2);
       const prevTotalSupply2 = await sToken.totalSupply();
       rPenalty = (penalty2.mul(staker.stake)).div(prevTotalSupply2);
@@ -1937,7 +1937,7 @@ describe('StakeManager', function () {
       let lock = await stakeManager.locks(signers[14].address, staker.tokenAddress, 0);
       const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
       let lockedAmount = lock.amount;
-      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(100);
+      const penalty = ((lockedAmount).mul(resetUnstakeLockPenalty)).div(toBigNumber('10000000'));
       lockedAmount = lockedAmount.sub(penalty);
       const prevTotalSupply = await sToken.totalSupply();
       await stakeManager.connect(signers[14]).resetUnstakeLock(stakerId);

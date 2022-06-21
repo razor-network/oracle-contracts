@@ -27,7 +27,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
      * @notice percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
      */
-    uint8 public resetUnstakeLockPenalty = 1;
+    uint32 public resetUnstakeLockPenalty = 100_000;
     /// @notice maximum commission stakers can charge from delegators on their profits
     uint8 public maxCommission = 20;
     /// @notice maximum commission change a staker can do
@@ -88,7 +88,7 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setResetUnstakeLockPenalty(uint8 _resetUnstakeLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
+    function setResetUnstakeLockPenalty(uint32 _resetUnstakeLockPenalty) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         resetUnstakeLockPenalty = _resetUnstakeLockPenalty;
     }
