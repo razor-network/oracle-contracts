@@ -203,6 +203,11 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             _updateDelayedRegistry();
         }
 
+        uint256 jobsLength = jobIDs.length;
+        for (uint8 i = 0; i < jobsLength; i++) {
+            require(jobs[jobIDs[i]].id == jobIDs[i], "job not present");
+        }
+
         numCollections = numCollections + 1;
 
         collections[numCollections] = Structs.Collection(true, numCollections, power, tolerance, aggregationMethod, jobIDs, name);
@@ -236,6 +241,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch();
+
+        uint256 jobsLength = jobIDs.length;
+        for (uint8 i = 0; i < jobsLength; i++) {
+            require(jobs[jobIDs[i]].id == jobIDs[i], "job not present");
+        }
+
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
