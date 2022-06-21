@@ -63,7 +63,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2400,
+            runs: 1700,
           },
         },
       },
@@ -83,6 +83,13 @@ module.exports = {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
+      timeout: 300000,
+    },
+    skale: {
+      url: PROVIDER_URL || '',
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+      timeout: 300000,
     },
   },
   etherscan: {
