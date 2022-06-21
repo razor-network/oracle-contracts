@@ -259,9 +259,20 @@ describe('CollectionManager', function () {
       await assertRevert(tx1, 'no jobs added');
     });
 
+    it('should not create collection if jobID doesnt exist', async function () {
+      const collectionName = 'Test Collection2';
+      const tx1 = collectionManager.createCollection(0, 0, 1, [118, 10], collectionName);
+      await assertRevert(tx1, 'job not present');
+    });
+
     it('updateCollection should only work for collections which exists', async function () {
       const tx = collectionManager.updateCollection(10, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should not work if the jobID does not exist', async function () {
+      const tx = collectionManager.updateCollection(1, 500, 2, 5, [1, 100]);
+      await assertRevert(tx, 'job not present');
     });
 
     it('updateCollection should only work for collections which are currently active', async function () {
