@@ -354,6 +354,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
+        require(locks[msg.sender][staker.tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw lock present");
         require(lock.unlockAfter != 0, "Did not unstake");
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");

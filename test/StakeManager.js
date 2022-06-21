@@ -2137,5 +2137,33 @@ describe('StakeManager', function () {
       const stakeAfter = staker.stake;
       assertBNEqual(stakeBefore, stakeAfter, 'stake should not decrease');
     });
+    it('should not be able to call initiate withdraw again after calling it once', async function () {
+      const staker = await stakeManager.getStaker(2);
+
+      await mineToNextEpoch();
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      const unstakeAmount = tokenAmount('10000');
+      // staker unstake
+      await sToken.connect(signers[4]).approve(stakeManager.address, unstakeAmount);
+      await stakeManager.connect(signers[4]).unstake(2, unstakeAmount);
+      // delegator unstake
+      await sToken.connect(signers[5]).approve(stakeManager.address, unstakeAmount);
+      await stakeManager.connect(signers[5]).unstake(2, unstakeAmount);
+
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), unstakeAmount.mul(2), 'sToken not transferred to stakeManager');
+
+      for (let i = 0; i <= UNSTAKE_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+
+      await stakeManager.connect(signers[5]).initiateWithdraw(2);
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), unstakeAmount, 'sToken not burnt');
+
+      const tx = stakeManager.connect(signers[5]).initiateWithdraw(2);
+      await assertRevert(tx, 'Withdraw lock present');
+
+      await stakeManager.connect(signers[4]).initiateWithdraw(2);
+      assertBNEqual(await sToken.balanceOf(stakeManager.address), toBigNumber('0'), 'sToken not burnt');
+    });
   });
 });
