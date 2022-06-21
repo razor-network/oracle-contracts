@@ -63,7 +63,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2400,
+            runs: 1700,
           },
         },
       },
