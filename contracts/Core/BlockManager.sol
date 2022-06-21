@@ -132,7 +132,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function giveSorted(
         uint32 epoch,
         uint16 leafId,
-        uint32[] memory sortedValues
+        uint256[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
