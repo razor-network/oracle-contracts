@@ -6,6 +6,9 @@ MNEMONIC=
 # Ethereum Network
 NETWORK=
 
+# Network type can be either MAINNET or TESTNET
+NETWORK_TYPE=
+
 # Provider HOST & PORT for deployment
 PROVIDER_HOST=
 PROVIDER_PORT=
