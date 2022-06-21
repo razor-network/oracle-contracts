@@ -200,6 +200,13 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     event Slashed(uint32 bountyId, address indexed bountyHunter);
 
+    /**
+     * @dev Emitted when the bountyHunter redeem bounty
+     * @param bountyId unique id for each bounty to be claimed by bounty hunter
+     * @param bountyHunter address who will claim the bounty
+     */
+    event RedeemBounty(uint32 bountyId, address indexed bountyHunter);
+
     /** @param razorAddress The address of the Razor token ERC20 contract
      * @param rewardManagerAddress The address of the RewardManager contract
      * @param voteManagersAddress The address of the VoteManager contract
@@ -555,6 +562,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         // slither-disable-next-line timestamp
         require(bountyLocks[bountyId].redeemAfter <= epoch, "Redeem epoch not reached");
         delete bountyLocks[bountyId];
+        emit RedeemBounty(bountyId, msg.sender);
         // Ignoring below line for testing as this is standard erc20 function
         require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
