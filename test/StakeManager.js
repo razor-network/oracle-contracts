@@ -281,7 +281,7 @@ describe('StakeManager', function () {
     it('Staker should not be able to unlock withdraw if didnt unstake', async function () {
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const tx = stakeManager.connect(signers[1]).unlockWithdraw(stakerId);
-      await assertRevert(tx, 'Did not unstake');
+      await assertRevert(tx, 'Did not initiate withdraw');
     });
 
     it('Staker should not be able to unstake zero amount', async function () {
@@ -355,6 +355,12 @@ describe('StakeManager', function () {
       assertBNEqual(await sToken.balanceOf(stakeManager.address), toBigNumber('0'), 'sToken not transferred to stakeManager');
       assertBNEqual(rAmount, lock.amount, 'incorrect Amount locked');
       assertBNEqual(staker.stake.add(lock.amount), prevStake, 'Stake not reduced');
+    });
+
+    it('Staker should not be able to unstake when there is an existing withdraw lock', async function () {
+      const amount = tokenAmount('200000');
+      const tx = stakeManager.connect(signers[1]).unstake(1, amount);
+      await assertRevert(tx, 'Existing Withdraw Lock');
     });
 
     it('Staker should be able to unlock withdraw after lock period', async function () {
@@ -706,7 +712,7 @@ describe('StakeManager', function () {
     it('Staker should not be able to unlock withdraw if didnt unstake', async function () {
       const stakerId = await stakeManager.stakerIds(signers[1].address);
       const tx = stakeManager.connect(signers[5]).unlockWithdraw(stakerId);
-      await assertRevert(tx, 'Did not unstake');
+      await assertRevert(tx, 'Did not initiate withdraw');
     });
 
     it('Delegator should be able to unstake when there is no existing lock', async function () {
@@ -738,7 +744,7 @@ describe('StakeManager', function () {
       const amount = tokenAmount('10000');
       const staker = await stakeManager.getStaker(4);
       const tx = stakeManager.connect(signers[5]).unstake(staker.id, amount);
-      await assertRevert(tx, 'Existing Unstake Lock');
+      await assertRevert(tx, 'Existing Withdraw Lock');
     });
 
     it('Delegator should not be able to withdraw in withdraw lock period', async function () {
@@ -1038,13 +1044,30 @@ describe('StakeManager', function () {
       await razor.connect(signers[7]).approve(stakeManager.address, stake1);
       await stakeManager.connect(signers[7]).stake(epoch, stake1);
       const stakerIdAcc7 = await stakeManager.stakerIds(signers[7].address);
-      await governance.setSlashParams(500, 9500, 0);
+
+      const staker = await stakeManager.getStaker(stakerIdAcc7);
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+
+      await sToken.connect(signers[7]).approve(stakeManager.address, stake1);
+      await stakeManager.connect(signers[7]).unstake(stakerIdAcc7, stake1);
+      await governance.setSlashParams(500000, 9500000, 0);
       await stakeManager.grantRole(STAKE_MODIFIER_ROLE, signers[0].address);
       await stakeManager.slash(epoch, stakerIdAcc7, signers[10].address); // slashing whole stake of signers[7]
       const stake2 = tokenAmount('200000');
       await razor.connect(signers[7]).approve(stakeManager.address, stake2);
       const tx = stakeManager.connect(signers[7]).stake(epoch, stake2);
       await assertRevert(tx, 'staker is slashed');
+    });
+
+    it('should not allow staker to unstake if he is not going to receive any RAZORs,', async function () {
+      const stakerId = await stakeManager.getStakerId(signers[7].address);
+
+      for (let i = 0; i <= UNSTAKE_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+
+      const tx = stakeManager.connect(signers[7]).initiateWithdraw(stakerId);
+      await assertRevert(tx, 'No razor to withdraw');
     });
 
     it('non admin should not be able to withdraw funds in emergency', async function () {

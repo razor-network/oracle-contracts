@@ -325,6 +325,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakerId != 0, "staker.id = 0");
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         // slither-disable-next-line timestamp
+        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Existing Withdraw Lock");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
         uint32 epoch = _getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
@@ -367,6 +368,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         rewardManager.giveInactivityPenalties(epoch, stakerId);
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
+        require(rAmount > 0, "No razor to withdraw");
+
         staker.stake = staker.stake - rAmount;
 
         locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod);
@@ -387,7 +390,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Withdraw];
-        require(lock.unlockAfter != 0, "Did not unstake");
+        require(lock.unlockAfter != 0, "Did not initiate withdraw");
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
 
