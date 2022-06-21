@@ -288,6 +288,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
         uint32 epoch = _getEpoch();
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
+        require(stakers[stakerId]._address != msg.sender, "Staker cannot delegate themself");
         // slither-disable-next-line timestamp
         require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
