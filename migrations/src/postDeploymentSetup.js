@@ -49,8 +49,8 @@ module.exports = async () => {
   }
 
   // Initialise Contracts and Grant Roles
-  await postDeploymentInitialiseContracts();
-  await postDeploymentGrantRoles();
+  await postDeploymentInitialiseContracts('deploy');
+  await postDeploymentGrantRoles('deploy');
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {

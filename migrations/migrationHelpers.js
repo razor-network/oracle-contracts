@@ -15,29 +15,43 @@ const { BigNumber } = ethers;
 const DEPLOYMENT_FILE = `${__dirname}/../.contract-deployment.tmp.json`;
 const OLD_DEPLOYMENT_FILE = `${__dirname}/../.previous-deployment-addresses`;
 
+const POST_DEPLOYMENT_TEST_FILE = `${__dirname}/../.post-deployment-test.tmp.json`;
+
 const readDeploymentFile = async () => jsonfile.readFile(DEPLOYMENT_FILE);
+
+const readPostDeploymentTestFile = async () => jsonfile.readFile(POST_DEPLOYMENT_TEST_FILE);
 
 const readOldDeploymentFile = async () => jsonfile.readFile(OLD_DEPLOYMENT_FILE);
 
 const writeDeploymentFile = async (data) => jsonfile.writeFile(DEPLOYMENT_FILE, data);
 
-const appendDeploymentFile = async (data) => {
+const appendDeploymentFile = async (data, type) => {
   let deployments = {};
+  if (type === 'deploy') {
+    try {
+      deployments = await readDeploymentFile();
+    } catch (e) {
+      console.log("Deployment file doesn't exist, generating it...");
+    }
 
-  try {
-    deployments = await readDeploymentFile();
-  } catch (e) {
-    console.log("Deployment file doesn't exist, generating it...");
+    await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
+  } else {
+    // This is used for testing the post deployment script
+    try {
+      deployments = await readPostDeploymentTestFile();
+    } catch (e) {
+      console.log("Deployment file doesn't exist, generating it...");
+    }
+
+    await jsonfile.writeFile(POST_DEPLOYMENT_TEST_FILE, { ...deployments, ...data });
   }
-
-  await jsonfile.writeFile(DEPLOYMENT_FILE, { ...deployments, ...data });
 };
 
-const updateDeploymentFile = async (contractName) => {
+const updateDeploymentFile = async (contractName, type) => {
   const { deployments } = hre;
   const { get } = deployments;
   const contract = await get(contractName);
-  await appendDeploymentFile({ [contractName]: contract.address });
+  await appendDeploymentFile({ [contractName]: contract.address }, type);
 };
 
 const verifyDeployedContracts = async (contractName, constructorParams = []) => {
@@ -98,8 +112,25 @@ const deployContractHH = async (contractName, constructorParams = []) => {
     `${contractName} deployed at ${Contract.address} by owner ${deployer} 
     using ${Contract.receipt.gasUsed} gas with tx hash ${Contract.transactionHash}`
   );
-  await updateDeploymentFile(contractName);
+  await updateDeploymentFile(contractName, 'deploy');
   await verifyDeployedContracts(contractName, constructorParams);
+  return Contract;
+};
+
+const deployPostDeploymentTestContracts = async (contractName, constructorParams = []) => {
+  const { getNamedAccounts, deployments } = hre;
+  const { log, deploy } = deployments;
+  const namedAccounts = await getNamedAccounts();
+  const { deployer } = namedAccounts;
+  const Contract = await deploy(contractName, {
+    from: deployer,
+    args: [...constructorParams],
+  });
+  log(
+    `${contractName} deployed at ${Contract.address} by owner ${deployer} 
+    using ${Contract.receipt.gasUsed} gas with tx hash ${Contract.transactionHash}`
+  );
+  await updateDeploymentFile(contractName, 'test');
   return Contract;
 };
 
@@ -249,82 +280,156 @@ const waitForConfirmState = async (numStates, stateLength) => {
   }
 };
 
-const fetchDeployedContractDetails = async () => {
-  const {
-    Governance: governanceAddress,
-    BlockManager: blockManagerAddress,
-    CollectionManager: collectionManagerAddress,
-    StakeManager: stakeManagerAddress,
-    RewardManager: rewardManagerAddress,
-    VoteManager: voteManagerAddress,
-    Delegator: delegatorAddress,
-    RAZOR: RAZORAddress,
-    StakedTokenFactory: stakedTokenFactoryAddress,
-    RandomNoManager: randomNoManagerAddress,
-    BondManager: bondManagerAddress,
-  } = await readDeploymentFile();
+const fetchDeployedContractDetails = async (type) => {
+  if (type === 'deploy') {
+    const {
+      Governance: governanceAddress,
+      BlockManager: blockManagerAddress,
+      CollectionManager: collectionManagerAddress,
+      StakeManager: stakeManagerAddress,
+      RewardManager: rewardManagerAddress,
+      VoteManager: voteManagerAddress,
+      Delegator: delegatorAddress,
+      RAZOR: RAZORAddress,
+      StakedTokenFactory: stakedTokenFactoryAddress,
+      RandomNoManager: randomNoManagerAddress,
+      BondManager: bondManagerAddress,
+    } = await readDeploymentFile();
+    const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
+    const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
+    const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
+    const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
+    const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
+    const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
+    const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
+    const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
+    const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
+    const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
+    const { contractInstance: bondManager } = await getdeployedContractInstance('BondManager', bondManagerAddress);
 
-  const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
-  const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
-  const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
-  const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
-  const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
-  const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
-  const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
-  const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
-  const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
-  const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
-  const { contractInstance: bondManager } = await getdeployedContractInstance('BondManager', bondManagerAddress);
+    return {
+      Governance: {
+        governanceAddress,
+        governance,
+      },
+      BlockManager: {
+        blockManagerAddress,
+        blockManager,
+      },
+      CollectionManager: {
+        collectionManagerAddress,
+        collectionManager,
+      },
+      StakeManager: {
+        stakeManagerAddress,
+        stakeManager,
+      },
+      RewardManager: {
+        rewardManagerAddress,
+        rewardManager,
+      },
+      VoteManager: {
+        voteManagerAddress,
+        voteManager,
+      },
+      Delegator: {
+        delegatorAddress,
+        delegator,
+      },
+      RAZOR: {
+        RAZORAddress,
+        RAZOR,
+      },
+      StakedTokenFactory: {
+        stakedTokenFactoryAddress,
+        stakedTokenFactory,
+      },
+      RandomNoManager: {
+        randomNoManagerAddress,
+        randomNoManager,
+      },
+      BondManager: {
+        bondManagerAddress,
+        bondManager,
+      },
+    };
+  } else {
+    // This is used for testing the post deployment script
+    const {
+      Governance: governanceAddress,
+      BlockManager: blockManagerAddress,
+      CollectionManager: collectionManagerAddress,
+      StakeManager: stakeManagerAddress,
+      RewardManager: rewardManagerAddress,
+      VoteManager: voteManagerAddress,
+      Delegator: delegatorAddress,
+      RAZOR: RAZORAddress,
+      StakedTokenFactory: stakedTokenFactoryAddress,
+      RandomNoManager: randomNoManagerAddress,
+      BondManager: bondManagerAddress,
+    } = await readPostDeploymentTestFile();
+    const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
+    const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
+    const { contractInstance: stakeManager } = await getdeployedContractInstance('StakeManager', stakeManagerAddress);
+    const { contractInstance: rewardManager } = await getdeployedContractInstance('RewardManager', rewardManagerAddress);
+    const { contractInstance: voteManager } = await getdeployedContractInstance('VoteManager', voteManagerAddress);
+    const { contractInstance: delegator } = await getdeployedContractInstance('Delegator', delegatorAddress);
+    const { contractInstance: RAZOR } = await getdeployedContractInstance('RAZOR', RAZORAddress);
+    const { contractInstance: governance } = await getdeployedContractInstance('Governance', governanceAddress);
+    const { contractInstance: stakedTokenFactory } = await getdeployedContractInstance('StakedTokenFactory', stakedTokenFactoryAddress);
+    const { contractInstance: randomNoManager } = await getdeployedContractInstance('RandomNoManager', randomNoManagerAddress);
+    const { contractInstance: bondManager } = await getdeployedContractInstance('BondManager', bondManagerAddress);
 
-  return {
-    Governance: {
-      governanceAddress,
-      governance,
-    },
-    BlockManager: {
-      blockManagerAddress,
-      blockManager,
-    },
-    CollectionManager: {
-      collectionManagerAddress,
-      collectionManager,
-    },
-    StakeManager: {
-      stakeManagerAddress,
-      stakeManager,
-    },
-    RewardManager: {
-      rewardManagerAddress,
-      rewardManager,
-    },
-    VoteManager: {
-      voteManagerAddress,
-      voteManager,
-    },
-    Delegator: {
-      delegatorAddress,
-      delegator,
-    },
-    RAZOR: {
-      RAZORAddress,
-      RAZOR,
-    },
-    StakedTokenFactory: {
-      stakedTokenFactoryAddress,
-      stakedTokenFactory,
-    },
-    RandomNoManager: {
-      randomNoManagerAddress,
-      randomNoManager,
-    },
-    BondManager: {
-      bondManagerAddress,
-      bondManager,
-    },
-  };
+    return {
+      Governance: {
+        governanceAddress,
+        governance,
+      },
+      BlockManager: {
+        blockManagerAddress,
+        blockManager,
+      },
+      CollectionManager: {
+        collectionManagerAddress,
+        collectionManager,
+      },
+      StakeManager: {
+        stakeManagerAddress,
+        stakeManager,
+      },
+      RewardManager: {
+        rewardManagerAddress,
+        rewardManager,
+      },
+      VoteManager: {
+        voteManagerAddress,
+        voteManager,
+      },
+      Delegator: {
+        delegatorAddress,
+        delegator,
+      },
+      RAZOR: {
+        RAZORAddress,
+        RAZOR,
+      },
+      StakedTokenFactory: {
+        stakedTokenFactoryAddress,
+        stakedTokenFactory,
+      },
+      RandomNoManager: {
+        randomNoManagerAddress,
+        randomNoManager,
+      },
+      BondManager: {
+        bondManagerAddress,
+        bondManager,
+      },
+    };
+  }
 };
 
-const postDeploymentInitialiseContracts = async () => {
+const postDeploymentInitialiseContracts = async (type) => {
   const {
     Governance: {
       governance,
@@ -365,8 +470,9 @@ const postDeploymentInitialiseContracts = async () => {
     },
     BondManager: {
       bondManager,
+      bondManagerAddress,
     },
-  } = await fetchDeployedContractDetails();
+  } = await fetchDeployedContractDetails(type);
 
   const pendingTransactions = [];
   if (NETWORK !== 'mainnet') {
@@ -385,15 +491,15 @@ const postDeploymentInitialiseContracts = async () => {
     blockManagerAddress, collectionManagerAddress).catch(() => {}));
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress).catch(() => {}));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress).catch(() => {}));
-  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
+  pendingTransactions.push(await governance.initialize(blockManagerAddress, bondManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
-  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress).catch(() => {}));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, bondManagerAddress).catch(() => {}));
   pendingTransactions.push(await bondManager.initialize(RAZORAddress, collectionManagerAddress).catch(() => {}));
 
   Promise.allSettled(pendingTransactions).then(() => console.log('Contracts Initialised'));
 };
 
-const postDeploymentGrantRoles = async () => {
+const postDeploymentGrantRoles = async (type) => {
   const signers = await ethers.getSigners();
 
   const {
@@ -430,7 +536,7 @@ const postDeploymentGrantRoles = async () => {
     BondManager: {
       bondManager,
     },
-  } = await fetchDeployedContractDetails();
+  } = await fetchDeployedContractDetails(type);
 
   const pendingTransactions = [];
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
@@ -465,8 +571,10 @@ const postDeploymentGrantRoles = async () => {
 
 module.exports = {
   updateDeploymentFile,
+  fetchDeployedContractDetails,
   deployContract,
   deployContractHH,
+  deployPostDeploymentTestContracts,
   getdeployedContractInstance,
   appendDeploymentFile,
   readDeploymentFile,
