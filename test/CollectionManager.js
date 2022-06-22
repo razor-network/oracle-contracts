@@ -118,10 +118,10 @@ describe('CollectionManager', function () {
       const weight = 50;
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
 
-      await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 5]);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 3]);
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
-      assertBNEqual(collection.jobIDs[2], toBigNumber('5'));
+      assertBNEqual(collection.jobIDs[2], toBigNumber('3'));
     });
 
     it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
@@ -135,7 +135,7 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to update collection', async function () {
-      await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 5]);
+      await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 3]);
       const collection = await collectionManager.getCollection(1);
       assertBNEqual(collection.power, toBigNumber('5'));
       assertBNEqual(collection.aggregationMethod, toBigNumber('2'));
@@ -175,10 +175,10 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to remove job from collection', async function () {
-      await collectionManager.updateCollection(1, 500, 1, 3, [1, 5]);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 3]);
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 2);
-      assertBNEqual(collection.jobIDs[1], toBigNumber('5'));
+      assertBNEqual(collection.jobIDs[1], toBigNumber('3'));
     });
 
     it('should be able to inactivate collection', async function () {
@@ -259,9 +259,20 @@ describe('CollectionManager', function () {
       await assertRevert(tx1, 'no jobs added');
     });
 
+    it('should not create collection if jobID doesnt exist', async function () {
+      const collectionName = 'Test Collection2';
+      const tx1 = collectionManager.createCollection(0, 0, 1, [118, 10], collectionName);
+      await assertRevert(tx1, 'job not present');
+    });
+
     it('updateCollection should only work for collections which exists', async function () {
       const tx = collectionManager.updateCollection(10, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should not work if the jobID does not exist', async function () {
+      const tx = collectionManager.updateCollection(1, 500, 2, 5, [1, 100]);
+      await assertRevert(tx, 'job not present');
     });
 
     it('updateCollection should only work for collections which are currently active', async function () {
