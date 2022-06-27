@@ -294,8 +294,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[leafIdToCollectionIdRegistry[i]].tolerance;
+    function getCollectionTolerance(uint16 id) external view override returns (uint32) {
+        return collections[id].tolerance;
     }
 
     /// @inheritdoc ICollectionManager
