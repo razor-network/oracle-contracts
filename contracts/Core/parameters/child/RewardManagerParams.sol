@@ -7,6 +7,8 @@ import "../../storage/Constants.sol";
 abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice percentage stake penalty to be given out for inactivity
     uint32 public penaltyNotRevealNum = 1000;
+    /// @notice percentage age penalty to be given out for inactivity
+    uint32 public penaltyAgeNotRevealNum = 1000;
     /**
      * @notice the number of epochs for which the staker wont be given inactivity penalties.
      * Stakers inactive for more than grace period will be penalized
@@ -25,6 +27,12 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         penaltyNotRevealNum = _penaltyNotRevealNumerator;
+    }
+
+    /// @inheritdoc IRewardManagerParams
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
+        // slither-disable-next-line events-maths
+        penaltyAgeNotRevealNum = _penaltyAgeNotRevealNumerator;
     }
 
     /// @inheritdoc IRewardManagerParams
