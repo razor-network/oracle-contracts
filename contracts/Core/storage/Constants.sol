@@ -31,6 +31,7 @@ contract Constants {
 
     uint16 public constant EPOCH_LENGTH = 1800;
 
+    // slither-disable-next-line too-many-digits
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     uint32 public constant BASE_DENOMINATOR = 10_000_000;
     // keccak256("BLOCK_CONFIRMER_ROLE")
