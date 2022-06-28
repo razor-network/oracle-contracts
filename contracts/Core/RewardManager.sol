@@ -144,7 +144,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
                 if (medianLastEpoch == 0) continue; //WARNING: unreachable. Can be removed
                 uint256 prod = age * voteValueLastEpoch;
                 // slither-disable-next-line calls-loop
-                uint32 tolerance = collectionManager.getCollectionTolerance(idsRevealedLastEpoch[i]); //TODO: replace i with idsRevealedLastEpoch[i]
+                uint32 tolerance = collectionManager.getCollectionTolerance(idsRevealedLastEpoch[i]);
                 tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
                 uint256 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 uint256 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
