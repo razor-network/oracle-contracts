@@ -25,7 +25,7 @@ describe('Governance contract Test', async () => {
   const expectedRevertMessage = 'AccessControl';
 
   const penaltyNotRevealNumerator = toBigNumber('1000');
-  const penaltyAgeNotRevealNumerator = toBigNumber('1000');
+  const penaltyAgeNotRevealNumerator = toBigNumber('100000');
 
   const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');

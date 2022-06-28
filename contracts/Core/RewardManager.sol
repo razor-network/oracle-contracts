@@ -164,6 +164,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /** @notice Calculates the stake and age inactivity penalties of the staker
      * @param epochs The difference of epochs where the staker was inactive
      * @param stakeValue The Stake that staker had in last epoch
+     * @param ageValue The age that staker had in last epoch
      */
     function _calculateInactivityPenalties(
         uint32 epochs,
@@ -172,8 +173,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     ) internal view returns (uint256, uint32) {
         uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / BASE_DENOMINATOR;
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
-        uint32 penaltyAge = ((epochs) * (ageValue * penaltyAgeNotRevealNum)) / BASE_DENOMINATOR;
-        uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
+        uint256 penaltyAge = (uint256(epochs) * (uint256(ageValue) * uint256(penaltyAgeNotRevealNum))) / BASE_DENOMINATOR;
+        uint32 newAge = uint32(penaltyAge) < ageValue ? ageValue - uint32(penaltyAge) : 0;
         return (newStake, newAge);
     }
 }
