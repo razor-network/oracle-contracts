@@ -595,22 +595,31 @@ describe('BlockManager', function () {
       await mineToNextState();
       await reveal(signers[3], 0, voteManager, stakeManager);
       await mineToNextState();
-      const tx = propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
+
+      // Try to propose using wrong iteration
+      const medians = await calculateMedians(collectionManager);
+      const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc3);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      const idsRevealed = await getIdsRevealed(collectionManager);
+      const epoch = await getEpoch();
+      const tx = blockManager.connect(signers[3]).propose(epoch,
+        idsRevealed,
+        medians,
+        iteration + 10000000,
+        biggestStakerId);
       await reset();
       await assertRevert(tx, 'not elected');
     });
-    it('staker should not be able to propose when not not revealed', async function () {
+    it('staker should not be able to propose when not revealed', async function () {
       await mineToNextEpoch();
       const secret = '0x727d5c8e6d18ed15ce7ac8d3cce6ec8a0e9c02481514c0823ea49d847ccb9eee';
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await mineToNextState();
       const tx = propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
-      try {
-        await assertRevert(tx, 'Cannot propose without revealing');
-      } catch (err) {
-        await assertRevert(tx, 'not elected');
-      }
+      await assertRevert(tx, 'Cannot propose without revealing');
       await reset();
     });
     it('staker should not be able to propose when stake goes below minStake', async function () {
