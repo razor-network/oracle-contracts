@@ -30,12 +30,13 @@ describe('Access Control Test', async () => {
   let initializeContracts;
   let delegator;
   let voteManager;
+  let razor;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
       blockManager, governance, collectionManager, stakeManager, rewardManager, initializeContracts, delegator,
-      voteManager,
+      voteManager, razor,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -101,6 +102,11 @@ describe('Access Control Test', async () => {
   });
 
   it('giveBlockReward() should be accessable by RewardModifier', async () => {
+    // stake first to get token address
+    const stake = tokenAmount('200000');
+    const epoch = await getEpoch();
+    await razor.connect(signers[0]).approve(stakeManager.address, stake);
+    await stakeManager.connect(signers[0]).stake(epoch, stake);
     await rewardManager.grantRole(REWARD_MODIFIER_ROLE, signers[0].address);
     await rewardManager.giveBlockReward(1, 1);
     await rewardManager.revokeRole(REWARD_MODIFIER_ROLE, signers[0].address);
