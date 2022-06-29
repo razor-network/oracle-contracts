@@ -549,14 +549,11 @@ describe('StakeManager', function () {
       // commit
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
-      await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
-
       const penaltyAge = penaltyPercentage * epochsJumped * ageBefore;
       const expectedAge = Math.round(ageBefore - penaltyAge);
       staker = await stakeManager.stakers(3);
 
-      assertBNEqual(toBigNumber(staker.age), toBigNumber(expectedAge), 'Staker age should decrease based on penaltyAgeNotRevealNum');
+      assertBNEqual(staker.age, expectedAge, 'Staker age should decrease based on penaltyAgeNotRevealNum');
     });
 
     it('should not penalize staker if number of inactive epochs is smaller than / equal to grace_period', async function () {
@@ -2214,6 +2211,33 @@ describe('StakeManager', function () {
       staker = await stakeManager.stakers(stakerId);
       const stakeAfter = staker.stake;
       assertBNEqual(stakeBefore, stakeAfter, 'stake should not decrease');
+    });
+    it('should be able to set inactivity age penalty to zero', async function () {
+      await mineToNextEpoch();
+      await governance.grantRole(GOVERNER_ROLE, signers[0].address);
+      await governance.connect(signers[0]).setPenaltyAgeNotRevealNum(0);
+      const penaltyNotRevealNum = await rewardManager.penaltyAgeNotRevealNum();
+      assertBNEqual(penaltyNotRevealNum, toBigNumber('0'));
+      let secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+      await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
+      await mineToNextState();
+      await propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);
+      await mineToNextState();
+      await mineToNextState();
+      const epochsJumped = GRACE_PERIOD + 3;
+      for (let i = 0; i < epochsJumped; i++) {
+        await mineToNextEpoch();
+      }
+      const stakerId = await stakeManager.stakerIds(signers[4].address);
+      let staker = await stakeManager.stakers(stakerId);
+      const ageBefore = staker.age;
+      secret = '0x727d5c9e6d18ed45ce7ac8d3ceb6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
+      staker = await stakeManager.stakers(stakerId);
+      const ageAfter = staker.age;
+      assertBNEqual(ageBefore, ageAfter, 'stake should not decrease');
     });
     it('should not be able to call initiate withdraw again after calling it once', async function () {
       const staker = await stakeManager.getStaker(2);
