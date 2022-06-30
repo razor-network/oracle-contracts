@@ -411,7 +411,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakers[stakerId].stakerReward != 0, "no stakerReward to transfer");
         uint32 epoch = _getEpoch();
         uint256 stakerRewardToBeClaimed = stakers[stakerId].stakerReward;
-        _setStakerStakerReward(epoch, stakerId, StakerRewardChanged.StakerRewardClaimed, stakers[stakerId].stakerReward, 0);
+        _setStakerReward(epoch, stakerId, StakerRewardChanged.StakerRewardClaimed, stakers[stakerId].stakerReward, 0);
         require(razor.transfer(msg.sender, stakerRewardToBeClaimed), "couldnt transfer");
     }
 
@@ -504,14 +504,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @inheritdoc IStakeManager
-    function setStakerStakerReward(
+    function setStakerReward(
         uint32 _epoch,
         uint32 _id,
         Constants.StakerRewardChanged reason,
         uint256 prevStakerReward,
         uint256 _stakerReward
     ) external override onlyRole(STAKE_MODIFIER_ROLE) {
-        _setStakerStakerReward(_epoch, _id, reason, prevStakerReward, _stakerReward);
+        _setStakerReward(_epoch, _id, reason, prevStakerReward, _stakerReward);
     }
 
     /// @inheritdoc IStakeManager
@@ -644,7 +644,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         emit StakeChange(_epoch, _id, reason, _prevStake, _stake, block.timestamp);
     }
 
-    function _setStakerStakerReward(
+    function _setStakerReward(
         uint32 _epoch,
         uint32 _id,
         Constants.StakerRewardChanged reason,
