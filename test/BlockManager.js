@@ -28,7 +28,7 @@ const {
   toBigNumber,
   tokenAmount,
   getCollectionIdPositionInBlock,
-  getIterationWithPosistion,
+  getIterationWithPosition,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -1680,7 +1680,7 @@ describe('BlockManager', function () {
       const idsRevealed = await getIdsRevealed(collectionManager);
       const medians = await calculateMedians(collectionManager);
       const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
-      const iteration = await getIterationWithPosistion(voteManager, stakeManager, staker, biggestStake, 2);
+      const iteration = await getIterationWithPosition(voteManager, stakeManager, staker, biggestStake, 2);
       const tx = blockManager.connect(signers[17]).propose(epoch,
         idsRevealed,
         medians,

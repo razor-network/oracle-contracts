@@ -81,7 +81,7 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
   return false;
 };
 
-const isElectedProposerWithPosistion = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
+const isElectedProposerWithPosition = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
   // add +1 since prng returns 0 to max-1 and staker start from 1
   const salt1 = await web3.utils.soliditySha3(iteration);
   const seed1 = await prngHash(salt, salt1);
@@ -146,7 +146,7 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   return 0;
 };
 
-const getIterationWithPosistion = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
+const getIterationWithPosition = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
   const epoch = getEpoch();
@@ -156,7 +156,7 @@ const getIterationWithPosistion = async (voteManager, stakeManager, staker, bigg
   // stake 0 represents that given staker has not voted in that epoch
   // so anyway in propose its going to revert
   for (let i = 0; i < 10000000000; i++) {
-    const [isElected, position] = await isElectedProposerWithPosistion(i, biggestStake, stake, stakerId, numStakers, salt);
+    const [isElected, position] = await isElectedProposerWithPosition(i, biggestStake, stake, stakerId, numStakers, salt);
     if (!isElected && position === ifPosition) {
       return i;
     }
@@ -299,7 +299,7 @@ module.exports = {
   getEpoch,
   getVote,
   getIteration,
-  getIterationWithPosistion,
+  getIterationWithPosition,
   getFalseIteration,
   getState,
   prng,
