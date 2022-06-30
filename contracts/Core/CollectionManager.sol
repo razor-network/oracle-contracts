@@ -162,12 +162,12 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             _updateDelayedRegistry();
         }
 
-        if (assetStatus == true) {
-            require(collections[id].active == false, "ID already active");
+        if (assetStatus) {
+            require(!collections[id].active, "ID already active");
             numActiveCollections = numActiveCollections + 1;
             collections[id].active = assetStatus;
         } else {
-            require(collections[id].active == true, "ID already inactive");
+            require(collections[id].active, "ID already inactive");
             numActiveCollections = numActiveCollections - 1;
             collections[id].active = assetStatus;
         }
