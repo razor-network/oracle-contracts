@@ -287,8 +287,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch = _getEpoch();
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
         require(stakers[stakerId]._address != msg.sender, "Staker cannot delegate themself");
-        // slither-disable-next-line timestamp
-        require(_isStakerActive(stakerId, epoch), "Staker is inactive");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -653,15 +651,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     ) internal {
         stakers[_id].stakerReward = _stakerReward;
         emit StakerRewardChange(_epoch, _id, reason, prevStakerReward, _stakerReward, block.timestamp);
-    }
-
-    /**
-     * @return isStakerActive : Activity < Grace
-     */
-    function _isStakerActive(uint32 stakerId, uint32 epoch) internal view returns (bool) {
-        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        // slither-disable-next-line timestamp
-        return ((epoch - epochLastRevealed) <= gracePeriod);
     }
 
     /**
