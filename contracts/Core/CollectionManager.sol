@@ -154,7 +154,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
-        require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
 
@@ -163,13 +162,16 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             _updateDelayedRegistry();
         }
 
-        if (!collections[id].active) {
+        if (assetStatus == true) {
+            require(collections[id].active == false, "ID already active");
             numActiveCollections = numActiveCollections + 1;
+            collections[id].active = assetStatus;
         } else {
+            require(collections[id].active == true, "ID already inactive");
             numActiveCollections = numActiveCollections - 1;
+            collections[id].active = assetStatus;
         }
 
-        collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         _updateRegistry();
 
