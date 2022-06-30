@@ -48,10 +48,6 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /// @inheritdoc IRewardManager
     function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
         Structs.Staker memory staker = stakeManager.getStaker(stakerId);
-        if (!staker.acceptDelegation) {
-            stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + blockReward);
-            return;
-        }
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
         uint256 stakerSRZR = sToken.balanceOf(staker._address);
