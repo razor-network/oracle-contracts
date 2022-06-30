@@ -250,7 +250,7 @@ describe('CollectionManager', function () {
 
     it('should not be able to set Collection status if provided status is the same as current collectionstatus', async function () {
       const tx1 = collectionManager.setCollectionStatus(false, 3);// status of collection with Id 3 is already false
-      await assertRevert(tx1, 'status not being changed');
+      await assertRevert(tx1, 'ID already inactive');
     });
 
     it('should not create collection if it does not have any jobIDs', async function () {
@@ -275,15 +275,15 @@ describe('CollectionManager', function () {
       await assertRevert(tx, 'job not present');
     });
 
-    it('updateCollection should only work for collections which are currently active', async function () {
+    it('updateCollection should not work if jobIDs array is empty', async function () {
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
       await mineToNextState(); // propose
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
-      const tx = collectionManager.updateCollection(3, 500, 2, 5, [1]);
-      await assertRevert(tx, 'Collection is inactive');
+      const tx = collectionManager.updateCollection(3, 500, 2, 5, []);
+      await assertRevert(tx, 'job not present');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {
