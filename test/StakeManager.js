@@ -1187,40 +1187,40 @@ describe('StakeManager', function () {
       await stakeManager.connect(signers[0]).unpause();
     });
 
-    it('Delegation should revert, if staker is inactive for more than grace period', async function () {
-      let epoch = await getEpoch();
+    // it('Delegation should revert, if staker is inactive for more than grace period', async function () {
+    //   let epoch = await getEpoch();
 
-      const amount = tokenAmount('100000');
-      await razor.transfer(signers[9].address, amount);
-      await razor.connect(signers[9]).approve(stakeManager.address, amount);
-      await stakeManager.connect(signers[9]).stake(epoch, amount);
-      await stakeManager.connect(signers[9]).updateCommission(4);
-      await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
-      const stakerId = await stakeManager.stakerIds(signers[9].address);
+    //   const amount = tokenAmount('100000');
+    //   await razor.transfer(signers[9].address, amount);
+    //   await razor.connect(signers[9]).approve(stakeManager.address, amount);
+    //   await stakeManager.connect(signers[9]).stake(epoch, amount);
+    //   await stakeManager.connect(signers[9]).updateCommission(4);
+    //   await stakeManager.connect(signers[9]).setDelegationAcceptance('true');
+    //   const stakerId = await stakeManager.stakerIds(signers[9].address);
 
-      // Participation In Epoch as delegators cant delegate to a staker untill they participate
-      const secret = '0x427d5c9e6d18ed45ce7ac8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-      await commit(signers[9], 0, voteManager, collectionManager, secret, blockManager);
+    //   // Participation In Epoch as delegators cant delegate to a staker untill they participate
+    //   const secret = '0x427d5c9e6d18ed45ce7ac8e3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+    //   await commit(signers[9], 0, voteManager, collectionManager, secret, blockManager);
 
-      await mineToNextState(); // reveal
-      await reveal(signers[9], 0, voteManager, stakeManager, collectionManager);
-      await mineToNextEpoch();
+    //   await mineToNextState(); // reveal
+    //   await reveal(signers[9], 0, voteManager, stakeManager, collectionManager);
+    //   await mineToNextEpoch();
 
-      // delegation working as expected till staker is active
-      epoch = await getEpoch();
-      await razor.connect(signers[10]).approve(stakeManager.address, amount);
-      await stakeManager.connect(signers[10]).delegate(stakerId, amount);
+    //   // delegation working as expected till staker is active
+    //   epoch = await getEpoch();
+    //   await razor.connect(signers[10]).approve(stakeManager.address, amount);
+    //   await stakeManager.connect(signers[10]).delegate(stakerId, amount);
 
-      const epochsJumped = GRACE_PERIOD + 1;
-      for (let i = 0; i <= epochsJumped; i++) {
-        await mineToNextEpoch();
-      }
-      epoch = await getEpoch();
-      // delegation reverted
-      await razor.connect(signers[10]).approve(stakeManager.address, amount);
-      const tx = stakeManager.connect(signers[10]).delegate(stakerId, amount);
-      await assertRevert(tx, 'Staker is inactive');
-    });
+    //   const epochsJumped = GRACE_PERIOD + 1;
+    //   for (let i = 0; i <= epochsJumped; i++) {
+    //     await mineToNextEpoch();
+    //   }
+    //   epoch = await getEpoch();
+    //   // delegation reverted
+    //   await razor.connect(signers[10]).approve(stakeManager.address, amount);
+    //   const tx = stakeManager.connect(signers[10]).delegate(stakerId, amount);
+    //   await assertRevert(tx, 'Staker is inactive');
+    // });
     it('Staker with minStake staked, should be able to participate', async function () {
       const stakeOfStaker = tokenAmount('20000');
       await razor.transfer(signers[9].address, stakeOfStaker);
