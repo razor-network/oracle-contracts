@@ -81,6 +81,25 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
   return false;
 };
 
+const isElectedProposerWithPosistion = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
+  // add +1 since prng returns 0 to max-1 and staker start from 1
+  const salt1 = await web3.utils.soliditySha3(iteration);
+  const seed1 = await prngHash(salt, salt1);
+  const rand1 = await prng(numStakers, seed1);
+  if (!(toBigNumber(rand1).add(1).eq(stakerId))) {
+    return [false, 1];
+  }
+
+  const salt2 = await web3.utils.soliditySha3(stakerId, iteration);
+  const seed2 = await prngHash(salt, salt2);
+  const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
+  if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) {
+    return [true, 1];
+  }
+
+  return [false, 2];
+};
+
 const getEpoch = async () => {
   const blockNumber = toBigNumber(await web3.eth.getBlockNumber());
   const getCurrentBlock = await web3.eth.getBlock(blockNumber.toNumber());
@@ -123,6 +142,24 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (isElected) return (i);
+  }
+  return 0;
+};
+
+const getIterationWithPosistion = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
+  const numStakers = await stakeManager.getNumStakers();
+  const stakerId = staker.id;
+  const epoch = getEpoch();
+  const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
+  const salt = await voteManager.getSalt();
+  if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
+  // stake 0 represents that given staker has not voted in that epoch
+  // so anyway in propose its going to revert
+  for (let i = 0; i < 10000000000; i++) {
+    const [isElected, position] = await isElectedProposerWithPosistion(i, biggestStake, stake, stakerId, numStakers, salt);
+    if (!isElected && position === ifPosition) {
+      return i;
+    }
   }
   return 0;
 };
@@ -262,6 +299,7 @@ module.exports = {
   getEpoch,
   getVote,
   getIteration,
+  getIterationWithPosistion,
   getFalseIteration,
   getState,
   prng,
