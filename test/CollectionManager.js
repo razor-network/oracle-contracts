@@ -283,7 +283,7 @@ describe('CollectionManager', function () {
       await mineToNextState(); // confirm
       await blockManager.connect(signers[5]).claimBlockReward();
       const tx = collectionManager.updateCollection(3, 500, 2, 5, []);
-      await assertRevert(tx, 'job not present');
+      await assertRevert(tx, 'no jobs added');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {

@@ -239,9 +239,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+        require(jobIDs.length > 0, "no jobs added");
         require(collectionID <= numCollections, "Collection ID not present");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-        require(jobIDs.length > 0, "job not present");
         uint32 epoch = _getEpoch();
 
         uint256 jobsLength = jobIDs.length;
