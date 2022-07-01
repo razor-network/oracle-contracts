@@ -6,12 +6,13 @@ import "./Core/interface/ICollectionManager.sol";
 import "./IDelegator.sol";
 import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
+import "./Pause.sol";
 
 /** @title Delegator
  * @notice Delegator acts as a bridge between the client and the protocol
  */
 
-contract Delegator is StateManager, ACL, IDelegator {
+contract Delegator is ACL, StateManager, Pause, IDelegator {
     ICollectionManager public collectionManager;
 
     /// @inheritdoc IDelegator
@@ -21,22 +22,22 @@ contract Delegator is StateManager, ACL, IDelegator {
     }
 
     /// @inheritdoc IDelegator
-    function getNumActiveCollections() external view override returns (uint256) {
-        return collectionManager.getNumActiveCollections();
+    function getActiveCollections() external view override whenNotPaused returns (uint16[] memory) {
+        return collectionManager.getActiveCollections();
     }
 
     /// @inheritdoc IDelegator
-    function getCollectionID(bytes32 _hname) external view override returns (uint16) {
+    function getCollectionID(bytes32 _hname) external view override whenNotPaused returns (uint16) {
         return collectionManager.getCollectionID(_hname);
     }
 
     /// @inheritdoc IDelegator
-    function getResult(bytes32 _name) external view override returns (uint256, int8) {
+    function getResult(bytes32 _name) external view override whenNotPaused returns (uint256, int8) {
         return collectionManager.getResult(_name);
     }
 
     /// @inheritdoc IDelegator
-    function getResultFromID(uint16 _id) external view override returns (uint256, int8) {
+    function getResultFromID(uint16 _id) external view override whenNotPaused returns (uint256, int8) {
         return collectionManager.getResultFromID(_id);
     }
 }

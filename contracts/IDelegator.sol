@@ -31,7 +31,7 @@ interface IDelegator {
     function getResultFromID(uint16 _id) external view returns (uint256, int8);
 
     /**
-     * @return number of active collections in the oracle
+     * @return ids of active collections in the oracle
      */
-    function getNumActiveCollections() external view returns (uint256);
+    function getActiveCollections() external view returns (uint16[] memory);
 }

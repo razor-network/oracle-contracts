@@ -7,6 +7,7 @@ const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   COLLECTION_MODIFIER_ROLE,
+  PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
@@ -86,8 +87,9 @@ describe('Delegator', function () {
       assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
-    it('should be able to get the correct number of active assets from delegator', async function () {
-      assertBNEqual((await delegator.getNumActiveCollections()), toBigNumber('1'), 'incorrect value fetched');
+    it('should be able to get the correct active collection ids from delegator', async function () {
+      const activeCollectionsIds = [1];
+      assertBNEqual((await delegator.getActiveCollections()), activeCollectionsIds, 'incorrect active collection ids');
     });
 
     it('should be able to register collection that has just been created', async function () {
@@ -266,6 +268,13 @@ describe('Delegator', function () {
       const power = 2;
       const tx = collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
       await assertRevert(tx, 'Collection exists with same name');
+    });
+
+    it('should not be able to fetch result from delegator if paused', async function () {
+      await delegator.grantRole(PAUSE_ROLE, signers[0].address);
+      await delegator.pause();
+      const tx = delegator.getResultFromID(1);
+      await assertRevert(tx, 'Pausable: paused');
     });
   });
 });
