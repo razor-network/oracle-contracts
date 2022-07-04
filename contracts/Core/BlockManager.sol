@@ -162,12 +162,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
-        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
-        // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
+        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(ids.length == medians.length, "Invalid block proposed");
 

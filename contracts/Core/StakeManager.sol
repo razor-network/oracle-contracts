@@ -557,7 +557,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @notice Allows bountyHunter to redeem their bounty once its locking period is over
      * @param bountyId The ID of the bounty
      */
-    function redeemBounty(uint32 bountyId) external {
+    function redeemBounty(uint32 bountyId) external whenNotPaused {
         uint32 epoch = _getEpoch();
         uint256 bounty = bountyLocks[bountyId].amount;
 
