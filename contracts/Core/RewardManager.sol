@@ -137,17 +137,19 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
             {
                 uint256 medianLastEpoch = mediansLastEpoch[i];
-                if (medianLastEpoch == 0) continue;
+                if (medianLastEpoch == 0) continue; //WARNING: unreachable. Can be removed
                 uint256 prod = age * voteValueLastEpoch;
                 // slither-disable-next-line calls-loop
-                uint32 tolerance = collectionManager.getCollectionTolerance(i);
+                uint32 tolerance = collectionManager.getCollectionTolerance(idsRevealedLastEpoch[i]);
                 tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
                 uint256 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 uint256 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 // if (voteWeightLastEpoch > 0) {
                 if (voteValueLastEpoch > maxVoteTolerance) {
+                    //penalty = age(vote/maxvote-1)
                     penalty = penalty + (prod / maxVoteTolerance - age);
                 } else if (voteValueLastEpoch < minVoteTolerance) {
+                    //penalty = age(1-vote/minvote)
                     penalty = penalty + (age - prod / minVoteTolerance);
                 }
             }
