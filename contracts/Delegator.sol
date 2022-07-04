@@ -15,7 +15,7 @@ import "./Pause.sol";
 
 contract Delegator is ACL, StateManager, Pause, IDelegator {
     ICollectionManager public collectionManager;
-    IRandomNoClient public randomNoManger;
+    IRandomNoClient public randomNoManager;
 
     /// @inheritdoc IDelegator
     function updateAddress(address newDelegateAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -26,7 +26,7 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     /// @inheritdoc IDelegator
     function updateRandomNoManagerAddress(address newRandomNoManagerAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newRandomNoManagerAddress != address(0x0), "Zero Address check");
-        randomNoManger = IRandomNoClient(newRandomNoManagerAddress);
+        randomNoManager = IRandomNoClient(newRandomNoManagerAddress);
     }
 
     /// @inheritdoc IDelegator
@@ -56,11 +56,11 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
 
     /// @inheritdoc IDelegator
     function getGenericRandomNumberOfLastEpoch() external view override whenNotPaused returns (uint256) {
-        return randomNoManger.getGenericRandomNumberOfLastEpoch();
+        return randomNoManager.getGenericRandomNumberOfLastEpoch();
     }
 
     /// @inheritdoc IDelegator
     function getGenericRandomNumber(uint32 _epoch) external view override whenNotPaused returns (uint256) {
-        return randomNoManger.getGenericRandomNumber(_epoch);
+        return randomNoManager.getGenericRandomNumber(_epoch);
     }
 }
