@@ -209,8 +209,14 @@ describe('Delegator', function () {
     });
 
     it('should be able to fetch random number generated of last epoch', async function () {
-      const randomNumber = await delegator.getGenericRandomNumberOfLastEpoch();
-      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Random number of last epoch reported as 0');
+      const randomNumberOfLastEpoch = await delegator.getGenericRandomNumberOfLastEpoch();
+      assertBNNotEqual(randomNumberOfLastEpoch, toBigNumber('0'), 'Random number of last epoch reported as 0');
+    });
+
+    it('should be able to fetch random number using epoch', async function () {
+      const epoch = await getEpoch();
+      const randomNumber = await delegator.getGenericRandomNumber(epoch - 1);
+      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Random number of epoch reported as 0');
     });
 
     it('getResult should give the right value after activations and deactivation of assets', async function () {

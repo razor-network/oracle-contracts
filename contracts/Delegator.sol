@@ -58,4 +58,9 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     function getGenericRandomNumberOfLastEpoch() external view override whenNotPaused returns (uint256) {
         return randomNoManger.getGenericRandomNumberOfLastEpoch();
     }
+
+    /// @inheritdoc IDelegator
+    function getGenericRandomNumber(uint32 _epoch) external view override whenNotPaused returns (uint256) {
+        return randomNoManger.getGenericRandomNumber(_epoch);
+    }
 }

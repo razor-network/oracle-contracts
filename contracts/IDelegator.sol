@@ -54,4 +54,11 @@ interface IDelegator {
      * @return random number
      */
     function getGenericRandomNumberOfLastEpoch() external view returns (uint256);
+
+    /**
+     * @dev using epoch, clients can query random number generated of the epoch
+     * @param _epoch epoch
+     * @return random number
+     */
+    function getGenericRandomNumber(uint32 _epoch) external view returns (uint256);
 }
