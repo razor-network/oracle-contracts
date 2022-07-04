@@ -10,6 +10,13 @@ interface IRewardManagerParams {
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external;
 
     /**
+     * @notice changing the percentage age penalty to be given out for inactivity
+     * @dev can be called only by the the address that has the governance role
+     * @param _penaltyAgeNotRevealNumerator updated value to be set for penaltyAgeNotRevealNumerator
+     */
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external;
+
+    /**
      * @notice changing the block reward given out to stakers
      * @dev can be called only by the the address that has the governance role
      * @param _blockReward updated value to be set for blockReward
