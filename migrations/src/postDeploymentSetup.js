@@ -124,8 +124,7 @@ module.exports = async () => {
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
   pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress));
-  pendingTransactions.push(await delegator.updateRandomNoManagerAddress(randomNoManagerAddress));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));

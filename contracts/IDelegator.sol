@@ -6,15 +6,9 @@ interface IDelegator {
      * @dev updates the address of the Collection Manager contract from where the delegator will fetch
      * results of the oracle
      * @param newDelegateAddress address of the Collection Manager
-     */
-    function updateAddress(address newDelegateAddress) external;
-
-    /**
-     * @dev updates the address of the Random Number Manager contract from where the delegator will fetch
-     * random number
      * @param newRandomNoManagerAddress address of the Random Number Manager
      */
-    function updateRandomNoManagerAddress(address newRandomNoManagerAddress) external;
+    function updateAddress(address newDelegateAddress, address newRandomNoManagerAddress) external;
 
     /**
      * @dev using the hash of collection name, clients can query collection id with respect to its hash

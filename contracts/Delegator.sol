@@ -18,14 +18,9 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     IRandomNoClient public randomNoManager;
 
     /// @inheritdoc IDelegator
-    function updateAddress(address newDelegateAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newDelegateAddress != address(0x0), "Zero Address check");
+    function updateAddress(address newDelegateAddress, address newRandomNoManagerAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newDelegateAddress != address(0x0) && newRandomNoManagerAddress != address(0x0), "Zero Address check");
         collectionManager = ICollectionManager(newDelegateAddress);
-    }
-
-    /// @inheritdoc IDelegator
-    function updateRandomNoManagerAddress(address newRandomNoManagerAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
-        require(newRandomNoManagerAddress != address(0x0), "Zero Address check");
         randomNoManager = IRandomNoClient(newRandomNoManagerAddress);
     }
 
