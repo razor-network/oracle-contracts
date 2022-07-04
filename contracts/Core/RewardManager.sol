@@ -54,13 +54,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint256 delegatorShare = blockReward - ((blockReward * stakerSRZR) / totalSupply);
         uint8 commissionApplicable = staker.commission < maxCommission ? staker.commission : maxCommission;
         uint256 stakerReward = (delegatorShare * commissionApplicable) / 100;
-        stakeManager.setStakerStake(
-            epoch,
-            stakerId,
-            StakeChanged.BlockReward,
-            staker.stake,
-            staker.stake + (blockReward - stakerReward)
-        );
+        stakeManager.setStakerStake(epoch, stakerId, StakeChanged.BlockReward, staker.stake, staker.stake + (blockReward - stakerReward));
         stakeManager.setStakerStakerReward(
             epoch,
             stakerId,
@@ -71,7 +65,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     }
 
     /// @inheritdoc IRewardManager
-    function giveInactivityPenalties(uint32 epoch,uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }
 
