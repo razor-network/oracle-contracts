@@ -431,14 +431,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         address to,
         uint256 amount,
         uint32 stakerId
-    ) external override onlyRole(STOKEN_ROLE) {
+    ) external override initialized onlyRole(STOKEN_ROLE) {
         emit SrzrTransfer(from, to, amount, stakerId);
     }
 
     /**
      * @notice Used by staker to set delegation acceptance, its set as False by default
      */
-    function setDelegationAcceptance(bool status) external {
+    function setDelegationAcceptance(bool status) external initialized {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission != 0, "comission not set");
@@ -449,7 +449,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /**
      * @notice Used by staker to update commision for delegation
      */
-    function updateCommission(uint8 commission) external {
+    function updateCommission(uint8 commission) external initialized {
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
@@ -499,7 +499,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         Constants.StakeChanged reason,
         uint256 prevStake,
         uint256 _stake
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
@@ -510,7 +510,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         Constants.StakerRewardChanged reason,
         uint256 prevStakerReward,
         uint256 _stakerReward
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStakerReward(_epoch, _id, reason, prevStakerReward, _stakerReward);
     }
 
@@ -519,7 +519,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
 
         uint256 bounty;
@@ -557,7 +557,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @notice Allows bountyHunter to redeem their bounty once its locking period is over
      * @param bountyId The ID of the bounty
      */
-    function redeemBounty(uint32 bountyId) external whenNotPaused {
+    function redeemBounty(uint32 bountyId) external initialized whenNotPaused {
         uint32 epoch = _getEpoch();
         uint256 bounty = bountyLocks[bountyId].amount;
 
@@ -581,7 +581,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 _id,
         uint32 _age,
         Constants.AgeChanged reason
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
         emit AgeChange(_epoch, _id, _age, reason, block.timestamp);
     }

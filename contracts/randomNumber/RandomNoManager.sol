@@ -39,7 +39,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
     }
 
     /// @inheritdoc IRandomNoProvider
-    function provideSecret(uint32 epoch, bytes32 _secret) external override onlyRole(SECRETS_MODIFIER_ROLE) {
+    function provideSecret(uint32 epoch, bytes32 _secret) external override initialized onlyRole(SECRETS_MODIFIER_ROLE) {
         /// @dev this require is added for extra assurance to clients,
         /// to give them assurance that once secret is set for epoch, it cant be changed
         /// as admin could always override this SECRETS_MODIFIER_ROLE role

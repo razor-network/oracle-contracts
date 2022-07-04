@@ -230,7 +230,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _deltaCommission updated value to be set for deltaCommission
      */
-    function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+    function setDeltaCommission(uint8 _deltaCommission) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
@@ -240,7 +240,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _epochLimitForUpdateCommission updated value to be set for epochLimitForUpdateCommission
      */
-    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
@@ -250,7 +250,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _maxTolerance updated value for maxTolerance
      */
-    function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
+    function setMaxTolerance(uint32 _maxTolerance) external initialized onlyRole(GOVERNER_ROLE) {
         require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10_000_000");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
@@ -262,7 +262,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _toAssign updated value to be set for toAssign
      */
-    function setToAssign(uint16 _toAssign) external onlyRole(GOVERNER_ROLE) {
+    function setToAssign(uint16 _toAssign) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "toAssign", _toAssign, block.timestamp);
         voteManagerParams.setToAssign(_toAssign);
     }
@@ -272,7 +272,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _bufferLength updated value to be set for buffer
      */
-    function setBufferLength(uint8 _bufferLength) external onlyRole(GOVERNER_ROLE) {
+    function setBufferLength(uint8 _bufferLength) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_bufferLength", _bufferLength, block.timestamp);
         blockManagerParams.setBufferLength(_bufferLength);
         voteManagerParams.setBufferLength(_bufferLength);
