@@ -385,6 +385,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             }
         }
     }
+
     /**
     being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
                  by setCollectionStatus and createCollection in CollectionManager

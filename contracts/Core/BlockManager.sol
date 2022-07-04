@@ -612,9 +612,9 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         //toss a biased coin with increasing iteration till the following equation returns true.
         // stake/biggest stake >= prng(iteration,stakerid, salt), staker wins
         // stake/biggest stake < prng(iteration,stakerid, salt), staker loses
-        // simplified equation:- stake < prng * biggestStake 
+        // simplified equation:- stake < prng * biggestStake
         // stake * 2^32 < prng * 2^32 * biggestStake
-        // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32  
+        // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32
         bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
