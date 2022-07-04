@@ -34,4 +34,11 @@ interface IDelegator {
      * @return ids of active collections in the oracle
      */
     function getActiveCollections() external view returns (uint16[] memory);
+
+    /**
+     * @dev using the collection id, clients can query the status of collection
+     * @param _id collection ID
+     * @return status of the collection
+     */
+    function getCollectionStatus(uint16 _id) external view returns (bool);
 }

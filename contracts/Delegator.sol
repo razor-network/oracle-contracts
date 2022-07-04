@@ -27,6 +27,11 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     }
 
     /// @inheritdoc IDelegator
+    function getCollectionStatus(uint16 _id) external view override whenNotPaused returns (bool) {
+        return collectionManager.getCollectionStatus(_id);
+    }
+
+    /// @inheritdoc IDelegator
     function getCollectionID(bytes32 _hname) external view override whenNotPaused returns (uint16) {
         return collectionManager.getCollectionID(_hname);
     }
