@@ -219,7 +219,32 @@ describe('Delegator', function () {
       assertBNNotEqual(randomNumber, toBigNumber('0'), 'Random number of epoch reported as 0');
     });
 
+    it('should be able to register to fetch random number', async function () {
+      await mineToNextEpoch();
+      const requestId = await delegator.connect(signers[5]).callStatic.register();
+      await delegator.connect(signers[5]).register();
+      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+
+      await reveal(signers[5], 0, voteManager, stakeManager);
+      await mineToNextState();
+
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      const tx = delegator.connect(signers[5]).getRandomNumber(requestId);
+      await assertRevert(tx, 'Random Number not genarated yet');
+
+      await mineToNextState();
+      await blockManager.connect(signers[5]).claimBlockReward();
+
+      const randomNumber = await delegator.connect(signers[5]).getRandomNumber(requestId);
+      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Request for random number reported 0');
+    });
+
     it('getResult should give the right value after activations and deactivation of assets', async function () {
+      await mineToNextEpoch();
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();

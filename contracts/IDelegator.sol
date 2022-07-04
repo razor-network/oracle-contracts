@@ -11,6 +11,14 @@ interface IDelegator {
     function updateAddress(address newDelegateAddress, address newRandomNoManagerAddress) external;
 
     /**
+     * @notice Allows Client to register for random number
+     * Per request a rquest id is generated, which is binded to one epoch
+     * this epoch is current epoch if Protocol is in commit state, or epoch + 1 if in any other state
+     * @return requestId : unique request id
+     */
+    function register() external returns (bytes32);
+
+    /**
      * @dev using the hash of collection name, clients can query collection id with respect to its hash
      * @param _name bytes32 hash of the collection name
      * @return collection ID
@@ -42,6 +50,13 @@ interface IDelegator {
      * @return status of the collection
      */
     function getCollectionStatus(uint16 _id) external view returns (bool);
+
+    /**
+     * @notice Allows client to pull random number once available
+     * Random no is generated from secret of that epoch and request id, its unique per requestid
+     * @param requestId : A unique id per request
+     */
+    function getRandomNumber(bytes32 requestId) external view returns (uint256);
 
     /**
      * @notice Fetch generic random number of last epoch
