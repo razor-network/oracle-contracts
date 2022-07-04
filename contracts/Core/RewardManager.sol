@@ -71,10 +71,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     }
 
     /// @inheritdoc IRewardManager
-    function giveInactivityPenalties(
-        uint32 epoch,
-        uint32 stakerId
-    ) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveInactivityPenalties(uint32 epoch,uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }
 
