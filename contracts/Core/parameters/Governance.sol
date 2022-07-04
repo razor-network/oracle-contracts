@@ -64,9 +64,19 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _penaltyNotRevealNumerator updated value to be set for penaltyNotRevealNumerator
      */
-    function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
+    function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", _penaltyNotRevealNumerator, block.timestamp);
         rewardManagerParams.setPenaltyNotRevealNum(_penaltyNotRevealNumerator);
+    }
+
+    /**
+     * @notice changing the percentage age penalty to be given out for inactivity
+     * @dev can be called only by the the address that has the governer role
+     * @param _penaltyAgeNotRevealNumerator updated value to be set for penaltyAgeNotRevealNumerator
+     */
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "penaltyAgeNotRevealNum", _penaltyAgeNotRevealNumerator, block.timestamp);
+        rewardManagerParams.setPenaltyAgeNotRevealNum(_penaltyAgeNotRevealNumerator);
     }
 
     /**

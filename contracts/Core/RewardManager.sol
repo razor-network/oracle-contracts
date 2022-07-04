@@ -137,17 +137,19 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
             ) // Only penalise if given asset revealed, please note here again revealed value of asset cant be zero
             {
                 uint256 medianLastEpoch = mediansLastEpoch[i];
-                if (medianLastEpoch == 0) continue;
+                if (medianLastEpoch == 0) continue; //WARNING: unreachable. Can be removed
                 uint256 prod = age * voteValueLastEpoch;
                 // slither-disable-next-line calls-loop
-                uint32 tolerance = collectionManager.getCollectionTolerance(i);
+                uint32 tolerance = collectionManager.getCollectionTolerance(idsRevealedLastEpoch[i]);
                 tolerance = tolerance <= maxTolerance ? tolerance : maxTolerance;
                 uint256 maxVoteTolerance = medianLastEpoch + ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 uint256 minVoteTolerance = medianLastEpoch - ((medianLastEpoch * tolerance) / BASE_DENOMINATOR);
                 // if (voteWeightLastEpoch > 0) {
                 if (voteValueLastEpoch > maxVoteTolerance) {
+                    //penalty = age(vote/maxvote-1)
                     penalty = penalty + (prod / maxVoteTolerance - age);
                 } else if (voteValueLastEpoch < minVoteTolerance) {
+                    //penalty = age(1-vote/minvote)
                     penalty = penalty + (age - prod / minVoteTolerance);
                 }
             }
@@ -160,6 +162,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     /** @notice Calculates the stake and age inactivity penalties of the staker
      * @param epochs The difference of epochs where the staker was inactive
      * @param stakeValue The Stake that staker had in last epoch
+     * @param ageValue The age that staker had in last epoch
      */
     function _calculateInactivityPenalties(
         uint32 epochs,
@@ -168,8 +171,8 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     ) internal view returns (uint256, uint32) {
         uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / BASE_DENOMINATOR;
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
-        uint32 penaltyAge = epochs * 10000;
-        uint32 newAge = penaltyAge < ageValue ? ageValue - penaltyAge : 0;
+        uint256 penaltyAge = (uint256(epochs) * (uint256(ageValue) * uint256(penaltyAgeNotRevealNum))) / BASE_DENOMINATOR;
+        uint32 newAge = uint32(penaltyAge) < ageValue ? ageValue - uint32(penaltyAge) : 0;
         return (newStake, newAge);
     }
 }
