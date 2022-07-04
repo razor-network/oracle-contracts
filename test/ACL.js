@@ -353,6 +353,10 @@ describe('Access Control Test', async () => {
     assert(await delegator.connect(signers[0]).updateAddress(signers[2].address));
     await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address), expectedRevertMessage);
   });
+  it('Only Admin should be able to call updateRandomNoManagerAddress in Delegator', async () => {
+    assert(await delegator.connect(signers[0]).updateRandomNoManagerAddress(signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateRandomNoManagerAddress(signers[2].address), expectedRevertMessage);
+  });
   it('Delegator initializer should not accept zero Address', async function () {
     await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS), 'Zero Address check');
   });

@@ -14,6 +14,7 @@ const {
   mineToNextState,
   mineToNextEpoch,
   assertRevert,
+  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 
 const {
@@ -205,6 +206,11 @@ describe('Delegator', function () {
       const result = await delegator.getResult(hName);
       assertBNEqual(result[0], toBigNumber('500'));
       assertBNEqual(result[1], toBigNumber('2'));
+    });
+
+    it('should be able to fetch random number generated of last epoch', async function () {
+      const randomNumber = await delegator.getGenericRandomNumberOfLastEpoch();
+      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Random number of last epoch reported as 0');
     });
 
     it('getResult should give the right value after activations and deactivation of assets', async function () {
