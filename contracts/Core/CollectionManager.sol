@@ -369,6 +369,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
+     * being called by setCollectionStatus and createCollection in CollectionManager
      */
     function _updateRegistry() internal {
         uint16 j = 0;
@@ -382,7 +383,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             }
         }
     }
-
+    /**
+    being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
+                 by setCollectionStatus and createCollection in CollectionManager
+     */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {

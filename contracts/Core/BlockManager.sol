@@ -604,11 +604,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // since prng returns 0 to max-1 and staker start from 1
 
         bytes32 salt = voteManager.getSalt();
+        //roll an n sided fair die where n == numStakers to select a staker pseudoRandomly
         bytes32 seed1 = Random.prngHash(salt, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
+        //toss a biased coin with increasing iteration till the following equation returns true.
+        // stake/biggest stake >= prng(iteration,stakerid, salt), staker wins
+        // stake/biggest stake < prng(iteration,stakerid, salt), staker loses
+        // simplified equation:- stake < prng * biggestStake 
+        // stake * 2^32 < prng * 2^32 * biggestStake
+        // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32  
         bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 
