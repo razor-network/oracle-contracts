@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "./Core/StateManager.sol";
 import "./Core/interface/ICollectionManager.sol";
 import "./IDelegator.sol";
+import "./randomNumber/IRandomNoClient.sol";
 import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
 import "./Pause.sol";
@@ -14,11 +15,18 @@ import "./Pause.sol";
 
 contract Delegator is ACL, StateManager, Pause, IDelegator {
     ICollectionManager public collectionManager;
+    IRandomNoClient public randomNoManger;
 
     /// @inheritdoc IDelegator
     function updateAddress(address newDelegateAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
         require(newDelegateAddress != address(0x0), "Zero Address check");
         collectionManager = ICollectionManager(newDelegateAddress);
+    }
+
+    /// @inheritdoc IDelegator
+    function updateRandomNoManagerAddress(address newRandomNoManagerAddress) external override onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(newRandomNoManagerAddress != address(0x0), "Zero Address check");
+        randomNoManger = IRandomNoClient(newRandomNoManagerAddress);
     }
 
     /// @inheritdoc IDelegator
@@ -44,5 +52,10 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     /// @inheritdoc IDelegator
     function getResultFromID(uint16 _id) external view override whenNotPaused returns (uint256, int8) {
         return collectionManager.getResultFromID(_id);
+    }
+
+    /// @inheritdoc IDelegator
+    function getGenericRandomNumberOfLastEpoch() external view override whenNotPaused returns (uint256) {
+        return randomNoManger.getGenericRandomNumberOfLastEpoch();
     }
 }
