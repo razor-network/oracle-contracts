@@ -364,6 +364,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
+    function getDepth() external view returns (uint256) {
+        return _getDepth();
+    }
+
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (blockManager.getLatestResults(_id), collections[_id].power);

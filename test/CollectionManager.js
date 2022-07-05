@@ -2,7 +2,7 @@
 test same vote values, stakes
 test penalizeEpochs */
 const { utils } = require('ethers');
-const { assert } = require('chai');
+const { assert, expect } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -20,6 +20,7 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
+  getDepth,
 } = require('./helpers/utils');
 
 describe('CollectionManager', function () {
@@ -303,6 +304,33 @@ describe('CollectionManager', function () {
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });
+    it('Should be able to get correct depth of merkle tree for 1 active collections', async function () {
+      await mineToNextEpoch();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await collectionManager.setCollectionStatus(false, 2);
+      const numActiveCollections = await collectionManager.getNumActiveCollections();
+      const depth = await collectionManager.getDepth();
+      assert(depth, getDepth(numActiveCollections));
+    });
+
+    it('Should be able to get correct depth of merkle tree for series of 100 active collections', async function () {
+      const power = 3;
+      const tolerance = 500;
+      const depthArr = [];
+      const expectedDepthArr = [];
+      for (let i = 4; i <= 102; i++) {
+        await collectionManager.createCollection(tolerance, power, 1, [1, 2], `Test Collection ${i}`);
+        const numActiveCollections = await collectionManager.getNumActiveCollections();
+        const treeDepth = await collectionManager.getDepth();
+        depthArr.push(treeDepth.toNumber());
+        expectedDepthArr.push(getDepth(numActiveCollections));
+      }
+      expect(depthArr).to.eql(expectedDepthArr);
+    });
+
     // it('should be able to get result using proxy', async function () {
     //  await delegator.upgradeDelegate(collectionManager.address);
     //  assert(await delegator.delegate() === collectionManager.address);
