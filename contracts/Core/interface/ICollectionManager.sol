@@ -81,9 +81,4 @@ interface ICollectionManager {
      * @return epoch in which the registry needs to be updated
      */
     function getUpdateRegistryEpoch() external view returns (uint32);
-
-    /**
-     * @return current depth of the merkle tree
-     */
-    function getDepth() external view returns (uint256);
 }

@@ -364,8 +364,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
-    /// @inheritdoc ICollectionManager
-    function getDepth() external view override returns (uint256) {
+    function getDepth() external view returns (uint256) {
         return _getDepth();
     }
 
