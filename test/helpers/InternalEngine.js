@@ -4,7 +4,7 @@ const toBigNumber = (value) => BigNumber.from(value);
 
 const {
   getAssignedCollections, getEpoch, getBiggestStakeAndId,
-  getIteration, getSignature
+  getIteration, getSignature,
 } = require('./utils');
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
@@ -106,14 +106,14 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret,
   // const depth = Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections));
   // console.log(depth);
   // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], seqAllotedCollections);
-  const signature = await getSignature(signer)
+  const signature = await getSignature(signer);
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
-    signature
+    signature,
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 

@@ -22,7 +22,7 @@ const {
   getEpoch,
   tokenAmount,
   adhocPropose,
-  getSecret
+  getSecret,
 } = require('./helpers/utils');
 
 const { commit, reveal } = require('./helpers/InternalEngine');
@@ -224,7 +224,7 @@ describe('Delegator', function () {
       await mineToNextEpoch();
       const requestId = await delegator.connect(signers[5]).callStatic.register();
       await delegator.connect(signers[5]).register();
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 

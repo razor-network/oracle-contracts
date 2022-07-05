@@ -1,4 +1,5 @@
 const { ethers } = require('hardhat');
+
 const { BigNumber, utils, provider } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
@@ -148,16 +149,16 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
 };
 
 const getSignature = async (signer) => {
-  const { chainId } = await provider.getNetwork()
-  const epoch = await getEpoch()
+  const { chainId } = await provider.getNetwork();
+  const epoch = await getEpoch();
   const messageHash = utils.solidityKeccak256(
     ['address', 'uint32', 'uint256', 'string'],
-    [signer.address, epoch, chainId, "razororacle"]
+    [signer.address, epoch, chainId, 'razororacle']
   );
-  const hashBinary = utils.arrayify(messageHash)
+  const hashBinary = utils.arrayify(messageHash);
   const signature = await signer.signMessage(hashBinary);
-  return signature
-}
+  return signature;
+};
 
 const getSecret = async (signer) => {
   const signature = await getSignature(signer);
@@ -166,7 +167,7 @@ const getSecret = async (signer) => {
     [signature]
   );
   return secret;
-}
+};
 const getIterationWithPosition = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
@@ -254,14 +255,14 @@ const adhocCommit = async (medians, signer, deviation, voteManager, collectionMa
   }
   leavesOfTree[signer.address] = helper;
   const tree = await createMerkle(leavesOfTree[signer.address]);
-  const signature = await getSignature(signer)
+  const signature = await getSignature(signer);
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
-    signature
+    signature,
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
   await voteManager.connect(signer).commit(getEpoch(), commitment);

@@ -502,7 +502,7 @@ describe('StakeManager', function () {
 
       // commit
       epoch = await getEpoch();
-      secret = await getSecret(signers[3]);
+      const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
@@ -522,7 +522,7 @@ describe('StakeManager', function () {
       }
 
       // commit
-      const secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a0e9c02481415c0823ea49d847ccb9cdd';
+      const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
@@ -2057,7 +2057,7 @@ describe('StakeManager', function () {
       const blockReward = await rewardManager.blockReward();
 
       await mineToNextEpoch();
-    
+
       let secret = await getSecret(signers[4]);
       await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
 
@@ -2187,7 +2187,7 @@ describe('StakeManager', function () {
       await governance.connect(signers[0]).setPenaltyAgeNotRevealNum(0);
       const penaltyNotRevealNum = await rewardManager.penaltyAgeNotRevealNum();
       assertBNEqual(penaltyNotRevealNum, toBigNumber('0'));
-      let secret = '0x727d5c9e6d18ed45ce7ac8d3cee6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      let secret = await getSecret(signers[4]);
       await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
@@ -2202,7 +2202,7 @@ describe('StakeManager', function () {
       const stakerId = await stakeManager.stakerIds(signers[4].address);
       let staker = await stakeManager.stakers(stakerId);
       const ageBefore = staker.age;
-      secret = '0x727d5c9e6d18ed45ce7ac8d3ceb6ec8a0e9c02581b15c0823ea49d847ccb9cdd';
+      secret = await getSecret(signers[4]);
       await commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
       staker = await stakeManager.stakers(stakerId);
       const ageAfter = staker.age;

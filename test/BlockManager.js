@@ -1653,8 +1653,9 @@ describe('BlockManager', function () {
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a9e0c02481415c0823ea49d847ecb9ddd';
+      let secret = await getSecret(signers[17]);
       await commit(signers[17], 0, voteManager, collectionManager, secret, blockManager);
+      secret = await getSecret(signers[19]);
       await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal

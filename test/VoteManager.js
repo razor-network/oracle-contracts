@@ -332,7 +332,9 @@ describe('VoteManager', function () {
         // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
         const treeRevealData = await getTreeRevealData(signers[4]); // getting treeRevealData of signers[4] which revealed in last testcase above
         const signature = await getSignature(signers[4]);
-        const tx = voteManager.connect(signers[4]).reveal(epoch, treeRevealData, '0x0000000000000000000000000000000000000000000000000000000000000000', signature);
+        const tx = voteManager.connect(signers[4]).reveal(
+          epoch, treeRevealData, '0x0000000000000000000000000000000000000000000000000000000000000000', signature
+        );
         await assertRevert(tx, 'secret cannot be empty');
       });
 
@@ -454,7 +456,7 @@ describe('VoteManager', function () {
         const stakeBeforeAcc4 = (await stakeManager.stakers(stakerIdAcc4)).stake;
 
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const secret = await getSecret(signers[4]);;
+        const secret = await getSecret(signers[4]);
         const root = await getRoot(signers[4]);
 
         await governance.grantRole(GOVERNER_ROLE, signers[0].address);
@@ -553,7 +555,7 @@ describe('VoteManager', function () {
         const secret = await getSecret(signers[7]);
         const treeRevealData = await getTreeRevealData(signers[3]); /* intentionally passing signers[3]s reveal data since signers[7]
          hasn't revealed yet but this won't affect moto of test case */
-         const signature = await getSignature(signers[7]);
+        const signature = await getSignature(signers[7]);
         const tx = voteManager.connect(signers[7]).reveal(epoch, treeRevealData, secret, signature);
         await assertRevert(tx, 'Staker does not exist');
       });
@@ -914,9 +916,8 @@ describe('VoteManager', function () {
           const tolerance = await collectionManager.getCollectionTolerance(idsProposedOfLastEpoch[i]);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
-          console.log(Number(maxVoteTolerance), Number(minVoteTolerance))
           prod = toBigNumber(votesOfLastEpoch).mul(expectedAgeAfterOf15);
-          if (votesOfLastEpoch !== toBigNumber('0')) {
+          if (Number(votesOfLastEpoch) !== 0) {
             if (votesOfLastEpoch > maxVoteTolerance) {
               toAdd = (prod.div(maxVoteTolerance)).sub(expectedAgeAfterOf15);
               penalty = penalty.add(toAdd);
@@ -929,6 +930,7 @@ describe('VoteManager', function () {
         expectedAgeAfterOf15 = toBigNumber(expectedAgeAfterOf15).sub(penalty);
         expectedAgeAfterOf15 = expectedAgeAfterOf15 < 0 ? 0 : expectedAgeAfterOf15;
         const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
+        console.log(expectedAgeAfterOf15, ageAfter2);
         assertBNEqual(expectedAgeAfterOf15, ageAfter2, 'Incorrect Penalties given');
       });
     });

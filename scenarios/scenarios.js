@@ -30,7 +30,7 @@ const {
   getIteration,
   toBigNumber,
   getCollectionIdPositionInBlock,
-  getSecret
+  getSecret,
 } = require('../test/helpers/utils');
 const { proposeWithDeviation, commit, reveal } = require('../test/helpers/InternalEngine');
 
@@ -243,7 +243,8 @@ describe('Scenarios', async () => {
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
-    await adhocCommit(medians, signers[5], 0, voteManager, collectionManager, secret[4]);
+    const secret = await getSecret(signers[5]);
+    await adhocCommit(medians, signers[5], 0, voteManager, collectionManager, secret);
     const stakeAfter = await stakeManager.getStake(5);
     assertBNLessThan(stakeAfter, stakeBefore, 'Inactivity Penalties have not been levied');
   }).timeout(80000);
@@ -317,7 +318,8 @@ describe('Scenarios', async () => {
     }
     // commit
     for (let i = 1; i <= 5; i++) {
-      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
+      const secret = await getSecret(signers[i]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret);
     }
     await mineToNextState(); // reveal
     for (let i = 1; i <= 5; i++) {
@@ -334,7 +336,8 @@ describe('Scenarios', async () => {
     await mineToNextState();// commit
 
     for (let i = 1; i <= 5; i++) {
-      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[i - 1]);
+      const secret = await getSecret(signers[i]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret);
     }
     await mineToNextState();
 
@@ -450,8 +453,8 @@ describe('Scenarios', async () => {
       const stake = tokenAmount('20000');
       await razor.connect(signers[i]).approve(stakeManager.address, stake);
       await stakeManager.connect(signers[i]).stake(epoch, stake);
-
-      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret[5 - i]);
+      const secret = await getSecret(signers[i]);
+      await adhocCommit(medians, signers[i], 0, voteManager, collectionManager, secret);
     }
 
     await mineToNextState();
@@ -939,9 +942,12 @@ describe('Scenarios', async () => {
 
   it('Passing locally calculated median for proposing and disputing by a staker, dispute should work fine', async function () {
     await governance.connect(signers[0]).setToAssign(7);
-    await commit(signers[1], 0, voteManager, collectionManager, '0x127d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
-    await commit(signers[2], 0, voteManager, collectionManager, '0x827d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
-    await commit(signers[3], 0, voteManager, collectionManager, '0x327d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+    let secret = await getSecret(signers[1]);
+    await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
+    secret = await getSecret(signers[2]);
+    await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
+    secret = await getSecret(signers[3]);
+    await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
     await mineToNextState();
 
     await reveal(signers[1], 0, voteManager, stakeManager);
@@ -1097,7 +1103,8 @@ describe('Scenarios', async () => {
       epoch = await getEpoch();
       // commit
       for (let j = 1; j <= 5; j++) {
-        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret[j - 1]);
+        const secret = await getSecret(signers[j]);
+        await adhocCommit(medians, signers[j], 0, voteManager, collectionManager, secret);
       }
       await mineToNextState();
       // reveal
