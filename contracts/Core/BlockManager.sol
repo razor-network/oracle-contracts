@@ -245,8 +245,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
-            emit BlockConfirmed(epoch, proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
             _confirmBlock(epoch, proposerId);
+            emit BlockConfirmed(epoch, proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality, timestamp
@@ -260,8 +260,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
-            emit BlockConfirmed(epoch, blocks[epoch - 1].proposerId, blocks[epoch - 1].ids, block.timestamp, blocks[epoch - 1].medians);
             _confirmBlock(epoch - 1, stakerId);
+            emit BlockConfirmed(epoch, blocks[epoch - 1].proposerId, blocks[epoch - 1].ids, block.timestamp, blocks[epoch - 1].medians);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
         // slither-disable-next-line incorrect-equality,timestamp
