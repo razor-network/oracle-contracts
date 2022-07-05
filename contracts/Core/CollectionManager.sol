@@ -365,6 +365,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
+    function getDepth() external view returns (uint256) {
+        return _getDepth();
+    }
+
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (blockManager.getLatestResults(_id), collections[_id].power);
@@ -372,6 +376,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
+     * being called by setCollectionStatus and createCollection in CollectionManager
      */
     function _updateRegistry() internal {
         uint16 j = 0;
@@ -386,6 +391,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
+    /**
+    being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
+                 by setCollectionStatus and createCollection in CollectionManager
+     */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {

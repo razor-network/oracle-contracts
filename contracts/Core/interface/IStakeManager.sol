@@ -59,7 +59,7 @@ interface IStakeManager {
      * @param prevStakerReward previous stakerReward of the staker
      * @param _stakerReward updated stakerReward of the staker
      */
-    function setStakerStakerReward(
+    function setStakerReward(
         uint32 _epoch,
         uint32 _id,
         Constants.StakerRewardChanged reason,

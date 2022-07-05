@@ -291,6 +291,10 @@ const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManag
 };
 const getData = async (signer) => (store[signer.address]);
 
+function getDepth(numActiveCollections) {
+  return (Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections)));
+}
+
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
@@ -312,4 +316,5 @@ module.exports = {
   adhocPropose,
   getData,
   getCollectionIdPositionInBlock,
+  getDepth,
 };
