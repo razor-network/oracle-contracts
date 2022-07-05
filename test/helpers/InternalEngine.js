@@ -4,7 +4,7 @@ const toBigNumber = (value) => BigNumber.from(value);
 
 const {
   getAssignedCollections, getEpoch, getBiggestStakeAndId,
-  getIteration,
+  getIteration, getSignature
 } = require('./utils');
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
@@ -106,13 +106,14 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret,
   // const depth = Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections));
   // console.log(depth);
   // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], seqAllotedCollections);
-
+  const signature = await getSignature(signer)
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
+    signature
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 
@@ -155,7 +156,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   };
   treeData[signer.address] = treeRevealData;
   // console.log('reveal', signer.address, treeRevealData.values);
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret, store[signer.address].signature);
   // console.log(treeRevealData);
   const helper = {};
   const arr = [];
