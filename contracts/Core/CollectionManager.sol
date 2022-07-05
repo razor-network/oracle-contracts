@@ -154,7 +154,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
-        require(assetStatus != collections[id].active, "status not being changed");
 
         uint32 epoch = _getEpoch();
 
@@ -163,13 +162,16 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             _updateDelayedRegistry();
         }
 
-        if (!collections[id].active) {
+        if (assetStatus) {
+            require(!collections[id].active, "ID already active");
             numActiveCollections = numActiveCollections + 1;
+            collections[id].active = assetStatus;
         } else {
+            require(collections[id].active, "ID already inactive");
             numActiveCollections = numActiveCollections - 1;
+            collections[id].active = assetStatus;
         }
 
-        collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         _updateRegistry();
 
@@ -237,8 +239,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         int8 power,
         uint16[] memory jobIDs
     ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+        require(jobIDs.length > 0, "no jobs added");
         require(collectionID <= numCollections, "Collection ID not present");
-        require(collections[collectionID].active, "Collection is inactive");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = _getEpoch();
 
@@ -294,8 +296,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[leafIdToCollectionIdRegistry[i]].tolerance;
+    function getCollectionTolerance(uint16 id) external view override returns (uint32) {
+        return collections[id].tolerance;
     }
 
     /// @inheritdoc ICollectionManager
@@ -350,7 +352,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     /**
      * @return array of active collections
      */
-    function getActiveCollections() external view returns (uint16[] memory) {
+    function getActiveCollections() external view override returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -362,6 +364,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
+    function getDepth() external view returns (uint256) {
+        return _getDepth();
+    }
+
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (blockManager.getLatestResults(_id), collections[_id].power);
@@ -369,6 +375,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
+     * being called by setCollectionStatus and createCollection in CollectionManager
      */
     function _updateRegistry() internal {
         uint16 j = 0;
@@ -383,6 +390,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
     }
 
+    /**
+    being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
+                 by setCollectionStatus and createCollection in CollectionManager
+     */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {

@@ -30,12 +30,13 @@ describe('Access Control Test', async () => {
   let initializeContracts;
   let delegator;
   let voteManager;
+  let razor;
   const expectedRevertMessage = 'AccessControl';
 
   before(async () => {
     ({
       blockManager, governance, collectionManager, stakeManager, rewardManager, initializeContracts, delegator,
-      voteManager,
+      voteManager, razor,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -101,6 +102,11 @@ describe('Access Control Test', async () => {
   });
 
   it('giveBlockReward() should be accessable by RewardModifier', async () => {
+    // stake first to get token address
+    const stake = tokenAmount('200000');
+    const epoch = await getEpoch();
+    await razor.connect(signers[0]).approve(stakeManager.address, stake);
+    await stakeManager.connect(signers[0]).stake(epoch, stake);
     await rewardManager.grantRole(REWARD_MODIFIER_ROLE, signers[0].address);
     await rewardManager.giveBlockReward(1, 1);
     await rewardManager.revokeRole(REWARD_MODIFIER_ROLE, signers[0].address);
@@ -344,11 +350,12 @@ describe('Access Control Test', async () => {
     await stakeManager.connect(signers[1]).revokeRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
   });
   it('Only Admin should be able to call updateAddress in Delegator', async () => {
-    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address));
-    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address), expectedRevertMessage);
+    assert(await delegator.connect(signers[0]).updateAddress(signers[2].address, signers[2].address));
+    await assertRevert(delegator.connect(signers[1]).updateAddress(signers[2].address, signers[2].address), expectedRevertMessage);
   });
   it('Delegator initializer should not accept zero Address', async function () {
-    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(ZERO_ADDRESS, signers[2].address), 'Zero Address check');
+    await assertRevert(delegator.connect(signers[0]).updateAddress(signers[2].address, ZERO_ADDRESS), 'Zero Address check');
   });
   it('only sToken Address should be able to call the srzrTransfer Method', async function () {
     await assertRevert(stakeManager.connect(signers[0]).srzrTransfer(signers[0].address, signers[1].address, tokenAmount('100'), 1), expectedRevertMessage);

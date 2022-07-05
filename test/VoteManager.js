@@ -98,12 +98,14 @@ describe('VoteManager', function () {
         await mineToNextState();
 
         let Cname;
-        for (let i = 1; i <= 8; i++) {
+        for (let i = 1; i <= 7; i++) {
           Cname = `Test Collection${String(i)}`;
           await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
         }
-        Cname = 'Test Collection10';
-        await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+        Cname = 'Test Collection8';
+        await collectionManager.createCollection(500000, 3, 1, [8, 9], Cname);
+        Cname = 'Test Collection9';
+        await collectionManager.createCollection(10000, 3, 1, [9, 1], Cname);
 
         await mineToNextEpoch();
         await razor.transfer(signers[1].address, tokenAmount('30000'));
@@ -419,7 +421,7 @@ describe('VoteManager', function () {
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
           const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
           const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, index);
-          const tolerance = await collectionManager.getCollectionTolerance(index);
+          const tolerance = await collectionManager.getCollectionTolerance(idsProposedOfLastEpoch[i]);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
 
@@ -909,8 +911,7 @@ describe('VoteManager', function () {
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
           const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
           const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc15, index);
-          console.log(votesOfLastEpoch);
-          const tolerance = await collectionManager.getCollectionTolerance(index);
+          const tolerance = await collectionManager.getCollectionTolerance(idsProposedOfLastEpoch[i]);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           console.log(Number(maxVoteTolerance), Number(minVoteTolerance))

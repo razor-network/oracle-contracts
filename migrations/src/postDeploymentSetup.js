@@ -96,17 +96,6 @@ module.exports = async () => {
     await ethers.provider.send('evm_setIntervalMining', [MINING_INTERVAL]);
   }
 
-  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
-    collectionManagerAddress, randomNoManagerAddress));
-  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
-  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress));
-  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
-  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
-    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));
-  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
-
   pendingTransactions.push(await collectionManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await blockManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
@@ -129,6 +118,17 @@ module.exports = async () => {
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
   pendingTransactions.push(await voteManager.grantRole(SALT_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(DEPTH_MODIFIER_ROLE, collectionManagerAddress));
+
+  pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
+    collectionManagerAddress, randomNoManagerAddress));
+  pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
+  pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, randomNoManagerAddress));
+  pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
+  pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
+    voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));
+  pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {

@@ -162,12 +162,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
-        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
-        // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
+        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(ids.length == medians.length, "Invalid block proposed");
 
@@ -242,11 +241,11 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         // slither-disable-next-line timestamp
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
+        // proposerId, epoch, timestamp
 
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
-            emit BlockConfirmed(epoch, proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -261,7 +260,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
-            emit BlockConfirmed(epoch, blocks[epoch - 1].proposerId, blocks[epoch - 1].ids, block.timestamp, blocks[epoch - 1].medians);
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -487,6 +485,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
             latestResults[_block.ids[i]] = _block.medians[i];
         }
 
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);
+
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, salt);
@@ -604,11 +604,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // since prng returns 0 to max-1 and staker start from 1
 
         bytes32 salt = voteManager.getSalt();
+        //roll an n sided fair die where n == numStakers to select a staker pseudoRandomly
         bytes32 seed1 = Random.prngHash(salt, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
+        //toss a biased coin with increasing iteration till the following equation returns true.
+        // stake/biggest stake >= prng(iteration,stakerid, salt), staker wins
+        // stake/biggest stake < prng(iteration,stakerid, salt), staker loses
+        // simplified equation:- stake < prng * biggestStake
+        // stake * 2^32 < prng * 2^32 * biggestStake
+        // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32
         bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 

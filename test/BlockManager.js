@@ -18,6 +18,7 @@ const {
   BURN_ADDRESS,
   WITHDRAW_LOCK_PERIOD,
   BASE_DENOMINATOR,
+  UNSTAKE_LOCK_PERIOD,
 } = require('./helpers/constants');
 const {
   calculateDisputesData,
@@ -27,7 +28,8 @@ const {
   toBigNumber,
   tokenAmount,
   getCollectionIdPositionInBlock,
-  getSecret
+  getSecret,
+  getIterationWithPosition,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -46,6 +48,7 @@ describe('BlockManager', function () {
   let randomNoManager;
   let initializeContracts;
   let governance;
+  let stakedToken;
 
   before(async () => {
     ({
@@ -58,6 +61,7 @@ describe('BlockManager', function () {
       voteManager,
       randomNoManager,
       initializeContracts,
+      stakedToken,
     } = await setupContracts());
     signers = await ethers.getSigners();
   });
@@ -595,22 +599,31 @@ describe('BlockManager', function () {
       await mineToNextState();
       await reveal(signers[3], 0, voteManager, stakeManager);
       await mineToNextState();
-      const tx = propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
+
+      // Try to propose using wrong iteration
+      const medians = await calculateMedians(collectionManager);
+      const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc3);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+      const idsRevealed = await getIdsRevealed(collectionManager);
+      const epoch = await getEpoch();
+      const tx = blockManager.connect(signers[3]).propose(epoch,
+        idsRevealed,
+        medians,
+        iteration + 10000000,
+        biggestStakerId);
       await reset();
       await assertRevert(tx, 'not elected');
     });
-    it('staker should not be able to propose when not not revealed', async function () {
+    it('staker should not be able to propose when not revealed', async function () {
       await mineToNextEpoch();
       const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
       await mineToNextState();
       const tx = propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
-      try {
-        await assertRevert(tx, 'Cannot propose without revealing');
-      } catch (err) {
-        await assertRevert(tx, 'not elected');
-      }
+      await assertRevert(tx, 'Cannot propose without revealing');
       await reset();
     });
     it('staker should not be able to propose when stake goes below minStake', async function () {
@@ -1615,6 +1628,50 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       await assertRevert(tx2, 'Invalid block proposed');
+    });
+    it('should be able to test second if for isElectedProposer', async function () {
+      await mineToNextEpoch();
+      // set minStake and minSafeRazor to 1 wei
+      await governance.connect(signers[0]).setMinStake(toBigNumber('1'));
+      const stakerIdAcc17 = await stakeManager.stakerIds(signers[17].address);
+      const staker = await stakeManager.getStaker(stakerIdAcc17);
+
+      // Try to unstake and withdraw and set stake to 1 wei
+      const sToken = await stakedToken.attach(staker.tokenAddress);
+      let unstakeAmount = await sToken.balanceOf(signers[17].address);
+      unstakeAmount = unstakeAmount.sub(toBigNumber('1'));
+      await sToken.connect(signers[17]).approve(stakeManager.address, unstakeAmount);
+      await stakeManager.connect(signers[17]).unstake(17, unstakeAmount);
+      for (let i = 0; i <= UNSTAKE_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      await stakeManager.connect(signers[17]).initiateWithdraw(17);
+      for (let i = 0; i <= WITHDRAW_LOCK_PERIOD; i++) {
+        await mineToNextEpoch();
+      }
+      await (stakeManager.connect(signers[17]).unlockWithdraw(17));
+
+      await mineToNextEpoch();
+      const epoch = await getEpoch();
+      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a9e0c02481415c0823ea49d847ecb9ddd';
+      await commit(signers[17], 0, voteManager, collectionManager, secret, blockManager);
+      await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
+
+      await mineToNextState(); // reveal
+      await reveal(signers[17], 0, voteManager, stakeManager);
+      await reveal(signers[19], 0, voteManager, stakeManager);
+
+      await mineToNextState(); // propose
+      const idsRevealed = await getIdsRevealed(collectionManager);
+      const medians = await calculateMedians(collectionManager);
+      const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager);
+      const iteration = await getIterationWithPosition(voteManager, stakeManager, staker, biggestStake, 2);
+      const tx = blockManager.connect(signers[17]).propose(epoch,
+        idsRevealed,
+        medians,
+        iteration,
+        biggestStakerId);
+      await assertRevert(tx, 'not elected');
     });
   });
 });

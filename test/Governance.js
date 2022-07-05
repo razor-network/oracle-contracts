@@ -25,6 +25,7 @@ describe('Governance contract Test', async () => {
   const expectedRevertMessage = 'AccessControl';
 
   const penaltyNotRevealNumerator = toBigNumber('1000');
+  const penaltyAgeNotRevealNumerator = toBigNumber('100000');
 
   const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
@@ -66,6 +67,9 @@ describe('Governance contract Test', async () => {
 
   it('parameters should not be modified without governer role access', async () => {
     let tx = governance.connect(signers[0]).setPenaltyNotRevealNum(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setPenaltyAgeNotRevealNum(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
@@ -122,6 +126,10 @@ describe('Governance contract Test', async () => {
     await governance.setPenaltyNotRevealNum(toBigNumber('5'));
     const penaltyNotRevealNum = await rewardManager.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNum, toBigNumber('5'));
+
+    await governance.setPenaltyAgeNotRevealNum(toBigNumber('5'));
+    const penaltyAgeNotRevealNum = await rewardManager.penaltyAgeNotRevealNum();
+    assertBNEqual(penaltyAgeNotRevealNum, toBigNumber('5'));
 
     await governance.setMinStake(toBigNumber('8'));
     const minStake = await stakeManager.minStake();
@@ -212,6 +220,9 @@ describe('Governance contract Test', async () => {
   it('parameters values should be initialized correctly', async () => {
     const penaltyNotRevealNumValue = await rewardManager.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
+
+    const penaltyAgeNotRevealNumValue = await rewardManager.penaltyAgeNotRevealNum();
+    assertBNEqual(penaltyAgeNotRevealNumerator, penaltyAgeNotRevealNumValue);
 
     const slashParams = await stakeManager.slashNums();
     assertBNEqual(slashParams[0], toBigNumber('500000'));

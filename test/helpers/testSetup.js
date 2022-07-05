@@ -54,7 +54,7 @@ const setupContracts = async () => {
     voteManager.initialize(stakeManager.address, rewardManager.address, blockManager.address, collectionManager.address),
     stakeManager.initialize(razor.address, rewardManager.address, voteManager.address, stakedTokenFactory.address),
     rewardManager.initialize(stakeManager.address, voteManager.address, blockManager.address, collectionManager.address),
-    delegator.updateAddress(collectionManager.address),
+    delegator.updateAddress(collectionManager.address, randomNoManager.address),
     collectionManager.initialize(voteManager.address, blockManager.address),
     randomNoManager.initialize(blockManager.address),
     governance.initialize(blockManager.address, rewardManager.address, stakeManager.address,
