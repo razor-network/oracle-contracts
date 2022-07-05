@@ -660,8 +660,6 @@ describe('StakeManager', function () {
       await stakeManager.grantRole(GOVERNANCE_ROLE, signers[1].address);
       let tx = stakeManager.connect(signers[1]).setMinSafeRazor(tokenAmount('200000'));
       await assertRevert(tx, 'minSafeRazor beyond minStake');
-      tx = stakeManager.connect(signers[1]).setMaxCommission(101);
-      await assertRevert(tx, 'Invalid Max Commission Update');
       tx = stakeManager.connect(signers[1]).setSlashParams(toBigNumber('500000'), toBigNumber('9500000'), toBigNumber('500000'));
       await assertRevert(tx, 'params sum exceeds denominator');
     });
