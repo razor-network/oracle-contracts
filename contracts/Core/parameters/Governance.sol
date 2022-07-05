@@ -103,7 +103,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _unstakeLockPeriod updated value to be set for unstakeLockPeriod
      */
-    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setUnstakeLockPeriod(uint16 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
         stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
     }
@@ -113,7 +113,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawLockPeriod updated value to be set for withdrawLockPeriod
      */
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
@@ -123,7 +123,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawInitiationPeriod updated value to be set for withdrawInitiationPeriod
      */
-    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawInitiationPeriod(uint16 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawInitiationPeriod", _withdrawInitiationPeriod, block.timestamp);
         stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
