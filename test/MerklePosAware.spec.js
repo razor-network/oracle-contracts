@@ -25,7 +25,7 @@ describe('Unit tests', function () {
         const proofs = [];
         const leafId = [];
         const leaves = [];
-        const depth = Math.log2(i) % 1 === 0 ? Math.log2(i) : Math.ceil(Math.log2(i));
+        const depth = Math.ceil(Math.log2(i));
         for (let j = 0; j < i; j++) {
           const tree = await createMerkle(votesThisItr);
           proofs.push(await getProofPath(tree, j));
