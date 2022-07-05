@@ -231,6 +231,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _deltaCommission updated value to be set for deltaCommission
      */
     function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+        require(_deltaCommission <= 100, "deltaCommission exceeds 100");
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
@@ -251,7 +252,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _maxTolerance updated value for maxTolerance
      */
     function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10_000_000");
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds baseDenom");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);

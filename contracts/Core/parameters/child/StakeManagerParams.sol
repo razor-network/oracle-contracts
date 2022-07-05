@@ -114,7 +114,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
 
     /// @inheritdoc IStakeManagerParams
     function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_maxCommission <= 100, "Invalid Max Commission Update");
         // slither-disable-next-line events-maths
         maxCommission = _maxCommission;
     }
