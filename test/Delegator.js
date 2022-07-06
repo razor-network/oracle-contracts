@@ -220,9 +220,11 @@ describe('Delegator', function () {
     });
 
     it('should be able to register to fetch random number', async function () {
-      await mineToNextEpoch();
+      // If the request to register randum number is in n epoch
+      // then random number would be generated in n+1 epoch once after block for n+1 epoch is confirmed
       const requestId = await delegator.connect(signers[5]).callStatic.register();
       await delegator.connect(signers[5]).register();
+      await mineToNextEpoch();
       const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
