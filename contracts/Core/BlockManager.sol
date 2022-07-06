@@ -35,6 +35,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     event BlockConfirmed(uint32 epoch, uint32 indexed stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
 
     /**
+     * @dev Emitted when a staker claims block reward
+     * @param epoch epoch when the block reward was claimed
+     * @param stakerId id of the staker that claimed the block reward
+     * @param timestamp time when the block reward was claimed
+     */
+    event ClaimBlockReward(uint32 epoch, uint32 indexed stakerId, uint256 timestamp);
+
+    /**
      * @dev Emitted when a block is proposed
      * @param epoch epoch when the block was proposed
      * @param stakerId id of the staker that proposed the block
@@ -246,6 +254,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
+            emit ClaimBlockReward(epoch, stakerId, block.timestamp);
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
