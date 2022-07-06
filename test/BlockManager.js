@@ -1721,7 +1721,7 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 3, 2);
+      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 3, 0);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
