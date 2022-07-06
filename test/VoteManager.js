@@ -906,7 +906,6 @@ describe('VoteManager', function () {
         let prod = toBigNumber(0);
 
         const idsProposedOfLastEpoch = (await blockManager.getBlock(epoch - 1)).ids;
-        console.log(idsProposedOfLastEpoch);
         let expectedAgeAfterOf15 = toBigNumber(ageBeforeOf15).add(10000);
         expectedAgeAfterOf15 = expectedAgeAfterOf15 > 1000000 ? 1000000 : expectedAgeAfterOf15;
 
@@ -930,8 +929,83 @@ describe('VoteManager', function () {
         expectedAgeAfterOf15 = toBigNumber(expectedAgeAfterOf15).sub(penalty);
         expectedAgeAfterOf15 = expectedAgeAfterOf15 < 0 ? 0 : expectedAgeAfterOf15;
         const ageAfter2 = await stakeManager.getAge(stakerIdAcc15);
-        console.log(expectedAgeAfterOf15, ageAfter2);
         assertBNEqual(expectedAgeAfterOf15, ageAfter2, 'Incorrect Penalties given');
+      });
+      it('should not be able to reveal if invalid signature', async function () {
+        await mineToNextEpoch();
+
+        const epoch = await getEpoch();
+        const salt = await voteManager.getSalt();
+        const secret = await getSecret(signers[15]);
+        const seed = ethers.utils.solidityKeccak256(
+          ['bytes32', 'bytes32'],
+          [salt, secret]
+        );
+        const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
+        const treeRevealData = {
+          values: [
+            { leafId: 1, value: 120 },
+            { leafId: 3, value: 420 },
+            { leafId: 3, value: 420 },
+          ],
+          proofs: [
+            [
+              randomBytes,
+            ],
+            [
+              randomBytes,
+            ],
+          ],
+          root: '0x85f5ab30c9b6153139f5e932f2e734463de610f4a265349574ca9b08f659cdab',
+        };
+        const commitment = ethers.utils.solidityKeccak256(
+          ['bytes32', 'bytes32'],
+          [treeRevealData.root, seed]
+        );
+        await voteManager.connect(signers[15]).commit(epoch, commitment);
+        await mineToNextState(); // reveal
+        // eslint-disable-next-line prefer-destructuring
+        const signature = await getSignature(signers[14]);
+        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, secret, signature);
+        await assertRevert(tx, 'invalid signature');
+      });
+      it('should not be able to reveal if invalid signature', async function () {
+        await mineToNextEpoch();
+
+        const epoch = await getEpoch();
+        const salt = await voteManager.getSalt();
+        const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
+        const seed = ethers.utils.solidityKeccak256(
+          ['bytes32', 'bytes32'],
+          [salt, secret]
+        );
+        const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
+        const treeRevealData = {
+          values: [
+            { leafId: 1, value: 120 },
+            { leafId: 3, value: 420 },
+            { leafId: 3, value: 420 },
+          ],
+          proofs: [
+            [
+              randomBytes,
+            ],
+            [
+              randomBytes,
+            ],
+          ],
+          root: '0x85f5ab30c9b6153139f5e932f2e734463de610f4a265349574ca9b08f659cdab',
+        };
+        const commitment = ethers.utils.solidityKeccak256(
+          ['bytes32', 'bytes32'],
+          [treeRevealData.root, seed]
+        );
+        await voteManager.connect(signers[15]).commit(epoch, commitment);
+        await mineToNextState(); // reveal
+        // eslint-disable-next-line prefer-destructuring
+        const signature = await getSignature(signers[15]);
+        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, secret, signature);
+        await assertRevert(tx, 'invalid secret');
       });
     });
   });
