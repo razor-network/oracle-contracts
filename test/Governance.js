@@ -1,4 +1,5 @@
 const { assert } = require('chai');
+const { utils } = require('ethers');
 const {
   assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
 } = require('./helpers/testHelpers');
@@ -42,6 +43,22 @@ describe('Governance contract Test', async () => {
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
   const toAssign = toBigNumber('3');
+
+  const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
+  const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
+  const rewardModifierHash = utils.solidityKeccak256(['string'], ['REWARD_MODIFIER_ROLE']);
+  const collectionModifierHash = utils.solidityKeccak256(['string'], ['COLLECTION_MODIFIER_ROLE']);
+  const voteModifierHash = utils.solidityKeccak256(['string'], ['VOTE_MODIFIER_ROLE']);
+  const delegatorModifierHash = utils.solidityKeccak256(['string'], ['DELEGATOR_MODIFIER_ROLE']);
+  const registryModifierHash = utils.solidityKeccak256(['string'], ['REGISTRY_MODIFIER_ROLE']);
+  const secretsModifierHash = utils.solidityKeccak256(['string'], ['SECRETS_MODIFIER_ROLE']);
+  const pauseHash = utils.solidityKeccak256(['string'], ['PAUSE_ROLE']);
+  const governanceHash = utils.solidityKeccak256(['string'], ['GOVERNANCE_ROLE']);
+  const stokenHash = utils.solidityKeccak256(['string'], ['STOKEN_ROLE']);
+  const saltModifierHash = utils.solidityKeccak256(['string'], ['SALT_MODIFIER_ROLE']);
+  const depthModifierHash = utils.solidityKeccak256(['string'], ['DEPTH_MODIFIER_ROLE']);
+  const escapeHatchHash = utils.solidityKeccak256(['string'], ['ESCAPE_HATCH_ROLE']);
+  const governerHash = utils.solidityKeccak256(['string'], ['GOVERNER_ROLE']);
 
   before(async () => {
     ({
@@ -273,5 +290,52 @@ describe('Governance contract Test', async () => {
 
     const toAssignValue = await voteManager.toAssign();
     assertBNEqual(toAssign, toAssignValue);
+  });
+
+  it('test keccak hash of all roles', async function () {
+    const blockConfirmerHashValue = await governance.BLOCK_CONFIRMER_ROLE();
+    assert(blockConfirmerHash === blockConfirmerHashValue, 'incorrect hash');
+
+    const stakeModifierHashValue = await governance.STAKE_MODIFIER_ROLE();
+    assert(stakeModifierHash === stakeModifierHashValue, 'incorrect hash');
+
+    const rewardModifierHashValue = await governance.REWARD_MODIFIER_ROLE();
+    assert(rewardModifierHash === rewardModifierHashValue, 'incorrect hash');
+
+    const collectionModifierHashValue = await governance.COLLECTION_MODIFIER_ROLE();
+    assert(collectionModifierHash === collectionModifierHashValue, 'incorrect hash');
+
+    const voteModifierHashValue = await governance.VOTE_MODIFIER_ROLE();
+    assert(voteModifierHash === voteModifierHashValue, 'incorrect hash');
+
+    const delegatorModifierHashValue = await governance.DELEGATOR_MODIFIER_ROLE();
+    assert(delegatorModifierHash, delegatorModifierHashValue, 'incorrect hash');
+
+    const registryModifierHashValue = await governance.REGISTRY_MODIFIER_ROLE();
+    assert(registryModifierHash === registryModifierHashValue, 'incorrect hash');
+
+    const secretsModifierHashValue = await governance.SECRETS_MODIFIER_ROLE();
+    assert(secretsModifierHash === secretsModifierHashValue, 'incorrect hash');
+
+    const pauseHashValue = await governance.PAUSE_ROLE();
+    assert(pauseHash === pauseHashValue, 'incorrect hash');
+
+    const governanceHashValue = await governance.GOVERNANCE_ROLE();
+    assert(governanceHash === governanceHashValue, 'incorrect hash');
+
+    const stokenHashValue = await governance.STOKEN_ROLE();
+    assert(stokenHash === stokenHashValue, 'incorrect hash');
+
+    const saltModifierHashValue = await governance.SALT_MODIFIER_ROLE();
+    assert(saltModifierHash === saltModifierHashValue, 'incorrect hash');
+
+    const depthModifierHashValue = await governance.DEPTH_MODIFIER_ROLE();
+    assert(depthModifierHash === depthModifierHashValue, 'incorrect hash');
+
+    const escapeHatchHashValue = await governance.ESCAPE_HATCH_ROLE();
+    assert(escapeHatchHash === escapeHatchHashValue, 'incorrect hash');
+
+    const governerHashValue = await governance.GOVERNER_ROLE();
+    assert(governerHash === governerHashValue, 'incorrect hash');
   });
 });

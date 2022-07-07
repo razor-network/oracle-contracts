@@ -1,4 +1,4 @@
-const { expect } = require('chai');
+const { expect, assert } = require('chai');
 const { createMerkle, getProofPath } = require('./helpers/MerklePosAware');
 
 describe('Unit tests', function () {
@@ -35,6 +35,31 @@ describe('Unit tests', function () {
         // console.log('asdasd', proofs, tree[0][0], leaves, medianIndex, depth);
         expect(await Merkle.verifyMultiple(proofs, randomHash, leaves, leafId, depth, i)).to.be.false;
         expect(await Merkle.verifyMultiple(proofs, tree[0][0], leaves, leafId, depth, i)).to.be.true;
+      }
+    });
+    it('Tests for getSequence', async function () {
+      const maxNodes = 100;
+      for (let i = 2; i <= maxNodes; i++) {
+        const depth = Math.ceil(Math.log2(i));
+        for (let j = 0; j < i; j++) {
+          let output = '';
+          let leafId = j;
+          for (let k = 0; k < depth; k++) {
+            if (leafId % 2 === 1) {
+              output = `1${output}`;
+            } else {
+              output = `0${output}`;
+            }
+            leafId = Math.floor(leafId / 2);
+          }
+          const asciiOutput = String(await Merkle.getSequence(j, depth));
+          let binary = '';
+          const arr = asciiOutput.split('3');
+          for (let k = 1; k < arr.length; k++) {
+            binary += arr[k];
+          }
+          assert(binary === output, 'incorrect sequence');
+        }
       }
     });
   });

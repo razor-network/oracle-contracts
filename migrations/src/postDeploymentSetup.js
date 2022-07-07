@@ -61,7 +61,7 @@ module.exports = async () => {
   const SALT_MODIFIER_ROLE = '0xf31dda80d37c96a1a0852ace387dda52a75487d7d4eb74895e749ede3e0987b4';
 
   // keccak256("DEPTH_MODIFIER_ROLE")
-  const DEPTH_MODIFIER_ROLE = '0xdec504361dd78243e1ec4f53c4c0ff2daf8da88c57ec66ea0107a0cb80d8bc17';
+  const DEPTH_MODIFIER_ROLE = '0x91f5d9ea80c4d04985e669bc72870410b28b57afdf61c0d50d377766d86a3748';
 
   const { contractInstance: blockManager } = await getdeployedContractInstance('BlockManager', blockManagerAddress);
   const { contractInstance: collectionManager } = await getdeployedContractInstance('CollectionManager', collectionManagerAddress);
