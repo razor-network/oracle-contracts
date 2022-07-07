@@ -46,7 +46,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     }
 
     /// @inheritdoc IRewardManager
-    function giveBlockReward(uint32 stakerId, uint32 epoch) external override onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveBlockReward(uint32 stakerId, uint32 epoch) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         Structs.Staker memory staker = stakeManager.getStaker(stakerId);
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
         uint256 totalSupply = sToken.totalSupply();
@@ -65,7 +65,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
     }
 
     /// @inheritdoc IRewardManager
-    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override onlyRole(REWARD_MODIFIER_ROLE) {
+    function giveInactivityPenalties(uint32 epoch, uint32 stakerId) external override initialized onlyRole(REWARD_MODIFIER_ROLE) {
         _giveInactivityPenalties(epoch, stakerId);
     }
 

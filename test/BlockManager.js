@@ -1698,7 +1698,6 @@ describe('BlockManager', function () {
       idsRevealed.push(1);
       idsRevealed.sort(function (a, b) { return a - b; });
       medians.sort(function (a, b) { return a - b; });
-      medians[0] = 0;
       await blockManager.connect(signers[19]).propose(epoch,
         idsRevealed,
         medians,
