@@ -1677,11 +1677,11 @@ describe('BlockManager', function () {
     it('dispute a block having a deactivated collection', async function () {
       await mineToNextState();
       await mineToNextState();
-      await collectionManager.setCollectionStatus(false, 3);
+      await collectionManager.setCollectionStatus(false, 1);
 
       await mineToNextEpoch();
       const epoch = await getEpoch();
-      const secret = '0x727d5c9e6d18ed15ce7ac8dececece8a0e9418555555c08bceedbcede56d8bc9';
+      const secret = await getSecret(signers[19]);
       await commit(signers[19], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState();
@@ -1694,11 +1694,11 @@ describe('BlockManager', function () {
       const staker = await stakeManager.getStaker(stakerIdAcc);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       const idsRevealed = await getIdsRevealed(collectionManager);
-      medians.push(300);
-      idsRevealed.push(3);
+      medians.push(100);
+      idsRevealed.push(1);
       idsRevealed.sort(function (a, b) { return a - b; });
       medians.sort(function (a, b) { return a - b; });
-      medians[2] = 0;
+      // medians[0] = 0;
       await blockManager.connect(signers[19]).propose(epoch,
         idsRevealed,
         medians,
@@ -1707,7 +1707,7 @@ describe('BlockManager', function () {
 
       await mineToNextState();
 
-      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 3, 0);
+      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
