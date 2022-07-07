@@ -21,6 +21,11 @@ interface ICollectionManager {
     function getNumActiveCollections() external view returns (uint16);
 
     /**
+     * @return ids of active collections
+     */
+    function getActiveCollections() external view returns (uint16[] memory);
+
+    /**
      * @param id the id of the collection
      * @return power of the collection
      */

@@ -35,6 +35,14 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     event BlockConfirmed(uint32 epoch, uint32 indexed stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
 
     /**
+     * @dev Emitted when a staker claims block reward
+     * @param epoch epoch when the block reward was claimed
+     * @param stakerId id of the staker that claimed the block reward
+     * @param timestamp time when the block reward was claimed
+     */
+    event ClaimBlockReward(uint32 epoch, uint32 indexed stakerId, uint256 timestamp);
+
+    /**
      * @dev Emitted when a block is proposed
      * @param epoch epoch when the block was proposed
      * @param stakerId id of the staker that proposed the block
@@ -241,11 +249,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(stakerId > 0, "Structs.Staker does not exist");
         // slither-disable-next-line timestamp
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
+        // proposerId, epoch, timestamp
 
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
-            emit BlockConfirmed(epoch, proposerId, blocks[epoch].ids, block.timestamp, blocks[epoch].medians);
+            emit ClaimBlockReward(epoch, stakerId, block.timestamp);
             _confirmBlock(epoch, proposerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -260,7 +269,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint32 epoch = _getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
-            emit BlockConfirmed(epoch, blocks[epoch - 1].proposerId, blocks[epoch - 1].ids, block.timestamp, blocks[epoch - 1].medians);
             _confirmBlock(epoch - 1, stakerId);
         }
         uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
@@ -485,6 +493,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         for (uint256 i = 0; i < _block.ids.length; i++) {
             latestResults[_block.ids[i]] = _block.medians[i];
         }
+
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);
 
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
