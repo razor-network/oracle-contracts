@@ -18,11 +18,11 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
 
     uint8 public buffer = 5;
     /// @notice the number of epochs for which the sRZRs are locked for calling unstake()
-    uint8 public unstakeLockPeriod = 1;
+    uint16 public unstakeLockPeriod = 1;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
-    uint8 public withdrawLockPeriod = 1;
+    uint16 public withdrawLockPeriod = 1;
     /// @notice the number of epochs where staker/delegator needs to initiate withdraw
-    uint8 public withdrawInitiationPeriod = 5;
+    uint16 public withdrawInitiationPeriod = 5;
     /**
      * @notice percentage stake penalty from the locked amount for extending unstake lock
      * incase withdrawInitiationPeriod was missed
@@ -70,19 +70,19 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setUnstakeLockPeriod(uint16 _unstakeLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         unstakeLockPeriod = _unstakeLockPeriod;
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         withdrawLockPeriod = _withdrawLockPeriod;
     }
 
     /// @inheritdoc IStakeManagerParams
-    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setWithdrawInitiationPeriod(uint16 _withdrawInitiationPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         withdrawInitiationPeriod = _withdrawInitiationPeriod;
     }
@@ -114,7 +114,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
 
     /// @inheritdoc IStakeManagerParams
     function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_maxCommission <= 100, "Invalid Max Commission Update");
         // slither-disable-next-line events-maths
         maxCommission = _maxCommission;
     }

@@ -103,7 +103,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _unstakeLockPeriod updated value to be set for unstakeLockPeriod
      */
-    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setUnstakeLockPeriod(uint16 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
         stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
     }
@@ -113,7 +113,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawLockPeriod updated value to be set for withdrawLockPeriod
      */
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
@@ -123,7 +123,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawInitiationPeriod updated value to be set for withdrawInitiationPeriod
      */
-    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawInitiationPeriod(uint16 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawInitiationPeriod", _withdrawInitiationPeriod, block.timestamp);
         stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
@@ -231,6 +231,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _deltaCommission updated value to be set for deltaCommission
      */
     function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+        require(_deltaCommission <= 100, "deltaCommission exceeds 100");
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
@@ -251,7 +252,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _maxTolerance updated value for maxTolerance
      */
     function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10_000_000");
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds baseDenom");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);
