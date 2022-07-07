@@ -103,7 +103,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         string calldata name,
         string calldata selector,
         string calldata url
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) {
+    ) external initialized onlyRole(COLLECTION_MODIFIER_ROLE) {
         require(weight <= 100, "Weight beyond max");
         numJobs = numJobs + 1;
 
@@ -128,7 +128,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+    ) external initialized onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
         require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
@@ -149,6 +149,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      */
     function setCollectionStatus(bool assetStatus, uint16 id)
         external
+        initialized
         onlyRole(COLLECTION_MODIFIER_ROLE)
         checkState(State.Confirm, buffer)
     {
@@ -194,7 +195,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
         string calldata name
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) {
+    ) external initialized onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) {
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
@@ -238,7 +239,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
-    ) external onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+    ) external initialized onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
         require(jobIDs.length > 0, "no jobs added");
         require(collectionID <= numCollections, "Collection ID not present");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
@@ -258,7 +259,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function updateDelayedRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
+    function updateDelayedRegistry() external override initialized onlyRole(REGISTRY_MODIFIER_ROLE) {
         _updateDelayedRegistry();
     }
 
