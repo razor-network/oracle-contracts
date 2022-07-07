@@ -225,6 +225,7 @@ describe('Delegator', function () {
       // then random number would be generated in n+1 epoch once after block for n+1 epoch is confirmed
       const requestId = await delegator.connect(signers[5]).callStatic.register();
       await delegator.connect(signers[5]).register();
+      await mineToNextEpoch();
       const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();

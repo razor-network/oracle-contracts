@@ -133,9 +133,10 @@ describe('RandomNoManager', function () {
       // Random number requested in epoch n will be fulfilled once after the block for n+1 epoch is confirmed.
       await mineToNextEpoch();
       const epoch = await getEpoch();
+      const secret = await getSecret(signers[5]);
 
       // Commit
-      await commit(signers[5], 0, voteManager, collectionManager, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
       // Reveal
