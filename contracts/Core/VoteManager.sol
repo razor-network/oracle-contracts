@@ -218,12 +218,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     /// @inheritdoc IVoteManager
-    function storeSalt(bytes32 _salt) external override onlyRole(SALT_MODIFIER_ROLE) {
+    function storeSalt(bytes32 _salt) external override initialized onlyRole(SALT_MODIFIER_ROLE) {
         salt = _salt;
     }
 
     /// @inheritdoc IVoteManager
-    function storeDepth(uint256 _depth) external override onlyRole(DEPTH_MODIFIER_ROLE) {
+    function storeDepth(uint256 _depth) external override initialized onlyRole(DEPTH_MODIFIER_ROLE) {
         depth = _depth;
     }
 
