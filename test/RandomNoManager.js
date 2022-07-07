@@ -18,6 +18,7 @@ const {
   toBigNumber,
   tokenAmount,
   prngHash,
+  getSecret,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -106,7 +107,8 @@ describe('RandomNoManager', function () {
       assertBNEqual(await randomNoManager.requests(reqid2), epoch + 1);
 
       // Commit
-      await commit(signers[5], 0, voteManager, collectionManager, '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd', blockManager);
+      const secret = await getSecret(signers[5]);
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
       // Reveal
