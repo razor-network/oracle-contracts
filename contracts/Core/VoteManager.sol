@@ -11,6 +11,7 @@ import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
 import "../lib/MerklePosAware.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /** @title VoteManager
  * @notice VoteManager manages the commitments of votes of the stakers
@@ -121,7 +122,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function reveal(
         uint32 epoch,
         Structs.MerkleTree memory tree,
-        bytes32 secret
+        bytes32 secret,
+        bytes memory signature
     ) external initialized checkEpochAndState(State.Reveal, epoch, buffer) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
@@ -131,6 +133,12 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(secret != 0x0, "secret cannot be empty");
         bytes32 seed = keccak256(abi.encode(salt, secret));
         require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        {
+            bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
+            require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
+            bytes32 _secret = keccak256(signature);
+            require(secret == _secret, "invalid secret");
+        }
         {
             uint256 stakerStake = stakeManager.getStake(stakerId);
             require(stakerStake >= minStake, "stake below minimum");

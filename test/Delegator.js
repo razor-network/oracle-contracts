@@ -22,6 +22,7 @@ const {
   getEpoch,
   tokenAmount,
   adhocPropose,
+  getSecret,
 } = require('./helpers/utils');
 
 const { commit, reveal } = require('./helpers/InternalEngine');
@@ -101,7 +102,7 @@ describe('Delegator', function () {
       const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -147,7 +148,7 @@ describe('Delegator', function () {
 
       await mineToNextState();
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -177,7 +178,7 @@ describe('Delegator', function () {
       await mineToNextEpoch();
 
       // const votes = [100, 500, 600, 700, 800, 900];
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -223,7 +224,7 @@ describe('Delegator', function () {
       await mineToNextEpoch();
       const requestId = await delegator.connect(signers[5]).callStatic.register();
       await delegator.connect(signers[5]).register();
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -262,7 +263,7 @@ describe('Delegator', function () {
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 

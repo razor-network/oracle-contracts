@@ -1,4 +1,6 @@
-const { BigNumber, utils } = ethers;
+const { ethers } = require('hardhat');
+
+const { BigNumber, utils, provider } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
@@ -146,6 +148,26 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   return 0;
 };
 
+const getSignature = async (signer) => {
+  const { chainId } = await provider.getNetwork();
+  const epoch = await getEpoch();
+  const messageHash = utils.solidityKeccak256(
+    ['address', 'uint32', 'uint256', 'string'],
+    [signer.address, epoch, chainId, 'razororacle']
+  );
+  const hashBinary = utils.arrayify(messageHash);
+  const signature = await signer.signMessage(hashBinary);
+  return signature;
+};
+
+const getSecret = async (signer) => {
+  const signature = await getSignature(signer);
+  const secret = utils.solidityKeccak256(
+    ['bytes'],
+    [signature]
+  );
+  return secret;
+};
 const getIterationWithPosition = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
   const numStakers = await stakeManager.getNumStakers();
   const stakerId = staker.id;
@@ -233,13 +255,14 @@ const adhocCommit = async (medians, signer, deviation, voteManager, collectionMa
   }
   leavesOfTree[signer.address] = helper;
   const tree = await createMerkle(leavesOfTree[signer.address]);
-
+  const signature = await getSignature(signer);
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
+    signature,
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
   await voteManager.connect(signer).commit(getEpoch(), commitment);
@@ -261,7 +284,7 @@ const adhocReveal = async (signer, deviation, voteManager) => {
     proofs,
     root: store[signer.address].tree[0][0],
   };
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret, store[signer.address].signature);
 };
 
 const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, voteManager) => {
@@ -302,6 +325,8 @@ module.exports = {
   getBiggestStakeAndId,
   getEpoch,
   getVote,
+  getSecret,
+  getSignature,
   getIteration,
   getIterationWithPosition,
   getFalseIteration,
