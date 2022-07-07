@@ -61,6 +61,6 @@ describe('Unit tests', function () {
           assert(binary === output, 'incorrect sequence');
         }
       }
-    });
+    }).timeout(400000);;
   });
 });
