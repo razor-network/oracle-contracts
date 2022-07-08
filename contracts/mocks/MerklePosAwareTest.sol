@@ -14,6 +14,11 @@ contract MerklePosAwareTest {
         return MerklePosAware.verifyMultiple(proofs, root, leaves, leafId, depth, maxAssets);
     }
 
+    function getSequence(uint256 leafId, uint256 depth) external pure returns (bytes memory) {
+        return MerklePosAware.getSequence(leafId, depth);
+    }
+    //function getSequence(uint256 leafId, uint256 depth) external
+
     // function verify(
     //     bytes32[] memory proof,
     //     bytes32 root,
