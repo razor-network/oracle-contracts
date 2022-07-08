@@ -27,15 +27,9 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
         uint32 epoch = _getEpoch();
-        State state = _getState(buffer);
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
-        // slither-disable-next-line incorrect-equality,timestamp
-        if (state == State.Commit) {
-            requests[requestId] = epoch;
-        } else {
-            requests[requestId] = epoch + 1;
-        }
+        requests[requestId] = epoch + 1;
     }
 
     /// @inheritdoc IRandomNoProvider
