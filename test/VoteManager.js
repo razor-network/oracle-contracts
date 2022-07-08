@@ -197,7 +197,6 @@ describe('VoteManager', function () {
       it('should not be able to reveal if length of the votes value is not same as number of active collections', async function () {
         const epoch = await getEpoch();
         const commitment = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dec';
-        const secret = await getSecret(signers[1]);
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dee';
         const treeRevealData = {
           values: [
@@ -218,13 +217,12 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
         // eslint-disable-next-line prefer-destructuring
         const signature = await getSignature(signers[1]);
-        const tx = voteManager.connect(signers[1]).reveal(epoch, treeRevealData, secret, signature);
+        const tx = voteManager.connect(signers[1]).reveal(epoch, treeRevealData, signature);
         await assertRevert(tx, 'values length mismatch');
       });
 
       it('if the vote value for assigned asset is zero, staker should not be able to reveal', async function () {
         const epoch = await getEpoch();
-        const signer3secret = await getSecret(signers[3]);
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dec';
         const data = await getData(signers[3]);
         const { seqAllotedCollections } = data;
@@ -258,12 +256,11 @@ describe('VoteManager', function () {
         };
         // await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
         const signature = await getSignature(signers[3]);
-        const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret, signature);
+        const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signature);
         await assertRevert(tx, '0 vote for assigned coll');
       });
       it('should not be able to reveal non alloted assets', async function () {
         const epoch = await getEpoch();
-        const signer3secret = await getSecret(signers[3]);
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dec';
         const data = await getData(signers[3]);
         const { seqAllotedCollections } = data;
@@ -305,7 +302,7 @@ describe('VoteManager', function () {
         };
         // await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
         const signature = await getSignature(signers[3]);
-        const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signer3secret, signature);
+        const tx = voteManager.connect(signers[3]).reveal(epoch, treeRevealData, signature);
         await assertRevert(tx, 'Revealed asset not alloted');
       });
 
@@ -325,17 +322,6 @@ describe('VoteManager', function () {
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
-      });
-
-      it('should not be able to reveal if secret is zero', async function () {
-        const epoch = await getEpoch();
-        // const votes2 = [104, 204, 304, 404, 504, 604, 704, 804, 904];
-        const treeRevealData = await getTreeRevealData(signers[4]); // getting treeRevealData of signers[4] which revealed in last testcase above
-        const signature = await getSignature(signers[4]);
-        const tx = voteManager.connect(signers[4]).reveal(
-          epoch, treeRevealData, '0x0000000000000000000000000000000000000000000000000000000000000000', signature
-        );
-        await assertRevert(tx, 'secret cannot be empty');
       });
 
       it('should be able to commit again with correct influence', async function () {
@@ -552,11 +538,10 @@ describe('VoteManager', function () {
       it('should not be able to reveal if staker does not exists', async function () {
         const epoch = await getEpoch();
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const secret = await getSecret(signers[7]);
         const treeRevealData = await getTreeRevealData(signers[3]); /* intentionally passing signers[3]s reveal data since signers[7]
          hasn't revealed yet but this won't affect moto of test case */
         const signature = await getSignature(signers[7]);
-        const tx = voteManager.connect(signers[7]).reveal(epoch, treeRevealData, secret, signature);
+        const tx = voteManager.connect(signers[7]).reveal(epoch, treeRevealData, signature);
         await assertRevert(tx, 'Staker does not exist');
       });
 
@@ -644,18 +629,6 @@ describe('VoteManager', function () {
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 950]; // 900 changed to 950 for having incorrect value
         const tx = reveal(signers[7], 10, voteManager, stakeManager, collectionManager); // value changed with deviation 10
         await assertRevert(tx, 'invalid merkle proof');
-      });
-
-      it('Should not be able to reveal with incorrect secret', async function () {
-        const epoch = await getEpoch();
-        // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        // const correctSecret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';  This was the correctSecret for signers[7]
-        const incorrectSecret = '0x727d5c9e6d18ed45ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddc';
-        // last digit 'd' changed to 'c' for having incorrect secret
-        const treeRevealData = await getTreeRevealData(signers[7]);
-        const signature = await getSignature(signers[7]);
-        const tx = voteManager.connect(signers[7]).reveal(epoch, treeRevealData, incorrectSecret, signature);
-        await assertRevert(tx, 'incorrect secret/value');
       });
 
       it('should not be able to call snitch on a staker if staker has not commited in present epoch', async function () {
@@ -966,7 +939,7 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
         // eslint-disable-next-line prefer-destructuring
         const signature = await getSignature(signers[14]);
-        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, secret, signature);
+        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, signature);
         await assertRevert(tx, 'invalid signature');
       });
       it('should not be able to reveal if invalid signature', async function () {
@@ -1004,8 +977,8 @@ describe('VoteManager', function () {
         await mineToNextState(); // reveal
         // eslint-disable-next-line prefer-destructuring
         const signature = await getSignature(signers[15]);
-        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, secret, signature);
-        await assertRevert(tx, 'invalid secret');
+        const tx = voteManager.connect(signers[15]).reveal(epoch, treeRevealData, signature);
+        await assertRevert(tx, 'incorrect secret/value');
       });
     });
   });

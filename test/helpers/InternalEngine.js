@@ -156,7 +156,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   };
   treeData[signer.address] = treeRevealData;
   // console.log('reveal', signer.address, treeRevealData.values);
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret, store[signer.address].signature);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].signature);
   // console.log(treeRevealData);
   const helper = {};
   const arr = [];
