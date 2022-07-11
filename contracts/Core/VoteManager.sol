@@ -117,28 +117,25 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * the values being revealed into a struct in the Structs.MerkleTree format.
      * @param epoch epoch when the revealed their votes
      * @param tree the merkle tree struct of the staker
-     * @param secret staker's secret using which seed would be calculated and thereby checking for collection allocation
+     * @param signature staker's signature on the messageHash which calculates
+     * the secret using which seed would be calculated and thereby checking for collection allocation
      */
     function reveal(
         uint32 epoch,
         Structs.MerkleTree memory tree,
-        bytes32 secret,
         bytes memory signature
     ) external initialized checkEpochAndState(State.Reveal, epoch, buffer) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
         require(tree.values.length == toAssign, "values length mismatch");
-        // avoid innocent staker getting slashed due to empty secret
-        require(secret != 0x0, "secret cannot be empty");
+
+        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
+        bytes32 secret = keccak256(signature);
+
         bytes32 seed = keccak256(abi.encode(salt, secret));
         require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
-        {
-            bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
-            require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
-            bytes32 _secret = keccak256(signature);
-            require(secret == _secret, "invalid secret");
-        }
         {
             uint256 stakerStake = stakeManager.getStake(stakerId);
             require(stakerStake >= minStake, "stake below minimum");

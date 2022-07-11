@@ -284,7 +284,7 @@ const adhocReveal = async (signer, deviation, voteManager) => {
     proofs,
     root: store[signer.address].tree[0][0],
   };
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret, store[signer.address].signature);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].signature);
 };
 
 const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, voteManager) => {
