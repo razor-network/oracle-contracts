@@ -432,6 +432,10 @@ describe('Scenarios', async () => {
     await sToken.connect(signers[1]).approve(stakeManager.address, amount);
     await stakeManager.connect(signers[1]).unstake(1, amount);
     for (let i = 0; i < UNSTAKE_LOCK_PERIOD; i++) {
+      const secret = await getSecret(signers[1]);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
@@ -441,6 +445,10 @@ describe('Scenarios', async () => {
     assertBNEqual(lock.amount, rAmount, 'Locked amount is not equal to requested lock amount');
     assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
     for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      const secret = await getSecret(signers[1]);
+      await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
     await stakeManager.connect(signers[1]).unlockWithdraw(1);
@@ -1155,6 +1163,10 @@ describe('Scenarios', async () => {
     assertBNEqual(lock.unlockAfter, epoch + UNSTAKE_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
     for (let i = 0; i < UNSTAKE_LOCK_PERIOD; i++) {
+      const secret = await getSecret(signers[3]);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
 
@@ -1171,6 +1183,10 @@ describe('Scenarios', async () => {
     assertBNEqual(lock.unlockAfter, epoch + WITHDRAW_LOCK_PERIOD, 'Withdraw after for the lock is incorrect');
 
     for (let i = 0; i < WITHDRAW_LOCK_PERIOD; i++) {
+      const secret = await getSecret(signers[3]);
+      await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState(); // reveal
+      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
 

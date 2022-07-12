@@ -937,17 +937,6 @@ describe('StakeManager', function () {
           await mineToNextEpoch();
         }
 
-        // const penaltyNotRevealNum =  await rewardManager.penaltyNotRevealNum();
-        // const epochLastRevealed = await voteManager.getEpochLastRevealed(1);
-        // const epochLastActive = staker.epochFirstStakedOrLastPenalized < epochLastRevealed
-        // ? epochLastRevealed
-        // : staker.epochFirstStakedOrLastPenalized;
-        // epoch = toBigNumber(await getEpoch());
-        // const inactive = ((epoch).sub(epochLastActive)).sub(toBigNumber('1'))
-        // const penalty = (toBigNumber(inactive).mul(toBigNumber(staker.stake).mul(penaltyNotRevealNum))).div(BASE_DENOMINATOR);
-        // prevStake = toBigNumber(staker.stake).sub(penalty);
-
-        // const rAmount = (lock.amount.mul(prevStake)).div(totalSupply);
         staker = await stakeManager.getStaker(4);
         const prevStake = (staker.stake);
         const totalSupply = await sToken.totalSupply();
