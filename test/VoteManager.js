@@ -263,14 +263,14 @@ describe('VoteManager', function () {
         const epoch = await getEpoch();
         const randomBytes = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb8dec';
         const data = await getData(signers[3]);
-        const { seqAllotedCollections } = data;
+        const { seqAllotedCollections, assignedCollections } = data;
         const { tree } = data;
         const root3 = tree[0][0];
         const values3 = [];
         let nonAssignedCollection;
         const numActiveCollections = await collectionManager.getNumActiveCollections();
         for (let i = 0; i < numActiveCollections; i++) {
-          if (!(seqAllotedCollections[i])) {
+          if (!(assignedCollections[i])) {
             nonAssignedCollection = i;
             break;
           }
@@ -279,7 +279,7 @@ describe('VoteManager', function () {
           if (j === 0) {
             values3.push({
               leafId: Number(nonAssignedCollection),
-              value: (Number(seqAllotedCollections[j]) + 1) * 100,
+              value: (Number(nonAssignedCollection) + 1) * 100,
             });
           } else {
             values3.push({

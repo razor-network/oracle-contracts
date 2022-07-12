@@ -9,11 +9,6 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     uint32 public penaltyNotRevealNum = 1000;
     /// @notice percentage age penalty to be given out for inactivity
     uint32 public penaltyAgeNotRevealNum = 100_000;
-    /**
-     * @notice the number of epochs for which the staker wont be given inactivity penalties.
-     * Stakers inactive for more than grace period will be penalized
-     */
-    uint16 public gracePeriod = 8;
     /// @notice maximum age a staker can have
     uint32 public maxAge = 100 * 10000;
     /// @notice reward given to staker whose block is confirmed
@@ -39,12 +34,6 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     function setBlockReward(uint256 _blockReward) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         blockReward = _blockReward;
-    }
-
-    /// @inheritdoc IRewardManagerParams
-    function setGracePeriod(uint16 _gracePeriod) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        gracePeriod = _gracePeriod;
     }
 
     /// @inheritdoc IRewardManagerParams
