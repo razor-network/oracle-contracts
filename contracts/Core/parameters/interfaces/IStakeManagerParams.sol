@@ -59,13 +59,6 @@ interface IStakeManagerParams {
     function setMinSafeRazor(uint256 _minSafeRazor) external;
 
     /**
-     * @notice changing number of epochs for which the staker wont be given inactivity penalties
-     * @dev can be called only by the the address that has the governance role
-     * @param _gracePeriod updated value to be set for gracePeriod
-     */
-    function setGracePeriod(uint16 _gracePeriod) external;
-
-    /**
      * @notice changing maximum commission stakers can charge from delegators on their profits
      * @dev can be called only by the the address that has the governance role
      * @param _maxCommission updated value to be set for maxCommission

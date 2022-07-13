@@ -89,7 +89,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
         uint32 previousAge = thisStaker.age;
         uint32 newAge = thisStaker.age;
 
-        if (inactiveEpochs > gracePeriod) {
+        if (inactiveEpochs > 0) {
             (newStake, newAge) = _calculateInactivityPenalties(inactiveEpochs, newStake, previousAge);
         }
         // uint256 currentStake = previousStake;

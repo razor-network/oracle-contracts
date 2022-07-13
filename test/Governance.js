@@ -31,7 +31,7 @@ describe('Governance contract Test', async () => {
   const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
-  const gracePeriod = toBigNumber('8');
+
   const minimumStake = tokenAmount('20000');
   const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
@@ -113,9 +113,6 @@ describe('Governance contract Test', async () => {
     tx = governance.connect(signers[0]).setMinSafeRazor(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
-    tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
     tx = governance.connect(signers[0]).setBlockReward(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -170,12 +167,6 @@ describe('Governance contract Test', async () => {
     await governance.setMaxAltBlocks(toBigNumber('10'));
     const maxAltBlocks = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
-
-    await governance.setGracePeriod(toBigNumber('14'));
-    const gracePeriod = await rewardManager.gracePeriod();
-    const gracePeriod1 = await stakeManager.gracePeriod();
-    assertBNEqual(gracePeriod, toBigNumber('14'));
-    assertBNEqual(gracePeriod1, toBigNumber('14'));
 
     await governance.setMaxTolerance(toBigNumber('15'));
     const maxTolerance = await rewardManager.maxTolerance();
@@ -284,9 +275,6 @@ describe('Governance contract Test', async () => {
 
     const epochLimitForUpdateCommissionValue = await stakeManager.epochLimitForUpdateCommission();
     assertBNEqual(epochLimitForUpdateCommission, epochLimitForUpdateCommissionValue);
-
-    const gracePeriodValue = await rewardManager.gracePeriod();
-    assertBNEqual(gracePeriod, gracePeriodValue);
 
     const toAssignValue = await voteManager.toAssign();
     assertBNEqual(toAssign, toAssignValue);

@@ -24,13 +24,6 @@ interface IRewardManagerParams {
     function setBlockReward(uint256 _blockReward) external;
 
     /**
-     * @notice changing number of epochs for which the staker wont be given inactivity penalties
-     * @dev can be called only by the the address that has the governance role
-     * @param _gracePeriod updated value to be set for gracePeriod
-     */
-    function setGracePeriod(uint16 _gracePeriod) external;
-
-    /**
      * @notice changing the maximum age a staker can have
      * @dev can be called only by the the address that has the governance role
      * @param _maxAge updated value to be set for maxAge

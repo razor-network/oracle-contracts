@@ -32,11 +32,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     uint8 public maxCommission = 20;
     /// @notice maximum commission change a staker can do
     uint8 public deltaCommission = 3;
-    /**
-     * @notice the number of epochs for which the staker wont be given inactivity penalties.
-     * Stakers inactive for more than grace period will be penalized
-     */
-    uint16 public gracePeriod = 8;
     /// @notice the number of epochs for which a staker cant change commission once set/change
     uint16 public epochLimitForUpdateCommission = 100;
     /// @notice slashing params being used if staker is slashed. Slash Penalty = bounty + burned + kept == 100%
@@ -104,12 +99,6 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
         require(_minSafeRazor <= minStake, "minSafeRazor beyond minStake");
         // slither-disable-next-line events-maths
         minSafeRazor = _minSafeRazor;
-    }
-
-    /// @inheritdoc IStakeManagerParams
-    function setGracePeriod(uint16 _gracePeriod) external override onlyRole(GOVERNANCE_ROLE) {
-        // slither-disable-next-line events-maths
-        gracePeriod = _gracePeriod;
     }
 
     /// @inheritdoc IStakeManagerParams
