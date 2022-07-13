@@ -25,7 +25,7 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     }
 
     /// @inheritdoc IDelegator
-    function register() external override returns (bytes32) {
+    function register() external override whenNotPaused returns (bytes32) {
         return randomNoManager.register();
     }
 
@@ -55,7 +55,7 @@ contract Delegator is ACL, StateManager, Pause, IDelegator {
     }
 
     /// @inheritdoc IDelegator
-    function getRandomNumber(bytes32 requestId) external view override returns (uint256) {
+    function getRandomNumber(bytes32 requestId) external view override whenNotPaused returns (uint256) {
         return randomNoManager.getRandomNumber(requestId);
     }
 
