@@ -6,6 +6,7 @@ const {
   getBiggestStakeAndId,
   getIteration,
   toBigNumber,
+  getSecret,
 } = require('./helpers/utils');
 const {
   COLLECTION_MODIFIER_ROLE,
@@ -135,8 +136,8 @@ describe('BondManager', async () => {
     }
     await collectionManager.revokeRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     for (let i = 1; i <= 3; i++) {
+      const secret = await getSecret(signers[i]);
       await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
     }
     await mineToNextState(); // reveal
@@ -239,7 +240,6 @@ describe('BondManager', async () => {
 
   it('set result and deactivate collection if not to be reported next epoch', async () => {
     let epoch = await getEpoch();
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
@@ -261,6 +261,7 @@ describe('BondManager', async () => {
 
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -305,6 +306,7 @@ describe('BondManager', async () => {
     await mineToNextEpoch();
     epoch = await getEpoch();
     for (let i = 1; i <= 3; i++) {
+      const secret = await getSecret(signers[i]);
       await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
     }
     await mineToNextState(); // reveal
@@ -353,7 +355,6 @@ describe('BondManager', async () => {
 
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     const databond = await bondManager.getDatabond(1);
 
     let collection = await collectionManager.getCollection(databond.collectionId);
@@ -362,6 +363,7 @@ describe('BondManager', async () => {
 
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -410,6 +412,7 @@ describe('BondManager', async () => {
       await mineToNextEpoch();
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -461,7 +464,6 @@ describe('BondManager', async () => {
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     const databond = await bondManager.getDatabond(1);
     const bondUpdation = await bondManager.epochLimitForUpdateBond();
 
@@ -471,6 +473,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -522,8 +525,6 @@ describe('BondManager', async () => {
   it('update databond collection and by changing number of jobIds, occurrence should update', async () => {
     let epoch = await getEpoch();
 
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
-
     const bond = await razor.balanceOf(signers[4].address);
     const jobDeposit = await bondManager.depositPerJob();
     await razor.connect(signers[4]).approve(bondManager.address, bond);
@@ -545,6 +546,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -612,7 +614,6 @@ describe('BondManager', async () => {
     );
 
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
 
@@ -625,6 +626,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -711,7 +713,6 @@ describe('BondManager', async () => {
     );
 
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
     let collection = await collectionManager.getCollection(databond.collectionId);
@@ -723,6 +724,7 @@ describe('BondManager', async () => {
 
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -783,7 +785,6 @@ describe('BondManager', async () => {
     );
 
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
     let collection = await collectionManager.getCollection(databond.collectionId);
@@ -795,6 +796,7 @@ describe('BondManager', async () => {
 
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -857,7 +859,6 @@ describe('BondManager', async () => {
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
 
@@ -869,6 +870,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -917,6 +919,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -956,7 +959,6 @@ describe('BondManager', async () => {
     collection = await collectionManager.getCollection(databond.collectionId);
     databondArray = await bondManager.getDatabondCollections();
     assert(databond.active === true);
-    assert(collection.active === true);
     assert(databondArray.length === 1);
   });
 
@@ -972,7 +974,6 @@ describe('BondManager', async () => {
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
 
@@ -984,6 +985,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -1055,7 +1057,6 @@ describe('BondManager', async () => {
       epoch, jobs, bond, occurrence, collectionPower, collectionTolerance, collectionAggregation, collectionName
     );
     assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('10'), 'databond not created');
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
 
     let databond = await bondManager.getDatabond(1);
 
@@ -1067,6 +1068,7 @@ describe('BondManager', async () => {
       epoch = await getEpoch();
 
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal
@@ -1184,7 +1186,6 @@ describe('BondManager', async () => {
                           VOTING
       ////////////////////////////////////////////////////////////// */
     const active = [true, true, true];
-    const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
     let blockConfirmer = 0;
     let blockIteration;
     for (let j = 1; j <= 10; j++) {
@@ -1192,6 +1193,7 @@ describe('BondManager', async () => {
 
       epoch = await getEpoch();
       for (let i = 1; i <= 3; i++) {
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
       await mineToNextState(); // reveal

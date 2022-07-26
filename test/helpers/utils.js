@@ -1,8 +1,6 @@
 const { ethers } = require('hardhat');
 
-const {
-  BigNumber, utils, provider,
-} = ethers;
+const { BigNumber, utils, provider } = ethers;
 const {
   ONE_ETHER, EPOCH_LENGTH, NUM_STATES, MATURITIES,
 } = require('./constants');
@@ -86,6 +84,26 @@ const isElectedProposer = async (iteration, biggestStake, stake, stakerId, numSt
   return false;
 };
 
+const isElectedProposerWithPosition = async (iteration, biggestStake, stake, stakerId, numStakers, salt) => {
+  // add +1 since prng returns 0 to max-1 and staker start from 1
+  const abiCoder = ethers.utils.defaultAbiCoder;
+  const salt1 = await utils.solidityKeccak256(['bytes'], [await abiCoder.encode(['uint256'], [iteration])]);
+  const seed1 = await prngHash(salt, salt1);
+  const rand1 = await prng(numStakers, seed1);
+  if (!(toBigNumber(rand1).add(1).eq(stakerId))) {
+    return [false, 1];
+  }
+
+  const salt2 = await utils.solidityKeccak256(['bytes'], [await abiCoder.encode(['uint32', 'uint256'], [stakerId, iteration])]);
+  const seed2 = await prngHash(salt, salt2);
+  const rand2 = await prng(toBigNumber(2).pow(toBigNumber(32)), toBigNumber(seed2));
+  if ((rand2.mul(biggestStake)).lt(stake.mul(toBigNumber(2).pow(32)))) {
+    return [true, 1];
+  }
+
+  return [false, 2];
+};
+
 const getEpoch = async () => {
   const blockNumber = toBigNumber(await provider.getBlockNumber());
   const getCurrentBlock = await provider.getBlock(blockNumber.toNumber());
@@ -128,6 +146,44 @@ const getIteration = async (voteManager, stakeManager, staker, biggestStake) => 
   for (let i = 0; i < 10000000000; i++) {
     const isElected = await isElectedProposer(i, biggestStake, stake, stakerId, numStakers, salt);
     if (isElected) return (i);
+  }
+  return 0;
+};
+
+const getSignature = async (signer) => {
+  const { chainId } = await provider.getNetwork();
+  const epoch = await getEpoch();
+  const messageHash = utils.solidityKeccak256(
+    ['address', 'uint32', 'uint256', 'string'],
+    [signer.address, epoch, chainId, 'razororacle']
+  );
+  const hashBinary = utils.arrayify(messageHash);
+  const signature = await signer.signMessage(hashBinary);
+  return signature;
+};
+
+const getSecret = async (signer) => {
+  const signature = await getSignature(signer);
+  const secret = utils.solidityKeccak256(
+    ['bytes'],
+    [signature]
+  );
+  return secret;
+};
+const getIterationWithPosition = async (voteManager, stakeManager, staker, biggestStake, ifPosition) => {
+  const numStakers = await stakeManager.getNumStakers();
+  const stakerId = staker.id;
+  const epoch = getEpoch();
+  const stake = await voteManager.getStakeSnapshot(epoch, stakerId);
+  const salt = await voteManager.getSalt();
+  if (Number(stake) === 0) return 0; // following loop goes in infinite loop if this condn not added
+  // stake 0 represents that given staker has not voted in that epoch
+  // so anyway in propose its going to revert
+  for (let i = 0; i < 10000000000; i++) {
+    const [isElected, position] = await isElectedProposerWithPosition(i, biggestStake, stake, stakerId, numStakers, salt);
+    if (!isElected && position === ifPosition) {
+      return i;
+    }
   }
   return 0;
 };
@@ -201,13 +257,14 @@ const adhocCommit = async (medians, signer, deviation, voteManager, collectionMa
   }
   leavesOfTree[signer.address] = helper;
   const tree = await createMerkle(leavesOfTree[signer.address]);
-
+  const signature = await getSignature(signer);
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
+    signature,
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
   await voteManager.connect(signer).commit(getEpoch(), commitment);
@@ -229,7 +286,7 @@ const adhocReveal = async (signer, deviation, voteManager) => {
     proofs,
     root: store[signer.address].tree[0][0],
   };
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].signature);
 };
 
 const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, voteManager) => {
@@ -259,6 +316,10 @@ const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManag
 };
 const getData = async (signer) => (store[signer.address]);
 
+function getDepth(numActiveCollections) {
+  return (Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections)));
+}
+
 module.exports = {
   calculateDisputesData,
   isElectedProposer,
@@ -266,7 +327,10 @@ module.exports = {
   getBiggestStakeAndId,
   getEpoch,
   getVote,
+  getSecret,
+  getSignature,
   getIteration,
+  getIterationWithPosition,
   getFalseIteration,
   getState,
   prng,
@@ -279,4 +343,5 @@ module.exports = {
   adhocPropose,
   getData,
   getCollectionIdPositionInBlock,
+  getDepth,
 };

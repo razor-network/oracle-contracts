@@ -9,7 +9,6 @@ interface IRewardManager {
      * reveal value deviations
      * @param stakerId The id of staker currently in consideration
      * @param epoch the epoch value
-     * todo reduce complexity
      */
     function givePenalties(uint32 epoch, uint32 stakerId) external;
 

@@ -12,6 +12,7 @@ const {
 const { BigNumber } = ethers;
 const {
   NETWORK,
+  NETWORK_TYPE,
   SEED_AMOUNT,
   STAKER_ADDRESSES,
 } = process.env;
@@ -33,7 +34,7 @@ module.exports = async () => {
   const stakerAddressList = STAKER_ADDRESSES.split(',');
 
   // Only transfer tokens in testnets
-  if (NETWORK !== 'mainnet') {
+  if (NETWORK_TYPE === 'TESTNET') {
     // Add new instance of StakeManager contract & Deployer address as Minter
 
     for (let i = 0; i < stakerAddressList.length; i++) {

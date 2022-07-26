@@ -19,14 +19,14 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param id the id of the job that was created
      * @param timestamp time at which the job was created
      */
-    event JobCreated(uint16 id, uint256 timestamp);
+    event JobCreated(uint16 indexed id, uint256 timestamp);
 
     /**
      * @dev Emitted when a collection has been created
      * @param id the id of the collection that was created
      * @param timestamp time at which the collection was created
      */
-    event CollectionCreated(uint16 id, uint256 timestamp);
+    event CollectionCreated(uint16 indexed id, uint256 timestamp);
 
     /**
      * @dev Emitted when a job has been updated
@@ -40,7 +40,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param url updated url
      */
     event JobUpdated(
-        uint16 id,
+        uint16 indexed id,
         JobSelectorType selectorType,
         uint32 epoch,
         uint8 weight,
@@ -57,7 +57,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param epoch in which the status change took place
      * @param timestamp time at which the status change took place
      */
-    event CollectionActivityStatus(bool active, uint16 id, uint32 epoch, uint256 timestamp);
+    event CollectionActivityStatus(bool active, uint16 indexed id, uint32 epoch, uint256 timestamp);
 
     /**
      * @dev Emitted when a collection has been updated
@@ -70,7 +70,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param timestamp time at which the collection was updated
      */
     event CollectionUpdated(
-        uint16 id,
+        uint16 indexed id,
         int8 power,
         uint32 epoch,
         uint32 aggregationMethod,
@@ -121,7 +121,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         JobSelectorType selectorType,
         string calldata selector,
         string calldata url
-    ) external override onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+    ) external override initialized onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
         require(jobID != 0, "ID cannot be 0");
         require(jobs[jobID].id == jobID, "Job ID not present");
         require(weight <= 100, "Weight beyond max");
@@ -140,6 +140,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function setCollectionStatus(bool assetStatus, uint16 id)
         external
         override
+        initialized
         onlyRole(COLLECTION_MODIFIER_ROLE)
         checkState(State.Confirm, buffer)
     {
@@ -153,13 +154,18 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             _updateDelayedRegistry();
         }
 
-        if (!collections[id].active) {
-            numActiveCollections = numActiveCollections + 1;
+        if (assetStatus) {
+            if (!collections[id].active) {
+                numActiveCollections = numActiveCollections + 1;
+                collections[id].active = assetStatus;
+            }
         } else {
-            numActiveCollections = numActiveCollections - 1;
+            if (collections[id].active) {
+                numActiveCollections = numActiveCollections - 1;
+                collections[id].active = assetStatus;
+            }
         }
 
-        collections[id].active = assetStatus;
         updateRegistryEpoch = epoch + 1;
         _updateRegistry();
 
@@ -175,7 +181,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 aggregationMethod,
         uint16[] memory jobIDs,
         string calldata name
-    ) external override onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) returns (uint16) {
+    ) external override initialized onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) returns (uint16) {
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
 
@@ -184,6 +190,11 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         // slither-disable-next-line incorrect-equality,timestamp
         if (updateRegistryEpoch <= epoch) {
             _updateDelayedRegistry();
+        }
+
+        uint256 jobsLength = jobIDs.length;
+        for (uint8 i = 0; i < jobsLength; i++) {
+            require(jobs[jobIDs[i]].id == jobIDs[i], "job not present");
         }
 
         numCollections = numCollections + 1;
@@ -221,10 +232,17 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint32 aggregationMethod,
         int8 power,
         uint16[] memory jobIDs
-    ) external override onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+    ) external override initialized onlyRole(COLLECTION_MODIFIER_ROLE) notState(State.Commit, buffer) {
+        require(jobIDs.length > 0, "no jobs added");
         require(collectionID <= numCollections, "Collection ID not present");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
         uint32 epoch = getEpoch();
+
+        uint256 jobsLength = jobIDs.length;
+        for (uint8 i = 0; i < jobsLength; i++) {
+            require(jobs[jobIDs[i]].id == jobIDs[i], "job not present");
+        }
+
         collections[collectionID].power = power;
         collections[collectionID].tolerance = tolerance;
         collections[collectionID].aggregationMethod = aggregationMethod;
@@ -280,7 +298,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function updateDelayedRegistry() external override onlyRole(REGISTRY_MODIFIER_ROLE) {
+    function updateDelayedRegistry() external override initialized onlyRole(REGISTRY_MODIFIER_ROLE) {
         _updateDelayedRegistry();
     }
 
@@ -318,8 +336,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getCollectionTolerance(uint16 i) external view override returns (uint32) {
-        return collections[leafIdToCollectionIdRegistry[i]].tolerance;
+    function getCollectionTolerance(uint16 id) external view override returns (uint32) {
+        return collections[id].tolerance;
     }
 
     /// @inheritdoc ICollectionManager
@@ -372,7 +390,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     /**
      * @return array of active collections
      */
-    function getActiveCollections() external view returns (uint16[] memory) {
+    function getActiveCollections() external view override returns (uint16[] memory) {
         uint16[] memory result = new uint16[](numActiveCollections);
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
@@ -384,6 +402,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
+    function getDepth() external view returns (uint256) {
+        return _getDepth();
+    }
+
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (collections[_id].result, collections[_id].power);
@@ -391,6 +413,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     /**
      * @dev updates the collectionIdToLeafIdRegistry and leafIdToCollectionIdRegistry everytime a collection has been activated/deactivated/created
+     * being called by setCollectionStatus and createCollection in CollectionManager
      */
     function _updateRegistry() internal {
         uint16 j = 0;
@@ -406,7 +429,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /**
-     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new collection is created
+     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new
+     * collection is created
+     * being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
+     * by setCollectionStatus and createCollection in CollectionManager
      */
     function _updateDelayedRegistry() internal {
         uint16 j = 0;
@@ -438,8 +464,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     function _getDepth() internal view returns (uint256 n) {
         // numActiveCollection is uint16, so further range not needed
         // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
-        // TODO : Looks like there is better version compared in gas
-        // https://ethereum.stackexchange.com/questions/8086/logarithm-math-operation-in-solidity/32900
 
         // 100000;
         // >= 2**4 , n = 4

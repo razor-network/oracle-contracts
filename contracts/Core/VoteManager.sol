@@ -11,6 +11,7 @@ import "./parameters/child/VoteManagerParams.sol";
 import "./StateManager.sol";
 import "../Initializable.sol";
 import "../lib/MerklePosAware.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /** @title VoteManager
  * @notice VoteManager manages the commitments of votes of the stakers
@@ -29,7 +30,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param commitment the staker's commitment
      * @param timestamp time when the commitment was set for the staker
      */
-    event Committed(uint32 epoch, uint32 stakerId, bytes32 commitment, uint256 timestamp);
+    event Committed(uint32 epoch, uint32 indexed stakerId, bytes32 commitment, uint256 timestamp);
     /**
      * @dev Emitted when a staker reveals
      * @param epoch epoch when the staker revealed
@@ -38,7 +39,14 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param values of the collections assigned to the staker
      * @param timestamp time when the staker revealed
      */
-    event Revealed(uint32 epoch, uint32 stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
+    event Revealed(uint32 epoch, uint32 indexed stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
+    /**
+     * @dev Emitted when bountyHunter snitch the staker
+     * @param epoch epoch when the bountyHunter snitch the staker
+     * @param stakerId id of the staker that is snitched
+     * @param bountyHunter address who will snitch the staker
+     */
+    event Snitch(uint32 epoch, uint32 indexed stakerId, address indexed bountyHunter);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -83,15 +91,14 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(!stakeManager.getStaker(stakerId).isSlashed, "VM : staker is slashed");
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch != epoch, "already commited");
-
+        // Switch to call confirm block only when block in previous epoch has not been confirmed
+        // and if previous epoch do have proposed blocks
         // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         if (!blockManager.isBlockConfirmed(epoch - 1)) {
             blockManager.confirmPreviousEpochBlock(stakerId);
         }
         // slither-disable-next-line reentrancy-events,reentrancy-no-eth
         rewardManager.givePenalties(epoch, stakerId);
-        // Switch to call confirm block only when block in previous epoch has not been confirmed
-        // and if previous epoch do have proposed blocks
         uint256 thisStakerStake = stakeManager.getStake(stakerId);
         if (thisStakerStake >= minStake) {
             commitments[stakerId].epoch = epoch;
@@ -110,19 +117,23 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * the values being revealed into a struct in the Structs.MerkleTree format.
      * @param epoch epoch when the revealed their votes
      * @param tree the merkle tree struct of the staker
-     * @param secret staker's secret using which seed would be calculated and thereby checking for collection allocation
+     * @param signature staker's signature on the messageHash which calculates
+     * the secret using which seed would be calculated and thereby checking for collection allocation
      */
     function reveal(
         uint32 epoch,
         Structs.MerkleTree memory tree,
-        bytes32 secret
+        bytes memory signature
     ) external initialized checkEpochAndState(State.Reveal, epoch, buffer) {
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Staker does not exist");
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
         require(tree.values.length == toAssign, "values length mismatch");
-        // avoid innocent staker getting slashed due to empty secret
-        require(secret != 0x0, "secret cannot be empty");
+
+        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
+        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
+        bytes32 secret = keccak256(signature);
+
         bytes32 seed = keccak256(abi.encode(salt, secret));
         require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
         {
@@ -158,8 +169,6 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                     ),
                     "invalid merkle proof"
                 );
-                // TODO : Possible opt
-                /// Can we remove epochs ? would save lot of gas
                 votes[epoch][stakerId][tree.values[i].leafId] = tree.values[i].value;
                 voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] =
                     voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] +
@@ -201,16 +210,17 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(keccak256(abi.encode(root, seed)) == commitments[thisStakerId].commitmentHash, "incorrect secret/value");
         //below line also avoid double reveal attack since once revealed, commitment has will be set to 0x0
         commitments[thisStakerId].commitmentHash = 0x0;
+        emit Snitch(epoch, thisStakerId, msg.sender);
         stakeManager.slash(epoch, thisStakerId, msg.sender);
     }
 
     /// @inheritdoc IVoteManager
-    function storeSalt(bytes32 _salt) external override onlyRole(SALT_MODIFIER_ROLE) {
+    function storeSalt(bytes32 _salt) external override initialized onlyRole(SALT_MODIFIER_ROLE) {
         salt = _salt;
     }
 
     /// @inheritdoc IVoteManager
-    function storeDepth(uint256 _depth) external override onlyRole(DEPTH_MODIFIER_ROLE) {
+    function storeDepth(uint256 _depth) external override initialized onlyRole(DEPTH_MODIFIER_ROLE) {
         depth = _depth;
     }
 

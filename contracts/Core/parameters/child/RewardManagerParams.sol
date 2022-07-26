@@ -7,11 +7,8 @@ import "../../storage/Constants.sol";
 abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice percentage stake penalty to be given out for inactivity
     uint32 public penaltyNotRevealNum = 1000;
-    /**
-     * @notice the number of epochs for which the staker wont be given inactivity penalties.
-     * Stakers inactive for more than grace period will be penalized
-     */
-    uint16 public gracePeriod = 8;
+    /// @notice percentage age penalty to be given out for inactivity
+    uint32 public penaltyAgeNotRevealNum = 100_000;
     /// @notice maximum age a staker can have
     uint32 public maxAge = 100 * 10000;
     /// @notice reward given to staker whose block is confirmed
@@ -28,15 +25,15 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     }
 
     /// @inheritdoc IRewardManagerParams
-    function setBlockReward(uint256 _blockReward) external override onlyRole(GOVERNANCE_ROLE) {
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        blockReward = _blockReward;
+        penaltyAgeNotRevealNum = _penaltyAgeNotRevealNumerator;
     }
 
     /// @inheritdoc IRewardManagerParams
-    function setGracePeriod(uint16 _gracePeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setBlockReward(uint256 _blockReward) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
-        gracePeriod = _gracePeriod;
+        blockReward = _blockReward;
     }
 
     /// @inheritdoc IRewardManagerParams
@@ -56,7 +53,6 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
 
     /// @inheritdoc IRewardManagerParams
     function setMaxCommission(uint8 _maxCommission) external override onlyRole(GOVERNANCE_ROLE) {
-        require(_maxCommission <= 100, "Invalid Max Commission Update");
         // slither-disable-next-line events-maths
         maxCommission = _maxCommission;
     }

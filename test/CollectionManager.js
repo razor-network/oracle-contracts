@@ -2,7 +2,7 @@
 test same vote values, stakes
 test penalizeEpochs */
 const { utils } = require('ethers');
-const { assert } = require('chai');
+const { assert, expect } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -20,6 +20,7 @@ const {
   toBigNumber,
   getEpoch,
   tokenAmount,
+  getDepth,
 } = require('./helpers/utils');
 
 describe('CollectionManager', function () {
@@ -148,10 +149,10 @@ describe('CollectionManager', function () {
       });
       await collectionManager.createMulJob(jobs);
 
-      await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 5]);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 3]);
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
-      assertBNEqual(collection.jobIDs[2], toBigNumber('5'));
+      assertBNEqual(collection.jobIDs[2], toBigNumber('3'));
     });
 
     it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
@@ -165,7 +166,7 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to update collection', async function () {
-      await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 5]);
+      await collectionManager.updateCollection(1, 500, 2, 5, [1, 2, 3]);
       const collection = await collectionManager.getCollection(1);
       assertBNEqual(collection.power, toBigNumber('5'));
       assertBNEqual(collection.aggregationMethod, toBigNumber('2'));
@@ -221,10 +222,10 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to remove job from collection', async function () {
-      await collectionManager.updateCollection(1, 500, 1, 3, [1, 5]);
+      await collectionManager.updateCollection(1, 500, 1, 3, [1, 3]);
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 2);
-      assertBNEqual(collection.jobIDs[1], toBigNumber('5'));
+      assertBNEqual(collection.jobIDs[1], toBigNumber('3'));
     });
 
     it('should be able to inactivate collection', async function () {
@@ -300,9 +301,31 @@ describe('CollectionManager', function () {
       await assertRevert(tx1, 'no jobs added');
     });
 
+    it('should not create collection if jobID doesnt exist', async function () {
+      const collectionName = 'Test Collection2';
+      const tx1 = collectionManager.createCollection(1, 0, 0, 1, [118, 10], collectionName);
+      await assertRevert(tx1, 'job not present');
+    });
+
     it('updateCollection should only work for collections which exists', async function () {
       const tx = collectionManager.updateCollection(10, 500, 2, 5, [1]);
       await assertRevert(tx, 'Collection ID not present');
+    });
+
+    it('updateCollection should not work if the jobID does not exist', async function () {
+      const tx = collectionManager.updateCollection(1, 500, 2, 5, [1, 100]);
+      await assertRevert(tx, 'job not present');
+    });
+
+    it('updateCollection should not work if jobIDs array is empty', async function () {
+      await mineToNextEpoch(); // commit
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      await blockManager.connect(signers[5]).claimBlockReward();
+      const tx = collectionManager.updateCollection(3, 500, 2, 5, []);
+      await assertRevert(tx, 'no jobs added');
     });
 
     it('updateJob, updateCollection should not work in commit state', async function () {
@@ -338,5 +361,44 @@ describe('CollectionManager', function () {
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });
+    it('Should be able to get correct depth of merkle tree for 1 active collections', async function () {
+      await mineToNextEpoch();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await mineToNextState();
+      await collectionManager.setCollectionStatus(false, 2);
+      const numActiveCollections = await collectionManager.getNumActiveCollections();
+      const depth = await collectionManager.getDepth();
+      assert(depth, getDepth(numActiveCollections));
+    });
+
+    it('Should be able to get correct depth of merkle tree for series of 100 active collections', async function () {
+      const power = 3;
+      const tolerance = 500;
+      const depthArr = [];
+      const expectedDepthArr = [];
+      for (let i = 4; i <= 102; i++) {
+        await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], `Test Collection ${i}`);
+        const numActiveCollections = await collectionManager.getNumActiveCollections();
+        const treeDepth = await collectionManager.getDepth();
+        depthArr.push(treeDepth.toNumber());
+        expectedDepthArr.push(getDepth(numActiveCollections));
+      }
+      expect(depthArr).to.eql(expectedDepthArr);
+    });
+
+    // it('should be able to get result using proxy', async function () {
+    //  await delegator.upgradeDelegate(collectionManager.address);
+    //  assert(await delegator.delegate() === collectionManager.address);
+    //
+    //  const url = 'http://testurl.com/2';
+    //  const selector = 'selector/2';
+    //  const name = 'test2';
+    //  const repeat = true;
+    //  await collectionManager.createJob(url, selector, name, repeat);
+    //  //await collectionManager.grantRole(await parameters.getJobConfirmerHash(), signers[0].address);
+    //  await collectionManager.fulfillJob(2, 222);
+    // });
   });
 });
