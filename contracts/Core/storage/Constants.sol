@@ -27,6 +27,11 @@ contract Constants {
         VotingRewardOrPenalty
     }
 
+    enum JobSelectorType {
+        JSON,
+        XHTML
+    }
+
     uint8 public constant NUM_STATES = 5;
 
     uint16 public constant EPOCH_LENGTH = 1200;
@@ -75,4 +80,13 @@ contract Constants {
 
     // keccak256("ESCAPE_HATCH_ROLE")
     bytes32 public constant ESCAPE_HATCH_ROLE = 0x518d8c39717318f051dfb836a4ebe5b3c34aa2cb7fce26c21a89745422ba8043;
+
+    // keccak256("OCCURRENCE_MODIFIER_ROLE")
+    bytes32 public constant OCCURRENCE_MODIFIER_ROLE = 0x35ed6c1cb451e31b9dd4f1d325602da07694e1747843e6b55ab1527fd8835fb5;
+
+    // keccak256("RESET_DATABOND_ROLE")
+    bytes32 public constant RESET_DATABOND_ROLE = 0x3e99a7fb3946972656cbde0e63ef530dd7750472272e07c65aa9f473a99f5c5d;
+
+    // keccak256("COLLECTION_CONFIRMER_ROLE")
+    bytes32 public constant COLLECTION_CONFIRMER_ROLE = 0xa1d2ec18e7ea6241ef0566da3d2bc59cc059592990e56680abdc7031155a0c28;
 }

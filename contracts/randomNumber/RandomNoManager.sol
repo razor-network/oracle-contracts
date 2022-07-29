@@ -26,7 +26,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
         requests[requestId] = epoch + 1;
@@ -50,7 +50,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         return _generateRandomNumber(epoch - 1, 0);
     }
 

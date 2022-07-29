@@ -12,9 +12,9 @@ then
     rm -rf deployed/$ENV
 fi
 
-npm run compile
 echo "Deploying contracts on network $NETWORK"
-npx hardhat run migrations/deploy_all.js --network $NETWORK
+npx hardhat --network $NETWORK deploy --show-stack-traces 
+npx hardhat run migrations/postDeployment.js --network $NETWORK --show-stack-traces 
 
 mkdir -p deployed/$ENV
 cp -r artifacts deployed/$ENV/abi

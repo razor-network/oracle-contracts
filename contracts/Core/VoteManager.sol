@@ -224,6 +224,11 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         depth = _depth;
     }
 
+    /**
+     * @notice returns the commitment of a particular staker
+     * @param stakerId id of the staker whose commitment is required
+     * @return commitment the struct of staker's commitment
+     */
     function getCommitment(uint32 stakerId) external view returns (Structs.Commitment memory commitment) {
         //epoch -> stakerid -> commitment
         return (commitments[stakerId]);
@@ -284,6 +289,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     /**
      * @dev an internal function used to check whether the particular collection was allocated to the staker
      * @param seed hash of salt and staker's secret
+     * @param max maximum number of assets that can be alloted to any of the stakers
      * @param iterationOfLoop positioning of the collection allocation sequence
      * @param leafId leafId of the collection that is being checked for allotment
      */

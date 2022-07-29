@@ -55,7 +55,9 @@
     "@semantic-release/git": "^10.0.1",
     "circleci-pr-commenter": "^0.1.2",
     "fs": "^0.0.1-security",
+    "hardhat": "^2.6.8",
     "hardhat-abi-exporter": "^2.3.0",
+    "hardhat-deploy": "^0.11.4",
     "json-to-markdown-table": "^1.0.0",
     "jsonfile": "^6.1.0",
     "semantic-release": "^19.0.2"
@@ -66,8 +68,6 @@
     "@commitlint/config-conventional": "^16.2.1",
     "@nomiclabs/hardhat-ethers": "^2.0.6",
     "@nomiclabs/hardhat-etherscan": "^2.1.6",
-    "@nomiclabs/hardhat-truffle5": "^2.0.0",
-    "@nomiclabs/hardhat-web3": "^2.0.0",
     "@tenderly/hardhat-tenderly": "^1.0.12",
     "axios": "^0.24.0",
     "chai": "^4.3.4",

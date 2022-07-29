@@ -13,7 +13,7 @@ contract StateManager is Constants {
      */
     modifier checkEpoch(uint32 epoch) {
         // slither-disable-next-line incorrect-equality
-        require(epoch == _getEpoch(), "incorrect epoch");
+        require(epoch == getEpoch(), "incorrect epoch");
         _;
     }
 
@@ -22,7 +22,7 @@ contract StateManager is Constants {
      */
     modifier checkState(State state, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(buffer), "incorrect state");
+        require(state == getState(buffer), "incorrect state");
         _;
     }
 
@@ -31,7 +31,7 @@ contract StateManager is Constants {
      */
     modifier notState(State state, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
-        require(state != _getState(buffer), "incorrect state");
+        require(state != getState(buffer), "incorrect state");
         _;
     }
 
@@ -44,17 +44,23 @@ contract StateManager is Constants {
         uint8 buffer
     ) {
         // slither-disable-next-line incorrect-equality
-        require(epoch == _getEpoch(), "incorrect epoch");
+        require(epoch == getEpoch(), "incorrect epoch");
         // slither-disable-next-line incorrect-equality
-        require(state == _getState(buffer), "incorrect state");
+        require(state == getState(buffer), "incorrect state");
         _;
     }
 
-    function _getEpoch() internal view returns (uint32) {
+    /**
+     * @return the value of current epoch
+     */
+    function getEpoch() public view returns (uint32) {
         return (uint32(block.timestamp) / (EPOCH_LENGTH));
     }
 
-    function _getState(uint8 buffer) internal view returns (State) {
+    /**
+     * @return the value of current state
+     */
+    function getState(uint8 buffer) public view returns (State) {
         uint8 lowerLimit = buffer;
 
         uint16 upperLimit = EPOCH_LENGTH / NUM_STATES - buffer;

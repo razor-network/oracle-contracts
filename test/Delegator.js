@@ -66,14 +66,32 @@ describe('Delegator', function () {
       let name = 'testJSON';
       let power = -2;
       let weight = 50;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      const jobs = [];
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
       url = 'http://testurl.com/2';
       selector = 'selector/2';
       selectorType = 1;
       name = 'testXHTML';
       power = 2;
       weight = 50;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      jobs.push({
+        id: 0,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      });
+      await collectionManager.createMulJob(jobs);
       power = 3;
       await mineToNextState();// reveal
       await mineToNextState();// propose
@@ -81,7 +99,7 @@ describe('Delegator', function () {
       await mineToNextState();// confirm
       const epoch = await getEpoch();
       const collectionName = 'Test Collection';
-      await collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
+      await collectionManager.createCollection(500, power, 1, 1, [1, 2], collectionName);
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
@@ -141,7 +159,7 @@ describe('Delegator', function () {
       await mineToNextState();
       // confirm
       for (let i = 2; i <= 9; i++) {
-        await collectionManager.createCollection(500, 2, 1, [1, 2], `Test Collection${String(i)}`);
+        await collectionManager.createCollection(500, 2, 1, 1, [1, 2], `Test Collection${String(i)}`);
         assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(i - 1));
         assertBNEqual(await collectionManager.collectionIdToLeafIdRegistryOfLastEpoch(i), toBigNumber(0));
       }
@@ -306,7 +324,7 @@ describe('Delegator', function () {
       await mineToNextState();
       const collectionName = 'Test Collection3';
       const power = 2;
-      const tx = collectionManager.createCollection(500, power, 1, [1, 2], collectionName);
+      const tx = collectionManager.createCollection(500, power, 1, 1, [1, 2], collectionName);
       await assertRevert(tx, 'Collection exists with same name');
     });
 

@@ -18,6 +18,7 @@ describe('Governance contract Test', async () => {
   let governance;
   let collectionManager;
   let blockManager;
+  let bondManager;
   let stakeManager;
   let rewardManager;
   let voteManager;
@@ -43,6 +44,11 @@ describe('Governance contract Test', async () => {
   const deltaCommission = toBigNumber('3');
   const epochLimitForUpdateCommission = toBigNumber('100');
   const toAssign = toBigNumber('3');
+  const depositPerJob = tokenAmount('500000');
+  const minBond = tokenAmount('100000');
+  const epochLimitForUpdateBond = toBigNumber('5');
+  const minJobs = toBigNumber('2');
+  const maxJobs = toBigNumber('6');
 
   const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
   const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
@@ -62,7 +68,7 @@ describe('Governance contract Test', async () => {
 
   before(async () => {
     ({
-      governance, collectionManager, blockManager, stakeManager, voteManager,
+      governance, collectionManager, blockManager, bondManager, stakeManager, voteManager,
       rewardManager, initializeContracts,
     } = await setupContracts());
     await Promise.all(await initializeContracts());
@@ -133,6 +139,21 @@ describe('Governance contract Test', async () => {
 
     tx = governance.connect(signers[0]).setToAssign(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMinBond(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setDepositPerJob(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setEpochLimitForUpdateBond(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMaxJobs(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
+    tx = governance.connect(signers[0]).setMinJobs(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
   });
 
   it('parameters should be able to modify with governer role access', async () => {
@@ -162,7 +183,9 @@ describe('Governance contract Test', async () => {
 
     await governance.setWithdrawLockPeriod(toBigNumber('9'));
     const withdrawLockPeriod = await stakeManager.withdrawLockPeriod();
+    const withdrawLockPeriod1 = await bondManager.withdrawLockPeriod();
     assertBNEqual(withdrawLockPeriod, toBigNumber('9'));
+    assertBNEqual(withdrawLockPeriod1, toBigNumber('9'));
 
     await governance.setMaxAltBlocks(toBigNumber('10'));
     const maxAltBlocks = await blockManager.maxAltBlocks();
@@ -207,6 +230,26 @@ describe('Governance contract Test', async () => {
     await governance.setBlockReward(toBigNumber('27'));
     const blockReward = await blockManager.blockReward();
     assertBNEqual(blockReward, toBigNumber('27'));
+
+    await governance.setMinBond(toBigNumber('28'));
+    const minBond = await bondManager.minBond();
+    assertBNEqual(minBond, toBigNumber('28'));
+
+    await governance.setDepositPerJob(toBigNumber('29'));
+    const depositPerJob = await bondManager.depositPerJob();
+    assertBNEqual(depositPerJob, toBigNumber('29'));
+
+    await governance.setEpochLimitForUpdateBond(toBigNumber('30'));
+    const epochLimitForUpdateBond = await bondManager.epochLimitForUpdateBond();
+    assertBNEqual(epochLimitForUpdateBond, toBigNumber('30'));
+
+    await governance.setMaxJobs(toBigNumber('31'));
+    const maxJobs = await bondManager.maxJobs();
+    assertBNEqual(maxJobs, toBigNumber('31'));
+
+    await governance.setMinJobs(toBigNumber('32'));
+    const minJobs = await bondManager.minJobs();
+    assertBNEqual(minJobs, toBigNumber('32'));
 
     let tx = governance.setMaxCommission(toBigNumber('101'));
     await assertRevert(tx, 'Invalid Max Commission Update');
@@ -278,6 +321,21 @@ describe('Governance contract Test', async () => {
 
     const toAssignValue = await voteManager.toAssign();
     assertBNEqual(toAssign, toAssignValue);
+
+    const depositPerJobValue = await bondManager.depositPerJob();
+    assertBNEqual(depositPerJob, depositPerJobValue);
+
+    const minBondValue = await bondManager.minBond();
+    assertBNEqual(minBond, minBondValue);
+
+    const epochLimitForUpdateBondValue = await bondManager.epochLimitForUpdateBond();
+    assertBNEqual(epochLimitForUpdateBond, epochLimitForUpdateBondValue);
+
+    const minJobsValue = await bondManager.minJobs();
+    assertBNEqual(minJobs, minJobsValue);
+
+    const maxJobsValue = await bondManager.maxJobs();
+    assertBNEqual(maxJobs, maxJobsValue);
   });
 
   it('test keccak hash of all roles', async function () {

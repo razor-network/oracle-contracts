@@ -1,3 +1,4 @@
+const { assert } = require('chai');
 const {
   getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
@@ -65,6 +66,8 @@ describe('Scenarios', async () => {
     await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
     await governance.grantRole(GOVERNER_ROLE, signers[0].address);
 
+    const jobs = [];
+    const id = 0;
     const url = 'http://testurl.com';
     const selector = 'selector';
     const selectorType = 0;
@@ -74,9 +77,19 @@ describe('Scenarios', async () => {
     let i = 0;
     while (i < 9) {
       name = `test${i}`;
-      await collectionManager.createJob(weight, power, selectorType, name, selector, url);
+      const job = {
+        id,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      };
+      jobs.push(job);
       i++;
     }
+    await collectionManager.createMulJob(jobs);
 
     while (Number(await getState()) !== 4) {
       if (Number(await getState()) === -1) {
@@ -89,10 +102,10 @@ describe('Scenarios', async () => {
     let Cname;
     for (let i = 1; i <= 8; i++) {
       Cname = `Test Collection${String(i)}`;
-      await collectionManager.createCollection(500, 3, 1, [i, i + 1], Cname);
+      await collectionManager.createCollection(500, 3, 1, 1, [i, i + 1], Cname);
     }
     Cname = 'Test Collection9';
-    await collectionManager.createCollection(500, 3, 1, [9, 1], Cname);
+    await collectionManager.createCollection(500, 3, 1, 1, [9, 1], Cname);
     await mineToNextEpoch();
     const epoch = getEpoch();
     const razors = tokenAmount('443000');
