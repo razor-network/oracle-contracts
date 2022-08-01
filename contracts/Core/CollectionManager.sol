@@ -472,50 +472,32 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         // n = n+ 1 == 5
 
         uint256 x = numActiveCollections;
-        // X = 2 ** n ;
 
-        // Optimised way
-        // for (; x > 0; x >>= 1) {
-        // if (x >= 2**8) { x >>= 8; n += 8; }
-        // if (x >= 2**4) { x >>= 4; n += 4; }
-        // if (x >= 2**2) { x >>= 2; n += 2; }
-        // if (x >= 2**1) { x >>= 1; n += 1; }
-        // if (x == 1) { x >>= 1; n += 1; }
-        // }
-
-        // for 6
-        // 110
-        // optimised version of above would return 2
-        // 000
-        // but we want 3
-        // so we have to give importance to 1(1)0 as well
-        // as in our case result for 100 and 110 is diff
-        // so thats why we have to go unoptimised way
-
-        // I dont know if we can use above optimised way and somehow detect that in middle(1) as well
-        // So thats why lets have above as commented
-        // and check in new issue, if we could do so
-
-        //6
-        //110, 6
-        //011, 3
-        //001, 1
-        //000, 0
-
-        // 8
-        // 1000
-        // 0100
-        // 0010
-        // 0001
-        // 0000
-
-        // Have tested function upto 2**16;
-        bool flag = false;
-        for (n = 0; x > 1; x >>= 1) {
-            // O(n) 1<n<=16
-            if (x % 2 != 0) flag = true; // for that (1)
-            n += 1;
+        if (x > 0) {
+            x = x - 1;
+            // Optimised way
+            for (; x > 0; x >>= 1) {
+                if (x >= 2**8) {
+                    x >>= 8;
+                    n += 8;
+                }
+                if (x >= 2**4) {
+                    x >>= 4;
+                    n += 4;
+                }
+                if (x >= 2**2) {
+                    x >>= 2;
+                    n += 2;
+                }
+                if (x >= 2**1) {
+                    x >>= 1;
+                    n += 1;
+                }
+                if (x == 1) {
+                    x >>= 1;
+                    n += 1;
+                }
+            }
         }
-        if (flag) n++;
     }
 }

@@ -379,11 +379,11 @@ describe('CollectionManager', function () {
       const depthArr = [];
       const expectedDepthArr = [];
       for (let i = 4; i <= 102; i++) {
-        await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], `Test Collection ${i}`);
         const numActiveCollections = await collectionManager.getNumActiveCollections();
         const treeDepth = await collectionManager.getDepth();
         depthArr.push(treeDepth.toNumber());
         expectedDepthArr.push(getDepth(numActiveCollections));
+        await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], `Test Collection ${i}`);
       }
       expect(depthArr).to.eql(expectedDepthArr);
     });
