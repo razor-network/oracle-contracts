@@ -6,7 +6,6 @@ import "./parameters/child/BondManagerParams.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./storage/BondStorage.sol";
 import "./StateManager.sol";
-import "../lib/Structs.sol";
 import "../Initializable.sol";
 import "../Pause.sol";
 
