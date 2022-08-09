@@ -10,6 +10,8 @@ const {
   STOKEN_ROLE,
   DEPTH_MODIFIER_ROLE,
   SALT_MODIFIER_ROLE,
+  MINTER_ROLE,
+  PAUSER_ROLE,
 } = require('./helpers/constants');
 const {
   assertRevert, restoreSnapshot, takeSnapshot, waitNBlocks, mineToNextState, mineToNextEpoch, assertBNEqual,
@@ -366,5 +368,33 @@ describe('Access Control Test', async () => {
     await assertRevert(stakeManager.connect(signers[1]).escape(signers[2].address), expectedRevertMessage);
     await stakeManager.pause();
     await stakeManager.escape(signers[2].address);
+  });
+  it('Default Admin should able to change, New admin should able to grant/revoke', async () => {
+    // Old admin should be able to grant admin role to another account
+    await razor.grantRole(DEFAULT_ADMIN_ROLE_HASH, signers[1].address);
+    assert(await razor.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[1].address) === true);
+
+    // New admin should be able to revoke admin access from old admin
+    await razor.connect(signers[1]).revokeRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+    assert(await razor.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address) === false);
+  });
+
+  it('Minter role should able to change, admin should able to grant/revoke', async () => {
+    // Old admin should be able to grant minter role to another account
+    await razor.grantRole(MINTER_ROLE, signers[1].address);
+    assert(await razor.hasRole(MINTER_ROLE, signers[1].address) === true);
+
+    // admin should be able to revoke minter access
+    await razor.revokeRole(MINTER_ROLE, signers[1].address);
+    assert(await razor.hasRole(MINTER_ROLE, signers[1].address) === false);
+  });
+  it('Pauser role should able to change, New admin should able to grant/revoke', async () => {
+    // Old admin should be able to grant role to another account
+    await razor.grantRole(PAUSER_ROLE, signers[1].address);
+    assert(await razor.hasRole(PAUSER_ROLE, signers[1].address) === true);
+
+    // admin should be able to revoke pauser access
+    await razor.revokeRole(PAUSER_ROLE, signers[1].address);
+    assert(await razor.hasRole(PAUSER_ROLE, signers[1].address) === false);
   });
 });

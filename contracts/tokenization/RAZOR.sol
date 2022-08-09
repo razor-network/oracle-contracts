@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetMinterPauser.sol";
 
 /**
  * @title RAZOR
@@ -10,11 +10,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * `ERC20` functions.
  */
 
-contract RAZOR is ERC20 {
+contract RAZOR is ERC20PresetMinterPauser {
     /**
      * @dev Constructor that gives msg.sender all of existing tokens.
      */
-    constructor(uint256 initialSupply) ERC20("RAZOR", "RAZOR") {
+    constructor(uint256 initialSupply) ERC20PresetMinterPauser("RAZOR", "RAZOR") {
         _mint(msg.sender, initialSupply);
     }
 }
