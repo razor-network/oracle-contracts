@@ -122,13 +122,14 @@ module.exports = async () => {
   pendingTransactions.push(await blockManager.initialize(stakeManagerAddress, rewardManagerAddress, voteManagerAddress,
     collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await voteManager.initialize(stakeManagerAddress, rewardManagerAddress, blockManagerAddress, collectionManagerAddress));
-  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress, blockManagerAddress, collectionManagerAddress));
   pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress));
   pendingTransactions.push(await collectionManager.initialize(voteManagerAddress, blockManagerAddress));
+  pendingTransactions.push(await stakeManager.initialize(RAZORAddress, rewardManagerAddress, voteManagerAddress, stakedTokenFactoryAddress));
+  pendingTransactions.push(await stakeManager.pause());
 
   console.log('Waiting for post-deployment setup transactions to get confirmed');
   for (let i = 0; i < pendingTransactions.length; i++) {
