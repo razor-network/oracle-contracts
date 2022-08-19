@@ -2,7 +2,6 @@ const { NETWORK, RAZOR_ADDRESS } = process.env;
 const {
   deployContract,
   appendDeploymentFile,
-  readOldDeploymentFile,
 } = require('../migrationHelpers');
 
 const { BigNumber } = ethers;
