@@ -29,7 +29,7 @@ const {
 
 // Ref - https://chainid.network/chains.json
 const ENV_CHAIN_IDS = {
-  mainnet: 1,
+  mainnet: 278611351,
   goerli: 5,
   mumbai: 80001,
 };
@@ -47,27 +47,7 @@ module.exports = {
           },
         },
       },
-    ],
-    overrides: {
-      'contracts/Core/BlockManager.sol': {
-        version: '0.8.4',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      'contracts/Core/StakeManager.sol': {
-        version: '0.8.4',
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 1300,
-          },
-        },
-      },
-    },
+    ]
   },
   networks: {
     local: {
@@ -86,6 +66,12 @@ module.exports = {
       timeout: 300000,
     },
     skale: {
+      url: PROVIDER_URL || '',
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+      timeout: 300000,
+    },
+    mainnet: {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
