@@ -20,7 +20,7 @@ interface IBondManagerParams {
 
     function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external;
 
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external;
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external;
 
     function setMinJobs(uint8 _minJobs) external;
 

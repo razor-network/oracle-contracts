@@ -17,7 +17,7 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
     // slither-disable-next-line constable-states
     uint8 public minJobs = 2;
     /// @notice the number of epochs for which the RAZORs are locked after initiating withdraw
-    uint8 public withdrawLockPeriod = 1;
+    uint16 public withdrawLockPeriod = 1;
 
     /// @inheritdoc IBondManagerParams
     function setDepositPerJob(uint256 _depositPerJob) external override onlyRole(GOVERNANCE_ROLE) {
@@ -68,7 +68,7 @@ abstract contract BondManagerParams is ACL, IBondManagerParams, Constants {
         buffer = _bufferLength;
     }
 
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external override onlyRole(GOVERNANCE_ROLE) {
         // slither-disable-next-line events-maths
         withdrawLockPeriod = _withdrawLockPeriod;
     }

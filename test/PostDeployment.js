@@ -15,6 +15,7 @@ const {
   adhocCommit,
   adhocReveal,
   adhocPropose,
+  getSecret,
 } = require('./helpers/utils');
 
 const {
@@ -142,7 +143,7 @@ describe('Post Deployment Test', function () {
   it('1 epoch of constant voting and participation', async () => {
     await governanceContract.connect(signers[0]).setToAssign(7);
     const secret = [];
-    secret.push('0x727d5c9e6d18ed15ce7ac8decececbcbcbcbc8555555c0823ea4ecececececec');
+    secret.push(await getSecret(signers[1]));
 
     // commit
     const epoch = await getEpoch();

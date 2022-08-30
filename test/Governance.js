@@ -1,4 +1,5 @@
 const { assert } = require('chai');
+const { utils } = require('ethers');
 const {
   assertBNEqual, assertRevert, restoreSnapshot, takeSnapshot,
 } = require('./helpers/testHelpers');
@@ -26,16 +27,17 @@ describe('Governance contract Test', async () => {
   const expectedRevertMessage = 'AccessControl';
 
   const penaltyNotRevealNumerator = toBigNumber('1000');
+  const penaltyAgeNotRevealNumerator = toBigNumber('100000');
 
   const unstakeLockPeriod = toBigNumber('1');
   const withdrawLockPeriod = toBigNumber('1');
   const maxAltBlocks = toBigNumber('5');
-  const gracePeriod = toBigNumber('8');
+
   const minimumStake = tokenAmount('20000');
   const minimumSafeRazor = tokenAmount('10000');
   const blockReward = tokenAmount('100');
   const withdrawReleasePeriod = toBigNumber('5');
-  const resetUnstakeLockPenalty = toBigNumber('1');
+  const resetUnstakeLockPenalty = toBigNumber('100000');
   const maxAge = toBigNumber('1000000');
   const maxTolerance = toBigNumber('1000000');
   const maxCommission = toBigNumber('20');
@@ -47,6 +49,22 @@ describe('Governance contract Test', async () => {
   const epochLimitForUpdateBond = toBigNumber('5');
   const minJobs = toBigNumber('2');
   const maxJobs = toBigNumber('6');
+
+  const blockConfirmerHash = utils.solidityKeccak256(['string'], ['BLOCK_CONFIRMER_ROLE']);
+  const stakeModifierHash = utils.solidityKeccak256(['string'], ['STAKE_MODIFIER_ROLE']);
+  const rewardModifierHash = utils.solidityKeccak256(['string'], ['REWARD_MODIFIER_ROLE']);
+  const collectionModifierHash = utils.solidityKeccak256(['string'], ['COLLECTION_MODIFIER_ROLE']);
+  const voteModifierHash = utils.solidityKeccak256(['string'], ['VOTE_MODIFIER_ROLE']);
+  const delegatorModifierHash = utils.solidityKeccak256(['string'], ['DELEGATOR_MODIFIER_ROLE']);
+  const registryModifierHash = utils.solidityKeccak256(['string'], ['REGISTRY_MODIFIER_ROLE']);
+  const secretsModifierHash = utils.solidityKeccak256(['string'], ['SECRETS_MODIFIER_ROLE']);
+  const pauseHash = utils.solidityKeccak256(['string'], ['PAUSE_ROLE']);
+  const governanceHash = utils.solidityKeccak256(['string'], ['GOVERNANCE_ROLE']);
+  const stokenHash = utils.solidityKeccak256(['string'], ['STOKEN_ROLE']);
+  const saltModifierHash = utils.solidityKeccak256(['string'], ['SALT_MODIFIER_ROLE']);
+  const depthModifierHash = utils.solidityKeccak256(['string'], ['DEPTH_MODIFIER_ROLE']);
+  const escapeHatchHash = utils.solidityKeccak256(['string'], ['ESCAPE_HATCH_ROLE']);
+  const governerHash = utils.solidityKeccak256(['string'], ['GOVERNER_ROLE']);
 
   before(async () => {
     ({
@@ -74,6 +92,9 @@ describe('Governance contract Test', async () => {
     let tx = governance.connect(signers[0]).setPenaltyNotRevealNum(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
+    tx = governance.connect(signers[0]).setPenaltyAgeNotRevealNum(toBigNumber('1'));
+    await assertRevert(tx, expectedRevertMessage);
+
     tx = governance.connect(signers[0]).setSlashParams(toBigNumber('1'), toBigNumber('1'), toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
@@ -96,9 +117,6 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setMinSafeRazor(toBigNumber('1'));
-    await assertRevert(tx, expectedRevertMessage);
-
-    tx = governance.connect(signers[0]).setGracePeriod(toBigNumber('1'));
     await assertRevert(tx, expectedRevertMessage);
 
     tx = governance.connect(signers[0]).setBlockReward(toBigNumber('1'));
@@ -144,6 +162,10 @@ describe('Governance contract Test', async () => {
     const penaltyNotRevealNum = await rewardManager.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNum, toBigNumber('5'));
 
+    await governance.setPenaltyAgeNotRevealNum(toBigNumber('5'));
+    const penaltyAgeNotRevealNum = await rewardManager.penaltyAgeNotRevealNum();
+    assertBNEqual(penaltyAgeNotRevealNum, toBigNumber('5'));
+
     await governance.setMinStake(toBigNumber('8'));
     const minStake = await stakeManager.minStake();
     const minStake1 = await voteManager.minStake();
@@ -169,12 +191,6 @@ describe('Governance contract Test', async () => {
     const maxAltBlocks = await blockManager.maxAltBlocks();
     assertBNEqual(maxAltBlocks, toBigNumber('10'));
 
-    await governance.setGracePeriod(toBigNumber('14'));
-    const gracePeriod = await rewardManager.gracePeriod();
-    const gracePeriod1 = await stakeManager.gracePeriod();
-    assertBNEqual(gracePeriod, toBigNumber('14'));
-    assertBNEqual(gracePeriod1, toBigNumber('14'));
-
     await governance.setMaxTolerance(toBigNumber('15'));
     const maxTolerance = await rewardManager.maxTolerance();
     const maxTolerance1 = await collectionManager.maxTolerance();
@@ -185,9 +201,9 @@ describe('Governance contract Test', async () => {
     const withdrawInitiationPeriod = await stakeManager.withdrawInitiationPeriod();
     assertBNEqual(withdrawInitiationPeriod, toBigNumber('16'));
 
-    await governance.setResetUnstakeLockPenalty(toBigNumber('17'));
+    await governance.setResetUnstakeLockPenalty(toBigNumber('200000'));
     const resetUnstakeLockPenalty = await stakeManager.resetUnstakeLockPenalty();
-    assertBNEqual(resetUnstakeLockPenalty, toBigNumber('17'));
+    assertBNEqual(resetUnstakeLockPenalty, toBigNumber('200000'));
 
     await governance.setMaxAge(toBigNumber('18'));
     const maxAge = await rewardManager.maxAge();
@@ -245,7 +261,7 @@ describe('Governance contract Test', async () => {
     await assertRevert(tx, 'Slash nums addtion exceeds 10mil');
 
     tx = governance.setMaxTolerance(toBigNumber('11000000'));
-    await assertRevert(tx, 'maxTolerance exceeds 10_000_000');
+    await assertRevert(tx, 'maxTolerance exceeds baseDenom');
 
     await governance.connect(signers[0]).setToAssign(toBigNumber('10'));
     const toAssign = await voteManager.toAssign();
@@ -255,6 +271,9 @@ describe('Governance contract Test', async () => {
   it('parameters values should be initialized correctly', async () => {
     const penaltyNotRevealNumValue = await rewardManager.penaltyNotRevealNum();
     assertBNEqual(penaltyNotRevealNumerator, penaltyNotRevealNumValue);
+
+    const penaltyAgeNotRevealNumValue = await rewardManager.penaltyAgeNotRevealNum();
+    assertBNEqual(penaltyAgeNotRevealNumerator, penaltyAgeNotRevealNumValue);
 
     const slashParams = await stakeManager.slashNums();
     assertBNEqual(slashParams[0], toBigNumber('500000'));
@@ -300,9 +319,6 @@ describe('Governance contract Test', async () => {
     const epochLimitForUpdateCommissionValue = await stakeManager.epochLimitForUpdateCommission();
     assertBNEqual(epochLimitForUpdateCommission, epochLimitForUpdateCommissionValue);
 
-    const gracePeriodValue = await rewardManager.gracePeriod();
-    assertBNEqual(gracePeriod, gracePeriodValue);
-
     const toAssignValue = await voteManager.toAssign();
     assertBNEqual(toAssign, toAssignValue);
 
@@ -320,5 +336,52 @@ describe('Governance contract Test', async () => {
 
     const maxJobsValue = await bondManager.maxJobs();
     assertBNEqual(maxJobs, maxJobsValue);
+  });
+
+  it('test keccak hash of all roles', async function () {
+    const blockConfirmerHashValue = await governance.BLOCK_CONFIRMER_ROLE();
+    assert(blockConfirmerHash === blockConfirmerHashValue, 'incorrect hash');
+
+    const stakeModifierHashValue = await governance.STAKE_MODIFIER_ROLE();
+    assert(stakeModifierHash === stakeModifierHashValue, 'incorrect hash');
+
+    const rewardModifierHashValue = await governance.REWARD_MODIFIER_ROLE();
+    assert(rewardModifierHash === rewardModifierHashValue, 'incorrect hash');
+
+    const collectionModifierHashValue = await governance.COLLECTION_MODIFIER_ROLE();
+    assert(collectionModifierHash === collectionModifierHashValue, 'incorrect hash');
+
+    const voteModifierHashValue = await governance.VOTE_MODIFIER_ROLE();
+    assert(voteModifierHash === voteModifierHashValue, 'incorrect hash');
+
+    const delegatorModifierHashValue = await governance.DELEGATOR_MODIFIER_ROLE();
+    assert(delegatorModifierHash, delegatorModifierHashValue, 'incorrect hash');
+
+    const registryModifierHashValue = await governance.REGISTRY_MODIFIER_ROLE();
+    assert(registryModifierHash === registryModifierHashValue, 'incorrect hash');
+
+    const secretsModifierHashValue = await governance.SECRETS_MODIFIER_ROLE();
+    assert(secretsModifierHash === secretsModifierHashValue, 'incorrect hash');
+
+    const pauseHashValue = await governance.PAUSE_ROLE();
+    assert(pauseHash === pauseHashValue, 'incorrect hash');
+
+    const governanceHashValue = await governance.GOVERNANCE_ROLE();
+    assert(governanceHash === governanceHashValue, 'incorrect hash');
+
+    const stokenHashValue = await governance.STOKEN_ROLE();
+    assert(stokenHash === stokenHashValue, 'incorrect hash');
+
+    const saltModifierHashValue = await governance.SALT_MODIFIER_ROLE();
+    assert(saltModifierHash === saltModifierHashValue, 'incorrect hash');
+
+    const depthModifierHashValue = await governance.DEPTH_MODIFIER_ROLE();
+    assert(depthModifierHash === depthModifierHashValue, 'incorrect hash');
+
+    const escapeHatchHashValue = await governance.ESCAPE_HATCH_ROLE();
+    assert(escapeHatchHash === escapeHatchHashValue, 'incorrect hash');
+
+    const governerHashValue = await governance.GOVERNER_ROLE();
+    assert(governerHash === governerHashValue, 'incorrect hash');
   });
 });

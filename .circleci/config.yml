@@ -47,7 +47,7 @@ jobs:
       - run:
           name: Run tests
           command: |
-            CI=true npm run test 
+            CI=true npm run test
       - store_artifacts:
           path: test
           prefix: test
@@ -66,7 +66,6 @@ jobs:
           path: scenarios
           prefix: scenarios
 
-
   lint:
     docker:
       - image: 'cimg/node:16.5'
@@ -80,7 +79,6 @@ jobs:
       - store_artifacts:
           path: lint
           prefix: lint
-
 
   coverage:
     docker:
@@ -107,9 +105,9 @@ jobs:
           at: .
       - run:
           name: Slither
-          command: | 
-              slither . --filter-paths "node_modules" --disable-color
-              
+          command: |
+            slither . --filter-paths "node_modules" --disable-color
+
   gasCompare:
     docker:
       - image: 'cimg/node:16.5'
@@ -120,18 +118,18 @@ jobs:
       - run:
           name: Run GasCompare
           command: |
-              if [ "$CIRCLE_BRANCH" == 'master' ]; then
-              exit 0
-              fi
-              CI=true npm run test
-              mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-              git checkout master
-              CI=true npm run test
-              mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-              git checkout $CIRCLE_BRANCH
-              npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
-              
-
+            if [ "$CIRCLE_BRANCH" == 'master' ]; then
+            exit 0
+            fi
+            CI=true npm run test
+            mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+            git checkout master
+            npm install
+            CI=true npm run test
+            mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+            git reset --hard
+            git checkout $CIRCLE_BRANCH
+            npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
 
 notify:
   webhooks:
@@ -149,16 +147,16 @@ workflows:
             - install_dependencies
       - scenarios:
           requires:
-          - install_dependencies
+            - install_dependencies
       - coverage:
           requires:
-          - install_dependencies
+            - install_dependencies
       - slither:
           requires:
-          - install_dependencies
+            - install_dependencies
       - lint:
           requires:
-          - install_dependencies
+            - install_dependencies
       - gasCompare:
           requires:
-          - install_dependencies
+            - install_dependencies

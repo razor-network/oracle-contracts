@@ -7,12 +7,14 @@ const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
   COLLECTION_MODIFIER_ROLE,
+  PAUSE_ROLE,
 } = require('./helpers/constants');
 const {
   assertBNEqual,
   mineToNextState,
   mineToNextEpoch,
   assertRevert,
+  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 
 const {
@@ -20,6 +22,7 @@ const {
   getEpoch,
   tokenAmount,
   adhocPropose,
+  getSecret,
 } = require('./helpers/utils');
 
 const { commit, reveal } = require('./helpers/InternalEngine');
@@ -104,8 +107,9 @@ describe('Delegator', function () {
       assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
-    it('should be able to get the correct number of active assets from delegator', async function () {
-      assertBNEqual((await delegator.getNumActiveCollections()), toBigNumber('1'), 'incorrect value fetched');
+    it('should be able to get the correct active collection ids from delegator', async function () {
+      const activeCollectionsIds = [1];
+      assertBNEqual((await delegator.getActiveCollections()), activeCollectionsIds, 'incorrect active collection ids');
     });
 
     it('should be able to register collection that has just been created', async function () {
@@ -116,7 +120,7 @@ describe('Delegator', function () {
       const epoch = await getEpoch();
       await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -162,7 +166,7 @@ describe('Delegator', function () {
 
       await mineToNextState();
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -192,7 +196,7 @@ describe('Delegator', function () {
       await mineToNextEpoch();
 
       // const votes = [100, 500, 600, 700, 800, 900];
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -223,7 +227,45 @@ describe('Delegator', function () {
       assertBNEqual(result[1], toBigNumber('2'));
     });
 
+    it('should be able to fetch random number generated of last epoch', async function () {
+      const randomNumberOfLastEpoch = await delegator.getGenericRandomNumberOfLastEpoch();
+      assertBNNotEqual(randomNumberOfLastEpoch, toBigNumber('0'), 'Random number of last epoch reported as 0');
+    });
+
+    it('should be able to fetch random number using epoch', async function () {
+      const epoch = await getEpoch();
+      const randomNumber = await delegator.getGenericRandomNumber(epoch - 1);
+      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Random number of epoch reported as 0');
+    });
+
+    it('should be able to register to fetch random number', async function () {
+      // If the request to register randum number is in n epoch
+      // then random number would be generated in n+1 epoch once after block for n+1 epoch is confirmed
+      const requestId = await delegator.connect(signers[5]).callStatic.register();
+      await delegator.connect(signers[5]).register();
+      await mineToNextEpoch();
+      const secret = await getSecret(signers[5]);
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+
+      await reveal(signers[5], 0, voteManager, stakeManager);
+      await mineToNextState();
+
+      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await mineToNextState();
+
+      const tx = delegator.connect(signers[5]).getRandomNumber(requestId);
+      await assertRevert(tx, 'Random Number not genarated yet');
+
+      await mineToNextState();
+      await blockManager.connect(signers[5]).claimBlockReward();
+
+      const randomNumber = await delegator.connect(signers[5]).getRandomNumber(requestId);
+      assertBNNotEqual(randomNumber, toBigNumber('0'), 'Request for random number reported 0');
+    });
+
     it('getResult should give the right value after activations and deactivation of assets', async function () {
+      await mineToNextEpoch();
       await mineToNextState();
       await mineToNextState();
       await mineToNextState();
@@ -241,7 +283,7 @@ describe('Delegator', function () {
       assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
 
-      const secret = '0x727d5c9e6d18ed15ce7ac8d3cce6ec8a0e9c02481415c0823ea49d847ccb9ddd';
+      const secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
@@ -284,6 +326,13 @@ describe('Delegator', function () {
       const power = 2;
       const tx = collectionManager.createCollection(500, power, 1, 1, [1, 2], collectionName);
       await assertRevert(tx, 'Collection exists with same name');
+    });
+
+    it('should not be able to fetch result from delegator if paused', async function () {
+      await delegator.grantRole(PAUSE_ROLE, signers[0].address);
+      await delegator.pause();
+      const tx = delegator.getResultFromID(1);
+      await assertRevert(tx, 'Pausable: paused');
     });
   });
 });

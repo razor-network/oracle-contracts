@@ -489,7 +489,7 @@ const postDeploymentInitialiseContracts = async (type) => {
     stakedTokenFactoryAddress).catch(() => {}));
   pendingTransactions.push(await rewardManager.initialize(stakeManagerAddress, voteManagerAddress,
     blockManagerAddress, collectionManagerAddress).catch(() => {}));
-  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress).catch(() => {}));
+  pendingTransactions.push(await delegator.updateAddress(collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
   pendingTransactions.push(await randomNoManager.initialize(blockManagerAddress).catch(() => {}));
   pendingTransactions.push(await governance.initialize(blockManagerAddress, bondManagerAddress, rewardManagerAddress, stakeManagerAddress,
     voteManagerAddress, collectionManagerAddress, randomNoManagerAddress).catch(() => {}));
