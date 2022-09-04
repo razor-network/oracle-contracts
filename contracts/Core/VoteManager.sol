@@ -130,13 +130,14 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
         require(commitments[stakerId].epoch == epoch, "not committed in this epoch");
         require(tree.values.length == toAssign, "values length mismatch");
 
-        bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
-        require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
-        bytes32 secret = keccak256(signature);
-
-        bytes32 seed = keccak256(abi.encode(salt, secret));
-        require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
+        bytes32 seed;
         {
+            bytes32 messageHash = keccak256(abi.encodePacked(msg.sender, epoch, block.chainid, "razororacle"));
+            require(ECDSA.recover(ECDSA.toEthSignedMessageHash(messageHash), signature) == msg.sender, "invalid signature");
+            bytes32 secret = keccak256(signature);
+
+            seed = keccak256(abi.encode(salt, secret));
+            require(keccak256(abi.encode(tree.root, seed)) == commitments[stakerId].commitmentHash, "incorrect secret/value");
             uint256 stakerStake = stakeManager.getStake(stakerId);
             require(stakerStake >= minStake, "stake below minimum");
             stakeSnapshot[epoch][stakerId] = stakerStake;
@@ -152,7 +153,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
             // If Job Not Revealed before, like its not in same reveal batch of this
             // As it would be redundant to check
             // please note due to this job result cant be zero
-            if (votes[epoch][stakerId][tree.values[i].leafId] == 0) {
+            uint16 collectionId = collectionManager.getCollectionIdFromLeafId(tree.values[i].leafId);
+            if (votes[epoch][stakerId][collectionId] == 0) {
                 // Check if asset value is zero
                 // Reason for doing this is, staker can vote 0 for assigned coll, and get away with penalties"
                 require(tree.values[i].value != 0, "0 vote for assigned coll");
@@ -169,11 +171,9 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
                     ),
                     "invalid merkle proof"
                 );
-                votes[epoch][stakerId][tree.values[i].leafId] = tree.values[i].value;
-                voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] =
-                    voteWeights[epoch][tree.values[i].leafId][tree.values[i].value] +
-                    influence;
-                totalInfluenceRevealed[epoch][tree.values[i].leafId] = totalInfluenceRevealed[epoch][tree.values[i].leafId] + influence;
+                votes[epoch][stakerId][collectionId] = tree.values[i].value;
+                voteWeights[epoch][collectionId][tree.values[i].value] = voteWeights[epoch][collectionId][tree.values[i].value] + influence;
+                totalInfluenceRevealed[epoch][collectionId] = totalInfluenceRevealed[epoch][collectionId] + influence;
             }
         }
 
@@ -238,20 +238,20 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     function getVoteValue(
         uint32 epoch,
         uint32 stakerId,
-        uint16 leafId
+        uint16 collectionId
     ) external view override returns (uint256) {
         //epoch -> stakerid -> asserId
-        return votes[epoch][stakerId][leafId];
+        return votes[epoch][stakerId][collectionId];
     }
 
     /// @inheritdoc IVoteManager
     function getVoteWeight(
         uint32 epoch,
-        uint16 leafId,
+        uint16 collectionId,
         uint256 voteValue
     ) external view override returns (uint256) {
         //epoch -> leafId -> voteValue -> weight
-        return (voteWeights[epoch][leafId][voteValue]);
+        return (voteWeights[epoch][collectionId][voteValue]);
     }
 
     /// @inheritdoc IVoteManager
@@ -267,8 +267,8 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
     }
 
     /// @inheritdoc IVoteManager
-    function getTotalInfluenceRevealed(uint32 epoch, uint16 leafId) external view override returns (uint256) {
-        return (totalInfluenceRevealed[epoch][leafId]);
+    function getTotalInfluenceRevealed(uint32 epoch, uint16 collectionId) external view override returns (uint256) {
+        return (totalInfluenceRevealed[epoch][collectionId]);
     }
 
     /// @inheritdoc IVoteManager

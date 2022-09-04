@@ -44,7 +44,7 @@ library Structs {
     }
 
     struct Dispute {
-        uint16 leafId;
+        uint16 collectionId;
         uint256 lastVisitedValue;
         uint256 accWeight;
         uint256 median;

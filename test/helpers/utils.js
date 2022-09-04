@@ -13,11 +13,11 @@ const { createMerkle, getProofPath } = require('./MerklePosAware');
 const store = {};
 const leavesOfTree = {};
 
-const calculateDisputesData = async (leafId, voteManager, stakeManager, collectionManager, epoch) => {
+const calculateDisputesData = async (collectionId, voteManager, stakeManager, epoch) => {
   // See issue https://github.com/ethers-io/ethers.js/issues/407#issuecomment-458360013
   // We should rethink about overloading functions.
   // const totalInfluenceRevealed = await voteManager['getTotalInfluenceRevealed(uint32)'](epoch);
-  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, leafId);
+  const totalInfluenceRevealed = await voteManager.getTotalInfluenceRevealed(epoch, collectionId);
   const medianWeight = totalInfluenceRevealed.div(2);
   let median = toBigNumber('0');
 
@@ -29,10 +29,10 @@ const calculateDisputesData = async (leafId, voteManager, stakeManager, collecti
   const checkVotes = {};
   let weight;
   for (let i = 1; i <= (await stakeManager.numStakers()); i++) {
-    vote = await voteManager.getVoteValue(epoch, i, leafId);
+    vote = await voteManager.getVoteValue(epoch, i, collectionId);
     // if (vote[0] === epoch) {
     //   sortedStakers.push(i);
-    //   votes.push(vote[1][leafId]);
+    //   votes.push(vote[1][collectionId]);
     if ((!(checkVotes[vote])) && (Number(vote) !== 0)) {
       sortedValues.push(vote);
     }
@@ -41,7 +41,7 @@ const calculateDisputesData = async (leafId, voteManager, stakeManager, collecti
   // median = accProd.div(totalInfluenceRevealed);
   sortedValues.sort();
   for (let i = 0; i < sortedValues.length; i++) {
-    weight = await voteManager.getVoteWeight(epoch, leafId, sortedValues[i]);
+    weight = await voteManager.getVoteWeight(epoch, collectionId, sortedValues[i]);
     accWeight = accWeight.add(weight);
     if (Number(median) === 0 && accWeight.gt(medianWeight)) {
       median = sortedValues[i];
@@ -302,16 +302,14 @@ const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, vo
     biggestStakerId);
 };
 
-const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager, collectionManager) => {
+const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager) => {
   const { ids } = await blockManager.getProposedBlock(epoch, blockId);
   // console.log(ids);
   const dispute = await blockManager.disputes(epoch, signer.address);
-  const { leafId } = dispute;
-  const idToBeDisputed = await collectionManager.getCollectionIdFromLeafId(leafId);
-  // console.log(idToBeDisputed);
+  const { collectionId } = dispute;
   let collectionIndexInBlock = 0;
   for (let i = 0; i < ids.length; i++) {
-    if (ids[i] === idToBeDisputed) { collectionIndexInBlock = i; break; }
+    if (ids[i] === collectionId) { collectionIndexInBlock = i; break; }
   }
   return collectionIndexInBlock;
 };

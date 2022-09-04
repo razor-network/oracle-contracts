@@ -80,13 +80,6 @@ interface ICollectionManager {
     function setCollectionStatus(bool assetStatus, uint16 id) external;
 
     /**
-     * @notice updates the collectionIdToLeafIdRegistryOfLastEpoch resgistries.
-     * @dev It is called by the blockManager when a block is confirmed. It is only called if there was a change in the
-     * status of collections in the network
-     */
-    function updateDelayedRegistry() external;
-
-    /**
      * @param id the id of the collection
      * @return status of the collection
      */
@@ -125,22 +118,10 @@ interface ICollectionManager {
     function getCollectionTolerance(uint16 i) external view returns (uint32);
 
     /**
-     * @param id the id of the collection
-     * @return the leafId of the collection from collectionIdToLeafIdRegistry
-     */
-    function getLeafIdOfCollection(uint16 id) external view returns (uint16);
-
-    /**
      * @param leafId, the leafId of the collection
      * @return the id of the collection
      */
     function getCollectionIdFromLeafId(uint16 leafId) external view returns (uint16);
-
-    /**
-     * @param id the id of the collection
-     * @return the leafId of the collection from collectionIdToLeafIdRegistryOfLastEpoch
-     */
-    function getLeafIdOfCollectionForLastEpoch(uint16 id) external view returns (uint16);
 
     /**
      * @param _name the name of the collection in bytes32
@@ -163,9 +144,4 @@ interface ICollectionManager {
      * @return power of the resultant collection
      */
     function getResultFromID(uint16 _id) external view returns (uint256, int8);
-
-    /**
-     * @return epoch in which the registry needs to be updated
-     */
-    function getUpdateRegistryEpoch() external view returns (uint32);
 }

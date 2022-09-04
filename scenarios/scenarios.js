@@ -448,7 +448,7 @@ describe('Scenarios', async () => {
       const secret = await getSecret(signers[1]);
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
     epoch = await getEpoch();
@@ -461,7 +461,7 @@ describe('Scenarios', async () => {
       const secret = await getSecret(signers[1]);
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
     await stakeManager.connect(signers[1]).unlockWithdraw(1);
@@ -923,7 +923,6 @@ describe('Scenarios', async () => {
         const median = await calculateDisputesData(medianIndex,
           voteManager,
           stakeManager,
-          collectionManager,
           epoch);
         helper[medianIndex] = median.median;
       }
@@ -971,9 +970,9 @@ describe('Scenarios', async () => {
     await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
     await mineToNextState();
 
-    await reveal(signers[1], 0, voteManager, stakeManager);
-    await reveal(signers[2], 0, voteManager, stakeManager);
-    await reveal(signers[3], 0, voteManager, stakeManager);
+    await reveal(collectionManager, signers[1], 0, voteManager, stakeManager);
+    await reveal(collectionManager, signers[2], 0, voteManager, stakeManager);
+    await reveal(collectionManager, signers[3], 0, voteManager, stakeManager);
     await mineToNextState();
 
     await proposeWithDeviation(signers[2], 10, stakeManager, blockManager, voteManager, collectionManager);
@@ -982,14 +981,14 @@ describe('Scenarios', async () => {
     let epoch = await getEpoch();
     const data = await getData(signers[1]);
     const validActiveCollectionIndexToBeDisputed = (data.seqAllotedCollections)[0];
+    const validCollectionIdToBeDisputed = await collectionManager.getCollectionIdFromLeafId(validActiveCollectionIndexToBeDisputed);
     const {
       sortedValues,
-    } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
+    } = await calculateDisputesData(validCollectionIdToBeDisputed,
       voteManager,
       stakeManager,
-      collectionManager,
       epoch);
-    await blockManager.connect(signers[4]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
+    await blockManager.connect(signers[4]).giveSorted(epoch, validCollectionIdToBeDisputed, sortedValues);
 
     epoch = await getEpoch();
     const stakerIdAccount = await stakeManager.stakerIds(signers[2].address);
@@ -997,7 +996,7 @@ describe('Scenarios', async () => {
     const balanceBeforeBurn = await razor.balanceOf(BURN_ADDRESS);
 
     const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
-      signers[4], blockManager, collectionManager);
+      signers[4], blockManager);
     await blockManager.connect(signers[4]).finalizeDispute(epoch, 0, collectionIndexInBlock);
 
     const slashNums = await stakeManager.slashNums();
@@ -1179,7 +1178,7 @@ describe('Scenarios', async () => {
       const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
 
@@ -1199,7 +1198,7 @@ describe('Scenarios', async () => {
       const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
     }
 

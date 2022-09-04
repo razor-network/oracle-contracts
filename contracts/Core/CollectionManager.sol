@@ -149,11 +149,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         uint32 epoch = getEpoch();
 
-        // slither-disable-next-line incorrect-equality,timestamp
-        if (updateRegistryEpoch <= epoch) {
-            _updateDelayedRegistry();
-        }
-
         if (assetStatus) {
             if (!collections[id].active) {
                 numActiveCollections = numActiveCollections + 1;
@@ -166,7 +161,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
             }
         }
 
-        updateRegistryEpoch = epoch + 1;
         _updateRegistry();
 
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
@@ -184,13 +178,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     ) external override initialized onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) returns (uint16) {
         require(jobIDs.length > 0, "no jobs added");
         require(tolerance <= maxTolerance, "Invalid tolerance value");
-
-        uint32 epoch = getEpoch();
-
-        // slither-disable-next-line incorrect-equality,timestamp
-        if (updateRegistryEpoch <= epoch) {
-            _updateDelayedRegistry();
-        }
 
         uint256 jobsLength = jobIDs.length;
         for (uint8 i = 0; i < jobsLength; i++) {
@@ -214,7 +201,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
         numActiveCollections = numActiveCollections + 1;
 
-        updateRegistryEpoch = epoch + 1;
         _updateRegistry();
 
         emit CollectionCreated(numCollections, block.timestamp);
@@ -283,11 +269,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         }
 
         if (toBeUpdated) {
-            // slither-disable-next-line incorrect-equality,timestamp
-            if (updateRegistryEpoch <= epoch) {
-                _updateDelayedRegistry();
-            }
-            updateRegistryEpoch = epoch + 1;
             _updateRegistry();
             numActiveCollections = _numActiveCollections;
         }
@@ -295,11 +276,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
 
     function setCollectionOccurrence(uint16 collectionId, uint16 occurrence) external override onlyRole(OCCURRENCE_MODIFIER_ROLE) {
         collections[collectionId].occurrence = occurrence;
-    }
-
-    /// @inheritdoc ICollectionManager
-    function updateDelayedRegistry() external override initialized onlyRole(REGISTRY_MODIFIER_ROLE) {
-        _updateDelayedRegistry();
     }
 
     /**
@@ -368,21 +344,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /// @inheritdoc ICollectionManager
-    function getUpdateRegistryEpoch() external view override returns (uint32) {
-        return updateRegistryEpoch;
-    }
-
-    /// @inheritdoc ICollectionManager
-    function getLeafIdOfCollection(uint16 id) external view override returns (uint16) {
-        return collectionIdToLeafIdRegistry[id];
-    }
-
-    /// @inheritdoc ICollectionManager
-    function getLeafIdOfCollectionForLastEpoch(uint16 id) external view override returns (uint16) {
-        return collectionIdToLeafIdRegistryOfLastEpoch[id];
-    }
-
-    /// @inheritdoc ICollectionManager
     function getCollectionIdFromLeafId(uint16 leafId) external view override returns (uint16) {
         return leafIdToCollectionIdRegistry[leafId];
     }
@@ -419,30 +380,8 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         uint16 j = 0;
         for (uint16 i = 1; i <= numCollections; i++) {
             if (collections[i].active) {
-                collectionIdToLeafIdRegistry[i] = j;
                 leafIdToCollectionIdRegistry[j] = i;
                 j = j + 1;
-            } else {
-                collectionIdToLeafIdRegistry[i] = 0;
-            }
-        }
-    }
-
-    /**
-
-     * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new
-     * collection is created
-     * being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
-     * by setCollectionStatus and createCollection in CollectionManager
-     */
-    function _updateDelayedRegistry() internal {
-        uint16 j = 0;
-        for (uint16 i = 1; i <= numCollections; i++) {
-            if (collections[i].active) {
-                collectionIdToLeafIdRegistryOfLastEpoch[i] = j;
-                j = j + 1;
-            } else {
-                collectionIdToLeafIdRegistryOfLastEpoch[i] = 0;
             }
         }
     }

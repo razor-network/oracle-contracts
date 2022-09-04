@@ -142,7 +142,7 @@ describe('BondManager', async () => {
     }
     await mineToNextState(); // reveal
     for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
     const medians = await calculateMedians(collectionManager);
@@ -266,7 +266,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -311,7 +311,7 @@ describe('BondManager', async () => {
     }
     await mineToNextState(); // reveal
     for (let i = 1; i <= 3; i++) {
-      await reveal(signers[i], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
     }
     await mineToNextState(); // propose
     const medians = await calculateMedians(collectionManager);
@@ -368,7 +368,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -417,7 +417,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -478,7 +478,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -551,7 +551,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -631,7 +631,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -729,7 +729,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -801,7 +801,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -875,7 +875,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -924,7 +924,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -990,7 +990,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -1073,7 +1073,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
@@ -1198,7 +1198,7 @@ describe('BondManager', async () => {
       }
       await mineToNextState(); // reveal
       for (let i = 1; i <= 3; i++) {
-        await reveal(signers[i], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[i], 0, voteManager, stakeManager);
       }
       await mineToNextState(); // propose
       const medians = await calculateMedians(collectionManager);
