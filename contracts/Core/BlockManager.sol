@@ -77,7 +77,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param correctBiggestStakerId the correct biggest staker id
      * @param disputer address that raised the dispute
      */
-    event DisputeBiggestStakeProposed(uint32 indexed epoch, uint8 blockIndex, uint32 indexed correctBiggestStakerId, address indexed disputer);
+    event DisputeBiggestStakeProposed(
+        uint32 indexed epoch,
+        uint8 blockIndex,
+        uint32 indexed correctBiggestStakerId,
+        address indexed disputer
+    );
 
     /**
      * @dev Emitted when the disputer raise dispute for collection id that should be absent

@@ -111,7 +111,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after unstaking
      * @param timestamp time at which the staker/delegator unstaked
      */
-    event Unstaked(address indexed staker, uint32 indexed epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(
+        address indexed staker,
+        uint32 indexed epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     /**
      * @dev Emitted when staker/delegator initiates withdraw.
@@ -142,7 +149,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after withdraw process is completed
      * @param timestamp time at which the staker/delegator withdrew
      */
-    event Withdrew(address indexed staker, uint32 indexed epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(
+        address indexed staker,
+        uint32 indexed epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     /**
      * @dev Emitted when delegator delegates his RAZOR to a particular staker.
