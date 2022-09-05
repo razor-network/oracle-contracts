@@ -153,6 +153,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
             // If Job Not Revealed before, like its not in same reveal batch of this
             // As it would be redundant to check
             // please note due to this job result cant be zero
+            // slither-disable-next-line calls-loop
             uint16 collectionId = collectionManager.getCollectionIdFromLeafId(tree.values[i].leafId);
             if (votes[epoch][stakerId][collectionId] == 0) {
                 // Check if asset value is zero
