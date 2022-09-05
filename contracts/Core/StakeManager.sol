@@ -44,7 +44,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the change took place
      */
     event StakeChange(
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         Constants.StakeChanged reason,
         uint256 prevStake,
@@ -62,7 +62,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the change took place
      */
     event StakerRewardChange(
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         Constants.StakerRewardChanged reason,
         uint256 prevStakerReward,
@@ -78,7 +78,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param reason reason why the the change in age took place
      * @param timestamp time at which the change took place
      */
-    event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, Constants.AgeChanged reason, uint256 timestamp);
+    event AgeChange(uint32 indexed epoch, uint32 indexed stakerId, uint32 newAge, Constants.AgeChanged reason, uint256 timestamp);
 
     /**
      * @dev Emitted when staker stakes for the first time or adds stake.
@@ -94,7 +94,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     event Staked(
         address indexed staker,
         address sToken,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -111,7 +111,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after unstaking
      * @param timestamp time at which the staker/delegator unstaked
      */
-    event Unstaked(address indexed staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(address indexed staker, uint32 indexed epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /**
      * @dev Emitted when staker/delegator initiates withdraw.
@@ -125,7 +125,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     event WithdrawInitiated(
         address indexed staker,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -142,7 +142,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after withdraw process is completed
      * @param timestamp time at which the staker/delegator withdrew
      */
-    event Withdrew(address indexed staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(address indexed staker, uint32 indexed epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
 
     /**
      * @dev Emitted when delegator delegates his RAZOR to a particular staker.
@@ -156,7 +156,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     event Delegated(
         address indexed delegator,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -178,7 +178,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the reset took place
      */
-    event ResetLock(uint32 indexed stakerId, address indexed staker, uint32 epoch);
+    event ResetLock(uint32 indexed stakerId, address indexed staker, uint32 indexed epoch);
 
     /**
      * @dev Emitted when the staker/delegator extends unstake lock
@@ -186,7 +186,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the extension took place
      */
-    event ResetUnstakeLock(uint32 indexed stakerId, address indexed staker, uint32 epoch);
+    event ResetUnstakeLock(uint32 indexed stakerId, address indexed staker, uint32 indexed epoch);
 
     /**
      * @dev Emitted when the staker changes commission
