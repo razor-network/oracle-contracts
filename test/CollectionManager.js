@@ -150,7 +150,6 @@ describe('CollectionManager', function () {
       await collectionManager.createMulJob(jobs);
 
       await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 3]);
-
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
       assertBNEqual(collection.jobIDs[2], toBigNumber('3'));
@@ -362,7 +361,6 @@ describe('CollectionManager', function () {
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });
-
     it('Should be able to get correct depth of merkle tree for 1 active collections', async function () {
       await mineToNextEpoch();
       await mineToNextState();

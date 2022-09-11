@@ -429,7 +429,6 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     }
 
     /**
-
      * @dev updates the collectionIdToLeafIdRegistryOfLastEpoch whenever a collection status is changed or new
      * collection is created
      * being called by claimBlockReward and confirmPreviousBlockEpoch in block manager
