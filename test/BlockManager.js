@@ -677,7 +677,7 @@ describe('BlockManager', function () {
       await mineToNextState();// dispute
       const values = [(validCollectionIdToBeDisputed) * 100];
       await blockManager.connect(signers[19]).giveSorted(epoch, validCollectionIdToBeDisputed, values);
-      const tx = blockManager.connect(signers[19]).giveSorted(epoch, 0, values);
+      const tx = blockManager.connect(signers[19]).giveSorted(epoch, validCollectionIdToBeDisputed + 1, values);
       await assertRevert(tx, 'collectionId mismatch');
     });
     it('Only valid staker can call the claimBlockReward function', async function () {

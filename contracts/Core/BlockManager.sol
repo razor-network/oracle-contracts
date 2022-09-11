@@ -202,7 +202,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint16 collectionId,
         uint256[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
-        require(collectionId <= (collectionManager.getNumActiveCollections()), "Invalid collectionId");
+        require(collectionManager.getCollectionStatus(collectionId), "Invalid collectionId");
         uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, collectionId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
         uint256 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
