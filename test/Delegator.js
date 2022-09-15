@@ -174,7 +174,7 @@ describe('Delegator', function () {
 
       await blockManager.connect(signers[5]).claimBlockReward();
     });
-    
+
     beforeEach(async () => {
       snapShotId = await takeSnapshot();
     });
