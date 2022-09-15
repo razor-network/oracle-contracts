@@ -109,7 +109,6 @@ describe('CollectionManager', function () {
       await mineToNextState();// propose
       await mineToNextState();// dispute
       await mineToNextState();// confirm
-      const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const collectionName2 = 'Test Collection2';
       await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], collectionName);
@@ -127,7 +126,6 @@ describe('CollectionManager', function () {
       assertBNEqual((await collectionManager.getNumCollections()), toBigNumber('2'));
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
       assertBNEqual(await collectionManager.getCollectionPower(1), toBigNumber('3'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
     it('should be able to add a job to a collection', async function () {
@@ -150,6 +148,7 @@ describe('CollectionManager', function () {
       await collectionManager.createMulJob(jobs);
 
       await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 3]);
+
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
       assertBNEqual(collection.jobIDs[2], toBigNumber('3'));
@@ -236,7 +235,6 @@ describe('CollectionManager', function () {
       const collectionIsActive = await collectionManager.getCollectionStatus(3);
       assert(collectionIsActive === false);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch(); // commit
       await razor.transfer(signers[5].address, tokenAmount('423000'));
       await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
@@ -251,15 +249,12 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to reactivate collection', async function () {
-      const epoch = await getEpoch();
       await collectionManager.setCollectionStatus(true, 3);
       const collection = await collectionManager.getCollection(3);
       assert(collection.active === true);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('3'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await collectionManager.setCollectionStatus(false, 3);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
       await mineToNextState(); // propose
@@ -361,6 +356,7 @@ describe('CollectionManager', function () {
       await assertRevert(tx0, 'Weight beyond max');
       await assertRevert(tx1, 'Weight beyond max');
     });
+
     it('Should be able to get correct depth of merkle tree for 1 active collections', async function () {
       await mineToNextEpoch();
       await mineToNextState();
