@@ -42,7 +42,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     event JobUpdated(
         uint16 indexed id,
         JobSelectorType selectorType,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint8 weight,
         int8 power,
         uint256 timestamp,
@@ -57,7 +57,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param epoch in which the status change took place
      * @param timestamp time at which the status change took place
      */
-    event CollectionActivityStatus(bool active, uint16 indexed id, uint32 epoch, uint256 timestamp);
+    event CollectionActivityStatus(bool active, uint16 indexed id, uint32 indexed epoch, uint256 timestamp);
 
     /**
      * @dev Emitted when a collection has been updated
@@ -72,7 +72,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
     event CollectionUpdated(
         uint16 indexed id,
         int8 power,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 aggregationMethod,
         uint32 tolerance,
         uint16[] updatedJobIDs,

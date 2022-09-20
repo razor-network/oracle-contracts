@@ -30,7 +30,7 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param commitment the staker's commitment
      * @param timestamp time when the commitment was set for the staker
      */
-    event Committed(uint32 epoch, uint32 indexed stakerId, bytes32 commitment, uint256 timestamp);
+    event Committed(uint32 indexed epoch, uint32 indexed stakerId, bytes32 commitment, uint256 timestamp);
     /**
      * @dev Emitted when a staker reveals
      * @param epoch epoch when the staker revealed
@@ -39,14 +39,14 @@ contract VoteManager is Initializable, VoteStorage, StateManager, VoteManagerPar
      * @param values of the collections assigned to the staker
      * @param timestamp time when the staker revealed
      */
-    event Revealed(uint32 epoch, uint32 indexed stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
+    event Revealed(uint32 indexed epoch, uint32 indexed stakerId, uint256 influence, Structs.AssignedAsset[] values, uint256 timestamp);
     /**
      * @dev Emitted when bountyHunter snitch the staker
      * @param epoch epoch when the bountyHunter snitch the staker
      * @param stakerId id of the staker that is snitched
      * @param bountyHunter address who will snitch the staker
      */
-    event Snitch(uint32 epoch, uint32 indexed stakerId, address indexed bountyHunter);
+    event Snitch(uint32 indexed epoch, uint32 indexed stakerId, address indexed bountyHunter);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract

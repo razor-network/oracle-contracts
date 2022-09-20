@@ -5,6 +5,8 @@ const {
   mineToNextState,
   assertRevert,
   assertBNNotEqual,
+  takeSnapshot,
+  restoreSnapshot,
 } = require('./helpers/testHelpers');
 const { commit, reveal, propose } = require('./helpers/InternalEngine');
 const { setupContracts } = require('./helpers/testSetup');
@@ -33,6 +35,7 @@ describe('RandomNoManager', function () {
   let randomNoManager;
   let initializeContracts;
   let collectionManager;
+  let snapshotId;
 
   before(async () => {
     ({
@@ -45,63 +48,66 @@ describe('RandomNoManager', function () {
       initializeContracts,
     } = await setupContracts());
     signers = await ethers.getSigners();
+
+    const isAdminRoleGranted = await randomNoManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
+    assert(isAdminRoleGranted === true, 'Admin role was not Granted');
+
+    const tx = randomNoManager.connect(signers[1]).initialize(
+      blockManager.address
+    );
+    await assertRevert(tx, 'AccessControl');
+
+    await Promise.all(await initializeContracts());
+    await mineToNextEpoch();
+    await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+    const jobs = [];
+    const id = 0;
+    const url = 'http://testurl.com';
+    const selector = 'selector';
+    const selectorType = 0;
+    let name;
+    const power = -2;
+    const weight = 50;
+    let i = 0;
+    while (i < 9) {
+      name = `test${i}`;
+      const job = {
+        id,
+        selectorType,
+        weight,
+        power,
+        name,
+        selector,
+        url,
+      };
+      jobs.push(job);
+      i++;
+    }
+    await collectionManager.createMulJob(jobs);
+    while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
+
+    await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c1');
+    await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c2');
+    await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c3');
+    await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c4');
+    await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c5');
+
+    await mineToNextEpoch();
+    const epoch = await getEpoch();
+    await razor.transfer(signers[5].address, tokenAmount('423000'));
+    await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
+    await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
+  });
+
+  beforeEach(async () => {
+    snapshotId = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await restoreSnapshot(snapshotId);
   });
 
   describe('razor', async () => {
-    it('admin role should be granted', async () => {
-      const isAdminRoleGranted = await randomNoManager.hasRole(DEFAULT_ADMIN_ROLE_HASH, signers[0].address);
-      assert(isAdminRoleGranted === true, 'Admin role was not Granted');
-    });
-    it('should not be able to initiliaze randomNoManager contract without admin role', async () => {
-      const tx = randomNoManager.connect(signers[1]).initialize(
-        blockManager.address
-      );
-      await assertRevert(tx, 'AccessControl');
-    });
-
-    it('should be able to initialize', async () => {
-      await Promise.all(await initializeContracts());
-      await mineToNextEpoch();
-      await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
-      const jobs = [];
-      const id = 0;
-      const url = 'http://testurl.com';
-      const selector = 'selector';
-      const selectorType = 0;
-      let name;
-      const power = -2;
-      const weight = 50;
-      let i = 0;
-      while (i < 9) {
-        name = `test${i}`;
-        const job = {
-          id,
-          selectorType,
-          weight,
-          power,
-          name,
-          selector,
-          url,
-        };
-        jobs.push(job);
-        i++;
-      }
-      await collectionManager.createMulJob(jobs);
-      while (Number(await getState(await stakeManager.EPOCH_LENGTH())) !== 4) { await mineToNextState(); }
-
-      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c1');
-      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c2');
-      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c3');
-      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c4');
-      await collectionManager.createCollection(500, 3, 1, 1, [1, 2, 3], 'c5');
-
-      await mineToNextEpoch();
-      const epoch = await getEpoch();
-      await razor.transfer(signers[5].address, tokenAmount('423000'));
-      await razor.connect(signers[5]).approve(stakeManager.address, tokenAmount('420000'));
-      await stakeManager.connect(signers[5]).stake(epoch, tokenAmount('420000'));
-    });
-
     it('client should be able to register for random number', async function () {
       // Lets consider follwoing epoch as X
       const epoch = await getEpoch();
@@ -139,6 +145,9 @@ describe('RandomNoManager', function () {
 
     it('client should be able to get random number if its ready', async () => {
       // Should revert as random no will only be available for request id : utils.solidityKeccak256(['uint32'], ['32434']) post confirm for Epoch X
+      await randomNoManager.register();
+      await randomNoManager.register();
+
       const reqid = utils.solidityKeccak256(['uint32', 'address'], ['1', signers[0].address]);
       const tx = randomNoManager.getRandomNumber(reqid);
       await assertRevert(tx, 'Random Number not genarated yet');
@@ -192,6 +201,26 @@ describe('RandomNoManager', function () {
       assertBNEqual(randomNo4, toBigNumber(locallyCalculatedRandomNo3));
     });
     it('should not be able to provide secret if secret is already set for particular epoch', async function () {
+      await mineToNextEpoch();
+      // ****** set secret ******
+      // Commit
+      const secret = await getSecret(signers[5]);
+      await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
+      await mineToNextState();
+
+      // Reveal
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager, collectionManager);
+
+      // Propose
+      await mineToNextState();
+      await propose(signers[5], stakeManager, blockManager, voteManager, collectionManager);
+      // Dispute
+      await mineToNextState();
+      // Confirm
+      await mineToNextState();
+      await blockManager.connect(signers[5]).claimBlockReward();
+      // ****** secret now set ******
+
       await mineToNextEpoch();
       const epoch = await getEpoch();
       await randomNoManager.grantRole(SECRETS_MODIFIER_ROLE, signers[0].address);

@@ -706,6 +706,7 @@ describe('BlockManager', function () {
     it('should not be able to finalize dispute, if total influence revealed does not match', async function () {
       // commit
       await mineToNextEpoch();
+      await mineToNextEpoch();
       let epoch = await getEpoch();
 
       await razor.connect(signers[8]).approve(stakeManager.address, tokenAmount('190000'));
@@ -738,7 +739,7 @@ describe('BlockManager', function () {
       // dispute
       await mineToNextState();
       epoch = await getEpoch();
-      const validCollectionIdToBeDisputed = toBigNumber('8');
+      const validCollectionIdToBeDisputed = toBigNumber('3');
       await blockManager.connect(signers[9]).giveSorted(epoch, validCollectionIdToBeDisputed, [(validCollectionIdToBeDisputed) * 100]);
       const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[9], blockManager);
@@ -1341,7 +1342,7 @@ describe('BlockManager', function () {
       await mineToNextState(); // propose state
       const result = await calculateInvalidMedians(collectionManager, 1);
       validLeafIdToBeDisputed = toBigNumber(result[1]);
-
+      const validCollectionIdToBeDisputed = await collectionManager.getCollectionIdFromLeafId(validLeafIdToBeDisputed);
       for (let i = 0; i < 4; i++) {
         await proposeWithDeviation(signers[base + i], 1, stakeManager, blockManager, voteManager, collectionManager);
       }
@@ -1354,12 +1355,12 @@ describe('BlockManager', function () {
       assertBNEqual(blockIndexToBeConfirmed, toBigNumber('0'));
 
       // we dispute A - 0
-      const res = await calculateDisputesData(validLeafIdToBeDisputed,
+      const res = await calculateDisputesData(validCollectionIdToBeDisputed,
         voteManager,
         stakeManager,
         epoch);
 
-      await blockManager.giveSorted(epoch, validLeafIdToBeDisputed, res.sortedValues);
+      await blockManager.giveSorted(epoch, validCollectionIdToBeDisputed, res.sortedValues);
       let collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[0], blockManager);
 
