@@ -33,7 +33,6 @@ const {
   getCollectionIdPositionInBlock,
   getSecret,
   getIterationWithPosition,
-  getState,
 } = require('./helpers/utils');
 
 const { utils } = ethers;
@@ -226,7 +225,7 @@ describe('BlockManager', function () {
       const firstProposedBlock = await blockManager.proposedBlocks(epoch, 0);
       const { biggestStake } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
       const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
-      
+
       const secondProposedBlock = (firstProposedBlock.iteration.gt(iteration))
         ? await blockManager.proposedBlocks(epoch, 0) : await blockManager.proposedBlocks(epoch, 1);
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
@@ -249,7 +248,7 @@ describe('BlockManager', function () {
 
     it('staker should not be able to propose when not revealed', async function () {
       await mineToNextEpoch();
-    
+
       const secret = await getSecret(signers[2]);
       await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
@@ -257,7 +256,7 @@ describe('BlockManager', function () {
       const tx = propose(signers[2], stakeManager, blockManager, voteManager, collectionManager);
       await assertRevert(tx, 'Cannot propose without revealing');
     });
-  
+
     it('staker should not be able to propose when stake goes below minStake', async function () {
       const epoch = await getEpoch();
       const stakerIdAcc2 = await stakeManager.stakerIds(signers[2].address);
@@ -289,7 +288,7 @@ describe('BlockManager', function () {
     });
 
     it('should not be able to propose ids with different length than medians and vice versa', async function () {
-      let epoch = await getEpoch();
+      const epoch = await getEpoch();
       let medians = await calculateMedians(collectionManager);
       let idsRevealed = await getIdsRevealed(collectionManager);
       idsRevealed.push(9); // intentionally making ids.length > medians.length
@@ -303,7 +302,7 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId);
       await assertRevert(tx1, 'Invalid block proposed');
-  
+
       medians = await calculateMedians(collectionManager);
       idsRevealed = await getIdsRevealed(collectionManager);
       medians.push(1000); // intentionally making ids.length < medians.length
@@ -369,7 +368,7 @@ describe('BlockManager', function () {
       await propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
       await mineToNextEpoch(); // commit
       const epoch = await getEpoch();
-      secret = await getSecret(signers[1]);
+      const secret = await getSecret(signers[1]);
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
       expect(await blockManager.isBlockConfirmed(epoch - 1)).to.be.true;
     });
@@ -380,7 +379,7 @@ describe('BlockManager', function () {
       const epoch = await getEpoch();
 
       // const votes2 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-      secret = await getSecret(signers[1]);
+      let secret = await getSecret(signers[1]);
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       // const votes3 = [100, 200, 300, 400, 500, 600, 700, 800, 900];
@@ -468,7 +467,7 @@ describe('BlockManager', function () {
         iteration,
         biggestStakerId); // [100, 201, 300, 400, 500, 600, 700, 800, 900]
 
-        staker = await stakeManager.getStaker(stakerIdAcc5);
+      staker = await stakeManager.getStaker(stakerIdAcc5);
       iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
       proposedBlocksIteration1[5] = iteration;
       proposedBlocksIteration.push(iteration);
@@ -489,16 +488,14 @@ describe('BlockManager', function () {
       await mineToNextState(); // confirm
       // const sortedProposedBlockId = await blockManager.sortedProposedBlockIds(epoch, 0);
       // const block = await blockManager.getProposedBlock(epoch, sortedProposedBlockId);
-      let id = 1;
       let lowest = proposedBlocksIteration1[1];
       for (let i = 1; i <= 5; i++) {
         if (proposedBlocksIteration1[i] < lowest) {
-          id = i;
           lowest = proposedBlocksIteration1[i];
         }
       }
     });
-    
+
     it('If Biggest Influence of subquecent, block is larger; it should replace all the other blocks, if smaller; should not be added', async function () {
       await reset();
       await mineToNextEpoch();
@@ -520,7 +517,7 @@ describe('BlockManager', function () {
       const medians = await calculateMedians(collectionManager);
 
       // [9,11,13,12,10]
-      const stakerIds = [1,2,3,4,5];
+      const stakerIds = [1, 2, 3, 4, 5];
       const stakeLargest = (await voteManager.getStakeSnapshot(epoch, stakerIds[0]));
       const stakeSmallest = (await voteManager.getStakeSnapshot(epoch, stakerIds[2]));
       const stakeMid = (await voteManager.getStakeSnapshot(epoch, stakerIds[4]));
@@ -726,7 +723,7 @@ describe('BlockManager', function () {
       await propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
       await proposeWithDeviation(signers[2], 1, stakeManager, blockManager, voteManager, collectionManager);
 
-      await mineToNextState(); //dispute
+      await mineToNextState(); // dispute
     });
 
     beforeEach(async () => {
@@ -757,7 +754,7 @@ describe('BlockManager', function () {
     it('Give sorted should not work if given leafId is invalid', async function () {
       const epoch = await getEpoch();
       const {
-         sortedValues,
+        sortedValues,
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
@@ -868,9 +865,9 @@ describe('BlockManager', function () {
       // Commit
       let sig1Vals;
       let sig2Vals;
-      let validLeafIdToBeDisputed = -1
+      let validLeafIdToBeDisputed = -1;
       let epoch = await getEpoch();
-      while(Number(validLeafIdToBeDisputed) == -1){
+      while (Number(validLeafIdToBeDisputed) === -1) {
         await reset();
         await mineToNextEpoch();
 
@@ -888,12 +885,12 @@ describe('BlockManager', function () {
         await reveal(signers[2], 20, voteManager, stakeManager);
         // Propose
         await mineToNextState();
-        
-        sig1Vals = await getValuesArrayRevealed(signers[1])
-        sig2Vals = await getValuesArrayRevealed(signers[2])
-        for(let i = 0; i < sig1Vals.length; i++) {
-          if(Number(sig1Vals[i].leafId) === Number(sig2Vals[i].leafId)) {
-            validLeafIdToBeDisputed = sig1Vals[i].leafId
+
+        sig1Vals = await getValuesArrayRevealed(signers[1]);
+        sig2Vals = await getValuesArrayRevealed(signers[2]);
+        for (let i = 0; i < sig1Vals.length; i++) {
+          if (Number(sig1Vals[i].leafId) === Number(sig2Vals[i].leafId)) {
+            validLeafIdToBeDisputed = sig1Vals[i].leafId;
             break;
           }
         }
@@ -1172,6 +1169,7 @@ describe('BlockManager', function () {
   });
 
   describe('Block Manager: Claim Block Reward', async () => {
+    let validLeafIdToBeDisputed;
     before(async () => {
       await restoreSnapshot(snapshotId2);
       snapshotId2 = await takeSnapshot();
@@ -1204,7 +1202,7 @@ describe('BlockManager', function () {
     });
 
     it('should be able to confirm block and receive block reward', async () => {
-      await mineToNextState(); //dispute
+      await mineToNextState(); // dispute
       await mineToNextState(); // confirm
       await blockManager.connect(signers[1]).claimBlockReward();
 
@@ -1219,7 +1217,7 @@ describe('BlockManager', function () {
     });
 
     it('block proposed by account 2 should be confirmed after disputing block by account 1', async function () {
-      await mineToNextState(); //dispute 
+      await mineToNextState(); // dispute
       const epoch = await getEpoch();
 
       const {
@@ -1247,7 +1245,7 @@ describe('BlockManager', function () {
       const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, blockId, signers[19], blockManager, collectionManager);
       await blockManager.connect(signers[19]).finalizeDispute(epoch, blockIndex, collectionIndexInBlock);
 
-      await mineToNextState(); //confirm
+      await mineToNextState(); // confirm
 
       await blockManager.connect(signers[2]).claimBlockReward();
       assertBNEqual(
@@ -1298,17 +1296,16 @@ describe('BlockManager', function () {
       staker = await stakeManager.getStaker(stakerIdAcc1);
       assertBNEqual(staker.stake, stake);
     });
-  })
+  });
 
   describe('Block Manager: Dispute Miscellaneous', async () => {
-
     before(async () => {
       await restoreSnapshot(snapshotId2);
       snapshotId2 = await takeSnapshot();
       await reset();
-      const epoch = await getEpoch()
+      const epoch = await getEpoch();
       for (let i = 1; i < 4; i++) {
-        let secret = await getSecret(signers[i]);
+        const secret = await getSecret(signers[i]);
         await commit(signers[i], 0, voteManager, collectionManager, secret, blockManager);
       }
 
@@ -1426,7 +1423,7 @@ describe('BlockManager', function () {
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
       const tx = blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0);
-      await assertRevert(tx, 'Block already has been disputed')
+      await assertRevert(tx, 'Block already has been disputed');
     });
 
     it('dispute a block not having revealed collection', async function () {
@@ -1462,7 +1459,7 @@ describe('BlockManager', function () {
       // should change to -1 ;
       assertBNEqual(Number(blockIndexToBeConfirmed), -1);
       const tx = blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 9);
-      await assertRevert(tx, 'Block already has been disputed')
+      await assertRevert(tx, 'Block already has been disputed');
     });
-  })
+  });
 });
