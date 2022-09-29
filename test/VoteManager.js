@@ -11,6 +11,7 @@ const {
   WITHDRAW_LOCK_PERIOD,
   GOVERNER_ROLE,
   BASE_DENOMINATOR,
+  GRACE_PERIOD,
 
 } = require('./helpers/constants'); const {
   assertBNEqual,
@@ -20,6 +21,7 @@ const {
   mineToNextState,
   takeSnapshot,
   restoreSnapshot,
+  assertBNNotEqual,
 } = require('./helpers/testHelpers');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -725,6 +727,120 @@ describe('VoteManager', function () {
         expectedAgeAfterOf4 = expectedAgeAfterOf4 < 0 ? 0 : expectedAgeAfterOf4;
         const ageAfter2 = await stakeManager.getAge(stakerIdAcc4);
         assertBNEqual(expectedAgeAfterOf4, ageAfter2, 'Incorrect Penalties given');
+      });
+
+      it('should penalize staker if number of inactive epochs is greater than grace_period', async function () {
+        await reset();
+        const stake = tokenAmount('420000');
+        let staker = await stakeManager.getStaker(3);
+
+        const epochsJumped = GRACE_PERIOD + 2;
+        for (let i = 0; i < epochsJumped; i++) {
+          await mineToNextEpoch();
+        }
+
+        // commit
+        const secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+
+        staker = await stakeManager.stakers(3);
+        assertBNNotEqual(staker.stake, stake, 'Stake should have decreased due to penalty');
+      });
+
+      it('should penalize staker age if number of inactive epochs is greater than grace_period', async function () {
+        await reset();
+        let staker = await stakeManager.getStaker(3);
+        const ageBefore = staker.age;
+
+        const epochsJumped = GRACE_PERIOD + 2;
+        for (let i = 0; i < epochsJumped; i++) {
+          await mineToNextEpoch();
+        }
+
+        // commit
+        const secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+
+        staker = await stakeManager.stakers(3);
+        assertBNLessThan(toBigNumber(staker.age), toBigNumber(ageBefore), 'Staker age should have decreased due to penalty');
+      });
+
+      it('Staker age should be penalized based on penaltyAgeNotRevealNum', async function () {
+        await reset();
+        const penaltyAgeNotRevealNum = await rewardManager.penaltyAgeNotRevealNum();
+        const penaltyPercentage = penaltyAgeNotRevealNum / BASE_DENOMINATOR;
+
+        await mineToNextEpoch();
+        let secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+
+        let staker = await stakeManager.getStaker(3);
+        const ageBefore = staker.age;
+
+        const epochsJumped = GRACE_PERIOD + 2;
+        for (let i = 0; i < epochsJumped; i++) {
+          await mineToNextEpoch();
+        }
+        // commit
+        secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+
+        const penaltyAge = penaltyPercentage * epochsJumped * ageBefore;
+        const expectedAge = Math.round(ageBefore - penaltyAge);
+        staker = await stakeManager.stakers(3);
+
+        assertBNEqual(staker.age, expectedAge, 'Staker age should decrease based on penaltyAgeNotRevealNum');
+
+        await mineToNextState();
+        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      });
+
+      it('should not penalize staker if number of inactive epochs is smaller than / equal to grace_period', async function () {
+        await reset();
+        await mineToNextEpoch();
+        let staker = await stakeManager.getStaker(3);
+        const { stake } = staker;
+
+        const epochsJumped = GRACE_PERIOD;
+        for (let i = 0; i < epochsJumped; i++) {
+          await mineToNextEpoch();
+        }
+
+        const secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+        await mineToNextState();
+
+        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        staker = await stakeManager.stakers(3);
+        assertBNEqual(staker.stake, stake, 'Stake should not change');
+      });
+
+      it('should penalize staker even if they restake and not do commit/reveal in grace_period', async function () {
+        await reset();
+        await mineToNextEpoch();
+        let epoch = await getEpoch();
+        let staker = await stakeManager.getStaker(3);
+
+        const epochsJumped = GRACE_PERIOD;
+        for (let i = 0; i < epochsJumped; i++) {
+          await mineToNextEpoch();
+        }
+        epoch = await getEpoch();
+
+        const stake2 = tokenAmount('2300');
+        await razor.connect(signers[3]).approve(stakeManager.address, stake2);
+        await stakeManager.connect(signers[3]).stake(epoch, stake2);
+
+        await mineToNextEpoch();
+        epoch = await getEpoch();
+        staker = await stakeManager.getStaker(3);
+        const newStake = staker.stake;
+
+        const secret = await getSecret(signers[3]);
+        await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
+        staker = await stakeManager.getStaker(3);
+
+        assertBNNotEqual(staker.stake, newStake, 'Stake should have decreased due to inactivity penalty');
       });
     });
 
