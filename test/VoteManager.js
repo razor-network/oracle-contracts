@@ -792,7 +792,7 @@ describe('VoteManager', function () {
         assertBNEqual(staker.age, expectedAge, 'Staker age should decrease based on penaltyAgeNotRevealNum');
 
         await mineToNextState();
-        await reveal(collectionManager,signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       });
 
       it('should not penalize staker if number of inactive epochs is smaller than / equal to grace_period', async function () {
@@ -810,7 +810,7 @@ describe('VoteManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
         await mineToNextState();
 
-        await reveal(collectionManager,signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         staker = await stakeManager.stakers(3);
         assertBNEqual(staker.stake, stake, 'Stake should not change');
       });
