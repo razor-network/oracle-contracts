@@ -311,6 +311,8 @@ describe('AssignCollectionsRandomly', function () {
       expect(blockIndexToBeConfirmed).to.eq(-1);
       expect(block.valid).to.eq(false);
       assertBNEqual((await stakeManager.getStaker(await stakeManager.getStakerId(signers[1].address))).stake, 0);
+      const tx = blockManager.disputeOnOrderOfIds(epoch, 0, 1, 2);
+      await assertRevert(tx, 'Block already has been disputed');
     });
   });
 });
