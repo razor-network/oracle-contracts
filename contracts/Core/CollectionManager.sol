@@ -164,7 +164,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         _updateRegistry();
 
         emit CollectionActivityStatus(collections[id].active, id, epoch, block.timestamp);
-        voteManager.storeDepth(_getDepth()); // update depth now only, as from next epoch's commit it starts
+        voteManager.storeDepth(getDepth(numActiveCollections)); // update depth now only, as from next epoch's commit it starts
     }
 
     /// @inheritdoc ICollectionManager
@@ -206,7 +206,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         emit CollectionCreated(numCollections, block.timestamp);
 
         _setIDName(name, numCollections);
-        voteManager.storeDepth(_getDepth()); // TODO : Create method called as createCollectionBatch and update storeDepth only once
+        voteManager.storeDepth(getDepth(numActiveCollections)); // TODO : Create method called as createCollectionBatch and update storeDepth only once
 
         return numCollections;
     }
@@ -363,13 +363,54 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         return result;
     }
 
-    function getDepth() external view returns (uint256) {
-        return _getDepth();
-    }
-
     /// @inheritdoc ICollectionManager
     function getResultFromID(uint16 _id) public view override returns (uint256, int8) {
         return (collections[_id].result, collections[_id].power);
+    }
+
+    /**
+     * @dev calculates the current depth of the merkle tree that stakers have to submit at the time of commit/reveal
+     * @ return the depth of the MerkleTree
+     * @param numberOfCollections number of collections
+     */
+    function getDepth(uint256 numberOfCollections) public pure returns (uint256 n) {
+        // numActiveCollection is uint16, so further range not needed
+        // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
+
+        // 100000;
+        // >= 2**4 , n = 4
+        // 000010;
+        // >= 2**1
+        // n = n+ 1 == 5
+
+        uint256 x = numberOfCollections;
+
+        if (x > 0) {
+            x = x - 1;
+            // Optimised way
+            for (; x > 0; x >>= 1) {
+                if (x >= 2**8) {
+                    x >>= 8;
+                    n += 8;
+                }
+                if (x >= 2**4) {
+                    x >>= 4;
+                    n += 4;
+                }
+                if (x >= 2**2) {
+                    x >>= 2;
+                    n += 2;
+                }
+                if (x >= 2**1) {
+                    x >>= 1;
+                    n += 1;
+                }
+                if (x == 1) {
+                    x >>= 1;
+                    n += 1;
+                }
+            }
+        }
     }
 
     /**
@@ -395,67 +436,5 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         bytes32 _name = keccak256(abi.encodePacked(name));
         require(ids[_name] == 0, "Collection exists with same name");
         ids[_name] = _id;
-    }
-
-    /**
-     * @dev calculates the current depth of the merkle tree that stakers have to submit at the time of commit/reveal
-     * @ return the depth of the MerkleTree
-     */
-    function _getDepth() internal view returns (uint256 n) {
-        // numActiveCollection is uint16, so further range not needed
-        // Inspired and modified from : https://medium.com/coinmonks/math-in-solidity-part-5-exponent-and-logarithm-9aef8515136e
-
-        // 100000;
-        // >= 2**4 , n = 4
-        // 000010;
-        // >= 2**1
-        // n = n+ 1 == 5
-
-        uint256 x = numActiveCollections;
-        // X = 2 ** n ;
-
-        // Optimised way
-        // for (; x > 0; x >>= 1) {
-        // if (x >= 2**8) { x >>= 8; n += 8; }
-        // if (x >= 2**4) { x >>= 4; n += 4; }
-        // if (x >= 2**2) { x >>= 2; n += 2; }
-        // if (x >= 2**1) { x >>= 1; n += 1; }
-        // if (x == 1) { x >>= 1; n += 1; }
-        // }
-
-        // for 6
-        // 110
-        // optimised version of above would return 2
-        // 000
-        // but we want 3
-        // so we have to give importance to 1(1)0 as well
-        // as in our case result for 100 and 110 is diff
-        // so thats why we have to go unoptimised way
-
-        // I dont know if we can use above optimised way and somehow detect that in middle(1) as well
-        // So thats why lets have above as commented
-        // and check in new issue, if we could do so
-
-        //6
-        //110, 6
-        //011, 3
-        //001, 1
-        //000, 0
-
-        // 8
-        // 1000
-        // 0100
-        // 0010
-        // 0001
-        // 0000
-
-        // Have tested function upto 2**16;
-        bool flag = false;
-        for (n = 0; x > 1; x >>= 1) {
-            // O(n) 1<n<=16
-            if (x % 2 != 0) flag = true; // for that (1)
-            n += 1;
-        }
-        if (flag) n++;
     }
 }
