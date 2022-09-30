@@ -415,7 +415,7 @@ describe('CollectionManager', function () {
     it('Should be able to get correct depth of merkle tree for 1 active collections', async function () {
       await collectionManager.setCollectionStatus(false, 2);
       const numActiveCollections = await collectionManager.getNumActiveCollections();
-      const depth = await collectionManager.getDepth();
+      const depth = await collectionManager.getDepth(numActiveCollections);
       assert(depth, getDepth(numActiveCollections));
     });
 
@@ -427,7 +427,7 @@ describe('CollectionManager', function () {
       for (let i = 3; i <= 100; i++) {
         await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], `Test Collection ${i}`);
         const numActiveCollections = await collectionManager.getNumActiveCollections();
-        const treeDepth = await collectionManager.getDepth();
+        const treeDepth = await collectionManager.getDepth(numActiveCollections);
         depthArr.push(treeDepth.toNumber());
         expectedDepthArr.push(getDepth(numActiveCollections));
       }
