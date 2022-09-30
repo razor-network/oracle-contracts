@@ -387,14 +387,15 @@ describe('VoteManager', function () {
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
         const stakeBefore = (await stakeManager.stakers(stakerIdAcc3)).stake;
         // Correct Reveal
-        await reveal(signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager); // arguments getvVote => epoch, stakerId, assetId
         const anyLeafId = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatLeafId = (anyLeafId.add(1)).mul(100);
-        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, anyLeafId), voteValueForThatLeafId,
+        const collectionId = await collectionManager.getCollectionIdFromLeafId(anyLeafId);
+        const voteValueForThatLeafId = (toBigNumber(collectionId)).mul(100);
+        assertBNEqual(await voteManager.getVoteValue(epoch, stakerIdAcc3, collectionId), voteValueForThatLeafId,
           'Votes are not matching');
 
-        await reveal(signers[4], 4, voteManager, stakeManager);
-        await reveal(signers[2], 4, voteManager, stakeManager);
+        await reveal(collectionManager, signers[4], 4, voteManager, stakeManager);
+        await reveal(collectionManager, signers[2], 4, voteManager, stakeManager);
 
         const stakeAfter = (await stakeManager.stakers(stakerIdAcc3)).stake;
         assertBNEqual(stakeBefore, stakeAfter);
@@ -412,7 +413,7 @@ describe('VoteManager', function () {
 
       it('Staker should not be able to reveal if not committed', async function () {
         // const votes = [100, 200, 300, 400, 500, 600, 700, 800, 900];
-        const tx = reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+        const tx = reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
         await assertRevert(tx, 'not committed in this epoch');
       });
 
@@ -420,7 +421,7 @@ describe('VoteManager', function () {
         await mineToNextEpoch();
         const secret = await getSecret(signers[1]);
         await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
-        const tx = reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+        const tx = reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
         await assertRevert(tx, 'incorrect state');
       });
 
@@ -430,7 +431,7 @@ describe('VoteManager', function () {
         const secret = await getSecret(signers[1]);
         await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
         await mineToNextState();
-        const tx = reveal(signers[1], 10, voteManager, stakeManager, collectionManager); // value changed with deviation 10
+        const tx = reveal(collectionManager, signers[1], 10, voteManager, stakeManager, collectionManager); // value changed with deviation 10
         await assertRevert(tx, 'invalid merkle proof');
       });
 
@@ -448,7 +449,7 @@ describe('VoteManager', function () {
         await stakeManager.setStakerStake(epoch, stakerId, 2, staker.stake, tokenAmount('0'));
 
         await mineToNextState(); // reveal
-        const tx = reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+        const tx = reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
         await assertRevert(tx, 'stake below minimum');
       });
 
@@ -536,9 +537,9 @@ describe('VoteManager', function () {
       let influenceBefore;
 
       before(async () => {
-        await reveal(signers[2], 4, voteManager, stakeManager);
-        await reveal(signers[3], 0, voteManager, stakeManager);
-        await reveal(signers[4], 4, voteManager, stakeManager);
+        await reveal(collectionManager, signers[2], 4, voteManager, stakeManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[4], 4, voteManager, stakeManager);
 
         await mineToNextState(); // propose
         await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
@@ -567,9 +568,9 @@ describe('VoteManager', function () {
 
         await mineToNextState(); // reveal
 
-        await reveal(signers[2], 0, voteManager, stakeManager);
-        await reveal(signers[3], 0, voteManager, stakeManager);
-        await reveal(signers[4], 20, voteManager, stakeManager);
+        await reveal(collectionManager, signers[2], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager);
+        await reveal(collectionManager, signers[4], 20, voteManager, stakeManager);
       });
 
       beforeEach(async () => {
@@ -596,8 +597,9 @@ describe('VoteManager', function () {
         const stakerIdAcc3 = await stakeManager.stakerIds(signers[3].address);
 
         const anyLeafId = await getAnyAssignedIndex(signers[3]);
-        const voteValueForThatLeafId = (anyLeafId.add(1)).mul(100);
-        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, anyLeafId)), voteValueForThatLeafId,
+        const collectionId = await collectionManager.getCollectionIdFromLeafId(anyLeafId);
+        const voteValueForThatCollectionId = (toBigNumber(collectionId)).mul(100);
+        assertBNEqual((await voteManager.getVoteValue(epoch, stakerIdAcc3, collectionId)), voteValueForThatCollectionId,
           'Votes not matching');
       });
 
@@ -633,8 +635,7 @@ describe('VoteManager', function () {
 
         const idsProposedOfLastEpoch = (await blockManager.getBlock(epoch - 1)).ids;
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
-          const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
-          const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, index);
+          const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, idsProposedOfLastEpoch[i]);
           const tolerance = await collectionManager.getCollectionTolerance(idsProposedOfLastEpoch[i]);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
@@ -681,8 +682,8 @@ describe('VoteManager', function () {
 
         const stakerIdAcc4 = await stakeManager.stakerIds(signers[4].address);
 
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
-        await reveal(signers[4], -99, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[4], -99, voteManager, stakeManager, collectionManager);
 
         await mineToNextState(); // propose
 
@@ -707,8 +708,7 @@ describe('VoteManager', function () {
         expectedAgeAfterOf4 = expectedAgeAfterOf4 > 1000000 ? 1000000 : expectedAgeAfterOf4;
 
         for (let i = 0; i < idsProposedOfLastEpoch.length; i++) {
-          const index = await collectionManager.getLeafIdOfCollection(idsProposedOfLastEpoch[i]);
-          const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, index);
+          const votesOfLastEpoch = await voteManager.getVoteValue(epoch - 1, stakerIdAcc4, idsProposedOfLastEpoch[i]);
           const tolerance = await collectionManager.getCollectionTolerance(idsProposedOfLastEpoch[i]);
           const maxVoteTolerance = toBigNumber(medians[i]).add(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
           const minVoteTolerance = toBigNumber(medians[i]).sub(((toBigNumber(medians[i])).mul(tolerance)).div(BASE_DENOMINATOR));
@@ -792,7 +792,7 @@ describe('VoteManager', function () {
         assertBNEqual(staker.age, expectedAge, 'Staker age should decrease based on penaltyAgeNotRevealNum');
 
         await mineToNextState();
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       });
 
       it('should not penalize staker if number of inactive epochs is smaller than / equal to grace_period', async function () {
@@ -810,7 +810,7 @@ describe('VoteManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
         await mineToNextState();
 
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         staker = await stakeManager.stakers(3);
         assertBNEqual(staker.stake, stake, 'Stake should not change');
       });
@@ -1150,7 +1150,7 @@ describe('VoteManager', function () {
         const tx = commit(signers[4], 0, voteManager, collectionManager, secret, blockManager);
         await assertRevert(tx, 'staker is slashed');
         await mineToNextState(); // reveal
-        const tx1 = reveal(signers[4], 0, voteManager, stakeManager, collectionManager);
+        const tx1 = reveal(collectionManager, signers[4], 0, voteManager, stakeManager, collectionManager);
         await assertRevert(tx1, 'not committed in this epoch');
         await mineToNextState(); // propose
         const tx2 = propose(signers[4], stakeManager, blockManager, voteManager, collectionManager);

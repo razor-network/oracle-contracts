@@ -21,7 +21,6 @@ const {
 
 const {
   toBigNumber,
-  getEpoch,
   getDepth,
   getState,
 } = require('./helpers/utils');
@@ -229,7 +228,6 @@ describe('CollectionManager', function () {
     it('should be able to create a Collection with both one or more than one jobs', async function () {
       const power = 3;
       const tolerance = 500;
-      const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const collectionName2 = 'Test Collection2';
       await collectionManager.createCollection(tolerance, power, 1, 1, [1, 2], collectionName);
@@ -247,7 +245,6 @@ describe('CollectionManager', function () {
       assertBNEqual((await collectionManager.getNumCollections()), toBigNumber('2'));
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
       assertBNEqual(await collectionManager.getCollectionPower(1), toBigNumber('3'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
     it('should not be able to create collection if tolerance value is not less than maxTolerance', async function () {
@@ -313,6 +310,7 @@ describe('CollectionManager', function () {
 
     it('should be able to add a job to a collection', async function () {
       await collectionManager.updateCollection(1, 500, 1, 3, [1, 2, 3]);
+
       const collection = await collectionManager.getCollection(1);
       assert((collection.jobIDs).length === 3);
       assertBNEqual(collection.jobIDs[2], toBigNumber('3'));
@@ -370,16 +368,13 @@ describe('CollectionManager', function () {
     });
 
     it('should be able to inactivate collection', async function () {
-      const epoch = await getEpoch();
       await collectionManager.setCollectionStatus(false, 2);
       const collectionIsActive = await collectionManager.getCollectionStatus(2);
       assert(collectionIsActive === false);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('1'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
     it('should be able to reactivate collection', async function () {
-      let epoch = await getEpoch();
       await collectionManager.setCollectionStatus(false, 2);
       await mineToNextEpoch(); // commit
       await mineToNextState(); // reveal
@@ -387,12 +382,10 @@ describe('CollectionManager', function () {
       await mineToNextState(); // dispute
       await mineToNextState(); // confirm
 
-      epoch = await getEpoch();
       await collectionManager.setCollectionStatus(true, 2);
       const collection = await collectionManager.getCollection(2);
       assert(collection.active === true);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('2'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
     });
 
     it('should not be able to update Collection status if collection does not exist', async function () {

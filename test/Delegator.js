@@ -116,13 +116,10 @@ describe('Delegator', function () {
 
     it('should be able to get correct collectionID mapped to its hashed name but not registered yet', async function () {
       await mineToNextEpoch();
-      const epoch = await getEpoch();
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('1'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch));
-      assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to get the correct active collection ids from delegator', async function () {
@@ -131,11 +128,13 @@ describe('Delegator', function () {
     });
 
     it('should not be able to create collection with same name', async function () {
-      await mineToNextEpoch();
-      await mineToNextState();
-      await mineToNextState();
-      await mineToNextState();
-      await mineToNextState();
+      while (Number(await getState()) !== 4) {
+        if (Number(await getState()) === -1) {
+          await mineBlock();
+        } else {
+          await mineToNextState();
+        }
+      }
       const collectionName = 'Test Collection';
       const power = 2;
       const tx = collectionManager.createCollection(500, power, 1, 1, [1, 2], collectionName);
@@ -154,8 +153,6 @@ describe('Delegator', function () {
       }
       for (let i = 1; i <= 9; i++) {
         await collectionManager.createCollection(500, 2, 1, 1, [1, 2], `Test Collection${String(i)}`);
-        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(i - 1));
-        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistryOfLastEpoch(i), toBigNumber(0));
       }
 
       await mineToNextEpoch();
@@ -164,7 +161,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
@@ -183,10 +180,6 @@ describe('Delegator', function () {
       await restoreSnapshot(snapShotId);
     });
 
-    it('should be able to register collection that has just been created', async function () {
-      assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
-    });
-
     it('should be able to fetch the result of the desired id', async function () {
       await mineToNextEpoch();
       const collectionName = 'Test Collection1';
@@ -203,22 +196,14 @@ describe('Delegator', function () {
       assertBNEqual(result[1], toBigNumber('2'));
     });
 
-    it('should update registry when multiple collections are created', async function () {
-      for (let i = 1; i <= 9; i++) {
-        assertBNEqual(await collectionManager.collectionIdToLeafIdRegistryOfLastEpoch(i), toBigNumber(i - 1));
-      }
-    });
-
     it('getResult should give the right value after deactivation of assets', async function () {
       await collectionManager.setCollectionStatus(false, 2);
       await collectionManager.setCollectionStatus(false, 3);
       await collectionManager.setCollectionStatus(false, 4);
-      const epoch = await getEpoch();
       assert(await collectionManager.getCollectionStatus(2) === false);
       assert(await collectionManager.getCollectionStatus(3) === false);
       assert(await collectionManager.getCollectionStatus(4) === false);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('6'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
 
       // const votes = [100, 500, 600, 700, 800, 900];
@@ -226,7 +211,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await adhocPropose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
@@ -235,16 +220,7 @@ describe('Delegator', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 0;
-      for (let i = 1; i <= 9; i++) {
-        const collection = await collectionManager.getCollection(i);
-        if (collection.active === true) {
-          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(j));
-          j++;
-        } else {
-          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber('0'));
-        }
-      }
+
       await mineToNextEpoch();
       const collectionName = 'Test Collection5';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
@@ -262,7 +238,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await adhocPropose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
@@ -271,7 +247,6 @@ describe('Delegator', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      const epoch = await getEpoch();
       await collectionManager.setCollectionStatus(true, 2);
       await collectionManager.setCollectionStatus(true, 3);
       await collectionManager.setCollectionStatus(true, 4);
@@ -281,14 +256,13 @@ describe('Delegator', function () {
       assert(await collectionManager.getCollectionStatus(3) === true);
       assert(await collectionManager.getCollectionStatus(4) === true);
       assertBNEqual(await collectionManager.getNumActiveCollections(), toBigNumber('7'));
-      assertBNEqual(await collectionManager.getUpdateRegistryEpoch(), toBigNumber(epoch + 1));
       await mineToNextEpoch();
 
       secret = await getSecret(signers[5]);
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
@@ -297,16 +271,7 @@ describe('Delegator', function () {
       await mineToNextState();
 
       await blockManager.connect(signers[5]).claimBlockReward();
-      let j = 0;
-      for (let i = 1; i <= 9; i++) {
-        const collection = await collectionManager.getCollection(i);
-        if (collection.active === true) {
-          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber(j));
-          j++;
-        } else {
-          assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(i), toBigNumber('0'));
-        }
-      }
+
       await mineToNextEpoch();
       const collectionName = 'Test Collection3';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
@@ -347,7 +312,7 @@ describe('Delegator', function () {
       await commit(signers[5], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
 
-      await reveal(signers[5], 0, voteManager, stakeManager);
+      await reveal(collectionManager, signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
       await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7], [100, 200, 300, 400, 500, 600, 700], stakeManager, blockManager, voteManager);

@@ -344,7 +344,7 @@ describe('StakeManager', function () {
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
       // Next Epoch
       await reset();
     });
@@ -541,7 +541,7 @@ describe('StakeManager', function () {
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
 
       // -------------------- @Step 2 : Lets say staker is rewarded multiple times and his stake is now 2000 ** 10 ** 18, 2000 RZR --------------------
       await mineToNextEpoch();
@@ -599,7 +599,7 @@ describe('StakeManager', function () {
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[1], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[1], 0, voteManager, stakeManager, collectionManager);
       await mineToNextEpoch();
 
       epoch = await getEpoch();
@@ -1021,7 +1021,7 @@ describe('StakeManager', function () {
       await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[2], 0, voteManager, stakeManager, collectionManager);
 
       // Next Epoch
       await mineToNextEpoch(); // propose
@@ -1044,7 +1044,7 @@ describe('StakeManager', function () {
       await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[2], 0, voteManager, stakeManager, collectionManager);
 
       // Next Epoch
       await mineToNextEpoch();
@@ -1341,7 +1341,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
@@ -1468,7 +1468,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         // propose
         await mineToNextState();
         await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
@@ -1503,7 +1503,7 @@ describe('StakeManager', function () {
           await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
           await mineToNextState(); // reveal
-          await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+          await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
           await mineToNextEpoch();
         }
 
@@ -1526,7 +1526,7 @@ describe('StakeManager', function () {
           const secret = await getSecret(signers[3]);
           await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
           await mineToNextState(); // reveal
-          await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+          await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
           await mineToNextEpoch();
         }
 
@@ -1562,7 +1562,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         // Staker 4 is penalised because no of inactive epochs (0) > max allowed inactive epochs i.e grace_period (0)
         // Delagator unstakes
         await mineToNextEpoch();
@@ -1582,7 +1582,7 @@ describe('StakeManager', function () {
           await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
           await mineToNextState(); // reveal
-          await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+          await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
           await mineToNextEpoch();
         }
 
@@ -1603,7 +1603,7 @@ describe('StakeManager', function () {
           await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
           await mineToNextState(); // reveal
-          await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+          await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
           await mineToNextEpoch();
         }
 
@@ -1635,7 +1635,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
       const withdrawWithin = await stakeManager.withdrawInitiationPeriod();
@@ -1645,7 +1645,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
 
@@ -1716,7 +1716,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
       const prevDBalance = await razor.balanceOf(signers[4].address);
@@ -1727,7 +1727,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
 
@@ -1758,7 +1758,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
 
@@ -1802,7 +1802,7 @@ describe('StakeManager', function () {
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
 
       // propose
       await mineToNextState();
@@ -1827,7 +1827,7 @@ describe('StakeManager', function () {
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
 
       await mineToNextEpoch();
 
@@ -1841,7 +1841,7 @@ describe('StakeManager', function () {
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
 
       await mineToNextEpoch();
 
@@ -1867,7 +1867,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
       epoch = await getEpoch();
@@ -1901,7 +1901,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
         await mineToNextEpoch();
       }
 
@@ -1938,7 +1938,7 @@ describe('StakeManager', function () {
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
 
       const stakerId = await stakeManager.getStakerId(signers[3].address);
       let staker = await stakeManager.getStaker(stakerId);
@@ -2156,7 +2156,7 @@ describe('StakeManager', function () {
       const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState();
       await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
       await mineToNextState();
@@ -2179,7 +2179,7 @@ describe('StakeManager', function () {
       let secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState();
       await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
       await mineToNextState();
@@ -2207,7 +2207,7 @@ describe('StakeManager', function () {
       let secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState();
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState();
       await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
       await mineToNextState();
@@ -2241,7 +2241,7 @@ describe('StakeManager', function () {
       await commit(signers[2], 0, voteManager, collectionManager, secret, blockManager);
 
       await mineToNextState(); // reveal
-      await reveal(signers[2], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[2], 0, voteManager, stakeManager, collectionManager);
 
       await mineToNextState(); // propose
       await propose(signers[2], stakeManager, blockManager, voteManager, collectionManager);
@@ -2274,7 +2274,7 @@ describe('StakeManager', function () {
         await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
 
         await mineToNextState(); // reveal
-        await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+        await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
 
         await mineToNextState(); // propose
         await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
@@ -2309,7 +2309,7 @@ describe('StakeManager', function () {
       const secret = await getSecret(signers[3]);
       await commit(signers[3], 0, voteManager, collectionManager, secret, blockManager);
       await mineToNextState(); // reveal
-      await reveal(signers[3], 0, voteManager, stakeManager, collectionManager);
+      await reveal(collectionManager, signers[3], 0, voteManager, stakeManager, collectionManager);
       await mineToNextState(); // propose
       await propose(signers[3], stakeManager, blockManager, voteManager, collectionManager);
       await mineToNextState(); // dispute
