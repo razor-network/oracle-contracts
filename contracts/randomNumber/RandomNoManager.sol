@@ -15,7 +15,7 @@ import "./RandomNoStorage.sol";
  */
 
 contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
-    event RandomNumberAvailable(uint32 epoch);
+    event RandomNumberAvailable(uint32 indexed epoch);
 
     /**
      * @param blockManagerAddress The address of the BlockManager Contract
