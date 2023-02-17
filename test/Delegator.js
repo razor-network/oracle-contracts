@@ -124,8 +124,8 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-      assertBNEqual(result[0], toBigNumber('100'));
-      assertBNEqual(result[1], toBigNumber('3'));
+      assertBNEqual(result[3], toBigNumber('100'));
+      assertBNEqual(result[0], toBigNumber('3'));
     });
 
     it('should be able to fetch result using id', async function () {
@@ -205,8 +205,8 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection5';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-      assertBNEqual(result[0], toBigNumber('500'));
-      assertBNEqual(result[1], toBigNumber('2'));
+      assertBNEqual(result[3], toBigNumber('500'));
+      assertBNEqual(result[0], toBigNumber('2'));
     });
 
     it('should be able to fetch random number generated of last epoch', async function () {
@@ -294,8 +294,8 @@ describe('Delegator', function () {
       const result = await delegator.getResult(hName);
       const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('3'));
-      assertBNEqual(result[0], toBigNumber('300'));
-      assertBNEqual(result[1], toBigNumber('2'));
+      assertBNEqual(result[3], toBigNumber('300'));
+      assertBNEqual(result[0], toBigNumber('2'));
     });
 
     it('should not be able to create collection with same name', async function () {
