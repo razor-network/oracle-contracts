@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
 
-import "./Core/StateManager.sol";
 import "./Core/interface/ICollectionManager.sol";
 import "./IDelegator.sol";
 import "./randomNumber/IRandomNoClient.sol";
-import "./Core/parameters/ACL.sol";
 import "./Core/storage/Constants.sol";
 import "./Pause.sol";
 
@@ -13,7 +11,7 @@ import "./Pause.sol";
  * @notice Delegator acts as a bridge between the client and the protocol
  */
 
-contract Delegator is ACL, StateManager, Pause, IDelegator {
+contract Delegator is Pause, IDelegator {
     ICollectionManager public collectionManager;
     IRandomNoClient public randomNoManager;
 
