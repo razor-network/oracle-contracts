@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.0;
+import "./lib/Structs.sol";
 
 interface IDelegator {
+    struct Value {
+        int8 power;
+        uint16 collectionId;
+        bytes32 name;
+        uint256 value;
+    }
     /**
      * @dev updates the address of the Collection Manager contract from where the delegator will fetch
      * results of the oracle
@@ -28,9 +35,9 @@ interface IDelegator {
     /**
      * @dev using the hash of collection name, clients can query the result of that collection
      * @param _name bytes32 hash of the collection name
-     * @return result of the collection and its power
+     * @return value which is a struct of Value(power, collectionId, name, result)
      */
-    function getResult(bytes32 _name) external view returns (uint256, int8);
+    function getResult(bytes32 _name) external view returns (Value memory);
 
     /**
      * @dev using the collection id, clients can query the result of the collection
