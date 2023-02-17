@@ -9,6 +9,7 @@ interface IDelegator {
         bytes32 name;
         uint256 value;
     }
+
     /**
      * @dev updates the address of the Collection Manager contract from where the delegator will fetch
      * results of the oracle
