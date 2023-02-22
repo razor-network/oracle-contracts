@@ -154,9 +154,9 @@ describe('AssignCollectionsRandomly', function () {
       const collectionName = 'c2';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result1 = await delegator.getResult(hName);
-      assertBNEqual(result1[0], 300);
+      assertBNEqual(result1[3], 300);
       const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
-      assertBNEqual(result2[0], 0);
+      assertBNEqual(result2[3], 0);
 
       await reset();
     });
@@ -232,7 +232,7 @@ describe('AssignCollectionsRandomly', function () {
       const collectionName = 'c2';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-      assertBNEqual(result[0], 300);
+      assertBNEqual(result[3], 300);
     });
 
     it('Staker Proposes revealed assets in-correctly', async () => {

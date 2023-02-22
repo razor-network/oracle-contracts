@@ -101,7 +101,6 @@ module.exports = async () => {
   pendingTransactions.push(await rewardManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await stakeManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await voteManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
-  pendingTransactions.push(await delegator.grantRole(GOVERNANCE_ROLE, governanceAddress));
   pendingTransactions.push(await randomNoManager.grantRole(GOVERNANCE_ROLE, governanceAddress));
 
   pendingTransactions.push(await blockManager.grantRole(BLOCK_CONFIRMER_ROLE, voteManagerAddress));
@@ -115,6 +114,7 @@ module.exports = async () => {
   pendingTransactions.push(await collectionManager.grantRole(REGISTRY_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address));
   pendingTransactions.push(await stakeManager.grantRole(PAUSE_ROLE, signers[0].address));
+  pendingTransactions.push(await delegator.grantRole(PAUSE_ROLE, signers[0].address));
   pendingTransactions.push(await governance.grantRole(GOVERNER_ROLE, signers[0].address));
   pendingTransactions.push(await voteManager.grantRole(SALT_MODIFIER_ROLE, blockManagerAddress));
   pendingTransactions.push(await voteManager.grantRole(DEPTH_MODIFIER_ROLE, collectionManagerAddress));
