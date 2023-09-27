@@ -1,9 +1,10 @@
 name: CI
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+
 jobs:
   checkout_source:
     runs-on: ubuntu-latest
@@ -132,9 +133,6 @@ jobs:
           file: .
       - name: Run GasCompare
         run: |
-        if [ "$GITHUB_REF" == 'refs/heads/main' ]; then
-        exit 0
-        fi
         CI=true npm run test
         mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
         git checkout main
