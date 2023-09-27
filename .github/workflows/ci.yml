@@ -133,15 +133,18 @@ jobs:
           file: .
       - name: Run GasCompare
         run: |
-        CI=true npm run test
-        mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-        git checkout main
-        npm install
-        CI=true npm run test
-        mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-        git reset --hard
-        git checkout $GITHUB_REF
-        npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+          if [ "$GITHUB_REF" == 'refs/heads/main' ]; then  
+          exit 0
+          fi
+          CI=true npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          git checkout main
+          npm install
+          CI=true npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+          git reset --hard
+          git checkout $GITHUB_REF
+          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
 
   notify:
     needs: coverage
