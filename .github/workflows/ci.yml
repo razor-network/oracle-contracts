@@ -1,0 +1,156 @@
+name: CI
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+jobs:
+  checkout_source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Persist to workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+
+  install_dependencies:
+    runs-on: ubuntu-latest
+    needs: checkout_source
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+      - name: Install dependencies
+        run: |
+          npm install
+          npm run cp-ci-env
+      - name: Persist to workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+          paths:
+            - .env
+            - node_modules/*
+
+  test:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Run tests
+        run: |
+          CI=true npm run test
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: test
+          path: test
+
+  scenarios:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Run scenarios
+        run: |
+          CI=true npm run scenarios
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: scenarios
+          path: scenarios
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Run Lint
+        run: npm run lint
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: lint
+          path: lint
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Run Coverage
+        run: npm run coverage
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2.1.4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Store artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: coverage
+
+  slither:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Slither
+        run: |
+          slither . --filter-paths "node_modules" --disable-color
+
+  gasCompare:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - name: Attach workspace
+        uses: jakejarvis/persist-to-workspace@v1
+        with:
+          file: .
+      - name: Run GasCompare
+        run: |
+        if [ "$GITHUB_REF" == 'refs/heads/main' ]; then
+          exit 0
+        fi
+        CI=true npm run test
+        mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+        git checkout main
+        npm install
+        CI=true npm run test
+        mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+        git reset --hard
+        git checkout $GITHUB_REF
+        npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+
+  notify:
+    needs: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coveralls Webhook
+        uses: distributhor/coveralls-webhook@v1.0.0
+        with:
+          url: >-
+            https://coveralls.io/webhook?repo_token=${{ secrets.COVERALLS_REPO_TOKEN }}
