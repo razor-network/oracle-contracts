@@ -108,6 +108,10 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
+     - name: Checkout Code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0  # Fetch all history for all branches and tags.
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
