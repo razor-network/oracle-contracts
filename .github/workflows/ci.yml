@@ -108,7 +108,7 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-     - name: Checkout Code
+      - name: Checkout Code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0  # Fetch all history for all branches and tags.
