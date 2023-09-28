@@ -11,7 +11,7 @@ jobs:
 
   install_dependencies:
     runs-on: ubuntu-latest
-    needs: [checkout_source]
+    needs: checkout_source
     steps:
       - uses: actions/setup-node@v3
         with:
