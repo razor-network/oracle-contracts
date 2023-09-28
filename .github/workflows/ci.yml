@@ -16,8 +16,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - name: List directory contents
-        run: ls -R
+      - name: Debugging
+        run: |
+          pwd
+          ls -la
+          git status
 
   # test:
   #   runs-on: ubuntu-latest
