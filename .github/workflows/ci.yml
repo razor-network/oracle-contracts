@@ -115,4 +115,5 @@ jobs:
           fi
           CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          git fetch --all  
           git checkout master
