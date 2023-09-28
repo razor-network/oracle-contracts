@@ -110,12 +110,12 @@ jobs:
           action: retrieve
       - name: Run GasCompare
         run: |
-          if [ "$GITHUB_REF" == 'refs/heads/main' ]; then  
+          if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
           exit 0
           fi
           CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-          git checkout main
+          git checkout master
           npm install
           CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
