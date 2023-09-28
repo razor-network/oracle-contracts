@@ -77,7 +77,7 @@ jobs:
       - name: Run Coverage
         run: npm run coverage
       - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2.1.4
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Store artifacts
@@ -93,9 +93,12 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-      - name: Slither
-        run: |
-          slither . --filter-paths "node_modules" --disable-color
+      - name: Run Slither
+        uses: crytic/slither-action@v0.3.0
+        id: slither
+        with:
+          node-version: 16
+          sarif: results.sarif
 
   # gasCompare:
   #   runs-on: ubuntu-latest
