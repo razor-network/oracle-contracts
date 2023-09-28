@@ -99,6 +99,7 @@ jobs:
         with:
           node-version: 16
           sarif: results.sarif
+          fail-on: high
 
   gasCompare:
     runs-on: ubuntu-latest
