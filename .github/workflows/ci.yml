@@ -108,10 +108,14 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-      - name: Checkout Code
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0  # Fetch all history for all branches and tags.
+      - name: Set up Git Authentication
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "GitHub Actions"
+          git config --global credential.helper store
+          echo "https://$GITHUB_ACTOR:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
