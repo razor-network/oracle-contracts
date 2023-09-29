@@ -111,7 +111,6 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-        
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_REF" == "refs/heads/master" ]; then
