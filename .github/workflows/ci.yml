@@ -11,6 +11,7 @@ jobs:
         uses: actions/checkout@v2
         with: 
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -110,14 +111,14 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-      - name: Set up Git Authentication
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          echo "https://$GITHUB_TOKEN_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
+      # - name: Set up Git Authentication
+      #   run: |
+      #     git config user.name 'github-actions[bot]'
+      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
+      #     echo "https://$GITHUB_TOKEN_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
         
       - name: Run GasCompare
         run: |
