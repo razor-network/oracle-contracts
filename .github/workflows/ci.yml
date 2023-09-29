@@ -120,6 +120,8 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
       #     GITHUB_TOKEN_USERNAME: ${{ secrets.GIT_TOKEN_USERNAME }}
         
-      - name: Checkout Master
+      - name: Run GasCompare
         run: |
+          CI=true npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
           git checkout master
