@@ -118,6 +118,10 @@ jobs:
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       #     GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
+      - name: Setup Git to use PAT
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/"
+        
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
