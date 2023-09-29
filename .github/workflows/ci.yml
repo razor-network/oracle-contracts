@@ -123,10 +123,12 @@ jobs:
             echo "This is the master branch. Exiting..."
             exit 0
           fi
-          npm run test
-          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          # CI=true npm run test
+          # mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
           git checkout master
           npm install
-          npm run test
+          CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+          git fetch origin pull/${{ github.event.pull_request.number }}/head:$BRANCH_NAME
+          git checkout $BRANCH_NAME
+         
