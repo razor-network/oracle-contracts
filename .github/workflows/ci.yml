@@ -120,12 +120,6 @@ jobs:
       #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
       #     GITHUB_TOKEN_USERNAME: ${{ secrets.GIT_TOKEN_USERNAME }}
         
-      - name: Run GasCompare
+      - name: Checkout Master
         run: |
-          if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
-          exit 0
-          fi
-          CI=true npm run test
-          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-          git fetch --all  
           git checkout master
