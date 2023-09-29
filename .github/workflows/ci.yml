@@ -8,9 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GIT_TOKEN }}
           fetch-depth: 0
       - uses: actions/setup-node@v3
         with:
@@ -115,10 +115,10 @@ jobs:
       #   run: |
       #     git config user.name 'github-actions[bot]'
       #     git config user.email 'github-actions[bot]@users.noreply.github.com'
-      #     echo "https://$GITHUB_TOKEN_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+      #     echo "https://$GIT_TOKEN_USERNAME:$GIT_TOKEN@github.com" > ~/.git-credentials
       #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
+      #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+      #     GITHUB_TOKEN_USERNAME: ${{ secrets.GIT_TOKEN_USERNAME }}
         
       - name: Run GasCompare
         run: |
