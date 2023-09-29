@@ -111,18 +111,12 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-      # - name: Set up Git Authentication
-      #   run: |
-      #     git config user.name 'github-actions[bot]'
-      #     git config user.email 'github-actions[bot]@users.noreply.github.com'
-      #     echo "https://$GIT_TOKEN_USERNAME:$GIT_TOKEN@github.com" > ~/.git-credentials
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
-      #     GITHUB_TOKEN_USERNAME: ${{ secrets.GIT_TOKEN_USERNAME }}
         
       - name: Run GasCompare
         run: |
-          npm run test
-          ls -la
-          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-          git checkout master
+          if [ "$GITHUB_REF" == "refs/heads/master" ]; then
+            echo "This is the master branch. Exiting..."
+            exit 0
+          fi
+         BRANCH_NAME=${GITHUB_REF#refs/heads/} # Extract branch name from GITHUB_REF
+         echo "Current branch is $BRANCH_NAME"
