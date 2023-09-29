@@ -126,8 +126,10 @@ jobs:
           npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
           git checkout master
-          npm install
           npm run test
+          npm install
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+          git reset --hard 
+          git fetch --all
           git checkout $BRANCH_NAME # Checkout back to the original branch
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
