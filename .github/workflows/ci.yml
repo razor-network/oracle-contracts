@@ -129,6 +129,22 @@ jobs:
           npm install
           CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-          git fetch origin pull/${{ github.event.pull_request.number }}/head:$BRANCH_NAME
-          git checkout $BRANCH_NAME
+          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+        
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: persist
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+
+      - name: Run GasCompare
+        run: |
+          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+
+
+      
          
