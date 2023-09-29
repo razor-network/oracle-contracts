@@ -118,7 +118,16 @@ jobs:
           else
             BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
           fi
-        
           echo "Current branch is $BRANCH_NAME"
-          
-         
+          if [ "$BRANCH_NAME" == "master" ]; then
+            echo "This is the master branch. Exiting..."
+            exit 0
+          fi
+          npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          git checkout master
+          npm install
+          npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+          git checkout $BRANCH_NAME # Checkout back to the original branch
+          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
