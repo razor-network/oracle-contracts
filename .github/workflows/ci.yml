@@ -111,25 +111,54 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
+      # - name: Run GasCompare
+      #   run: |
+      #     if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+      #       BRANCH_NAME=$GITHUB_HEAD_REF
+      #     else
+      #       BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
+      #     fi
+      #     echo "Current branch is $BRANCH_NAME"
+      #     if [ "$BRANCH_NAME" == "master" ]; then
+      #       echo "This is the master branch. Exiting..."
+      #       exit 0
+      #     fi
+      #     npm run test
+      #     mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+      #     git checkout master
+      #     npm run test
+      #     npm install
+      #     mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
+      #     git reset --hard 
+      #     git fetch --all
+      #     git checkout $BRANCH_NAME # Checkout back to the original branch
+      #     npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
             BRANCH_NAME=$GITHUB_HEAD_REF
+            REPO_NAME=$GITHUB_REPOSITORY
           else
             BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
+            REPO_NAME=$GITHUB_REPOSITORY
           fi
-          echo "Current branch is $BRANCH_NAME"
+          
+          echo "Current branch is $BRANCH_NAME from repo $REPO_NAME"
+          
           if [ "$BRANCH_NAME" == "master" ]; then
             echo "This is the master branch. Exiting..."
             exit 0
           fi
+          
           npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
           git checkout master
-          npm run test
           npm install
+          npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-          git reset --hard 
-          git fetch --all
-          git checkout $BRANCH_NAME # Checkout back to the original branch
+          
+          # Fetch and checkout the branch from the forked repository
+          git fetch origin pull/$GITHUB_EVENT_NUMBER/head:$BRANCH_NAME
+          git checkout $BRANCH_NAME
+          
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
