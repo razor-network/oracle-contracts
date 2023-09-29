@@ -136,11 +136,13 @@ jobs:
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-            BRANCH_NAME=$GITHUB_HEAD_REF
-            REPO_NAME=$GITHUB_REPOSITORY
+            BRANCH_NAME=${{ github.event.pull_request.head.ref }}
+            REPO_NAME=${{ github.event.pull_request.head.repo.full_name }}
+            PR_NUMBER=${{ github.event.pull_request.number }}
           else
             BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
             REPO_NAME=$GITHUB_REPOSITORY
+            PR_NUMBER=""
           fi
           
           echo "Current branch is $BRANCH_NAME from repo $REPO_NAME"
@@ -157,8 +159,12 @@ jobs:
           npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
           
-          # Fetch and checkout the branch from the forked repository
-          git fetch origin pull/$GITHUB_EVENT_NUMBER/head:$BRANCH_NAME
-          git checkout $BRANCH_NAME
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            # Fetch and checkout the branch from the forked repository
+            git fetch origin pull/$PR_NUMBER/head:$BRANCH_NAME
+            git checkout $BRANCH_NAME
+          else
+            git checkout $BRANCH_NAME
+          fi
           
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
