@@ -113,9 +113,12 @@ jobs:
           action: retrieve
       - name: Run GasCompare
         run: |
-          if [ "$GITHUB_REF" == "refs/heads/master" ]; then
-            echo "This is the master branch. Exiting..."
-            exit 0
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            BRANCH_NAME=$GITHUB_HEAD_REF
+          else
+            BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
           fi
-          BRANCH_NAME=${GITHUB_REF#refs/heads/} # Extract branch name from GITHUB_REF
+        
           echo "Current branch is $BRANCH_NAME"
+          
+         
