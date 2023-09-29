@@ -9,6 +9,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with: 
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-node@v3
         with:
           node-version: 16
@@ -108,14 +110,14 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: retrieve
-      - name: Set up Git Authentication
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "RazorBot"
-          echo "https://$GITHUB_TOKEN_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
+      # - name: Set up Git Authentication
+      #   run: |
+      #     git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      #     git config --global user.name "RazorBot"
+      #     echo "https://$GITHUB_TOKEN_USERNAME:$GITHUB_TOKEN@github.com" > ~/.git-credentials
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #     GITHUB_TOKEN_USERNAME: ${{ secrets.GITHUB_TOKEN_USERNAME }}
       - name: Run GasCompare
         run: |
           if [ "$GITHUB_REF" == 'refs/heads/master' ]; then  
