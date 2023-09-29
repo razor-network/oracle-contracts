@@ -117,5 +117,5 @@ jobs:
             echo "This is the master branch. Exiting..."
             exit 0
           fi
-         BRANCH_NAME=${GITHUB_REF#refs/heads/} # Extract branch name from GITHUB_REF
-         echo "Current branch is $BRANCH_NAME"
+          BRANCH_NAME=${GITHUB_REF#refs/heads/} # Extract branch name from GITHUB_REF
+          echo "Current branch is $BRANCH_NAME"
