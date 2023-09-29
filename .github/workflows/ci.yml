@@ -122,5 +122,5 @@ jobs:
         
       - name: Run GasCompare
         run: |
-          ls -la
-          git checkout master
+          npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
