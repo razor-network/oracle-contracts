@@ -129,7 +129,6 @@ jobs:
           npm install
           CI=true npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
         
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
