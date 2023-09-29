@@ -135,36 +135,25 @@ jobs:
       #     npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
       - name: Run GasCompare
         run: |
-          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-            BRANCH_NAME=${{ github.event.pull_request.head.ref }}
-            REPO_NAME=${{ github.event.pull_request.head.repo.full_name }}
-            PR_NUMBER=${{ github.event.pull_request.number }}
-          else
-            BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
-            REPO_NAME=$GITHUB_REPOSITORY
-            PR_NUMBER=""
-          fi
+          CURRENT_BRANCH=$(git branch --show-current)
+          echo "Current branch is $CURRENT_BRANCH"
           
-          echo "Current branch is $BRANCH_NAME from repo $REPO_NAME"
-          
-          if [ "$BRANCH_NAME" == "master" ]; then
+          if [ "$CURRENT_BRANCH" == "master" ]; then
             echo "This is the master branch. Exiting..."
             exit 0
           fi
           
           npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          
+          git fetch origin master
           git checkout master
+          
           npm install
           npm run test
           mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
           
-          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-            # Fetch and checkout the branch from the forked repository
-            git fetch origin pull/$PR_NUMBER/head:$BRANCH_NAME
-            git checkout $BRANCH_NAME
-          else
-            git checkout $BRANCH_NAME
-          fi
+          git checkout $CURRENT_BRANCH
           
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+
