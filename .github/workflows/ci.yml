@@ -133,6 +133,7 @@ jobs:
       - uses: bissolli/gh-action-persist-workspace@v1
         with:
           action: persist
+
       - name: Checkout
         uses: actions/checkout@v3
 
@@ -142,6 +143,7 @@ jobs:
 
       - name: Run GasCompare
         run: |
+          ls -la
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
 
 
