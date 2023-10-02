@@ -79,6 +79,15 @@ let gasCompare = async () => {
             }
         }
     }
+
+    let markdownString = markdown(gasChangeData, coloumn);
+
+    if (gasChangeData.length !== 0) {
+        // Write the markdown to a file called gasCompareOutput.json
+        fs.writeFileSync('gasCompareOutput.json', markdownString);
+    } else {
+        console.log("No changes found in gas Consumption");
+    }
 // let markdownstring = markdown(gasChangeData,coloumn);
 // if(gasChangeData.length!==0){
     
