@@ -84,7 +84,7 @@ let gasCompare = async () => {
 
     if (gasChangeData.length !== 0) {
         // Write the markdown to a file called gasCompareOutput.json
-        fs.writeFileSync('gasCompareOutput.json', markdownString);
+        fs.writeFileSync('gasCompareOutput.md', markdownString);
     } else {
         console.log("No changes found in gas Consumption");
     }
