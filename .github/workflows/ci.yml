@@ -149,3 +149,23 @@ jobs:
       - name: Run GasCompare
         run: |
           npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Main.json
+
+      - name: Comment on the Pull Request
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs');
+            const markdown = fs.readFileSync('gasCompareOutput.md', 'utf8');
+
+            // Check if markdown content is not empty
+            if (markdown.trim().length) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: markdown
+              });
+            } else {
+              console.log("No markdown content to comment.");
+            }
