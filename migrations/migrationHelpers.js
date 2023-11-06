@@ -235,7 +235,7 @@ const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/mast
 
 const getJobs = async () => {
   try {
-    const jobs = await axios.get(`${SOURCE}/jobs.json`);
+    const jobs = await axios.get(`${SOURCE}/mainnet/jobs.json`);
     return jobs.data;
   } catch (error) {
     console.log('Error while fetching jobs', error.response.body);
@@ -245,7 +245,7 @@ const getJobs = async () => {
 
 const getCollections = async () => {
   try {
-    const collections = await axios.get(`${SOURCE}/collections.json`);
+    const collections = await axios.get(`${SOURCE}/mainnet/collections.json`);
     return collections.data;
   } catch (error) {
     console.log('Error while fetching collections', error.response.body);
