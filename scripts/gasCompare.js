@@ -8,8 +8,6 @@ let getFileData = (filePath) => {
     try{
         const fileData = fs.readFileSync(filePath);
         const response = JSON.parse(fileData)
-        console.log({fileData})
-        console.log(response)
         return response.info.methods;
 
     } catch (err) {
