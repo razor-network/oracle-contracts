@@ -83,6 +83,7 @@ let gasCompare = async () => {
         // Write the markdown to a file called gasCompareOutput.json
         fs.writeFileSync('gasCompareOutput.md', markdownString);
     } else {
+        fs.writeFileSync('gasCompareOutput.md', "No changes found in gas Consumption");
         console.log("No changes found in gas Consumption");
     }
 }

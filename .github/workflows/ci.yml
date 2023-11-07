@@ -8,13 +8,12 @@ on:
     types: [opened, synchronize]
 
 jobs:
-     
   install_dependencies:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with: 
+        with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
       - uses: actions/setup-node@v3
@@ -110,43 +109,66 @@ jobs:
           fail-on: high
 
   # WIP can safely be ignored
-  # gasCompare:
-  #   runs-on: ubuntu-latest
-  #   needs: install_dependencies
-  #   steps:
-  #     - uses: bissolli/gh-action-persist-workspace@v1
-  #       with:
-  #         action: retrieve
-  #     - name: Run GasCompare
-  #       run: |
-  #         if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
-  #           BRANCH_NAME=$GITHUB_HEAD_REF
-  #         else
-  #           BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
-  #         fi
-  #         echo "Current branch is $BRANCH_NAME"
-  #         if [ "$BRANCH_NAME" == "master" ]; then
-  #           echo "This is the master branch. Exiting..."
-  #           exit 0
-  #         fi
-  #         CI=true npm run test
-  #         mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
-  #         git checkout master
-  #         npm install
-  #         CI=true npm run test
-  #         mv ./gasReporterOutput.json /tmp/gasReporterOutput_Master.json
-        
-  #     - uses: bissolli/gh-action-persist-workspace@v1
-  #       with:
-  #         action: persist
+  gasCompare:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run GasCompare
+        run: |
+          if [ "$GITHUB_EVENT_NAME" == "pull_request" ]; then
+            BRANCH_NAME=$GITHUB_HEAD_REF
+          else
+            BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | sed 's/\//-/g')
+          fi
+          echo "Current branch is $BRANCH_NAME"
+          if [ "$BRANCH_NAME" == "main" ]; then
+            echo "This is the main branch. Exiting..."
+            exit 0
+          fi
+          CI=true npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Current.json
+          git checkout main
+          npm install
+          CI=true npm run test
+          mv ./gasReporterOutput.json /tmp/gasReporterOutput_Main.json
 
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: persist
 
-  #     - uses: bissolli/gh-action-persist-workspace@v1
-  #       with:
-  #         action: retrieve
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Run GasCompare
-  #       run: |
-  #         npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Master.json
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+
+      - name: Run GasCompare
+        run: |
+          npm run gasCompare /tmp/gasReporterOutput_Current.json /tmp/gasReporterOutput_Main.json
+
+      - name: Comment on the Pull Request
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const fs = require('fs');
+            if (!fs.existsSync('gasCompareOutput.md')) {
+              console.log('No gasCompareOutput.md file found.');
+              return;
+            }
+            const markdown = fs.readFileSync('gasCompareOutput.md', 'utf8');
+            // Check if markdown content is not empty
+            if (markdown.trim().length) {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: markdown
+              });
+            } else {
+              console.log("No markdown content to comment.");
+            }
