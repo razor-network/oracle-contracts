@@ -117,8 +117,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
-        uint256 timestamp,
-        string name
+        uint256 timestamp
     );
 
     /**
@@ -348,7 +347,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(sToken.balanceOf(msg.sender) >= sAmount, "Invalid Amount");
 
         locks[msg.sender][staker.tokenAddress][LockType.Unstake] = Structs.Lock(sAmount, epoch + unstakeLockPeriod);
-        emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp, "unstaked");
+        emit Unstaked(msg.sender, epoch, stakerId, sAmount, staker.stake, block.timestamp);
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.transferFrom(msg.sender, address(this), sAmount), "sToken transfer failed");
     }
