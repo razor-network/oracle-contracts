@@ -156,8 +156,11 @@ jobs:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: |
             const fs = require('fs');
+            if (!fs.existsSync('gasCompareOutput.md')) {
+              console.log('No gasCompareOutput.md file found.');
+              return;
+            }
             const markdown = fs.readFileSync('gasCompareOutput.md', 'utf8');
-
             // Check if markdown content is not empty
             if (markdown.trim().length) {
               await github.rest.issues.createComment({
