@@ -15,6 +15,7 @@ const {
   mineToNextEpoch,
   assertRevert,
   assertBNNotEqual,
+  assertBNLessThan,
 } = require('./helpers/testHelpers');
 
 const {
@@ -114,24 +115,31 @@ describe('Delegator', function () {
 
       await mineToNextState();
 
+      const resultTimestamp = await blockManager.latestResultTimestamp(1)
       await blockManager.connect(signers[5]).claimBlockReward();
+      assertBNEqual(toBigNumber('0'), resultTimestamp);
+      assertBNNotEqual(await blockManager.latestResultTimestamp(1), toBigNumber('0'));
 
       assertBNEqual(await collectionManager.collectionIdToLeafIdRegistry(1), toBigNumber('0'));
     });
 
     it('should be able to fetch the result of the desired id', async function () {
       await mineToNextEpoch();
+      const resultTimestamp = await blockManager.latestResultTimestamp(1)
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
       assertBNEqual(result[0], toBigNumber('100'));
       assertBNEqual(result[1], toBigNumber('3'));
+      assertBNEqual(result[2], toBigNumber(resultTimestamp));
     });
 
     it('should be able to fetch result using id', async function () {
+      const resultTimestamp = await blockManager.latestResultTimestamp(1)
       const result = await delegator.getResultFromID(1);
       assertBNEqual(result[0], toBigNumber('100'));
       assertBNEqual(result[1], toBigNumber('3'));
+      assertBNEqual(result[2], toBigNumber(resultTimestamp));
     });
 
     it('should update registry when multiple collections are created', async function () {
@@ -190,7 +198,10 @@ describe('Delegator', function () {
 
       await mineToNextState();
 
+      const resultTimestamp = await blockManager.latestResultTimestamp(2)
       await blockManager.connect(signers[5]).claimBlockReward();
+      assertBNEqual(await blockManager.latestResultTimestamp(2), resultTimestamp);
+
       let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);
@@ -233,7 +244,7 @@ describe('Delegator', function () {
       await reveal(signers[5], 0, voteManager, stakeManager);
       await mineToNextState();
 
-      await adhocPropose(signers[5], [1, 2, 3, 4, 5, 6, 7, 8, 9], [100, 200, 300, 400, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[5], [1, 5, 6, 7, 8, 9], [100, 500, 600, 700, 800, 900], stakeManager, blockManager, voteManager);
       await mineToNextState();
 
       const tx = delegator.connect(signers[5]).getRandomNumber(requestId);
@@ -277,7 +288,10 @@ describe('Delegator', function () {
 
       await mineToNextState();
 
+      const resultTimestamp = await blockManager.latestResultTimestamp(2)
       await blockManager.connect(signers[5]).claimBlockReward();
+      assertBNLessThan(resultTimestamp, await blockManager.latestResultTimestamp(2));
+    
       let j = 0;
       for (let i = 1; i <= 9; i++) {
         const collection = await collectionManager.getCollection(i);

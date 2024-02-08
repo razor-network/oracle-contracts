@@ -30,14 +30,14 @@ interface IDelegator {
      * @param _name bytes32 hash of the collection name
      * @return result of the collection and its power
      */
-    function getResult(bytes32 _name) external view returns (uint256, int8);
+    function getResult(bytes32 _name) external view returns (uint256, int8, uint256);
 
     /**
      * @dev using the collection id, clients can query the result of the collection
      * @param _id collection ID
      * @return result of the collection and its power
      */
-    function getResultFromID(uint16 _id) external view returns (uint256, int8);
+    function getResultFromID(uint16 _id) external view returns (uint256, int8, uint256);
 
     /**
      * @return ids of active collections in the oracle
