@@ -52,6 +52,7 @@ describe('CollectionManager', function () {
       await Promise.all(await initializeContracts());
       await mineToNextEpoch();
       await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+      const epoch = await getEpoch();
       const url = 'http://testurl.com';
       const selector = 'selector';
       const selectorType = 0;
@@ -60,6 +61,7 @@ describe('CollectionManager', function () {
       const weight = 50;
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       const job = await collectionManager.jobs(1);
+      assert(job.epochCreatedModifiedAt === epoch);
       assert(job.url === url);
       assert(job.selector === selector);
       assertBNEqual(job.selectorType, toBigNumber('0'));
@@ -68,6 +70,7 @@ describe('CollectionManager', function () {
 
     it('should be able to create Job with XHTML selector', async function () {
       await collectionManager.grantRole(COLLECTION_MODIFIER_ROLE, signers[0].address);
+      const epoch = await getEpoch();
       const url = 'http://testurl.com/2';
       const selector = 'selector/2';
       const selectorType = 1;
@@ -76,6 +79,7 @@ describe('CollectionManager', function () {
       const weight = 50;
       await collectionManager.createJob(weight, power, selectorType, name, selector, url);
       const job = await collectionManager.jobs(2);
+      assert(job.epochCreatedModifiedAt === epoch);
       assert(job.url === url);
       assert(job.selector === selector);
       assertBNEqual(job.selectorType, toBigNumber('1'));
@@ -144,11 +148,20 @@ describe('CollectionManager', function () {
 
     it('should be able to update Job', async function () {
       await collectionManager.createJob(50, 6, 0, 'test4', 'selector/4', 'http://testurl.com/4');
+      const jobBefore = await collectionManager.jobs(4);
+      await mineToNextEpoch();
+      await mineToNextState(); // reveal
+      await mineToNextState(); // propose
+      await mineToNextState(); // dispute
+      await mineToNextState(); // confirm
+      const epoch = await getEpoch();
       await collectionManager.updateJob(4, 50, 4, 0, 'selector/5', 'http://testurl.com/5');
-      const job = await collectionManager.jobs(4);
-      assert(job.url === 'http://testurl.com/5');
-      assert(job.selector === 'selector/5');
-      assertBNEqual(job.power, toBigNumber('4'));
+      const jobAfter = await collectionManager.jobs(4);
+      assert(jobBefore.epochCreatedModifiedAt < jobAfter.epochCreatedModifiedAt);
+      assert(jobAfter.epochCreatedModifiedAt === epoch);
+      assert(jobAfter.url === 'http://testurl.com/5');
+      assert(jobAfter.selector === 'selector/5');
+      assertBNEqual(jobAfter.power, toBigNumber('4'));
     });
 
     it('should be able to get a job', async function () {

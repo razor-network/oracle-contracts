@@ -107,7 +107,9 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         require(weight <= 100, "Weight beyond max");
         numJobs = numJobs + 1;
 
-        jobs[numJobs] = Structs.Job(numJobs, uint8(selectorType), weight, power, name, selector, url);
+        uint32 epoch = _getEpoch();
+
+        jobs[numJobs] = Structs.Job(numJobs, uint8(selectorType), weight, power, epoch, name, selector, url);
 
         emit JobCreated(numJobs, block.timestamp);
     }
@@ -140,6 +142,7 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
         jobs[jobID].selectorType = uint8(selectorType);
         jobs[jobID].weight = weight;
         jobs[jobID].power = power;
+        jobs[jobID].epochCreatedModifiedAt = epoch;
         emit JobUpdated(jobID, selectorType, epoch, weight, power, block.timestamp, selector, url);
     }
 

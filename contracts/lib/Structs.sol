@@ -55,6 +55,7 @@ library Structs {
         uint8 selectorType; // 0-1
         uint8 weight; // 1-100
         int8 power;
+        uint32 epochCreatedModifiedAt;
         string name;
         string selector;
         string url;
