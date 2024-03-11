@@ -40,6 +40,7 @@ async function main() {
     const gwei = await getGasFeeData("https://eth-mainnet.alchemyapi.io/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
     const opgwei = await getGasFeeData("https://opt-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
     const polyGwei = await getGasFeeData("https://polygon-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
+    const arbitrumGwei = await getGasFeeData("https://arb-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
       getJSON(ethPrice, function (error, response) {
       
         const ethusd = response.last;
@@ -58,9 +59,9 @@ async function main() {
         console.log('reveal: $', proposecost);
         console.log('propose: $', revealcost);
         console.log('cost per epoch: $', epochcost);
-        console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-        console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-        console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+        console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
         console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
         console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
@@ -78,9 +79,29 @@ async function main() {
         console.log('reveal: $', proposecost);
         console.log('propose: $', revealcost);
         console.log('cost per epoch: $', epochcost);
-        console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-        console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-        console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+        console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
+        console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
+        console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
+        console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
+        console.log('========================================================');
+
+
+        console.log("ETHUSD", ethusd);
+        commitcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(commits)) / 10 ** 9;
+        revealcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(reveals)) / 10 ** 9;
+        proposecost = Number(ethusd) * Number(arbitrumGwei) * Number(median(proposes)) / 10 ** 9;
+        epochcost = commitcost + revealcost + revealcost;
+        console.log(commitcost, revealcost, proposecost, epochcost)
+        console.log('On ArbitrumOne Mainnet network. It will take take following cost for tx');
+        console.log('Commit: $', commitcost);
+        console.log('reveal: $', proposecost);
+        console.log('propose: $', revealcost);
+        console.log('cost per epoch: $', epochcost);
+        console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
         console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
         console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
@@ -98,9 +119,9 @@ async function main() {
             console.log('reveal: $', proposecost);
             console.log('propose: $', revealcost);
             console.log('cost per epoch: $', epochcost);
-            console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-            console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-            console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+            console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+            console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+            console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
             console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
             console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
             console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
@@ -116,9 +137,9 @@ async function main() {
         //     console.log('reveal: $', proposecost);
         //     console.log('propose: $', revealcost);
         //     console.log('cost per epoch: $', epochcost);
-        //     console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-        //     console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-        //     console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+        //     console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        //     console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        //     console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
         //     console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
         //     console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         //     console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
@@ -138,9 +159,9 @@ async function main() {
         //       console.log('reveal: $', proposecost);
         //       console.log('propose: $', revealcost);
         //       console.log('cost per epoch: $', epochcost);
-        //       console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-        //       console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-        //       console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+        //       console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        //       console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        //       console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
         //       console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
         //       console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         //       console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
@@ -159,9 +180,9 @@ async function main() {
         //       console.log('reveal: $', proposecost);
         //       console.log('propose: $', revealcost);
         //       console.log('cost per epoch: $', epochcost);
-        //       console.log('cost per day if epoch = 5min: $', epochcost * 6 * 24 * 2);
-        //       console.log('cost per week if epoch = 5min: $', epochcost * 6 * 24 * 2 * 7);
-        //       console.log('cost per month if epoch = 5min: $', epochcost * 6 * 24 * 2 * 30);
+        //       console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        //       console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        //       console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
         //       console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
         //       console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         //       console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
