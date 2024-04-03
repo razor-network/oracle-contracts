@@ -38,7 +38,7 @@ const proposes = json.info.methods.BlockManager_dc82a745.gasData;
 
 async function main() {
     const gwei = await getGasFeeData("https://eth-mainnet.alchemyapi.io/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
-    const opgwei = await getGasFeeData("https://opt-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
+    const opgwei = await getGasFeeData("http://35.240.132.193:8545");
     const polyGwei = await getGasFeeData("https://polygon-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
     const arbitrumGwei = await getGasFeeData("https://arb-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
       getJSON(ethPrice, function (error, response) {
