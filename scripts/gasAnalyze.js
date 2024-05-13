@@ -18,7 +18,7 @@ async function getGasFeeData(rpc){
     const provider = new hre.ethers.providers.JsonRpcProvider(rpc);
     const gasPrice = await provider.getFeeData();
     const formatted = hre.ethers.utils.formatUnits(gasPrice.gasPrice, 'gwei');
-    console.log("Current Gas Price", formatted);
+    console.log("Current Gas Price", formatted, rpc);
     return formatted;
  }
     catch(e){
@@ -37,10 +37,10 @@ const proposes = json.info.methods.BlockManager_dc82a745.gasData;
 
 
 async function main() {
-    const gwei = await getGasFeeData("https://eth-mainnet.alchemyapi.io/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
-    const opgwei = await getGasFeeData("http://35.240.132.193:8545");
-    const polyGwei = await getGasFeeData("https://polygon-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
-    const arbitrumGwei = await getGasFeeData("https://arb-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
+    const gwei = await getGasFeeData("https://rpc.lokibuilder.xyz/wallet");
+    const opgwei = await getGasFeeData("https://opt-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
+    const baseGwei = await getGasFeeData("https://base.meowrpc.com");
+    const opStackGwei = await getGasFeeData("http://35.246.50.60:8545");
       getJSON(ethPrice, function (error, response) {
       
         const ethusd = response.last;
@@ -89,9 +89,9 @@ async function main() {
 
 
         console.log("ETHUSD", ethusd);
-        commitcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(commits)) / 10 ** 9;
-        revealcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(reveals)) / 10 ** 9;
-        proposecost = Number(ethusd) * Number(arbitrumGwei) * Number(median(proposes)) / 10 ** 9;
+        commitcost = Number(ethusd) * Number(opStackGwei) * Number(median(commits)) / 10 ** 9;
+        revealcost = Number(ethusd) * Number(opStackGwei) * Number(median(reveals)) / 10 ** 9;
+        proposecost = Number(ethusd) * Number(opStackGwei) * Number(median(proposes)) / 10 ** 9;
         epochcost = commitcost + revealcost + revealcost;
         console.log(commitcost, revealcost, proposecost, epochcost)
         console.log('On ArbitrumOne Mainnet network. It will take take following cost for tx');
@@ -109,9 +109,9 @@ async function main() {
           getJSON(maticPrice, function (error, response) {
             const maticusd = response.last;
             console.log("MATICUSD:", maticusd);
-            commitcost = Number(maticusd) * Number(polyGwei) * Number(median(commits)) / 10 ** 9;
-            revealcost = Number(maticusd) * Number(polyGwei) * Number(median(reveals)) / 10 ** 9;
-            proposecost = Number(maticusd) * Number(polyGwei) * Number(median(proposes)) / 10 ** 9;
+            commitcost = Number(maticusd) * Number(baseGwei) * Number(median(commits)) / 10 ** 9;
+            revealcost = Number(maticusd) * Number(baseGwei) * Number(median(reveals)) / 10 ** 9;
+            proposecost = Number(maticusd) * Number(baseGwei) * Number(median(proposes)) / 10 ** 9;
             epochcost = commitcost + revealcost + revealcost;
             // console.log(Number(ethusd),Number(gwei),Number(commits))
             console.log('On Polygon network. It will take take following cost for tx');
@@ -125,11 +125,11 @@ async function main() {
             console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
             console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
             console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
-        //     const arbitrumGwei = 0.45;
+        //     const opStackGwei = 0.45;
     
-        //     commitcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(commits)) / 10 ** 9;
-        //     revealcost = Number(ethusd) * Number(arbitrumGwei) * Number(median(reveals)) / 10 ** 9;
-        //     proposecost = Number(ethusd) * Number(arbitrumGwei) * Number(median(proposes)) / 10 ** 9;
+        //     commitcost = Number(ethusd) * Number(opStackGwei) * Number(median(commits)) / 10 ** 9;
+        //     revealcost = Number(ethusd) * Number(opStackGwei) * Number(median(reveals)) / 10 ** 9;
+        //     proposecost = Number(ethusd) * Number(opStackGwei) * Number(median(proposes)) / 10 ** 9;
         //     epochcost = commitcost + revealcost + revealcost;
         //     // console.log(Number(ethusd),Number(gwei),Number(commits))
         //     console.log('On Arbitrum network. It will take take following cost for tx (Not real time)');
