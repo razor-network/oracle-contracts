@@ -40,6 +40,7 @@ async function main() {
     const gwei = await getGasFeeData("https://rpc.lokibuilder.xyz/wallet");
     const opgwei = await getGasFeeData("https://opt-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
     const baseGwei = await getGasFeeData("https://base.meowrpc.com");
+    const polyGwei = await getGasFeeData("https://rpc-mainnet.maticvigil.com");
     const opStackGwei = await getGasFeeData("http://35.246.50.60:8545");
       getJSON(ethPrice, function (error, response) {
       
@@ -94,7 +95,7 @@ async function main() {
         proposecost = Number(ethusd) * Number(opStackGwei) * Number(median(proposes)) / 10 ** 9;
         epochcost = commitcost + revealcost + revealcost;
         console.log(commitcost, revealcost, proposecost, epochcost)
-        console.log('On ArbitrumOne Mainnet network. It will take take following cost for tx');
+        console.log('On OP Stack Testnet network. It will take take following cost for tx');
         console.log('Commit: $', commitcost);
         console.log('reveal: $', proposecost);
         console.log('propose: $', revealcost);
@@ -106,12 +107,32 @@ async function main() {
         console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
         console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
         console.log('========================================================');
+
+        console.log("ETHUSD", ethusd);
+        commitcost = Number(ethusd) * Number(baseGwei) * Number(median(commits)) / 10 ** 9;
+        revealcost = Number(ethusd) * Number(baseGwei) * Number(median(reveals)) / 10 ** 9;
+        proposecost = Number(ethusd) * Number(baseGwei) * Number(median(proposes)) / 10 ** 9;
+        epochcost = commitcost + revealcost + revealcost;
+        console.log(commitcost, revealcost, proposecost, epochcost)
+        console.log('On Base Mainnet network. It will take take following cost for tx');
+        console.log('Commit: $', commitcost);
+        console.log('reveal: $', proposecost);
+        console.log('propose: $', revealcost);
+        console.log('cost per epoch: $', epochcost);
+        console.log('cost per day if epoch = 5min: $', epochcost * 12 * 24);
+        console.log('cost per week if epoch = 5min: $', epochcost * 12 * 24 * 7);
+        console.log('cost per month if epoch = 5min: $', epochcost * 12 * 24 * 30);
+        console.log('cost per day if epoch = 1 hour: $', epochcost * 24);
+        console.log('cost per week if epoch = 1 hour: $', epochcost * 24 * 7);
+        console.log('cost per month if epoch = 1 hour: $', epochcost * 24 * 30);
+        console.log('========================================================');
+
           getJSON(maticPrice, function (error, response) {
             const maticusd = response.last;
             console.log("MATICUSD:", maticusd);
-            commitcost = Number(maticusd) * Number(baseGwei) * Number(median(commits)) / 10 ** 9;
-            revealcost = Number(maticusd) * Number(baseGwei) * Number(median(reveals)) / 10 ** 9;
-            proposecost = Number(maticusd) * Number(baseGwei) * Number(median(proposes)) / 10 ** 9;
+            commitcost = Number(maticusd) * Number(polyGwei) * Number(median(commits)) / 10 ** 9;
+            revealcost = Number(maticusd) * Number(polyGwei) * Number(median(reveals)) / 10 ** 9;
+            proposecost = Number(maticusd) * Number(polyGwei) * Number(median(proposes)) / 10 ** 9;
             epochcost = commitcost + revealcost + revealcost;
             // console.log(Number(ethusd),Number(gwei),Number(commits))
             console.log('On Polygon network. It will take take following cost for tx');
