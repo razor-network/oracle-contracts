@@ -41,7 +41,7 @@ async function main() {
     const opgwei = await getGasFeeData("https://opt-mainnet.g.alchemy.com/v2/B2TSPVLHcfePftR4ZdgRsjwoaWNAPP65");
     const baseGwei = await getGasFeeData("https://base.meowrpc.com");
     const polyGwei = await getGasFeeData("https://rpc-mainnet.maticvigil.com");
-    const opStackGwei = await getGasFeeData("http://35.246.50.60:8545");
+    const opStackGwei = await getGasFeeData("http://35.240.132.193:8547");
       getJSON(ethPrice, function (error, response) {
       
         const ethusd = response.last;
@@ -95,7 +95,7 @@ async function main() {
         proposecost = Number(ethusd) * Number(opStackGwei) * Number(median(proposes)) / 10 ** 9;
         epochcost = commitcost + revealcost + revealcost;
         console.log(commitcost, revealcost, proposecost, epochcost)
-        console.log('On OP Stack Testnet network. It will take take following cost for tx');
+        console.log('On ARB L3 Stack Testnet network. It will take take following cost for tx');
         console.log('Commit: $', commitcost);
         console.log('reveal: $', proposecost);
         console.log('propose: $', revealcost);
