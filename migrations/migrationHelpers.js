@@ -124,7 +124,7 @@ const getdeployedContractInstance = async (
   return { Contract, contractInstance };
 };
 
-const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master';
+const SOURCE = 'https://raw.githubusercontent.com/razor-network/datasources/master/testnet';
 
 const getJobs = async () => {
   try {
@@ -169,7 +169,7 @@ const waitForConfirmState = async (numStates, stateLength) => {
   while (state !== 4) {
     state = await currentState(numStates, stateLength);
     console.log('Current state', state);
-    await sleep(10000);
+    await sleep(1000);
   }
 };
 
