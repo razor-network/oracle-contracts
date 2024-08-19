@@ -473,8 +473,8 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     }
 
     /// @inheritdoc IBlockManager
-    function getLatestResults(uint16 id) external view override returns (uint256) {
-        return latestResults[id];
+    function getLatestResults(uint16 id) external view override returns (uint256, uint256) {
+        return (latestResults[id], latestResultTimestamp[id]);
     }
 
     /**
@@ -492,6 +492,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         Structs.Block memory _block = blocks[epoch];
         for (uint256 i = 0; i < _block.ids.length; i++) {
             latestResults[_block.ids[i]] = _block.medians[i];
+            latestResultTimestamp[_block.ids[i]] = block.timestamp;
         }
 
         emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);

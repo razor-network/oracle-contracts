@@ -29,5 +29,5 @@ interface IBlockManager {
      * @notice Allows to get latest result of collection from id, used by delegator
      * @param id Collection ID
      */
-    function getLatestResults(uint16 id) external view returns (uint256);
+    function getLatestResults(uint16 id) external view returns (uint256, uint256);
 }
