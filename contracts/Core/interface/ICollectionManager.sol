@@ -70,7 +70,7 @@ interface ICollectionManager {
      * @notice returns the result of the collection based on the name sent by the client
      * @param _name the name of the collection in bytes32
      * @return result of the collection
-     * @return result timestamp of the collection
+     * @return timestamp of the collection
      * @return power of the resultant collection
      */
     function getResult(bytes32 _name) external view returns (uint256, int8, uint256);
