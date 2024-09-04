@@ -169,7 +169,7 @@ const waitForConfirmState = async (numStates, stateLength) => {
   while (state !== 4) {
     state = await currentState(numStates, stateLength);
     console.log('Current state', state);
-    await sleep(10000);
+    await sleep(1000);
   }
 };
 

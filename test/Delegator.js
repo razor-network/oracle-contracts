@@ -121,17 +121,21 @@ describe('Delegator', function () {
 
     it('should be able to fetch the result of the desired id', async function () {
       await mineToNextEpoch();
+      const resultTimestamp = await blockManager.latestResultTimestamp(1)
       const collectionName = 'Test Collection';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
       assertBNEqual(result[3], toBigNumber('100'));
+      assertBNEqual(result[4], resultTimestamp);
       assertBNEqual(result[0], toBigNumber('3'));
     });
 
     it('should be able to fetch result using id', async function () {
+      const resultTimestamp = await blockManager.latestResultTimestamp(1)
       const result = await delegator.getResultFromID(1);
       assertBNEqual(result[0], toBigNumber('100'));
       assertBNEqual(result[1], toBigNumber('3'));
+      assertBNEqual(result[2], resultTimestamp);
     });
 
     it('should update registry when multiple collections are created', async function () {
@@ -204,8 +208,10 @@ describe('Delegator', function () {
       await mineToNextEpoch();
       const collectionName = 'Test Collection5';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
+      const resultTimestamp = await blockManager.latestResultTimestamp(5)
       const result = await delegator.getResult(hName);
       assertBNEqual(result[3], toBigNumber('500'));
+      assertBNEqual(result[4], resultTimestamp);
       assertBNEqual(result[0], toBigNumber('2'));
     });
 
@@ -292,9 +298,11 @@ describe('Delegator', function () {
       const collectionName = 'Test Collection3';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
+      const resultTimestamp = await blockManager.latestResultTimestamp(3);
       const collectionID = await collectionManager.ids(hName);
       assertBNEqual(collectionID, toBigNumber('3'));
       assertBNEqual(result[3], toBigNumber('300'));
+      assertBNEqual(result[4], resultTimestamp);
       assertBNEqual(result[0], toBigNumber('2'));
     });
 

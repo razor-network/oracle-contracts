@@ -13,6 +13,8 @@ contract BlockStorage {
     mapping(uint32 => uint32) public epochLastProposed;
     // @notice mapping for latest results of collection id->result
     mapping(uint16 => uint256) public latestResults;
+    // @notice mapping for latest results of collection id->result timestamp
+    mapping(uint16 => uint256) public latestResultTimestamp;
     /// @notice total number of proposed blocks in an epoch
     // slither-disable-next-line constable-states
     uint32 public numProposedBlocks;
