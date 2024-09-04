@@ -29,7 +29,7 @@ contract Constants {
 
     uint8 public constant NUM_STATES = 5;
 
-    uint16 public constant EPOCH_LENGTH = 1200;
+    uint16 public constant EPOCH_LENGTH = 300;
 
     // slither-disable-next-line too-many-digits
     address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
