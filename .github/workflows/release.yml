@@ -1,22 +1,23 @@
-name: Release
+name: Release Package
+
 on:
   push:
-    branches:
-      - "next"
+    tags:
+      - v*
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        persist-credentials: false
-    - uses: actions/setup-node@v1
-      with:
-        node-version: "16.x"
-    - run: yarn cp-ci-env
-    - run: yarn install
-    - run: yarn run hardhat export-abi
-    - run: yarn semantic-release
-      env:
-        GITHUB_TOKEN: ${{ secrets.RAZORNETWORKBOT }}
-        NPM_TOKEN: ${{ secrets.RAZORDEPLOYER }}
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "18.x"
+      - run: yarn cp-ci-env
+      - run: yarn install
+      - run: yarn run hardhat export-abi
+      - run: yarn semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RAZORNETWORKBOT }}
+          NPM_TOKEN: ${{ secrets.RAZORDEPLOYER }}
