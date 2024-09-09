@@ -3,29 +3,30 @@ const {
   assertRevert,
 } = require('./helpers/testHelpers');
 
-const InitializableMock = artifacts.require('../contracts/mocks/InitializableMock');
+let mock;
 
 describe('Initializable', function () {
   beforeEach('deploying', async function () {
-    this.contract = await InitializableMock.new();
+    const InitializableMock = await ethers.getContractFactory('InitializableMock');
+    mock = await InitializableMock.deploy();
   });
 
   it('initializer has not run', async function () {
-    assert.isFalse(await this.contract.initializerRan());
+    assert.isFalse(await mock.initializerRan());
   });
 
   it('initializer has run', async function () {
-    await this.contract.initialize();
-    assert.isTrue(await this.contract.initializerRan());
+    await mock.initialize();
+    assert.isTrue(await mock.initializerRan());
   });
 
   it('initializer does not run again', async function () {
-    await this.contract.initialize();
-    await assertRevert(this.contract.initialize(), 'contract already initialized');
+    await mock.initialize();
+    await assertRevert(mock.initialize(), 'contract already initialized');
   });
 
   it('initializer has run after nested initialization', async function () {
-    await this.contract.initializeNested();
-    assert.isTrue(await this.contract.initializerRan());
+    await mock.initializeNested();
+    assert.isTrue(await mock.initializerRan());
   });
 });
