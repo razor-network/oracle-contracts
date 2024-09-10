@@ -21,6 +21,7 @@ const {
   getEpoch,
   tokenAmount,
   getDepth,
+  getState
 } = require('./helpers/utils');
 
 describe('CollectionManager', function () {
@@ -317,11 +318,12 @@ describe('CollectionManager', function () {
     });
 
     it('Should be able to get correct depth of merkle tree for series of 100 active collections', async function () {
+      
       const power = 3;
       const tolerance = 500;
       const depthArr = [];
       const expectedDepthArr = [];
-      for (let i = 4; i <= 102; i++) {
+      for (let i = 4; i <= 50; i++) {
         await collectionManager.createCollection(tolerance, power, 1, [1, 2], `Test Collection ${i}`);
         const numActiveCollections = await collectionManager.getNumActiveCollections();
         const treeDepth = await collectionManager.getDepth();

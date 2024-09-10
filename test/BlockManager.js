@@ -34,7 +34,7 @@ const {
 
 const { utils } = ethers;
 const {
-  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed,
+  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed, getData
 } = require('./helpers/InternalEngine');
 
 describe('BlockManager', function () {
@@ -550,10 +550,12 @@ describe('BlockManager', function () {
 
       // Staker 3
       await reveal(signers[7], 20, voteManager, stakeManager);
+
+      const data = await getData(signers[7]);
       // Propose
       await mineToNextState();
 
-      validLeafIdToBeDisputed = toBigNumber('4');
+      validLeafIdToBeDisputed = data.seqAllotedCollections[0];
 
       await proposeWithDeviation(signers[6], 1, stakeManager, blockManager, voteManager, collectionManager);
 

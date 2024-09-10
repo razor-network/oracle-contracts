@@ -230,6 +230,8 @@ const proposeWithDeviation = async (signer, deviation, stakeManager, blockManage
     mediansValues,
     iteration,
     biggestStakerId);
+
+  return [idsRevealedThisEpoch, mediansValues];
 };
 
 const propose = async (signer, stakeManager, blockManager, voteManager, collectionManager) => {
