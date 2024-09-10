@@ -17,7 +17,7 @@
     "no-unused-vars": "error",
     "not-rely-on-time" : "off",
     "ordering": "error",
-    "prettier/prettier": "warning",
+    "prettier/prettier": "error",
     "private-vars-leading-underscore": "error",
     "quotes": ["error","double"],
     "reentrancy": "error",
