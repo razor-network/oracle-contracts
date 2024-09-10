@@ -34,7 +34,7 @@ const {
 
 const { utils } = ethers;
 const {
-  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed, getData
+  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed, getData,
 } = require('./helpers/InternalEngine');
 
 describe('BlockManager', function () {

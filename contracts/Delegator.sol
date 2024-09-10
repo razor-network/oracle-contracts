@@ -50,7 +50,17 @@ contract Delegator is Pause, IDelegator {
     }
 
     /// @inheritdoc IDelegator
-    function getResultFromID(uint16 _id) external view override whenNotPaused returns (uint256, int8, uint256) {
+    function getResultFromID(uint16 _id)
+        external
+        view
+        override
+        whenNotPaused
+        returns (
+            uint256,
+            int8,
+            uint256
+        )
+    {
         return collectionManager.getResultFromID(_id);
     }
 

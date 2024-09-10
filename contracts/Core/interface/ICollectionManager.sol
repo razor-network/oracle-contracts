@@ -73,7 +73,14 @@ interface ICollectionManager {
      * @return timestamp of the collection
      * @return power of the resultant collection
      */
-    function getResult(bytes32 _name) external view returns (uint256, int8, uint256);
+    function getResult(bytes32 _name)
+        external
+        view
+        returns (
+            uint256,
+            int8,
+            uint256
+        );
 
     /**
      * @notice returns the result of the collection based on the id sent by the client
@@ -82,7 +89,14 @@ interface ICollectionManager {
      * @return timestamp of the collection when latest result was set
      * @return power of the resultant collection
      */
-    function getResultFromID(uint16 _id) external view returns (uint256, int8, uint256);
+    function getResultFromID(uint16 _id)
+        external
+        view
+        returns (
+            uint256,
+            int8,
+            uint256
+        );
 
     /**
      * @return epoch in which the registry needs to be updated
