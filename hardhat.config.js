@@ -8,7 +8,6 @@ if (dotenvResult.error) {
 }
 
 require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
@@ -32,7 +31,7 @@ const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
   mumbai: 80001,
-  skale: 1517929550,
+  skale: 2046399126,
 };
 
 module.exports = {
@@ -87,8 +86,7 @@ module.exports = {
       timeout: 300000,
     },
     skale: {
-      url: PROVIDER_URL || '',
-      accounts: { mnemonic: MNEMONIC },
+      url: 'http://127.0.0.1:1248', // this is the RPC endpoint exposed by Frame,
       chainId: ENV_CHAIN_IDS[NETWORK],
       timeout: 300000,
     },
