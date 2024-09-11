@@ -511,12 +511,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param biggestStake biggest Stake that was revealed
      * @return isAdded : whether the block was added to the array
      */
-    function _insertAppropriately(
-        uint32 epoch,
-        uint32 blockId,
-        uint256 iteration,
-        uint256 biggestStake
-    ) internal returns (bool isAdded) {
+    function _insertAppropriately(uint32 epoch, uint32 blockId, uint256 iteration, uint256 biggestStake) internal returns (bool isAdded) {
         uint8 sortedProposedBlockslength = uint8(sortedProposedBlockIds[epoch].length);
 
         if (sortedProposedBlockslength == 0) {
@@ -570,11 +565,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param blockIndex index of the block that is disputed
      * @param blockId id of the block being disputed
      */
-    function _executeDispute(
-        uint32 epoch,
-        uint8 blockIndex,
-        uint32 blockId
-    ) internal {
+    function _executeDispute(uint32 epoch, uint8 blockIndex, uint32 blockId) internal {
         proposedBlocks[epoch][blockId].valid = false;
 
         uint8 sortedProposedBlocksLength = uint8(sortedProposedBlockIds[epoch].length);
@@ -627,12 +618,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // stake * 2^32 < prng * 2^32 * biggestStake
         // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32
         bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
-        uint256 rand2 = Random.prng(2**32, seed2);
+        uint256 rand2 = Random.prng(2 ** 32, seed2);
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         uint256 stake = voteManager.getStakeSnapshot(epoch, stakerId);
         // Below line can't be tested since it can't be assured if it returns true or false
-        if (rand2 * (biggestStake) > stake * (2**32)) return (false);
+        if (rand2 * (biggestStake) > stake * (2 ** 32)) return (false);
         return true;
     }
 }

@@ -38,11 +38,7 @@ contract StateManager is Constants {
     /** @notice a check to ensure the epoch value sent in the function is of the currect epoch
      * and was called in the state specified
      */
-    modifier checkEpochAndState(
-        State state,
-        uint32 epoch,
-        uint8 buffer
-    ) {
+    modifier checkEpochAndState(State state, uint32 epoch, uint8 buffer) {
         // slither-disable-next-line incorrect-equality
         require(epoch == _getEpoch(), "incorrect epoch");
         // slither-disable-next-line incorrect-equality

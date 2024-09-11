@@ -424,12 +424,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @inheritdoc IStakeManager
-    function srzrTransfer(
-        address from,
-        address to,
-        uint256 amount,
-        uint32 stakerId
-    ) external override initialized onlyRole(STOKEN_ROLE) {
+    function srzrTransfer(address from, address to, uint256 amount, uint32 stakerId) external override initialized onlyRole(STOKEN_ROLE) {
         emit SrzrTransfer(from, to, amount, stakerId);
     }
 
@@ -513,11 +508,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /// @inheritdoc IStakeManager
-    function slash(
-        uint32 epoch,
-        uint32 stakerId,
-        address bountyHunter
-    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
+    function slash(uint32 epoch, uint32 stakerId, address bountyHunter) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
 
         uint256 bounty;
@@ -631,13 +622,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param _id of the staker
      * @param _stake the amount of Razor tokens staked
      */
-    function _setStakerStake(
-        uint32 _epoch,
-        uint32 _id,
-        Constants.StakeChanged reason,
-        uint256 _prevStake,
-        uint256 _stake
-    ) internal {
+    function _setStakerStake(uint32 _epoch, uint32 _id, Constants.StakeChanged reason, uint256 _prevStake, uint256 _stake) internal {
         stakers[_id].stake = _stake;
         emit StakeChange(_epoch, _id, reason, _prevStake, _stake, block.timestamp);
     }
@@ -667,11 +652,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param _sAmount The Amount in sRZR
      * @param _currentStake The cuurent stake of associated staker
      */
-    function _convertSRZRToRZR(
-        uint256 _sAmount,
-        uint256 _currentStake,
-        uint256 _totalSupply
-    ) internal pure returns (uint256) {
+    function _convertSRZRToRZR(uint256 _sAmount, uint256 _currentStake, uint256 _totalSupply) internal pure returns (uint256) {
         return ((_sAmount * _currentStake) / _totalSupply);
     }
 
@@ -681,11 +662,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param _currentStake The cuurent stake of associated staker
      * @param _totalSupply The totalSupply of sRZR
      */
-    function _convertRZRtoSRZR(
-        uint256 _amount,
-        uint256 _currentStake,
-        uint256 _totalSupply
-    ) internal pure returns (uint256) {
+    function _convertRZRtoSRZR(uint256 _amount, uint256 _currentStake, uint256 _totalSupply) internal pure returns (uint256) {
         // Follwoing require is included to cover case where
         // CurrentStake Becomes zero beacues of penalties,
         //this is likely scenario when staker stakes is slashed to 0 for invalid block.

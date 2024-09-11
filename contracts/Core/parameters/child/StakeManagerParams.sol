@@ -37,16 +37,12 @@ abstract contract StakeManagerParams is ACL, IStakeManagerParams, Constants {
     /// @notice slashing params being used if staker is slashed. Slash Penalty = bounty + burned + kept == 100%
     SlashNums public slashNums = SlashNums(500_000, 9_500_000, 0);
     /// @notice minimum amount of stake required to participate
-    uint256 public minStake = 20000 * (10**18);
+    uint256 public minStake = 20000 * (10 ** 18);
     /// @notice minimum amount of stake required to become a staker
-    uint256 public minSafeRazor = 10000 * (10**18);
+    uint256 public minSafeRazor = 10000 * (10 ** 18);
 
     /// @inheritdoc IStakeManagerParams
-    function setSlashParams(
-        uint32 _bounty,
-        uint32 _burn,
-        uint32 _keep
-    ) external override onlyRole(GOVERNANCE_ROLE) {
+    function setSlashParams(uint32 _bounty, uint32 _burn, uint32 _keep) external override onlyRole(GOVERNANCE_ROLE) {
         require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "params sum exceeds denominator");
         // slither-disable-next-line events-maths
         slashNums = SlashNums(_bounty, _burn, _keep);

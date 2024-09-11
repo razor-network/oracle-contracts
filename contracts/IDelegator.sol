@@ -46,14 +46,7 @@ interface IDelegator {
      * @param _id collection ID
      * @return result of the collection, its power and last updated timestamp
      */
-    function getResultFromID(uint16 _id)
-        external
-        view
-        returns (
-            uint256,
-            int8,
-            uint256
-        );
+    function getResultFromID(uint16 _id) external view returns (uint256, int8, uint256);
 
     /**
      * @return ids of active collections in the oracle
