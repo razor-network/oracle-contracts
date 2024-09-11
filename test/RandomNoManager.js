@@ -5,6 +5,7 @@ const {
   assertRevert,
   assertBNNotEqual,
 } = require('./helpers/testHelpers');
+const { assert } = require('chai');
 const { commit, reveal, propose } = require('./helpers/InternalEngine');
 const { setupContracts } = require('./helpers/testSetup');
 const {
@@ -166,7 +167,7 @@ describe('RandomNoManager', function () {
       // Get Random no : Generic From Epoch
       const randomNo3 = await randomNoManager.getGenericRandomNumber(epoch);
       const seed3 = await randomNoManager.secrets(epoch);
-      const salt3 = 0;
+      const salt3 = "0x0000000000000000000000000000000000000000000000000000000000000000";
       const locallyCalculatedRandomNo3 = await prngHash(seed3, salt3);
       assertBNEqual(randomNo3, toBigNumber(locallyCalculatedRandomNo3));
       assertBNNotEqual(randomNo3, randomNo);

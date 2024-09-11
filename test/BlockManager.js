@@ -9,6 +9,7 @@ const {
   mineToNextState,
   assertRevert,
 } = require('./helpers/testHelpers');
+const { assert, expect } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
@@ -278,7 +279,6 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       const numActiveCollections = await collectionManager.getNumActiveCollections();
@@ -409,7 +409,6 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, res1.sortedValues);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
@@ -428,7 +427,6 @@ describe('BlockManager', function () {
       const res2 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       await blockManager.connect(signers[15]).giveSorted(epoch, validLeafIdToBeDisputed, res2.sortedValues);
@@ -574,7 +572,6 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       // Dispute in batches
@@ -795,7 +792,6 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[10]).giveSorted(epoch, validLeafIdToBeDisputed, res1.sortedValues);
 
@@ -1349,7 +1345,6 @@ describe('BlockManager', function () {
       const res = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       await blockManager.giveSorted(epoch, validLeafIdToBeDisputed, res.sortedValues);
