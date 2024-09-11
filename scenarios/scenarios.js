@@ -1,7 +1,7 @@
+const { assert } = require('chai');
 const {
   getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
-const { assert } = require('chai');
 const { mineBlock } = require('../test/helpers/testHelpers');
 const {
   COLLECTION_MODIFIER_ROLE,

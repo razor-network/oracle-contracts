@@ -139,7 +139,7 @@ describe('AssignCollectionsRandomly', function () {
       // as a staker, you have to pass sorted values
       const data = await getData(signers[1]);
       const validLeafIdToBeDisputed = (data.seqAllotedCollections)[0];
-      console.log(data.seqAllotedCollections)
+      console.log(data.seqAllotedCollections);
       console.log('Data Fetched');
       const {
         sortedValues,

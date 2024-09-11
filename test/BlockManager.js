@@ -2,6 +2,7 @@
 // @dev : above is a quick fix for this linting error
 // I couldnt understand what it meant, to solve it
 
+const { assert, expect } = require('chai');
 const {
   assertBNEqual,
   assertDeepEqual,
@@ -9,7 +10,6 @@ const {
   mineToNextState,
   assertRevert,
 } = require('./helpers/testHelpers');
-const { assert, expect } = require('chai');
 const { setupContracts } = require('./helpers/testSetup');
 const {
   DEFAULT_ADMIN_ROLE_HASH,
