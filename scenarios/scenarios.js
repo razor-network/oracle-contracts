@@ -1,3 +1,4 @@
+const { assert } = require('chai');
 const {
   getState, adhocCommit, adhocReveal, getData, adhocPropose,
 } = require('../test/helpers/utils');
@@ -910,7 +911,6 @@ describe('Scenarios', async () => {
         const median = await calculateDisputesData(medianIndex,
           voteManager,
           stakeManager,
-          collectionManager,
           epoch);
         helper[medianIndex] = median.median;
       }
@@ -974,7 +974,6 @@ describe('Scenarios', async () => {
     } = await calculateDisputesData(validActiveCollectionIndexToBeDisputed,
       voteManager,
       stakeManager,
-      collectionManager,
       epoch);
     await blockManager.connect(signers[4]).giveSorted(epoch, validActiveCollectionIndexToBeDisputed, sortedValues);
 

@@ -24,11 +24,7 @@ interface IVoteManager {
      * @param leafId seq position of collection in merkle tree
      * @return vote value
      */
-    function getVoteValue(
-        uint32 epoch,
-        uint32 stakerId,
-        uint16 leafId
-    ) external view returns (uint256);
+    function getVoteValue(uint32 epoch, uint32 stakerId, uint16 leafId) external view returns (uint256);
 
     /**
      * @notice returns vote weight of the value of the collection reported
@@ -37,11 +33,7 @@ interface IVoteManager {
      * @param voteValue one of the values of the collection being reported
      * @return vote weight of the vote
      */
-    function getVoteWeight(
-        uint32 epoch,
-        uint16 leafId,
-        uint256 voteValue
-    ) external view returns (uint256);
+    function getVoteWeight(uint32 epoch, uint16 leafId, uint256 voteValue) external view returns (uint256);
 
     /**
      * @notice returns snapshot of influence of the staker when they revealed

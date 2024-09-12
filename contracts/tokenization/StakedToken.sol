@@ -36,11 +36,7 @@ contract StakedToken is ERC20, IStakedToken {
     }
 
     /// @inheritdoc IStakedToken
-    function mint(
-        address account,
-        uint256 amount,
-        uint256 _razorDeposited
-    ) external override onlyOwner returns (bool) {
+    function mint(address account, uint256 amount, uint256 _razorDeposited) external override onlyOwner returns (bool) {
         razorDeposited[account] = razorDeposited[account] + _razorDeposited;
         _mint(account, amount);
         return true;
@@ -65,11 +61,7 @@ contract StakedToken is ERC20, IStakedToken {
      * @param to address where sRZR is being transferred to
      * @param amount amount sRZR being transferred
      */
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal virtual override {
         //mint : addition, would happen in case of delegate or stake
         //burn : subtraction, would happeen when staker calls withdraw
         //transfer : add and sub

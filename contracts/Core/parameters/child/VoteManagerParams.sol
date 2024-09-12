@@ -9,7 +9,7 @@ abstract contract VoteManagerParams is ACL, IVoteManagerParams, Constants {
     /// @notice maximum number of collections that can be assigned to the staker
     uint16 public toAssign = 3;
     /// @notice minimum amount of stake required to participate
-    uint256 public minStake = 20000 * (10**18);
+    uint256 public minStake = 20000 * (10 ** 18);
 
     /// @inheritdoc IVoteManagerParams
     function setMinStake(uint256 _minStake) external override onlyRole(GOVERNANCE_ROLE) {

@@ -9,11 +9,7 @@ interface IStakeManagerParams {
      * @param _burn updated percent value to be set for burn
      * @param _keep updated percent value to be set for keep
      */
-    function setSlashParams(
-        uint32 _bounty,
-        uint32 _burn,
-        uint32 _keep
-    ) external;
+    function setSlashParams(uint32 _bounty, uint32 _burn, uint32 _keep) external;
 
     /**
      * @notice changing the number of epochs for which the RAZORs are locked after initiating withdraw
