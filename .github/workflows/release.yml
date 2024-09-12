@@ -27,5 +27,5 @@ jobs:
       - run: yarn run hardhat export-abi
       - run: npm publish
         env:
-          GITHUB_TOKEN: ${{ secrets.RAZORNETWORKBOT }}
-          NPM_TOKEN: ${{ secrets.RAZORDEPLOYER }}
+          GITHUB_TOKEN: ${{ secrets.GIT_TOKEN }}
+          NPM_TOKEN: ${{ secrets.PERSONAL_NPM }}
