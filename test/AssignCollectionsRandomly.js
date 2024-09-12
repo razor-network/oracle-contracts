@@ -135,11 +135,11 @@ describe('AssignCollectionsRandomly', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[19], blockManager, collectionManager);
+
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
 
       await mineToNextState();
@@ -151,10 +151,10 @@ describe('AssignCollectionsRandomly', function () {
       /* ///////////////////////////////////////////////////////////////
                           DELEGATOR
       ////////////////////////////////////////////////////////////// */
-      const collectionName = 'c2';
+      const collectionName = 'c0';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result1 = await delegator.getResult(hName);
-      assertBNEqual(result1[3], 300);
+      assertBNEqual(result1[3], 100);
       const result2 = await delegator.getResult(utils.solidityKeccak256(['string'], ['c1']));
       assertBNEqual(result2[3], 0);
 
@@ -194,7 +194,6 @@ describe('AssignCollectionsRandomly', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       let collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
@@ -202,7 +201,7 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
 
       // Give Sorted and FinaliseDispute on non-revealed asset
-      await blockManager.giveSorted(epoch, 0, [100]);
+      await blockManager.giveSorted(epoch, 3, [400]);
       collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[0], blockManager, collectionManager);
       await assertRevert(blockManager.finalizeDispute(epoch, 0, collectionIndexInBlock), 'Invalid dispute');
@@ -213,7 +212,7 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 5), 'Dispute: ID present only');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 6), 'Dispute: ID present only');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 7), 'Dispute: ID present only');
-      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 1), 'Dispute: ID should be absent');
+      await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 1), 'Dispute: ID present only');
       await assertRevert(blockManager.disputeCollectionIdShouldBePresent(epoch, 0, 4), 'Dispute: ID should be absent');
 
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 2, 0), 'Dispute: ID should be present');
@@ -221,7 +220,7 @@ describe('AssignCollectionsRandomly', function () {
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 5, 0), 'Dispute: ID should be present');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 6, 0), 'Dispute: ID should be present');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 7, 0), 'Dispute: ID should be present');
-      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0), 'Dispute: ID absent only');
+      await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0), 'Dispute: ID should be present');
       await assertRevert(blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 4, 0), 'Dispute: ID absent only');
       // the id itself doesnt exist
       await assertRevert(blockManager.disputeOnOrderOfIds(epoch, 0, 1, 0), 'index1 not greater than index0 0');
@@ -229,10 +228,10 @@ describe('AssignCollectionsRandomly', function () {
     });
 
     it('Delegator should be able to fetch the result of non revealed asset', async () => {
-      const collectionName = 'c2';
+      const collectionName = 'c0';
       const hName = utils.solidityKeccak256(['string'], [collectionName]);
       const result = await delegator.getResult(hName);
-      assertBNEqual(result[3], 300);
+      assertBNEqual(result[3], 100);
     });
 
     it('Staker Proposes revealed assets in-correctly', async () => {
@@ -296,11 +295,11 @@ describe('AssignCollectionsRandomly', function () {
       await restoreSnapshot(snapshotId);
       snapshotId = await takeSnapshot();
       // additional 2
-      await adhocPropose(signers[1], [1, 2, 5, 6, 7], [100, 200, 500, 600, 700], stakeManager, blockManager, voteManager);
+      await adhocPropose(signers[1], [1, 2, 4, 5, 6, 7], [100, 200, 400, 500, 600, 700], stakeManager, blockManager, voteManager);
       await mineToNextState();
       const epoch = await getEpoch();
 
-      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 1, 0);
+      await blockManager.disputeCollectionIdShouldBeAbsent(epoch, 0, 4, 2);
       const blockIndexToBeConfirmed = await blockManager.blockIndexToBeConfirmed();
       const block = await blockManager.getProposedBlock(epoch, 0);
       expect(blockIndexToBeConfirmed).to.eq(-1);

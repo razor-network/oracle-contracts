@@ -147,12 +147,10 @@ contract CollectionManager is Initializable, CollectionStorage, StateManager, Co
      * @param assetStatus the status that needs to be set for the collection
      * @param id the collection id for which the status needs to change
      */
-    function setCollectionStatus(bool assetStatus, uint16 id)
-        external
-        initialized
-        onlyRole(COLLECTION_MODIFIER_ROLE)
-        checkState(State.Confirm, buffer)
-    {
+    function setCollectionStatus(
+        bool assetStatus,
+        uint16 id
+    ) external initialized onlyRole(COLLECTION_MODIFIER_ROLE) checkState(State.Confirm, buffer) {
         require(id != 0, "ID cannot be 0");
         require(id <= numCollections, "ID does not exist");
 

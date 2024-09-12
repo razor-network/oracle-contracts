@@ -164,11 +164,7 @@ contract RewardManager is Initializable, Constants, RewardManagerParams, IReward
      * @param stakeValue The Stake that staker had in last epoch
      * @param ageValue The age that staker had in last epoch
      */
-    function _calculateInactivityPenalties(
-        uint32 epochs,
-        uint256 stakeValue,
-        uint32 ageValue
-    ) internal view returns (uint256, uint32) {
+    function _calculateInactivityPenalties(uint32 epochs, uint256 stakeValue, uint32 ageValue) internal view returns (uint256, uint32) {
         uint256 penalty = ((epochs) * (stakeValue * penaltyNotRevealNum)) / BASE_DENOMINATOR;
         uint256 newStake = penalty < stakeValue ? stakeValue - penalty : 0;
         uint256 penaltyAge = (uint256(epochs) * (uint256(ageValue) * uint256(penaltyAgeNotRevealNum))) / BASE_DENOMINATOR;

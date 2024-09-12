@@ -14,13 +14,7 @@ interface IStakeManager {
      * @param prevStake previous stake of the staker
      * @param _stake updated stake of the staker
      */
-    function setStakerStake(
-        uint32 _epoch,
-        uint32 _id,
-        Constants.StakeChanged reason,
-        uint256 prevStake,
-        uint256 _stake
-    ) external;
+    function setStakerStake(uint32 _epoch, uint32 _id, Constants.StakeChanged reason, uint256 prevStake, uint256 _stake) external;
 
     /**
      * @notice The function is used by the Votemanager reveal function and BlockManager FinalizeDispute
@@ -29,11 +23,7 @@ interface IStakeManager {
      * @param stakerId The ID of the staker who is penalised
      * @param bountyHunter The address of the bounty hunter
      */
-    function slash(
-        uint32 epoch,
-        uint32 stakerId,
-        address bountyHunter
-    ) external;
+    function slash(uint32 epoch, uint32 stakerId, address bountyHunter) external;
 
     /**
      * @notice External function for setting staker age of the staker
@@ -43,12 +33,7 @@ interface IStakeManager {
      * @param _age the updated new age
      * @param reason the reason for age change
      */
-    function setStakerAge(
-        uint32 _epoch,
-        uint32 _id,
-        uint32 _age,
-        Constants.AgeChanged reason
-    ) external;
+    function setStakerAge(uint32 _epoch, uint32 _id, uint32 _age, Constants.AgeChanged reason) external;
 
     /**
      * @notice External function for setting stakerReward of the staker
@@ -86,12 +71,7 @@ interface IStakeManager {
      * @param amount srzr amount being transferred
      * @param stakerId of the staker
      */
-    function srzrTransfer(
-        address from,
-        address to,
-        uint256 amount,
-        uint32 stakerId
-    ) external;
+    function srzrTransfer(address from, address to, uint256 amount, uint32 stakerId) external;
 
     /**
      * @param _address Address of the staker

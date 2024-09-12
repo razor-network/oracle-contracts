@@ -302,11 +302,12 @@ const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, vo
     biggestStakerId);
 };
 
-const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager) => {
+const getCollectionIdPositionInBlock = async (epoch, blockId, signer, blockManager, collectionManager) => {
   const { ids } = await blockManager.getProposedBlock(epoch, blockId);
   // console.log(ids);
   const dispute = await blockManager.disputes(epoch, signer.address);
-  const { collectionId } = dispute;
+  const { leafId } = dispute;
+  const collectionId = await collectionManager.getCollectionIdFromLeafId(leafId);
   let collectionIndexInBlock = 0;
   for (let i = 0; i < ids.length; i++) {
     if (ids[i] === collectionId) { collectionIndexInBlock = i; break; }

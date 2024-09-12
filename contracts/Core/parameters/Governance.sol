@@ -86,11 +86,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param _burn updated percent value to be set for burn
      * @param _keep updated percent value to be set for keep
      */
-    function setSlashParams(
-        uint32 _bounty,
-        uint32 _burn,
-        uint32 _keep
-    ) external initialized onlyRole(GOVERNER_ROLE) {
+    function setSlashParams(uint32 _bounty, uint32 _burn, uint32 _keep) external initialized onlyRole(GOVERNER_ROLE) {
         require(_bounty + _burn + _keep <= BASE_DENOMINATOR, "Slash nums addtion exceeds 10mil");
         emit ParameterChanged(msg.sender, "bountySlashNum", _bounty, block.timestamp);
         emit ParameterChanged(msg.sender, "burnSlashNum", _burn, block.timestamp);

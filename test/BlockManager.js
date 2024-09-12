@@ -2,6 +2,7 @@
 // @dev : above is a quick fix for this linting error
 // I couldnt understand what it meant, to solve it
 
+const { assert, expect } = require('chai');
 const {
   assertBNEqual,
   assertDeepEqual,
@@ -34,7 +35,7 @@ const {
 
 const { utils } = ethers;
 const {
-  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed,
+  commit, reveal, propose, proposeWithDeviation, reset, calculateMedians, calculateInvalidMedians, getIdsRevealed, getData,
 } = require('./helpers/InternalEngine');
 
 describe('BlockManager', function () {
@@ -278,7 +279,6 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
       const numActiveCollections = await collectionManager.getNumActiveCollections();
@@ -409,7 +409,6 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, res1.sortedValues);
       const firstDispute = await blockManager.disputes(epoch, signers[19].address);
@@ -428,7 +427,6 @@ describe('BlockManager', function () {
       const res2 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       await blockManager.connect(signers[15]).giveSorted(epoch, validLeafIdToBeDisputed, res2.sortedValues);
@@ -550,10 +548,12 @@ describe('BlockManager', function () {
 
       // Staker 3
       await reveal(signers[7], 20, voteManager, stakeManager);
+
+      const data = await getData(signers[7]);
       // Propose
       await mineToNextState();
 
-      validLeafIdToBeDisputed = toBigNumber('4');
+      validLeafIdToBeDisputed = data.seqAllotedCollections[0];
 
       await proposeWithDeviation(signers[6], 1, stakeManager, blockManager, voteManager, collectionManager);
 
@@ -572,7 +572,6 @@ describe('BlockManager', function () {
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       // Dispute in batches
@@ -793,7 +792,6 @@ describe('BlockManager', function () {
       const res1 = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
       await blockManager.connect(signers[10]).giveSorted(epoch, validLeafIdToBeDisputed, res1.sortedValues);
 
@@ -1347,7 +1345,6 @@ describe('BlockManager', function () {
       const res = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
-        collectionManager,
         epoch);
 
       await blockManager.giveSorted(epoch, validLeafIdToBeDisputed, res.sortedValues);

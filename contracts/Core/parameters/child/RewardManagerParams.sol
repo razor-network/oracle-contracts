@@ -12,7 +12,7 @@ abstract contract RewardManagerParams is ACL, IRewardManagerParams, Constants {
     /// @notice maximum age a staker can have
     uint32 public maxAge = 100 * 10000;
     /// @notice reward given to staker whose block is confirmed
-    uint256 public blockReward = 100 * (10**18);
+    uint256 public blockReward = 100 * (10 ** 18);
     /// @notice maximum percentage deviation allowed from medians for all collections
     uint32 public maxTolerance = 1_000_000;
     /// @notice maximum commission stakers can charge from delegators on their profits
