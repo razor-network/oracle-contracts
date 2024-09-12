@@ -1,8 +1,8 @@
 {
-    "name": "@razor-network/contracts",
+    "name": "@cooldev/oracle-contracts-test",
     "version": "2.0.0",
     "description": "These are the contracts for Razor network testnet",
-    "author": "Razor Network",
+    "author": "Razor Network Testing Team",
     "private": false,
     "files": [
       "abi/**/*",
