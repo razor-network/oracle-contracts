@@ -2,7 +2,7 @@
     "name": "@razor-network/contracts",
     "version": "2.0.2",
     "description": "These are the contracts for Razor network v2 mainnet",
-    "author": "Razor Network Testing Team",
+    "author": "Razor Network",
     "private": false,
     "files": [
       "abi/**/*",
