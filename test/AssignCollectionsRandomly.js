@@ -87,8 +87,6 @@ describe('AssignCollectionsRandomly', function () {
         }
       }
 
-      console.log('Jobs Created');
-
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c0');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c1');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c2');
@@ -96,8 +94,6 @@ describe('AssignCollectionsRandomly', function () {
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c4');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c5');
       await collectionManager.createCollection(500, 3, 1, [1, 2, 3], 'c6');
-
-      console.log('Collections Created');
 
       await mineToNextEpoch();
 
@@ -114,22 +110,17 @@ describe('AssignCollectionsRandomly', function () {
       await stakeManager.connect(signers[2]).stake(epoch, tokenAmount('100000'));
       await stakeManager.connect(signers[3]).stake(epoch, tokenAmount('100000'));
 
-      console.log('Staked');
-
       await mineToNextEpoch();
       epoch = await getEpoch();
       const secret = await getSecret(signers[1]);
       await reset();
       await commit(signers[1], 0, voteManager, collectionManager, secret, blockManager);
-      console.log('Committed');
       await mineToNextState();
 
       await reveal(signers[1], 0, voteManager, stakeManager);
-      console.log('Revealed');
       await mineToNextState();
 
       await propose(signers[1], stakeManager, blockManager, voteManager, collectionManager);
-      console.log('Proposed');
 
       // Block Proposed
 
@@ -139,22 +130,17 @@ describe('AssignCollectionsRandomly', function () {
       // as a staker, you have to pass sorted values
       const data = await getData(signers[1]);
       const validLeafIdToBeDisputed = (data.seqAllotedCollections)[0];
-      console.log(data.seqAllotedCollections);
-      console.log('Data Fetched');
       const {
         sortedValues,
       } = await calculateDisputesData(validLeafIdToBeDisputed,
         voteManager,
         stakeManager,
         epoch);
-      console.log('Dispute Data Calculated');
       await blockManager.connect(signers[19]).giveSorted(epoch, validLeafIdToBeDisputed, sortedValues);
-      console.log('give sorted called');
       const collectionIndexInBlock = await getCollectionIdPositionInBlock(epoch, await blockManager.sortedProposedBlockIds(epoch, 0),
         signers[19], blockManager, collectionManager);
 
       await assertRevert(blockManager.connect(signers[19]).finalizeDispute(epoch, 0, collectionIndexInBlock), 'Block proposed with same medians');
-      console.log('Finalize Dispute called');
 
       await mineToNextState();
 
