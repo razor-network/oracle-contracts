@@ -47,6 +47,7 @@ const calculateDisputesData = async (collectionId, voteManager, stakeManager, ep
       median = sortedValues[i];
     }
   }
+
   return {
     median, totalInfluenceRevealed, sortedValues,
   };
@@ -295,6 +296,7 @@ const adhocPropose = async (signer, ids, medians, stakeManager, blockManager, vo
   const staker = await stakeManager.getStaker(stakerID);
   const { biggestStake, biggestStakerId } = await getBiggestStakeAndId(stakeManager, voteManager); (stakeManager);
   const iteration = await getIteration(voteManager, stakeManager, staker, biggestStake);
+
   await blockManager.connect(signer).propose(getEpoch(),
     ids,
     medians,
