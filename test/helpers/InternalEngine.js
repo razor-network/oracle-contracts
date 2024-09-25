@@ -224,7 +224,7 @@ const proposeWithDeviation = async (signer, deviation, stakeManager, blockManage
       }
     }
   }
-  // console.log('propose', idsRevealedThisEpoch, mediansValues);
+
   await blockManager.connect(signer).propose(epoch,
     idsRevealedThisEpoch,
     mediansValues,
