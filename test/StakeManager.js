@@ -813,7 +813,8 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Unstake Lock doesnt exist');
     });
 
-    it('Staker should not be able to unstake if the staker has not staked yet',
+    it(
+'Staker should not be able to unstake if the staker has not staked yet',
       async function () {
         const amount = tokenAmount('100000');
 
@@ -821,7 +822,8 @@ describe('StakeManager', function () {
         // const staker = await stakeManager.getStaker(stakerId);
         const tx1 = stakeManager.connect(signers[7]).unstake(stakerId, amount);
         await assertRevert(tx1, 'staker.id = 0');
-      });
+      }
+);
 
     it('Staker should not be able to unstake more than his sRZR balance', async function () {
       const stakerIdAcc1 = await stakeManager.stakerIds(signers[1].address);
@@ -1100,14 +1102,16 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Existing Withdraw Lock');
     });
 
-    it('Staker should not be able to withdraw if the staker has not staked yet',
+    it(
+'Staker should not be able to withdraw if the staker has not staked yet',
       async function () {
         const stakerId = await stakeManager.stakerIds(signers[7].address);
         const tx2 = stakeManager.connect(signers[7]).initiateWithdraw(stakerId);
         await assertRevert(tx2, 'staker doesnt exist');
         const tx5 = stakeManager.connect(signers[7]).unlockWithdraw(stakerId);
         await assertRevert(tx5, 'staker doesnt exist');
-      });
+      }
+);
 
     it('Staker should not be able to withdraw if contract is paused', async function () {
       const prevBalance = await razor.balanceOf(signers[1].address);
@@ -1223,13 +1227,15 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Delegetion not accpected');
     });
 
-    it('Staker should not be able to setDelegationAcceptance,updateCommission if the staker has not staked yet',
+    it(
+'Staker should not be able to setDelegationAcceptance,updateCommission if the staker has not staked yet',
       async function () {
         const tx3 = stakeManager.connect(signers[7]).setDelegationAcceptance('true');
         await assertRevert(tx3, 'staker id = 0');
         const tx4 = stakeManager.connect(signers[7]).updateCommission(7);
         await assertRevert(tx4, 'staker id = 0');
-      });
+      }
+);
 
     it('Staker should not be able to accept delegation if comission is not set', async function () {
       const tx = stakeManager.connect(signers[2]).setDelegationAcceptance('true');
@@ -1455,7 +1461,8 @@ describe('StakeManager', function () {
       await assertRevert(tx, 'Did not initiate withdraw');
     });
 
-    it('Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded',
+    it(
+'Delegators should receive more amount than expected after withdraw due to increase in valuation of sRZR when chosen staker is rewarded',
       async function () {
         await reset();
         await mineToNextEpoch();
@@ -1545,9 +1552,11 @@ describe('StakeManager', function () {
 
         const newBalanaceUnchanged = prevBalance.add(rAmountUnchanged); // New balance of delegator after withdraw if 1RZR = 1sRZR
         assertBNLessThan(newBalanaceUnchanged, DelegatorBalance, 'Delegators should receive more amount than expected due to increase in valuation of sRZR');
-      });
+      }
+);
 
-    it('Delegators should receive less amount than expected after withdraw due to decrease in valuation of sRZR when chosen staker is penalized',
+    it(
+'Delegators should receive less amount than expected after withdraw due to decrease in valuation of sRZR when chosen staker is penalized',
       async function () {
         await reset();
         let staker = await stakeManager.getStaker(3);
@@ -1622,7 +1631,8 @@ describe('StakeManager', function () {
 
         const newBalanaceUnchanged = prevBalance.add(rAmountUnchanged); // New balance of delegator after withdraw if 1RZR = 1sRZR
         assertBNLessThan(DelegatorBalance, newBalanaceUnchanged, 'Delegators should receive less amount than expected due to decrease in valuation of sRZR');
-      });
+      }
+);
 
     it('Delegators should not be able to withdraw if withdraw within period passes', async function () {
       const amount = tokenAmount('10000'); // unstaking partial amount
