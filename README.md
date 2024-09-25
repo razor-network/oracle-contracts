@@ -46,7 +46,7 @@ We are currently live on Polygon Mumbai Testnet.
 
 Deployed contract addresses can be found [here](deployed/mumbai/addresses.json)
 
-# tenderly
+# tenderly 
 ```
 npx hardhat node
 npm run deploy:local
