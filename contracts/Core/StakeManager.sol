@@ -684,6 +684,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /**
+     * @param stakerId Id of the staker for whom you want to get the maturity
      * @return maturity of staker
      */
     function _getMaturity(uint32 stakerId) internal view returns (uint256) {
