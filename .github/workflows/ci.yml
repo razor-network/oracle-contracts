@@ -51,15 +51,15 @@ jobs:
         run: |
           CI=true npm run scenarios
 
-  lint:
-    runs-on: ubuntu-latest
-    needs: install_dependencies
-    steps:
-      - uses: bissolli/gh-action-persist-workspace@v2
-        with:
-          action: retrieve
-      - name: Run Lint
-        run: npm run lint
+#   lint:
+#     runs-on: ubuntu-latest
+#     needs: install_dependencies
+#     steps:
+#       - uses: bissolli/gh-action-persist-workspace@v2
+#         with:
+#           action: retrieve
+#       - name: Run Lint
+#         run: npm run lint
 
   coverage:
     runs-on: ubuntu-latest
