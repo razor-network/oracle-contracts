@@ -12,7 +12,6 @@ require('@nomiclabs/hardhat-ethers');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
-require('@tenderly/hardhat-tenderly');
 require('@primitivefi/hardhat-dodoc');
 
 const {
@@ -23,7 +22,6 @@ const {
   MNEMONIC,
   CMC_KEY,
   ETHERSCAN_KEY,
-  TENDERLY_SLUG,
 } = process.env;
 
 // Ref - https://chainid.network/chains.json
@@ -108,10 +106,6 @@ module.exports = {
     clear: true,
     flat: true,
     spacing: 2,
-  },
-  tenderly: {
-    username: 'razor',
-    project: TENDERLY_SLUG,
   },
   mocha: {
     timeout: 50000,
