@@ -27,11 +27,17 @@ contract Constants {
         VotingRewardOrPenalty
     }
 
+    enum JobSelectorType {
+        JSON,
+        XHTML
+    }
+
     uint8 public constant NUM_STATES = 5;
 
-    uint16 public constant EPOCH_LENGTH = 1800;
+    uint16 public constant EPOCH_LENGTH = 1200;
 
-    address public constant BURN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    // slither-disable-next-line too-many-digits
+    address public constant BURN_ADDRESS = 0x000000000000000000000000000000000000dEaD;
     uint32 public constant BASE_DENOMINATOR = 10_000_000;
     // keccak256("BLOCK_CONFIRMER_ROLE")
     bytes32 public constant BLOCK_CONFIRMER_ROLE = 0x18797bc7973e1dadee1895be2f1003818e30eae3b0e7a01eb9b2e66f3ea2771f;
@@ -46,7 +52,7 @@ contract Constants {
     bytes32 public constant COLLECTION_MODIFIER_ROLE = 0xa3a75e7cd2b78fcc3ae2046ab93bfa4ac0b87ed7ea56646a312cbcb73eabd294;
 
     // keccak256("VOTE_MODIFIER_ROLE")
-    bytes32 public constant VOTE_MODIFIER_ROLE = 0xca0fffcc0404933256f3ec63d47233fbb05be25fc0eacc2cfb1a2853993fbbe5;
+    bytes32 public constant VOTE_MODIFIER_ROLE = 0x912208965b92edeb3eb82a612c87b38b5e844f7539cb396f0d08ec012e511b07;
 
     // keccak256("DELEGATOR_MODIFIER_ROLE")
     bytes32 public constant DELEGATOR_MODIFIER_ROLE = 0x6b7da7a33355c6e035439beb2ac6a052f1558db73f08690b1c9ef5a4e8389597;
@@ -70,8 +76,17 @@ contract Constants {
     bytes32 public constant SALT_MODIFIER_ROLE = 0xf31dda80d37c96a1a0852ace387dda52a75487d7d4eb74895e749ede3e0987b4;
 
     // keccak256("DEPTH_MODIFIER_ROLE)")
-    bytes32 public constant DEPTH_MODIFIER_ROLE = 0xdec504361dd78243e1ec4f53c4c0ff2daf8da88c57ec66ea0107a0cb80d8bc17;
+    bytes32 public constant DEPTH_MODIFIER_ROLE = 0x91f5d9ea80c4d04985e669bc72870410b28b57afdf61c0d50d377766d86a3748;
 
     // keccak256("ESCAPE_HATCH_ROLE")
     bytes32 public constant ESCAPE_HATCH_ROLE = 0x518d8c39717318f051dfb836a4ebe5b3c34aa2cb7fce26c21a89745422ba8043;
+
+    // keccak256("OCCURRENCE_MODIFIER_ROLE")
+    bytes32 public constant OCCURRENCE_MODIFIER_ROLE = 0x35ed6c1cb451e31b9dd4f1d325602da07694e1747843e6b55ab1527fd8835fb5;
+
+    // keccak256("RESET_DATABOND_ROLE")
+    bytes32 public constant RESET_DATABOND_ROLE = 0x3e99a7fb3946972656cbde0e63ef530dd7750472272e07c65aa9f473a99f5c5d;
+
+    // keccak256("COLLECTION_CONFIRMER_ROLE")
+    bytes32 public constant COLLECTION_CONFIRMER_ROLE = 0xa1d2ec18e7ea6241ef0566da3d2bc59cc059592990e56680abdc7031155a0c28;
 }

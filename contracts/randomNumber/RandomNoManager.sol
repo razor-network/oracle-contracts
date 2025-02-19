@@ -15,7 +15,7 @@ import "./RandomNoStorage.sol";
  */
 
 contract RandomNoManager is Initializable, StateManager, RandomNoStorage, RandomNoManagerParams, IRandomNoClient, IRandomNoProvider {
-    event RandomNumberAvailable(uint32 epoch);
+    event RandomNumberAvailable(uint32 indexed epoch);
 
     /**
      * @param blockManagerAddress The address of the BlockManager Contract
@@ -26,20 +26,14 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function register() external override initialized returns (bytes32 requestId) {
-        uint32 epoch = _getEpoch();
-        State state = _getState(buffer);
+        uint32 epoch = getEpoch();
         nonce[msg.sender] = nonce[msg.sender] + 1;
         requestId = keccak256(abi.encodePacked(nonce[msg.sender], msg.sender));
-        // slither-disable-next-line incorrect-equality,timestamp
-        if (state == State.Commit) {
-            requests[requestId] = epoch;
-        } else {
-            requests[requestId] = epoch + 1;
-        }
+        requests[requestId] = epoch + 1;
     }
 
     /// @inheritdoc IRandomNoProvider
-    function provideSecret(uint32 epoch, bytes32 _secret) external override onlyRole(SECRETS_MODIFIER_ROLE) {
+    function provideSecret(uint32 epoch, bytes32 _secret) external override initialized onlyRole(SECRETS_MODIFIER_ROLE) {
         /// @dev this require is added for extra assurance to clients,
         /// to give them assurance that once secret is set for epoch, it cant be changed
         /// as admin could always override this SECRETS_MODIFIER_ROLE role
@@ -56,7 +50,7 @@ contract RandomNoManager is Initializable, StateManager, RandomNoStorage, Random
 
     /// @inheritdoc IRandomNoClient
     function getGenericRandomNumberOfLastEpoch() external view override returns (uint256) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         return _generateRandomNumber(epoch - 1, 0);
     }
 

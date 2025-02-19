@@ -2,12 +2,14 @@
 pragma solidity ^0.8.0;
 import "../../Initializable.sol";
 import "./interfaces/IBlockManagerParams.sol";
+import "./interfaces/IBondManagerParams.sol";
 import "./interfaces/IRewardManagerParams.sol";
 import "./interfaces/IRandomNoManagerParams.sol";
 import "./interfaces/IStakeManagerParams.sol";
 import "./interfaces/IVoteManagerParams.sol";
 import "./interfaces/ICollectionManagerParams.sol";
 import "./../interface/IStakeManager.sol";
+import "./../interface/IBondManager.sol";
 import "../storage/Constants.sol";
 import "./ACL.sol";
 
@@ -17,11 +19,13 @@ import "./ACL.sol";
 // slither-disable-next-line missing-inheritance
 contract Governance is Initializable, ACL, Constants {
     IBlockManagerParams public blockManagerParams;
+    IBondManagerParams public bondManagerParams;
     IRewardManagerParams public rewardManagerParams;
     IStakeManagerParams public stakeManagerParams;
     IVoteManagerParams public voteManagerParams;
     ICollectionManagerParams public collectionManagerParams;
     IStakeManager public stakeManager;
+    IBondManager public bondManager;
     IRandomNoManagerParams public randomNoManagerParams;
 
     bytes32 public constant GOVERNER_ROLE = 0x704c992d358ec8f6051d88e5bd9f92457afedcbc3e2d110fcd019b5eda48e52e;
@@ -33,7 +37,7 @@ contract Governance is Initializable, ACL, Constants {
      * @param valueChangedTo new value of the parameter
      * @param timestamp the exact time the parameter change took place
      */
-    event ParameterChanged(address admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
+    event ParameterChanged(address indexed admin, string parameterName, uint256 valueChangedTo, uint256 timestamp);
 
     /**
      * @param blockManagerAddress The address of the BlockManager contract
@@ -44,6 +48,7 @@ contract Governance is Initializable, ACL, Constants {
      */
     function initialize(
         address blockManagerAddress,
+        address bondManagerAddress,
         address rewardManagerAddress,
         address stakeManagerAddress,
         address voteManagerAddress,
@@ -51,11 +56,13 @@ contract Governance is Initializable, ACL, Constants {
         address randomNoManagerAddress
     ) external initializer onlyRole(DEFAULT_ADMIN_ROLE) {
         blockManagerParams = IBlockManagerParams(blockManagerAddress);
+        bondManagerParams = IBondManagerParams(bondManagerAddress);
         rewardManagerParams = IRewardManagerParams(rewardManagerAddress);
         stakeManagerParams = IStakeManagerParams(stakeManagerAddress);
         voteManagerParams = IVoteManagerParams(voteManagerAddress);
         collectionManagerParams = ICollectionManagerParams(collectionManagerAddress);
         stakeManager = IStakeManager(stakeManagerAddress);
+        bondManager = IBondManager(bondManagerAddress);
         randomNoManagerParams = IRandomNoManagerParams(randomNoManagerAddress);
     }
 
@@ -64,9 +71,19 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _penaltyNotRevealNumerator updated value to be set for penaltyNotRevealNumerator
      */
-    function setPenaltyNotRevealNum(uint16 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
+    function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "penaltyNotRevealNum", _penaltyNotRevealNumerator, block.timestamp);
         rewardManagerParams.setPenaltyNotRevealNum(_penaltyNotRevealNumerator);
+    }
+
+    /**
+     * @notice changing the percentage age penalty to be given out for inactivity
+     * @dev can be called only by the the address that has the governer role
+     * @param _penaltyAgeNotRevealNumerator updated value to be set for penaltyAgeNotRevealNumerator
+     */
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external initialized onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "penaltyAgeNotRevealNum", _penaltyAgeNotRevealNumerator, block.timestamp);
+        rewardManagerParams.setPenaltyAgeNotRevealNum(_penaltyAgeNotRevealNumerator);
     }
 
     /**
@@ -93,7 +110,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _unstakeLockPeriod updated value to be set for unstakeLockPeriod
      */
-    function setUnstakeLockPeriod(uint8 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setUnstakeLockPeriod(uint16 _unstakeLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "unstakeLockPeriod", _unstakeLockPeriod, block.timestamp);
         stakeManagerParams.setUnstakeLockPeriod(_unstakeLockPeriod);
     }
@@ -103,9 +120,10 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawLockPeriod updated value to be set for withdrawLockPeriod
      */
-    function setWithdrawLockPeriod(uint8 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawLockPeriod(uint16 _withdrawLockPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawLockPeriod", _withdrawLockPeriod, block.timestamp);
         stakeManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
+        bondManagerParams.setWithdrawLockPeriod(_withdrawLockPeriod);
     }
 
     /**
@@ -113,7 +131,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _withdrawInitiationPeriod updated value to be set for withdrawInitiationPeriod
      */
-    function setWithdrawInitiationPeriod(uint8 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
+    function setWithdrawInitiationPeriod(uint16 _withdrawInitiationPeriod) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "withdrawInitiationPeriod", _withdrawInitiationPeriod, block.timestamp);
         stakeManagerParams.setWithdrawInitiationPeriod(_withdrawInitiationPeriod);
     }
@@ -124,7 +142,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governer role
      * @param _extendLockPenalty updated value to be set for extendLockPenalty
      */
-    function setResetUnstakeLockPenalty(uint8 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
+    function setResetUnstakeLockPenalty(uint32 _extendLockPenalty) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "extendLockPenalty", _extendLockPenalty, block.timestamp);
         stakeManagerParams.setResetUnstakeLockPenalty(_extendLockPenalty);
     }
@@ -173,17 +191,6 @@ contract Governance is Initializable, ACL, Constants {
     }
 
     /**
-     * @notice changing number of epochs for which the staker wont be given inactivity penalties
-     * @dev can be called only by the the address that has the governance role
-     * @param _gracePeriod updated value to be set for gracePeriod
-     */
-    function setGracePeriod(uint16 _gracePeriod) external initialized onlyRole(GOVERNER_ROLE) {
-        emit ParameterChanged(msg.sender, "gracePeriod", _gracePeriod, block.timestamp);
-        rewardManagerParams.setGracePeriod(_gracePeriod);
-        stakeManagerParams.setGracePeriod(_gracePeriod);
-    }
-
-    /**
      * @notice changing the maximum age a staker can have
      * @dev can be called only by the the address that has the governer role
      * @param _maxAge updated value to be set for maxAge
@@ -220,7 +227,8 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _deltaCommission updated value to be set for deltaCommission
      */
-    function setDeltaCommission(uint8 _deltaCommission) external onlyRole(GOVERNER_ROLE) {
+    function setDeltaCommission(uint8 _deltaCommission) external initialized onlyRole(GOVERNER_ROLE) {
+        require(_deltaCommission <= 100, "deltaCommission exceeds 100");
         emit ParameterChanged(msg.sender, "deltaCommission", _deltaCommission, block.timestamp);
         stakeManagerParams.setDeltaCommission(_deltaCommission);
     }
@@ -230,7 +238,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _epochLimitForUpdateCommission updated value to be set for epochLimitForUpdateCommission
      */
-    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external onlyRole(GOVERNER_ROLE) {
+    function setEpochLimitForUpdateCommission(uint16 _epochLimitForUpdateCommission) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "epochLimitForUpdateCommission", _epochLimitForUpdateCommission, block.timestamp);
         stakeManagerParams.setEpochLimitForUpdateCommission(_epochLimitForUpdateCommission);
     }
@@ -240,8 +248,8 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _maxTolerance updated value for maxTolerance
      */
-    function setMaxTolerance(uint32 _maxTolerance) external onlyRole(GOVERNER_ROLE) {
-        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds 10_000_000");
+    function setMaxTolerance(uint32 _maxTolerance) external initialized onlyRole(GOVERNER_ROLE) {
+        require(_maxTolerance <= BASE_DENOMINATOR, "maxTolerance exceeds baseDenom");
         emit ParameterChanged(msg.sender, "maxTolerance", _maxTolerance, block.timestamp);
         collectionManagerParams.setMaxTolerance(_maxTolerance);
         rewardManagerParams.setMaxTolerance(_maxTolerance);
@@ -252,7 +260,7 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _toAssign updated value to be set for toAssign
      */
-    function setToAssign(uint16 _toAssign) external onlyRole(GOVERNER_ROLE) {
+    function setToAssign(uint16 _toAssign) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "toAssign", _toAssign, block.timestamp);
         voteManagerParams.setToAssign(_toAssign);
     }
@@ -262,11 +270,41 @@ contract Governance is Initializable, ACL, Constants {
      * @dev can be called only by the the address that has the governance role
      * @param _bufferLength updated value to be set for buffer
      */
-    function setBufferLength(uint8 _bufferLength) external onlyRole(GOVERNER_ROLE) {
+    function setBufferLength(uint8 _bufferLength) external initialized onlyRole(GOVERNER_ROLE) {
         emit ParameterChanged(msg.sender, "_bufferLength", _bufferLength, block.timestamp);
         blockManagerParams.setBufferLength(_bufferLength);
         voteManagerParams.setBufferLength(_bufferLength);
         collectionManagerParams.setBufferLength(_bufferLength);
         randomNoManagerParams.setBufferLength(_bufferLength);
+        bondManagerParams.setBufferLength(_bufferLength);
+    }
+
+    function setDepositPerJob(uint256 _depositPerJob) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_depositPerJob", _depositPerJob, block.timestamp);
+        bondManagerParams.setDepositPerJob(_depositPerJob);
+        bondManager.occurrenceRecalculation();
+    }
+
+    function setMinBond(uint256 _minBond) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_minBond", _minBond, block.timestamp);
+        bondManagerParams.setMinBond(_minBond);
+        bondManager.databondCollectionsReset();
+    }
+
+    function setMinJobs(uint8 _minJobs) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_minJobs", _minJobs, block.timestamp);
+        bondManagerParams.setMinJobs(_minJobs);
+        bondManager.databondCollectionsReset();
+    }
+
+    function setMaxJobs(uint8 _maxJobs) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_maxJobs", _maxJobs, block.timestamp);
+        bondManagerParams.setMaxJobs(_maxJobs);
+        bondManager.databondCollectionsReset();
+    }
+
+    function setEpochLimitForUpdateBond(uint16 _epochLimitForUpdateBond) external onlyRole(GOVERNER_ROLE) {
+        emit ParameterChanged(msg.sender, "_epochLimitForUpdateBond", _epochLimitForUpdateBond, block.timestamp);
+        bondManagerParams.setEpochLimitForUpdateBond(_epochLimitForUpdateBond);
     }
 }

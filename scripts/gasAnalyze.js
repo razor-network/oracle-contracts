@@ -18,8 +18,8 @@ const polygonGasApi = 'https://gasstation-mainnet.matic.network/';
 const maticPrice = 'https://api.gemini.com/v1/pubticker/maticusd';
 
 const commits = json.info.methods.VoteManager_40f84925.gasData;
-const reveals = json.info.methods.VoteManager_45502afa.gasData;
-const proposes = json.info.methods.BlockManager_accd8f53.gasData;
+const reveals = json.info.methods.VoteManager_f110a0fa.gasData;
+const proposes = json.info.methods.BlockManager_474a1ae1.gasData;
 
 // console.log(commits)
 getJSON(ethGasApi, function (error, response) {

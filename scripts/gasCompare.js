@@ -1,8 +1,5 @@
 const fs = require("fs");
 const markdown = require('json-to-markdown-table');
-const Commenter = require('circleci-pr-commenter');
-
-const commenter = new Commenter()
 
 let arguments = process.argv
 
@@ -79,21 +76,15 @@ let gasCompare = async () => {
             }
         }
     }
-let markdownstring = markdown(gasChangeData,coloumn);
-if(gasChangeData.length!==0){
-    
-        await commenter.createOrUpdateComment('gasCompare', markdownstring ).catch(err=>{  
-                console.log(markdownstring);
-        })
+
+    let markdownString = markdown(gasChangeData, coloumn);
+
+    if (gasChangeData.length !== 0) {
+        // Write the markdown to a file called gasCompareOutput.json
+        fs.writeFileSync('gasCompareOutput.md', markdownString);
+    } else {
+        console.log("No changes found in gas Consumption");
     }
-        
-else{
-        await commenter.createOrUpdateComment('gasCompare', `No changes found in gas Consumption`).catch(err=>
-        {
-            console.log(`No changes found in gas Consumption`);
-        })
-        
-}
 }
 
 gasCompare();

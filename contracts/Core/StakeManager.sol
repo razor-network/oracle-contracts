@@ -32,7 +32,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param amount amount of sRZR transferred
      * @param stakerId the id of the staker whose sRZR is involved in the transfer
      */
-    event SrzrTransfer(address from, address to, uint256 amount, uint32 stakerId);
+    event SrzrTransfer(address indexed from, address indexed to, uint256 amount, uint32 indexed stakerId);
 
     /**
      * @dev Emitted when there has been change in the stake of the staker.
@@ -44,7 +44,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the change took place
      */
     event StakeChange(
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         Constants.StakeChanged reason,
         uint256 prevStake,
@@ -62,7 +62,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the change took place
      */
     event StakerRewardChange(
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         Constants.StakerRewardChanged reason,
         uint256 prevStakerReward,
@@ -78,7 +78,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param reason reason why the the change in age took place
      * @param timestamp time at which the change took place
      */
-    event AgeChange(uint32 epoch, uint32 indexed stakerId, uint32 newAge, Constants.AgeChanged reason, uint256 timestamp);
+    event AgeChange(uint32 indexed epoch, uint32 indexed stakerId, uint32 newAge, Constants.AgeChanged reason, uint256 timestamp);
 
     /**
      * @dev Emitted when staker stakes for the first time or adds stake.
@@ -92,9 +92,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the staker staked
      */
     event Staked(
-        address staker,
+        address indexed staker,
         address sToken,
-        uint32 epoch,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -111,7 +111,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after unstaking
      * @param timestamp time at which the staker/delegator unstaked
      */
-    event Unstaked(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Unstaked(
+        address indexed staker,
+        uint32 indexed epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     /**
      * @dev Emitted when staker/delegator initiates withdraw.
@@ -124,8 +131,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the staker/delegator initiated withdraw
      */
     event WithdrawInitiated(
-        address staker,
-        uint32 epoch,
+        address indexed staker,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -142,7 +149,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param newStake current stake after withdraw process is completed
      * @param timestamp time at which the staker/delegator withdrew
      */
-    event Withdrew(address staker, uint32 epoch, uint32 indexed stakerId, uint256 amount, uint256 newStake, uint256 timestamp);
+    event Withdrew(
+        address indexed staker,
+        uint32 indexed epoch,
+        uint32 indexed stakerId,
+        uint256 amount,
+        uint256 newStake,
+        uint256 timestamp
+    );
 
     /**
      * @dev Emitted when delegator delegates his RAZOR to a particular staker.
@@ -155,8 +169,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param timestamp time at which the delegator delegated
      */
     event Delegated(
-        address delegator,
-        uint32 epoch,
+        address indexed delegator,
+        uint32 indexed epoch,
         uint32 indexed stakerId,
         uint256 amount,
         uint256 newStake,
@@ -170,7 +184,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param stakerId the stakerId for which extension took place
      */
-    event DelegationAcceptanceChanged(bool delegationEnabled, address staker, uint32 indexed stakerId);
+    event DelegationAcceptanceChanged(bool delegationEnabled, address indexed staker, uint32 indexed stakerId);
 
     /**
      * @dev Emitted when the staker/delegator lock resets after successfully withdrawing
@@ -178,7 +192,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the reset took place
      */
-    event ResetLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ResetLock(uint32 indexed stakerId, address indexed staker, uint32 indexed epoch);
 
     /**
      * @dev Emitted when the staker/delegator extends unstake lock
@@ -186,7 +200,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param staker address of the staker/delegator
      * @param epoch in which the extension took place
      */
-    event ResetUnstakeLock(uint32 indexed stakerId, address staker, uint32 epoch);
+    event ResetUnstakeLock(uint32 indexed stakerId, address indexed staker, uint32 indexed epoch);
 
     /**
      * @dev Emitted when the staker changes commission
@@ -200,7 +214,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param bountyId unique id for each bounty to be claimed by bounty hunter
      * @param bountyHunter address who will claim the bounty caused by slash
      */
-    event Slashed(uint32 bountyId, address bountyHunter);
+    event Slashed(uint32 bountyId, address indexed bountyHunter);
+
+    /**
+     * @dev Emitted when the bountyHunter redeem bounty
+     * @param bountyId unique id for each bounty to be claimed by bounty hunter
+     * @param bountyHunter address who will claim the bounty
+     */
+    event RedeemBounty(uint32 bountyId, address indexed bountyHunter);
 
     /** @param razorAddress The address of the Razor token ERC20 contract
      * @param rewardManagerAddress The address of the RewardManager contract
@@ -250,8 +271,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
             IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
             totalSupply = sToken.totalSupply();
             uint256 toMint = _convertRZRtoSRZR(amount, stakers[stakerId].stake, totalSupply); // RZRs to sRZRs
-            // WARNING: ALLOWING STAKE TO BE ADDED AFTER WITHDRAW/SLASH, consequences need an analysis
-            // For more info, See issue -: https://github.com/razor-network/contracts/issues/112
             stakers[stakerId].stake = stakers[stakerId].stake + (amount);
 
             // Mint sToken as Amount * (totalSupplyOfToken/previousStake)
@@ -282,10 +301,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId The Id of staker whom you want to delegate
      */
     function delegate(uint32 stakerId, uint256 amount) external initialized whenNotPaused {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(stakers[stakerId].acceptDelegation, "Delegetion not accpected");
-        // slither-disable-next-line timestamp
-        require(_isStakerActive(stakerId, epoch), "Staker is inactive");
+        require(stakers[stakerId]._address != msg.sender, "Staker cannot delegate themself");
         require(!stakers[stakerId].isSlashed, "Staker is slashed");
         // Step 1 : Calculate Mintable amount
         IStakedToken sToken = IStakedToken(stakers[stakerId].tokenAddress);
@@ -320,8 +338,9 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         require(stakerId != 0, "staker.id = 0");
         require(stakers[stakerId].stake > 0, "Nonpositive stake");
         // slither-disable-next-line timestamp
+        require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Existing Withdraw Lock");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount == 0, "Existing Unstake Lock");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
@@ -339,7 +358,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @param stakerId The Id of staker associated with sRZR which user want to initiateWithdraw
      */
     function initiateWithdraw(uint32 stakerId) external initialized whenNotPaused {
-        State currentState = _getState(buffer);
+        State currentState = getState(buffer);
         // slither-disable-next-line timestamp
         require(currentState != State.Propose, "Unstake: NA Propose");
         // slither-disable-next-line timestamp
@@ -347,9 +366,10 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
 
         require(stakerId != 0, "staker doesnt exist");
         // slither-disable-next-line timestamp
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Unstake];
+        require(locks[msg.sender][staker.tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw lock present");
         require(lock.unlockAfter != 0, "Did not unstake");
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
@@ -361,6 +381,8 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         rewardManager.giveInactivityPenalties(epoch, stakerId);
 
         uint256 rAmount = _convertSRZRToRZR(lock.amount, staker.stake, sToken.totalSupply());
+        require(rAmount > 0, "No razor to withdraw");
+
         staker.stake = staker.stake - rAmount;
 
         locks[msg.sender][staker.tokenAddress][LockType.Withdraw] = Structs.Lock(rAmount, epoch + withdrawLockPeriod);
@@ -376,12 +398,12 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     function unlockWithdraw(uint32 stakerId) external initialized whenNotPaused {
         // slither-disable-next-line timestamp
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         require(stakerId != 0, "staker doesnt exist");
 
         Structs.Staker storage staker = stakers[stakerId];
         Structs.Lock storage lock = locks[msg.sender][staker.tokenAddress][LockType.Withdraw];
-        require(lock.unlockAfter != 0, "Did not unstake");
+        require(lock.unlockAfter != 0, "Did not initiate withdraw");
         // slither-disable-next-line timestamp
         require(lock.unlockAfter <= epoch, "Withdraw epoch not reached");
 
@@ -402,7 +424,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker doesnt exist");
         require(stakers[stakerId].stakerReward != 0, "no stakerReward to transfer");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         uint256 stakerRewardToBeClaimed = stakers[stakerId].stakerReward;
         _setStakerReward(epoch, stakerId, StakerRewardChanged.StakerRewardClaimed, stakers[stakerId].stakerReward, 0);
         require(razor.transfer(msg.sender, stakerRewardToBeClaimed), "couldnt transfer");
@@ -424,14 +446,14 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         address to,
         uint256 amount,
         uint32 stakerId
-    ) external override onlyRole(STOKEN_ROLE) {
+    ) external override initialized onlyRole(STOKEN_ROLE) {
         emit SrzrTransfer(from, to, amount, stakerId);
     }
 
     /**
      * @notice Used by staker to set delegation acceptance, its set as False by default
      */
-    function setDelegationAcceptance(bool status) external {
+    function setDelegationAcceptance(bool status) external initialized {
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
         require(stakers[stakerId].commission != 0, "comission not set");
@@ -442,11 +464,11 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     /**
      * @notice Used by staker to update commision for delegation
      */
-    function updateCommission(uint8 commission) external {
+    function updateCommission(uint8 commission) external initialized {
         require(commission <= maxCommission, "Commission exceeds maxlimit");
         uint32 stakerId = stakerIds[msg.sender];
         require(stakerId != 0, "staker id = 0");
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         if (stakers[stakerId].epochCommissionLastUpdated != 0) {
             // slither-disable-next-line timestamp
             require((stakers[stakerId].epochCommissionLastUpdated + epochLimitForUpdateCommission) <= epoch, "Invalid Epoch For Updation");
@@ -464,7 +486,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      */
     function resetUnstakeLock(uint32 stakerId) external initialized whenNotPaused {
         // Lock should be expired if you want to extend
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         // slither-disable-next-line timestamp
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake].amount != 0, "Unstake Lock doesnt exist");
         require(locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw].unlockAfter == 0, "Withdraw Lock exists");
@@ -474,13 +496,13 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         IStakedToken sToken = IStakedToken(staker.tokenAddress);
 
         //Giving out the extendLock penalty
-        uint256 penalty = (lock.amount * resetUnstakeLockPenalty) / 100;
+        uint256 penalty = (lock.amount * resetUnstakeLockPenalty) / BASE_DENOMINATOR;
         uint256 rPenalty = _convertSRZRToRZR(penalty, staker.stake, sToken.totalSupply());
 
         lock.amount = lock.amount - penalty;
         staker.stake = staker.stake - rPenalty;
         lock.unlockAfter = epoch + unstakeLockPeriod;
-        emit ResetUnstakeLock(stakerId, msg.sender, _getEpoch());
+        emit ResetUnstakeLock(stakerId, msg.sender, getEpoch());
         // Ignoring below line for testing as this is standard erc20 function
         require(sToken.burn(address(this), penalty), "Token burn Failed");
     }
@@ -492,7 +514,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         Constants.StakeChanged reason,
         uint256 prevStake,
         uint256 _stake
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerStake(_epoch, _id, reason, prevStake, _stake);
     }
 
@@ -503,7 +525,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         Constants.StakerRewardChanged reason,
         uint256 prevStakerReward,
         uint256 _stakerReward
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         _setStakerReward(_epoch, _id, reason, prevStakerReward, _stakerReward);
     }
 
@@ -512,7 +534,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 epoch,
         uint32 stakerId,
         address bountyHunter
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         uint256 _stake = stakers[stakerId].stake;
 
         uint256 bounty;
@@ -550,14 +572,15 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
      * @notice Allows bountyHunter to redeem their bounty once its locking period is over
      * @param bountyId The ID of the bounty
      */
-    function redeemBounty(uint32 bountyId) external {
-        uint32 epoch = _getEpoch();
+    function redeemBounty(uint32 bountyId) external initialized whenNotPaused {
+        uint32 epoch = getEpoch();
         uint256 bounty = bountyLocks[bountyId].amount;
 
         require(msg.sender == bountyLocks[bountyId].bountyHunter, "Incorrect Caller");
         // slither-disable-next-line timestamp
         require(bountyLocks[bountyId].redeemAfter <= epoch, "Redeem epoch not reached");
         delete bountyLocks[bountyId];
+        emit RedeemBounty(bountyId, msg.sender);
         // Ignoring below line for testing as this is standard erc20 function
         require(razor.transfer(msg.sender, bounty), "couldnt transfer");
     }
@@ -573,7 +596,7 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
         uint32 _id,
         uint32 _age,
         Constants.AgeChanged reason
-    ) external override onlyRole(STAKE_MODIFIER_ROLE) {
+    ) external override initialized onlyRole(STAKE_MODIFIER_ROLE) {
         stakers[_id].age = _age;
         emit AgeChange(_epoch, _id, _age, reason, block.timestamp);
     }
@@ -661,17 +684,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     }
 
     /**
-     * @param stakerId Id of the staker whose status is being queried
-     * @param epoch The current value of epoch
-     * @return isStakerActive : Activity < Grace
-     */
-    function _isStakerActive(uint32 stakerId, uint32 epoch) internal view returns (bool) {
-        uint32 epochLastRevealed = voteManager.getEpochLastRevealed(stakerId);
-        // slither-disable-next-line timestamp
-        return ((epoch - epochLastRevealed) <= gracePeriod);
-    }
-
-    /**
      * @param stakerId Id of the staker for whom you want to get the maturity
      * @return maturity of staker
      */
@@ -722,6 +734,6 @@ contract StakeManager is Initializable, StakeStorage, StateManager, Pause, Stake
     function _resetLock(uint32 stakerId) private {
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Unstake] = Structs.Lock({amount: 0, unlockAfter: 0});
         locks[msg.sender][stakers[stakerId].tokenAddress][LockType.Withdraw] = Structs.Lock({amount: 0, unlockAfter: 0});
-        emit ResetLock(stakerId, msg.sender, _getEpoch());
+        emit ResetLock(stakerId, msg.sender, getEpoch());
     }
 }

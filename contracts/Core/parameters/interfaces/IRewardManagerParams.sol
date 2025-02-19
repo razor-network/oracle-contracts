@@ -10,18 +10,18 @@ interface IRewardManagerParams {
     function setPenaltyNotRevealNum(uint32 _penaltyNotRevealNumerator) external;
 
     /**
+     * @notice changing the percentage age penalty to be given out for inactivity
+     * @dev can be called only by the the address that has the governance role
+     * @param _penaltyAgeNotRevealNumerator updated value to be set for penaltyAgeNotRevealNumerator
+     */
+    function setPenaltyAgeNotRevealNum(uint32 _penaltyAgeNotRevealNumerator) external;
+
+    /**
      * @notice changing the block reward given out to stakers
      * @dev can be called only by the the address that has the governance role
      * @param _blockReward updated value to be set for blockReward
      */
     function setBlockReward(uint256 _blockReward) external;
-
-    /**
-     * @notice changing number of epochs for which the staker wont be given inactivity penalties
-     * @dev can be called only by the the address that has the governance role
-     * @param _gracePeriod updated value to be set for gracePeriod
-     */
-    function setGracePeriod(uint16 _gracePeriod) external;
 
     /**
      * @notice changing the maximum age a staker can have

@@ -4,7 +4,7 @@ const toBigNumber = (value) => BigNumber.from(value);
 
 const {
   getAssignedCollections, getEpoch, getBiggestStakeAndId,
-  getIteration,
+  getIteration, getSignature,
 } = require('./utils');
 const { createMerkle, getProofPath } = require('./MerklePosAware');
 
@@ -106,13 +106,14 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret,
   // const depth = Math.log2(numActiveCollections) % 1 === 0 ? Math.log2(numActiveCollections) : Math.ceil(Math.log2(numActiveCollections));
   // console.log(depth);
   // console.log('Commit', assignedCollections, leavesOfTree, tree[0][0], seqAllotedCollections);
-
+  const signature = await getSignature(signer);
   store[signer.address] = {
     assignedCollections,
     seqAllotedCollections,
     leavesOfTree,
     tree,
     secret,
+    signature,
   };
   const commitment = utils.solidityKeccak256(['bytes32', 'bytes32'], [tree[0][0], seed1]);
 
@@ -134,7 +135,7 @@ const commit = async (signer, deviation, voteManager, collectionManager, secret,
 //     bytes32[][] proofs;
 //     bytes32 root;
 // }
-const reveal = async (signer, deviation, voteManager, stakeManager) => {
+const reveal = async (collectionManager, signer, deviation, voteManager, stakeManager) => {
   const proofs = [];
   const values = [];
   for (let j = 0; j < store[signer.address].seqAllotedCollections.length; j++) {
@@ -155,7 +156,7 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
   };
   treeData[signer.address] = treeRevealData;
   // console.log('reveal', signer.address, treeRevealData.values);
-  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].secret);
+  await voteManager.connect(signer).reveal(getEpoch(), treeRevealData, store[signer.address].signature);
   // console.log(treeRevealData);
   const helper = {};
   const arr = [];
@@ -163,22 +164,23 @@ const reveal = async (signer, deviation, voteManager, stakeManager) => {
     const stakerId = await stakeManager.stakerIds(signer.address);
     const influence = await voteManager.getInfluenceSnapshot(getEpoch(), stakerId);
     const leafId = (store[signer.address].seqAllotedCollections)[i];
+    const collectionId = await collectionManager.getCollectionIdFromLeafId(leafId);
     const voteValue = values[i].value;
     arr.push(voteValue);
-    if (!(helper[leafId])) {
+    if (!(helper[collectionId])) {
       let flag = false;
-      influenceSum[leafId] = (influenceSum[leafId]).add(influence);
-      if (res[leafId] === undefined) res[leafId] = [];
-      for (let j = 0; j < res[leafId].length; j++) {
-        if (res[leafId][j] === voteValue) {
+      influenceSum[collectionId] = (influenceSum[collectionId]).add(influence);
+      if (res[collectionId] === undefined) res[collectionId] = [];
+      for (let j = 0; j < res[collectionId].length; j++) {
+        if (res[collectionId][j] === voteValue) {
           flag = true;
         }
       }
-      if (!flag) res[leafId].push(voteValue);
-      if (voteWeights[leafId] === undefined) voteWeights[leafId] = {};
-      if (voteWeights[leafId][voteValue] === undefined) voteWeights[leafId][voteValue] = toBigNumber(0);
-      voteWeights[leafId][voteValue] = voteWeights[leafId][voteValue].add(influence);
-      helper[leafId] = true;
+      if (!flag) res[collectionId].push(voteValue);
+      if (voteWeights[collectionId] === undefined) voteWeights[collectionId] = {};
+      if (voteWeights[collectionId][voteValue] === undefined) voteWeights[collectionId][voteValue] = toBigNumber(0);
+      voteWeights[collectionId][voteValue] = voteWeights[collectionId][voteValue].add(influence);
+      helper[collectionId] = true;
     }
   }
   votes[signer.address] = arr;
@@ -210,14 +212,15 @@ const proposeWithDeviation = async (signer, deviation, stakeManager, blockManage
   const mediansValues = [];
 
   for (let j = 0; j < activeCollectionIds.length; j++) {
-    if (Number(influenceSum[j]) !== 0) {
+    const collectionId = activeCollectionIds[j];
+    if (Number(influenceSum[[collectionId]]) !== 0) {
       idsRevealedThisEpoch.push(activeCollectionIds[j]);
       let accWeight = toBigNumber(0);
-      res[j].sort();
-      for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
-        if (accWeight.gt((influenceSum[j].div(2)))) {
-          mediansValues.push(res[j][i] + deviation);
+      res[collectionId].sort();
+      for (let i = 0; i < res[collectionId].length; i++) {
+        accWeight = accWeight.add(voteWeights[collectionId][res[collectionId][i]]);
+        if (accWeight.gt((influenceSum[collectionId].div(2)))) {
+          mediansValues.push(res[collectionId][i] + deviation);
           break;
         }
       }
@@ -237,18 +240,20 @@ const propose = async (signer, stakeManager, blockManager, voteManager, collecti
 
 const calculateMedians = async (collectionManager) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const activeCollectionIds = await collectionManager.getActiveCollections();
 
   // const idsRevealedThisEpoch = [];
   const mediansValues = [];
 
   for (let j = 0; j < numActiveCollections; j++) {
-    if (Number(influenceSum[j]) !== 0) {
+    const collectionId = activeCollectionIds[j];
+    if (Number(influenceSum[collectionId]) !== 0) {
       let accWeight = toBigNumber(0);
-      res[j].sort();
-      for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
-        if (accWeight.gt((influenceSum[j].div(2)))) {
-          mediansValues.push(res[j][i]);
+      res[collectionId].sort();
+      for (let i = 0; i < res[collectionId].length; i++) {
+        accWeight = accWeight.add(voteWeights[collectionId][res[collectionId][i]]);
+        if (accWeight.gt((influenceSum[collectionId].div(2)))) {
+          mediansValues.push(res[collectionId][i]);
           break;
         }
       }
@@ -259,22 +264,24 @@ const calculateMedians = async (collectionManager) => {
 
 const calculateInvalidMedians = async (collectionManager, deviation) => {
   const numActiveCollections = await collectionManager.getNumActiveCollections();
+  const activeCollectionIds = await collectionManager.getActiveCollections();
 
   // const idsRevealedThisEpoch = [];
   const mediansValues = [];
   let validLeafIdToBeDisputed = 0;
   for (let j = 0; j < numActiveCollections; j++) {
-    if (Number(influenceSum[j]) !== 0) {
+    const collectionId = activeCollectionIds[j];
+    if (Number(influenceSum[collectionId]) !== 0) {
       let accWeight = toBigNumber(0);
-      res[j].sort();
-      for (let i = 0; i < res[j].length; i++) {
-        accWeight = accWeight.add(voteWeights[j][res[j][i]]);
-        if (accWeight.gt((influenceSum[j].div(2)))) {
+      res[collectionId].sort();
+      for (let i = 0; i < res[collectionId].length; i++) {
+        accWeight = accWeight.add(voteWeights[collectionId][res[collectionId][i]]);
+        if (accWeight.gt((influenceSum[collectionId].div(2)))) {
           if (validLeafIdToBeDisputed === 0) {
             validLeafIdToBeDisputed = j;
-            mediansValues.push(res[j][i] + deviation);
+            mediansValues.push(res[collectionId][i] + deviation);
           } else {
-            mediansValues.push(res[j][i]);
+            mediansValues.push(res[collectionId][i]);
           }
           break;
         }
@@ -303,7 +310,7 @@ const getIdsRevealed = async (collectionManager) => {
   const idsRevealedThisEpoch = [];
   const activeCollectionIds = await collectionManager.getActiveCollections();
   for (let j = 0; j < activeCollectionIds.length; j++) {
-    if (Number(influenceSum[j]) !== 0) {
+    if (Number(influenceSum[activeCollectionIds[j]]) !== 0) {
       idsRevealedThisEpoch.push(activeCollectionIds[j]);
     }
   }

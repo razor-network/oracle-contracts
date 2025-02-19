@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - "release*"
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  install_dependencies:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+      - name: Install dependencies
+        run: |
+          npm install
+          npm run cp-ci-env
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: persist
+
+  test:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run tests
+        run: |
+          CI=true npm run test
+
+  scenarios:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run scenarios
+        run: |
+          CI=true npm run scenarios
+
+  lint:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run Lint
+        run: npm run lint
+
+  coverage:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run Coverage
+        run: npm run coverage
+      - name: Upload coverage to Coveralls
+        uses: coverallsapp/github-action@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  slither:
+    runs-on: ubuntu-latest
+    needs: install_dependencies
+    steps:
+      - uses: bissolli/gh-action-persist-workspace@v1
+        with:
+          action: retrieve
+      - name: Run Slither
+        uses: crytic/slither-action@v0.3.0
+        id: slither
+        with:
+          node-version: 16
+          sarif: results.sarif
+          fail-on: high

@@ -44,18 +44,16 @@ library MerklePosAware {
         while (j > 0) {
             bytes32 proofElement = proof[i];
             j--;
-            //skip proof check  if my node is  last node and number of nodes on level is odd
-            if (lastNode % 2 == 1 && lastNode == myNode) {
-                myNode = myNode / 2 + (myNode % 2);
-                lastNode = lastNode / 2 + (lastNode % 2);
-                continue;
+            // check  proof if my node is not last node and number of nodes on level is not odd
+            if (!(lastNode % 2 == 1 && lastNode == myNode)) {
+                // 0x30 is 0, 0x31 is 1
+                if (seq[j] == 0x30) {
+                    computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
+                } else {
+                    computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
+                }
+                i++;
             }
-            if (seq[j] == 0x30) {
-                computedHash = keccak256(abi.encodePacked(computedHash, proofElement));
-            } else {
-                computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
-            }
-            i++;
 
             myNode = myNode / 2 + (myNode % 2);
             lastNode = lastNode / 2 + (lastNode % 2);

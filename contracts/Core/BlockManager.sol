@@ -32,7 +32,15 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param medians of the confirmed block
      * @param timestamp time when the block was confirmed
      */
-    event BlockConfirmed(uint32 epoch, uint32 stakerId, uint16[] ids, uint32[] medians, uint256 timestamp);
+    event BlockConfirmed(uint32 indexed epoch, uint32 indexed stakerId, uint16[] ids, uint256 timestamp, uint256[] medians);
+
+    /**
+     * @dev Emitted when a staker claims block reward
+     * @param epoch epoch when the block reward was claimed
+     * @param stakerId id of the staker that claimed the block reward
+     * @param timestamp time when the block reward was claimed
+     */
+    event ClaimBlockReward(uint32 indexed epoch, uint32 indexed stakerId, uint256 timestamp);
 
     /**
      * @dev Emitted when a block is proposed
@@ -45,14 +53,80 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * @param timestamp time when the block was proposed
      */
     event Proposed(
-        uint32 epoch,
-        uint32 stakerId,
-        uint16[] ids,
-        uint32[] medians,
-        uint256 iteration,
+        uint32 indexed epoch,
+        uint32 indexed stakerId,
         uint32 biggestStakerId,
-        uint256 timestamp
+        uint16[] ids,
+        uint256 iteration,
+        uint256 timestamp,
+        uint256[] medians
     );
+
+    /**
+     * @dev Emitted when the staker calls giveSorted
+     * @param epoch epoch in which the dispute was setup and raised
+     * @param collectionId index of the collection that is to be disputed
+     * @param sortedValues values reported by staker for a collection in ascending order
+     */
+    event GiveSorted(uint32 indexed epoch, uint16 indexed collectionId, uint256[] sortedValues);
+
+    /**
+     * @dev Emitted when the disputer raise dispute for biggestStakeProposed
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param correctBiggestStakerId the correct biggest staker id
+     * @param disputer address that raised the dispute
+     */
+    event DisputeBiggestStakeProposed(
+        uint32 indexed epoch,
+        uint8 blockIndex,
+        uint32 indexed correctBiggestStakerId,
+        address indexed disputer
+    );
+
+    /**
+     * @dev Emitted when the disputer raise dispute for collection id that should be absent
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id
+     * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
+     * @param disputer address that raised the dispute
+     */
+    event DisputeCollectionIdShouldBeAbsent(
+        uint32 indexed epoch,
+        uint8 blockIndex,
+        uint32 indexed id,
+        uint256 postionOfCollectionInBlock,
+        address indexed disputer
+    );
+
+    /**
+     * @dev Emitted when the disputer raise dispute for collection id that should be present
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param id collection id that should be present
+     * @param disputer address that raised the dispute
+     */
+    event DisputeCollectionIdShouldBePresent(uint32 indexed epoch, uint8 blockIndex, uint32 indexed id, address indexed disputer);
+
+    /**
+     * @dev Emitted when the disputer raise dispute for the ids passed are not sorted in ascend order, or there is duplication
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param index0 lower
+     * @param index1 upper
+     * @param disputer address that raised the dispute
+     */
+    event DisputeOnOrderOfIds(uint32 indexed epoch, uint8 blockIndex, uint256 index0, uint256 index1, address indexed disputer);
+
+    /**
+     * @dev Emitted when the disputer calls finalizeDispute
+     * @param epoch epoch in which the dispute was raised
+     * @param blockIndex index of the block that is to be disputed
+     * @param postionOfCollectionInBlock position of collection id to be disputed inside ids proposed by block
+     * @param disputer address that raised the dispute
+     */
+    event FinalizeDispute(uint32 indexed epoch, uint8 blockIndex, uint256 postionOfCollectionInBlock, address indexed disputer);
 
     /**
      * @param stakeManagerAddress The address of the StakeManager contract
@@ -96,29 +170,28 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     function propose(
         uint32 epoch,
         uint16[] memory ids,
-        uint32[] memory medians,
+        uint256[] memory medians,
         uint256 iteration,
         uint32 biggestStakerId
     ) external initialized checkEpochAndState(State.Propose, epoch, buffer) {
         uint32 proposerId = stakeManager.getStakerId(msg.sender);
-        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
-        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         //staker can just skip commit/reveal and only propose every epoch to avoid penalty.
         //following line is to prevent that
-        // Below line can't be tested since if not revealed staker most of the times reverts with "not elected"
         require(voteManager.getEpochLastRevealed(proposerId) == epoch, "Cannot propose without revealing");
+        require(_isElectedProposer(iteration, biggestStakerId, proposerId, epoch), "not elected");
+        require(stakeManager.getStake(proposerId) >= minStake, "stake below minimum stake");
         require(epochLastProposed[proposerId] != epoch, "Already proposed");
         require(ids.length == medians.length, "Invalid block proposed");
 
         uint256 biggestStake = voteManager.getStakeSnapshot(epoch, biggestStakerId);
         if (sortedProposedBlockIds[epoch].length == 0) numProposedBlocks = 0;
-        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, medians, ids, iteration, biggestStake);
+        proposedBlocks[epoch][numProposedBlocks] = Structs.Block(true, proposerId, ids, iteration, biggestStake, medians);
         bool isAdded = _insertAppropriately(epoch, numProposedBlocks, iteration, biggestStake);
         epochLastProposed[proposerId] = epoch;
         if (isAdded) {
             numProposedBlocks = numProposedBlocks + 1;
         }
-        emit Proposed(epoch, proposerId, ids, medians, iteration, biggestStakerId, block.timestamp);
+        emit Proposed(epoch, proposerId, biggestStakerId, ids, iteration, block.timestamp, medians);
     }
 
     /**
@@ -126,23 +199,23 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * giveSorted() needs to be called to setup the dispute where in, the correct median will be calculated based on the votes
      * reported by stakers
      * @param epoch in which the dispute was setup and raised
-     * @param leafId index of the collection that is to be disputed
+     * @param collectionId index of the collection that is to be disputed
      * @param sortedValues values reported by staker for a collection in ascending order
      */
     function giveSorted(
         uint32 epoch,
-        uint16 leafId,
-        uint32[] memory sortedValues
+        uint16 collectionId,
+        uint256[] memory sortedValues
     ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
-        require(leafId <= (collectionManager.getNumActiveCollections() - 1), "Invalid leafId");
-        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, leafId) / 2;
+        require(collectionManager.getCollectionStatus(collectionId), "Invalid collectionId");
+        uint256 medianWeight = voteManager.getTotalInfluenceRevealed(epoch, collectionId) / 2;
         uint256 accWeight = disputes[epoch][msg.sender].accWeight;
-        uint32 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
+        uint256 lastVisitedValue = disputes[epoch][msg.sender].lastVisitedValue;
 
         if (disputes[epoch][msg.sender].accWeight == 0) {
-            disputes[epoch][msg.sender].leafId = leafId;
+            disputes[epoch][msg.sender].collectionId = collectionId;
         } else {
-            require(disputes[epoch][msg.sender].leafId == leafId, "leafId mismatch");
+            require(disputes[epoch][msg.sender].collectionId == collectionId, "collectionId mismatch");
             // require(disputes[epoch][msg.sender].median == 0, "median already found");
         }
         for (uint32 i = 0; i < sortedValues.length; i++) {
@@ -151,7 +224,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
 
             // reason to ignore : has to be done, as each vote will have diff weight
             // slither-disable-next-line calls-loop
-            uint256 weight = voteManager.getVoteWeight(epoch, leafId, sortedValues[i]);
+            uint256 weight = voteManager.getVoteWeight(epoch, collectionId, sortedValues[i]);
             accWeight = accWeight + weight;
             if (disputes[epoch][msg.sender].median == 0 && accWeight > medianWeight) {
                 disputes[epoch][msg.sender].median = sortedValues[i];
@@ -159,6 +232,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
         disputes[epoch][msg.sender].lastVisitedValue = lastVisitedValue;
         disputes[epoch][msg.sender].accWeight = accWeight;
+        emit GiveSorted(epoch, collectionId, sortedValues);
     }
 
     /**
@@ -175,35 +249,27 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
      * and is valid. This will confirm the block and rewards the selected staker with the block reward
      */
     function claimBlockReward() external initialized checkState(State.Confirm, buffer) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
         uint32 stakerId = stakeManager.getStakerId(msg.sender);
         require(stakerId > 0, "Structs.Staker does not exist");
         // slither-disable-next-line timestamp
         require(blocks[epoch].proposerId == 0, "Block already confirmed");
+        // proposerId, epoch, timestamp
 
         if (sortedProposedBlockIds[epoch].length != 0 && blockIndexToBeConfirmed != -1) {
             uint32 proposerId = proposedBlocks[epoch][sortedProposedBlockIds[epoch][uint8(blockIndexToBeConfirmed)]].proposerId;
             require(proposerId == stakerId, "Block Proposer mismatches");
+            emit ClaimBlockReward(epoch, stakerId, block.timestamp);
             _confirmBlock(epoch, proposerId);
-        }
-        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality, timestamp
-        if (updateRegistryEpoch <= epoch) {
-            collectionManager.updateDelayedRegistry();
         }
     }
 
     /// @inheritdoc IBlockManager
     function confirmPreviousEpochBlock(uint32 stakerId) external override initialized onlyRole(BLOCK_CONFIRMER_ROLE) {
-        uint32 epoch = _getEpoch();
+        uint32 epoch = getEpoch();
 
         if (sortedProposedBlockIds[epoch - 1].length != 0 && blockIndexToBeConfirmed != -1) {
             _confirmBlock(epoch - 1, stakerId);
-        }
-        uint32 updateRegistryEpoch = collectionManager.getUpdateRegistryEpoch();
-        // slither-disable-next-line incorrect-equality,timestamp
-        if (updateRegistryEpoch <= epoch - 1) {
-            collectionManager.updateDelayedRegistry();
         }
     }
 
@@ -224,6 +290,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         uint256 correctBiggestStake = voteManager.getStakeSnapshot(epoch, correctBiggestStakerId);
         require(correctBiggestStake > proposedBlocks[epoch][blockId].biggestStake, "Invalid dispute : Stake");
+        emit DisputeBiggestStakeProposed(epoch, blockIndex, correctBiggestStakerId, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -244,14 +311,12 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         // Step 1 : If its active collection, total influence revealed should be zero
         if (collectionManager.getCollectionStatus(id)) {
-            // Get leafId from collectionId, as voting is done w.r.t leafIds
-            uint16 leafId = collectionManager.getLeafIdOfCollection(id);
-            uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, leafId);
+            uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, id);
             require(totalInfluenceRevealed == 0, "Dispute: ID should be present");
         }
         // Step 2: Prove that given id is indeed present in block
         require(proposedBlocks[epoch][blockId].ids[postionOfCollectionInBlock] == id, "Dispute: ID absent only");
-
+        emit DisputeCollectionIdShouldBeAbsent(epoch, blockIndex, id, postionOfCollectionInBlock, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -268,9 +333,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
     ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        // Get leafId from collectionId, as voting is done w.r.t leafIds
-        uint16 leafId = collectionManager.getLeafIdOfCollection(id);
-        uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, leafId);
+        uint256 totalInfluenceRevealed = voteManager.getTotalInfluenceRevealed(epoch, id);
 
         require(totalInfluenceRevealed != 0, "Dispute: ID should be absent");
 
@@ -307,6 +370,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         }
 
         require(toDispute, "Dispute: ID present only");
+        emit DisputeCollectionIdShouldBePresent(epoch, blockIndex, id, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -330,6 +394,7 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
         require(index0 < index1, "index1 not greater than index0 0");
         require(proposedBlocks[epoch][blockId].ids[index0] >= proposedBlocks[epoch][blockId].ids[index1], "ID at i0 not gt than of i1");
+        emit DisputeOnOrderOfIds(epoch, blockIndex, index0, index1, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -348,22 +413,21 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         uint256 postionOfCollectionInBlock
     ) external initialized checkEpochAndState(State.Dispute, epoch, buffer) {
         require(
-            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].leafId),
+            disputes[epoch][msg.sender].accWeight == voteManager.getTotalInfluenceRevealed(epoch, disputes[epoch][msg.sender].collectionId),
             "TIR is wrong"
         ); // TIR : total influence revealed
         require(disputes[epoch][msg.sender].accWeight != 0, "Invalid dispute");
         // Would revert if no block is proposed, or the asset specifed was not revealed
         uint32 blockId = sortedProposedBlockIds[epoch][blockIndex];
         require(proposedBlocks[epoch][blockId].valid, "Block already has been disputed");
-        uint16 leafId = disputes[epoch][msg.sender].leafId;
-        // Get collection id from leafId, as propose happens w.r.t to ids
-        uint16 id = collectionManager.getCollectionIdFromLeafId(leafId);
+        uint16 collectionId = disputes[epoch][msg.sender].collectionId;
 
         Structs.Block memory _block = proposedBlocks[epoch][blockId];
-        require(_block.ids[postionOfCollectionInBlock] == id, "Wrong Coll Index passed");
-        uint32 proposedValue = proposedBlocks[epoch][blockId].medians[postionOfCollectionInBlock];
+        require(_block.ids[postionOfCollectionInBlock] == collectionId, "Wrong Coll Index passed");
+        uint256 proposedValue = proposedBlocks[epoch][blockId].medians[postionOfCollectionInBlock];
 
         require(proposedValue != disputes[epoch][msg.sender].median, "Block proposed with same medians");
+        emit FinalizeDispute(epoch, blockIndex, postionOfCollectionInBlock, msg.sender);
         _executeDispute(epoch, blockIndex, blockId);
     }
 
@@ -397,11 +461,6 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         return (blocks[epoch].proposerId != 0);
     }
 
-    /// @inheritdoc IBlockManager
-    function getLatestResults(uint16 id) external view override returns (uint32) {
-        return latestResults[id];
-    }
-
     /**
      * @notice an internal function in which the block is confirmed.
      * @dev The staker who confirms the block receives the block reward, creates the salt for the next epoch and stores
@@ -415,12 +474,10 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         bytes32 salt = keccak256(abi.encodePacked(epoch, blocks[epoch].medians)); // not iteration as it can be manipulated
 
         Structs.Block memory _block = blocks[epoch];
-        for (uint256 i = 0; i < _block.ids.length; i++) {
-            latestResults[_block.ids[i]] = _block.medians[i];
-        }
 
-        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, _block.medians, block.timestamp);
+        emit BlockConfirmed(epoch, _block.proposerId, _block.ids, block.timestamp, _block.medians);
 
+        collectionManager.setResult(epoch, _block.ids, _block.medians);
         voteManager.storeSalt(salt);
         rewardManager.giveBlockReward(stakerId, epoch);
         randomNoProvider.provideSecret(epoch, salt);
@@ -538,11 +595,18 @@ contract BlockManager is Initializable, BlockStorage, StateManager, BlockManager
         // since prng returns 0 to max-1 and staker start from 1
 
         bytes32 salt = voteManager.getSalt();
+        //roll an n sided fair die where n == numStakers to select a staker pseudoRandomly
         bytes32 seed1 = Random.prngHash(salt, keccak256(abi.encode(iteration)));
         uint256 rand1 = Random.prng(stakeManager.getNumStakers(), seed1);
         if ((rand1 + 1) != stakerId) {
             return false;
         }
+        //toss a biased coin with increasing iteration till the following equation returns true.
+        // stake/biggest stake >= prng(iteration,stakerid, salt), staker wins
+        // stake/biggest stake < prng(iteration,stakerid, salt), staker loses
+        // simplified equation:- stake < prng * biggestStake
+        // stake * 2^32 < prng * 2^32 * biggestStake
+        // multiplying by 2^32 since seed2 is bytes32 so rand2 goes from 0 to 2^32
         bytes32 seed2 = Random.prngHash(salt, keccak256(abi.encode(stakerId, iteration)));
         uint256 rand2 = Random.prng(2**32, seed2);
 

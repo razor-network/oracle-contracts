@@ -7,8 +7,8 @@ if (dotenvResult.error) {
   throw dotenvResult.error;
 }
 
+require('hardhat-deploy');
 require('@nomiclabs/hardhat-ethers');
-require('@nomiclabs/hardhat-truffle5');
 require('hardhat-gas-reporter');
 require('solidity-coverage');
 require('hardhat-abi-exporter');
@@ -32,6 +32,7 @@ const ENV_CHAIN_IDS = {
   mainnet: 1,
   goerli: 5,
   mumbai: 80001,
+  skale: 132333505628089,
 };
 
 module.exports = {
@@ -63,7 +64,7 @@ module.exports = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 2400,
+            runs: 1300,
           },
         },
       },
@@ -83,6 +84,16 @@ module.exports = {
       url: PROVIDER_URL || '',
       accounts: { mnemonic: MNEMONIC },
       chainId: ENV_CHAIN_IDS[NETWORK],
+      timeout: 300000,
+    },
+    skale: {
+      url: PROVIDER_URL || '',
+      accounts: { mnemonic: MNEMONIC },
+      chainId: ENV_CHAIN_IDS[NETWORK],
+      timeout: 300000,
+    },
+    hardhat: {
+      saveDeployments: false,
     },
   },
   etherscan: {
@@ -108,5 +119,12 @@ module.exports = {
   },
   dodoc: {
     runOnCompile: false,
+  },
+  namedAccounts: {
+    deployer: 0,
+    tokenOwner: 1,
+  },
+  paths: {
+    sources: './contracts',
   },
 };
