@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 16
+          node-version: 18
       - name: Install dependencies
         run: |
           npm install
@@ -83,9 +83,9 @@ jobs:
         with:
           action: retrieve
       - name: Run Slither
-        uses: crytic/slither-action@v0.3.0
+        uses: crytic/slither-action@v0.4.0
         id: slither
         with:
-          node-version: 16
+          node-version: 18
           sarif: results.sarif
           fail-on: high
